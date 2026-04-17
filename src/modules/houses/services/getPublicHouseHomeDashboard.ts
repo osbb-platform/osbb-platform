@@ -113,7 +113,7 @@ type GetPublicHouseHomeDashboardParams = {
   slug: string;
 };
 
-const CTA_LABEL = houseSystemCopy.cta.open as const;
+const CTA_LABEL = houseSystemCopy.cta.open;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
@@ -320,36 +320,40 @@ function normalizeMeetings(value: unknown): MeetingItem[] {
     return [];
   }
 
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
+  return value.reduce<MeetingItem[]>((acc, item, index) => {
+    if (!item || typeof item !== "object") {
+      return acc;
+    }
 
-      const raw = item as Record<string, unknown>;
+    const raw = item as Record<string, unknown>;
+    const normalized: MeetingItem = {
+      id: asString(raw.id) || `meeting-${index}`,
+      title: asString(raw.title),
+      shortDescription: asString(raw.shortDescription),
+      meetingDateTime: asString(raw.meetingDateTime),
+      location: asString(raw.location),
+      status:
+        raw.status === "scheduled" ||
+        raw.status === "active" ||
+        raw.status === "review" ||
+        raw.status === "completed" ||
+        raw.status === "archived"
+          ? raw.status
+          : "draft",
+      protocolPdf: asString(raw.protocolPdf) || undefined,
+      protocolDocumentId: asString(raw.protocolDocumentId) || undefined,
+      questions: Array.isArray(raw.questions)
+        ? (raw.questions as MeetingQuestion[])
+        : [],
+    };
 
-      return {
-        id: asString(raw.id) || `meeting-${index}`,
-        title: asString(raw.title),
-        shortDescription: asString(raw.shortDescription),
-        meetingDateTime: asString(raw.meetingDateTime),
-        location: asString(raw.location),
-        status:
-          raw.status === "scheduled" ||
-          raw.status === "active" ||
-          raw.status === "review" ||
-          raw.status === "completed" ||
-          raw.status === "archived"
-            ? raw.status
-            : "draft",
-        protocolPdf: asString(raw.protocolPdf) || undefined,
-        protocolDocumentId: asString(raw.protocolDocumentId) || undefined,
-        questions: Array.isArray(raw.questions)
-          ? (raw.questions as MeetingQuestion[])
-          : [],
-      } satisfies MeetingItem;
-    })
-    .filter((item): item is MeetingItem => item !== null && Boolean(item.title));
+    if (!normalized.title) {
+      return acc;
+    }
+
+    acc.push(normalized);
+    return acc;
+  }, []);
 }
 
 function normalizeDebtorItems(value: unknown): DebtorItem[] {

@@ -112,7 +112,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
 
   const messageMap = new Map<string, AdminHouseMessageListItem[]>();
 
-  for (const row of (messageData ?? []) as Array<Record<string, unknown>>) {
+  for (const row of ((messageData ?? []) as unknown as Array<Record<string, unknown>>)) {
     const houseId = String(row.house_id ?? "").trim();
 
     if (!houseId) {

@@ -123,7 +123,7 @@ export default async function InformationPage({
     }),
   );
 
-  const categories = [houseInformationCopy.filters.all, ...categoriesWithContent];
+  const categories: string[] = [houseInformationCopy.filters.all, ...categoriesWithContent];
   const requestedCategory = resolvedSearchParams.category ?? houseInformationCopy.filters.all;
   const activeCategory = categories.includes(requestedCategory)
     ? requestedCategory

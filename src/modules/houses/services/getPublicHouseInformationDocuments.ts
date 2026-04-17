@@ -42,5 +42,5 @@ export async function getPublicHouseInformationDocuments(
     );
   }
 
-  return (data ?? []) as PublicHouseInformationDocumentItem[];
+  return (data ?? []) as unknown as PublicHouseInformationDocumentItem[];
 }

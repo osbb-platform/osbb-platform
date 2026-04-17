@@ -111,7 +111,7 @@ export async function createHouseInformationSection(
 
   let coverImageUrl: string | null = null;
 
-  const content = {
+  const content: Record<string, unknown> = {
     headline,
     body,
     category,

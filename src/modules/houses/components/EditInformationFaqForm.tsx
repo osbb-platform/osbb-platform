@@ -6,7 +6,7 @@ import { createHouseInformationFaqSection } from "@/src/modules/houses/actions/c
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
 
-const initialState = {
+const initialState: { error: string | null } = {
   error: null,
 };
 
@@ -49,8 +49,15 @@ export function EditInformationFaqForm({
     initialState,
   );
 
+  const deleteActionWrapper = async (
+    _state: typeof initialState,
+    formData: FormData,
+  ) => {
+    return deleteHouseSection(formData);
+  };
+
   const [, deleteAction, isDeletePending] = useActionState(
-    deleteHouseSection,
+    deleteActionWrapper,
     initialState,
   );
 

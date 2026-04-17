@@ -1,12 +1,12 @@
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
-import type { CurrentAdminRole } from "@/src/shared/types/entities/admin.types";
+import type { AdminRole } from "@/src/shared/constants/roles/roles.constants";
 
 type GuardResult = {
   error: string | null;
 };
 
 export function assertRegistryActionAccess(params: {
-  role: CurrentAdminRole | null | undefined;
+  role: AdminRole | null | undefined;
   area: "houses" | "apartments";
   action:
     | "create"
@@ -25,9 +25,11 @@ export function assertRegistryActionAccess(params: {
       ? {
           create: access.housesRegistry.create,
           edit: access.housesRegistry.edit,
+          import: false,
           archive: access.housesRegistry.archive,
           restore: access.housesRegistry.restore,
           delete: access.housesRegistry.delete,
+          bulk: false,
           security: access.housesRegistry.changeAccessCode,
         }[params.action]
       : {

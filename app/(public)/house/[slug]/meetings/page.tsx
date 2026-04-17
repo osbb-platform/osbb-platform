@@ -1,4 +1,4 @@
-import { houseMeetingsCopy } from "@/src/shared/publicCopy/house";
+import { houseMeetingsCopy, houseSystemCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
 import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";

@@ -56,7 +56,7 @@ function denyAllWorkspaces() {
         ALL_WORKSPACE_ACTIONS.map((action) => [action, false]),
       ),
     ]),
-  ) as Record<HouseWorkspaceKey, Record<WorkspaceActionKey, false>>;
+  ) as Record<HouseWorkspaceKey, Record<WorkspaceActionKey, boolean>>;
 }
 
 const managerWorkspaces = denyAllWorkspaces();
@@ -268,11 +268,9 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
 
   [ROLES.ADMIN]: {
     inherits: [ROLES.MANAGER],
-    topLevel: {
-      districts: true,
-      employees: true,
-      companyPages: false,
-    },
+    topLevel: Object.fromEntries(
+      ALL_TOP_LEVEL_KEYS.map((key) => [key, true]),
+    ),
     housesRegistry: {
       create: true,
       edit: true,
@@ -305,6 +303,13 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
       editSuperadmin: false,
       deleteSuperadmin: false,
       inviteAdmin: false,
+    },
+    companyPages: {
+      view: true,
+      create: true,
+      edit: true,
+      publish: true,
+      archive: true,
     },
     profile: {
       editOwnProfile: true,
@@ -462,6 +467,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
       archiveFromDetail: true,
       restoreFromDetail: true,
     },
+    houseWorkspaces: {},
     security: {
       viewPasswordsInProfile: false,
       viewHouseAccessCodes: true,

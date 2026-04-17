@@ -201,16 +201,43 @@ function buildResolvedRoleAccess(role: AdminRole): ResolvedRoleAccess {
 
   mergeResolvedAccess(resolved, {
     role,
-    topLevel: config.topLevel,
-    housesRegistry: config.housesRegistry,
-    apartmentsRegistry: config.apartmentsRegistry,
-    history: config.history,
-    employees: config.employees,
-    companyPages: config.companyPages,
-    profile: config.profile,
-    houseShell: config.houseShell,
+    topLevel: {
+      ...resolved.topLevel,
+      ...config.topLevel,
+    },
+    housesRegistry: {
+      ...resolved.housesRegistry,
+      ...config.housesRegistry,
+    },
+    apartmentsRegistry: {
+      ...resolved.apartmentsRegistry,
+      ...config.apartmentsRegistry,
+    },
+    history: {
+      ...resolved.history,
+      ...config.history,
+    },
+    employees: {
+      ...resolved.employees,
+      ...config.employees,
+    },
+    companyPages: {
+      ...resolved.companyPages,
+      ...config.companyPages,
+    },
+    profile: {
+      ...resolved.profile,
+      ...config.profile,
+    },
+    houseShell: {
+      ...resolved.houseShell,
+      ...config.houseShell,
+    },
     houseWorkspaces: config.houseWorkspaces as ResolvedRoleAccess["houseWorkspaces"],
-    security: config.security,
+    security: {
+      ...resolved.security,
+      ...config.security,
+    },
   });
 
   return resolved;

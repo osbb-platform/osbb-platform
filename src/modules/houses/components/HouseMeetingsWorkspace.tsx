@@ -554,16 +554,14 @@ export function HouseMeetingsWorkspace({
               {mode === "create" ? "Новое собрание" : "Редактирование"}
             </div>
 
-            {mode !== "idle" ? (
-              <button
-                type="button"
-                onClick={closeWorkspace}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
-                aria-label="Закрыть форму"
-              >
-                ×
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={closeWorkspace}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
+              aria-label="Закрыть форму"
+            >
+              ×
+            </button>
           </div>
 
           {mode === "edit" &&

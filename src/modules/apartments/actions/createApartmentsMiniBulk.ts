@@ -36,7 +36,7 @@ export async function createApartmentsMiniBulk(
 ): Promise<CreateApartmentsMiniBulkState> {
   const currentUser = await getCurrentAdminUser();
   const accessError = assertRegistryActionAccess({ role: currentUser?.role, area: "apartments", action: "bulk" });
-  if (accessError) return { error: accessError.error, success: null };
+  if (accessError) return { error: accessError.error, successMessage: null };
 
   const houseId = String(formData.get("houseId") ?? "").trim();
   const rawRows = String(formData.get("rows") ?? "[]");

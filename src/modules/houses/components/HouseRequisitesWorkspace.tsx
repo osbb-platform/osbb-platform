@@ -74,9 +74,9 @@ export function HouseRequisitesWorkspace({
   houseId,
   houseSlug,
   section,
-  isReadOnly,
+  readOnlyMode,
 }: Props) {
-  const readOnlyMode = Boolean(isReadOnly);
+  const isReadOnly = Boolean(readOnlyMode);
   const router = useRouter();
 
   const [state, formAction, isPending] = useActionState(

@@ -377,18 +377,22 @@ export default async function AdminDashboardPage() {
             <KpiTile
               label="Материалов в работе"
               value={dashboard.contentPipeline.totalDraftSections}
+              hint="Черновики и секции, которые ещё не доведены до публикации."
             />
             <KpiTile
               label="Опубликованных разделов"
               value={dashboard.contentPipeline.totalPublishedSections}
+              hint="Активные разделы, которые уже опубликованы и доступны на сайтах домов."
             />
             <KpiTile
               label="Домов с материалами в работе"
               value={dashboard.contentPipeline.housesWithDrafts}
+              hint="Количество домов, в которых есть хотя бы один черновик или незавершённый материал."
             />
             <KpiTile
               label="Домов с опубликованным наполнением"
               value={dashboard.contentPipeline.housesWithPublishedContent}
+              hint="Количество домов, где уже есть опубликованные разделы для жителей."
             />
           </div>
 

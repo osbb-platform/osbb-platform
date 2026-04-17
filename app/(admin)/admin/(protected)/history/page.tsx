@@ -394,7 +394,7 @@ export default async function AdminHistoryPage({
 
             <div className="max-h-[640px] overflow-y-auto">
               {result.items.map((item) => {
-                const actorText =
+                const actorRaw =
                   item.source_type === "house_portal"
                     ? item.actor_email ??
                       item.metadata?.apartment ??
@@ -403,6 +403,11 @@ export default async function AdminHistoryPage({
                     : item.actor_name ??
                       item.actor_email ??
                       "Сотрудник не указан";
+
+                const actorText =
+                  typeof actorRaw === "string"
+                    ? actorRaw
+                    : JSON.stringify(actorRaw);
 
                 const actionTone = getActionTone(item.action_label);
                 const houseText = item.house_name ?? item.house_slug ?? "—";
@@ -444,16 +449,16 @@ export default async function AdminHistoryPage({
                         {houseText}
                       </div>
                       <div className="mt-1 text-xs text-slate-500">
-                        {item.description}
+                        {String(item.description ?? "—")}
                       </div>
                     </div>
 
                     <div className="text-slate-200">
-                      {item.main_section_label}
+                      {String(item.main_section_label ?? "—")}
                     </div>
 
                     <div className="text-slate-300">
-                      {item.sub_section_label}
+                      {String(item.sub_section_label ?? "—")}
                     </div>
 
                     <div className="text-slate-300">{actorText}</div>

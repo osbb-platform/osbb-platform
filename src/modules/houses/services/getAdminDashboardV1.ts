@@ -29,6 +29,8 @@ export type AdminDashboardPublicationItem = {
   section: string;
   title: string;
   createdAt: string;
+  actionLabel: string;
+  summary: string;
 };
 
 export type AdminDashboardHouseHealthItem = {

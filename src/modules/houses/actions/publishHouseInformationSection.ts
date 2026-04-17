@@ -14,7 +14,7 @@ export async function publishHouseInformationSection(formData: FormData) {
   });
 
   if (accessError) {
-    throw new Error(accessError.error);
+    throw new Error(accessError.error ?? "Access denied");
   }
 
   const sectionId = String(formData.get("sectionId") ?? "").trim();

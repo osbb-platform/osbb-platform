@@ -3,12 +3,12 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 
 export type PlatformHistoryFilterOptions = {
   cmsActors: string[];
-  cmsSections: Array<{
+  cmsSections: ReadonlyArray<{
     key: string;
     label: string;
-    subSections: Array<{ key: string; label: string }>;
+    subSections: ReadonlyArray<{ key: string; label: string }>;
   }>;
-  incomingSections: Array<{ key: string; label: string }>;
+  incomingSections: ReadonlyArray<{ key: string; label: string }>;
 };
 
 const CMS_SECTIONS = [

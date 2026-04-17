@@ -18,10 +18,12 @@ type HousePasswordGateProps = {
 
 type LoginState = {
   error: string | null;
+  lockedUntil: number | null;
 };
 
 const initialState: LoginState = {
   error: null,
+  lockedUntil: null,
 };
 
 const CODE_LENGTH = 6;
@@ -148,8 +150,10 @@ export function HousePasswordGate({
       return;
     }
 
+    const lockedUntil = state.lockedUntil;
+
     const tick = () => {
-      const remaining = Math.max(0, state.lockedUntil - Date.now());
+      const remaining = Math.max(0, lockedUntil - Date.now());
       setLockRemaining(remaining);
 
       if (remaining === 0) {

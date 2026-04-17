@@ -219,13 +219,9 @@ export default async function ReportsPage({
                       : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                   }`}
                   style={
-                    selectedMode === "archive"
-                      ? selectedYear === "all"
-                        ? { backgroundColor: districtColor }
-                        : undefined
-                      : selectedMonth === "all"
-                        ? { backgroundColor: districtColor }
-                        : undefined
+                    selectedMonth === "all"
+                      ? { backgroundColor: districtColor }
+                      : undefined
                   }
                 >
                   {houseReportsCopy.filters.all}
@@ -260,13 +256,9 @@ export default async function ReportsPage({
                       : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                   }`}
                   style={
-                    selectedMode === "archive"
-                      ? selectedYear === "all"
-                        ? { backgroundColor: districtColor }
-                        : undefined
-                      : selectedMonth === "all"
-                        ? { backgroundColor: districtColor }
-                        : undefined
+                    selectedMonth === "all"
+                      ? { backgroundColor: districtColor }
+                      : undefined
                   }
                 >
                   {houseReportsCopy.filters.all}

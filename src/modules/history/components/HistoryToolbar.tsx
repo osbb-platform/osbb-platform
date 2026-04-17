@@ -10,7 +10,7 @@ import type {
 type CmsSectionOption = {
   key: string;
   label: string;
-  subSections: Array<{ key: string; label: string }>;
+  subSections: ReadonlyArray<{ key: string; label: string }>;
 };
 
 type IncomingSectionOption = {
@@ -40,8 +40,8 @@ type Props = {
   dateFrom: string;
   dateTo: string;
   cmsActors: string[];
-  cmsSections: CmsSectionOption[];
-  incomingSections: IncomingSectionOption[];
+  cmsSections: ReadonlyArray<CmsSectionOption>;
+  incomingSections: ReadonlyArray<IncomingSectionOption>;
   districts: DistrictOption[];
   houses: HouseOption[];
 };

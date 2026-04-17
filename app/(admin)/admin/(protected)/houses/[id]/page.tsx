@@ -270,10 +270,12 @@ export default async function AdminHouseDetailPage({
         )
       : [];
 
-  let boardSection =
+  let boardSectionList =
     homeSections.find((section) => section.kind === "contacts") ?? null;
 
-  if (activeBlock === "board" && homePage && !boardSection) {
+  let boardSection = null;
+
+  if (activeBlock === "board" && homePage && !boardSectionList) {
     const ensuredBoardSectionId = await ensureHouseBoardSection({
       housePageId: homePage.id,
       houseSlug: house.slug,
@@ -281,8 +283,8 @@ export default async function AdminHouseDetailPage({
 
     boardSection = await getAdminHouseSectionById(ensuredBoardSectionId);
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (boardSection) {
-    boardSection = await getAdminHouseSectionById(boardSection.id);
+  } else if (boardSectionList) {
+    boardSection = await getAdminHouseSectionById(boardSectionList.id);
   }
 
   if (
@@ -328,10 +330,12 @@ export default async function AdminHouseDetailPage({
         )
       : [];
 
-  let specialistsSection =
+  let specialistsSectionList =
     homeSections.find((section) => section.kind === "specialists") ?? null;
 
-  if (activeBlock === "specialists" && homePage && !specialistsSection) {
+  let specialistsSection = null;
+
+  if (activeBlock === "specialists" && homePage && !specialistsSectionList) {
     const ensuredSpecialistsSectionId = await ensureHouseSpecialistsSection({
       housePageId: homePage.id,
       houseSlug: house.slug,
@@ -341,16 +345,18 @@ export default async function AdminHouseDetailPage({
       ensuredSpecialistsSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "specialists" && specialistsSection) {
-    specialistsSection = await getAdminHouseSectionById(specialistsSection.id);
+  } else if (activeBlock === "specialists" && specialistsSectionList) {
+    specialistsSection = await getAdminHouseSectionById(specialistsSectionList.id);
   } else if (activeBlock !== "specialists") {
     specialistsSection = null;
   }
 
-  let reportsSection =
+  let reportsSectionList =
     homeSections.find((section) => section.kind === "reports") ?? null;
 
-  if (activeBlock === "reports" && homePage && !reportsSection) {
+  let reportsSection = null;
+
+  if (activeBlock === "reports" && homePage && !reportsSectionList) {
     const ensuredReportsSectionId = await ensureHouseReportsSection({
       housePageId: homePage.id,
     });
@@ -359,16 +365,18 @@ export default async function AdminHouseDetailPage({
       ensuredReportsSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "reports" && reportsSection) {
-    reportsSection = await getAdminHouseSectionById(reportsSection.id);
+  } else if (activeBlock === "reports" && reportsSectionList) {
+    reportsSection = await getAdminHouseSectionById(reportsSectionList.id);
   } else if (activeBlock !== "reports") {
     reportsSection = null;
   }
 
-  let planSection =
+  let planSectionList =
     homeSections.find((section) => section.kind === "plan") ?? null;
 
-  if (activeBlock === "plan" && homePage && !planSection) {
+  let planSection = null;
+
+  if (activeBlock === "plan" && homePage && !planSectionList) {
     const ensuredPlanSectionId = await ensureHousePlanSection({
       housePageId: homePage.id,
     });
@@ -377,16 +385,18 @@ export default async function AdminHouseDetailPage({
       ensuredPlanSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "plan" && planSection) {
-    planSection = await getAdminHouseSectionById(planSection.id);
+  } else if (activeBlock === "plan" && planSectionList) {
+    planSection = await getAdminHouseSectionById(planSectionList.id);
   } else if (activeBlock !== "plan") {
     planSection = null;
   }
 
-  let debtorsSection =
+  let debtorsSectionList =
     homeSections.find((section) => section.kind === "debtors") ?? null;
 
-  if (activeBlock === "debtors" && homePage && !debtorsSection) {
+  let debtorsSection = null;
+
+  if (activeBlock === "debtors" && homePage && !debtorsSectionList) {
     const ensuredDebtorsSectionId = await ensureHouseDebtorsSection({
       housePageId: homePage.id,
     });
@@ -395,16 +405,18 @@ export default async function AdminHouseDetailPage({
       ensuredDebtorsSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "debtors" && debtorsSection) {
-    debtorsSection = await getAdminHouseSectionById(debtorsSection.id);
+  } else if (activeBlock === "debtors" && debtorsSectionList) {
+    debtorsSection = await getAdminHouseSectionById(debtorsSectionList.id);
   } else if (activeBlock !== "debtors") {
     debtorsSection = null;
   }
 
-  let meetingsSection =
+  let meetingsSectionList =
     homeSections.find((section) => section.kind === "meetings") ?? null;
 
-  if (activeBlock === "meetings" && homePage && !meetingsSection) {
+  let meetingsSection = null;
+
+  if (activeBlock === "meetings" && homePage && !meetingsSectionList) {
     const ensuredMeetingsSectionId = await ensureHouseMeetingsSection({
       housePageId: homePage.id,
     });
@@ -413,16 +425,18 @@ export default async function AdminHouseDetailPage({
       ensuredMeetingsSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "meetings" && meetingsSection) {
-    meetingsSection = await getAdminHouseSectionById(meetingsSection.id);
+  } else if (activeBlock === "meetings" && meetingsSectionList) {
+    meetingsSection = await getAdminHouseSectionById(meetingsSectionList.id);
   } else if (activeBlock !== "meetings") {
     meetingsSection = null;
   }
 
-  let requisitesSection =
+  let requisitesSectionList =
     homeSections.find((section) => section.kind === "requisites") ?? null;
 
-  if (activeBlock === "requisites" && homePage && !requisitesSection) {
+  let requisitesSection = null;
+
+  if (activeBlock === "requisites" && homePage && !requisitesSectionList) {
     const ensuredRequisitesSectionId = await ensureHouseRequisitesSection({
       housePageId: homePage.id,
     });
@@ -431,9 +445,9 @@ export default async function AdminHouseDetailPage({
       ensuredRequisitesSectionId,
     );
     homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "requisites" && requisitesSection) {
+  } else if (activeBlock === "requisites" && requisitesSectionList) {
     requisitesSection = await getAdminHouseSectionById(
-      requisitesSection.id,
+      requisitesSectionList.id,
     );
   } else if (activeBlock !== "requisites") {
     requisitesSection = null;
@@ -588,7 +602,7 @@ export default async function AdminHouseDetailPage({
       {activeBlock === "board" ? (
         boardSection ? (
           <EditBoardSectionForm
-            isReadOnly={!access.houseWorkspaces.board.edit}
+            readOnlyMode={!access.houseWorkspaces.board.edit}
             houseId={house.id}
             houseSlug={house.slug}
             section={{
@@ -609,7 +623,7 @@ export default async function AdminHouseDetailPage({
       {activeBlock === "reports" ? (
         reportsSection ? (
           <HouseReportsWorkspace
-            isReadOnly={!access.houseWorkspaces.reports.edit}
+            readOnlyMode={!access.houseWorkspaces.reports.edit}
             houseId={house.id}
             houseSlug={house.slug}
             sectionId={reportsSection.id}
@@ -708,7 +722,7 @@ export default async function AdminHouseDetailPage({
 
       {activeBlock === "requisites" ? (
         <HouseRequisitesWorkspace
-          isReadOnly={!access.houseWorkspaces.requisites.edit}
+          readOnlyMode={!access.houseWorkspaces.requisites.edit}
           houseId={house.id}
           houseSlug={house.slug}
           section={
