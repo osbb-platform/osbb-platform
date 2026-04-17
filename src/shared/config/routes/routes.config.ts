@@ -5,8 +5,17 @@ export const ROUTES = {
   },
   admin: {
     root: "/admin",
+    dashboard: "/admin",
     login: "/admin/login",
     houses: "/admin/houses",
-    company: "/admin/company",
+    apartments: "/admin/apartments",
+    districts: "/admin/districts",
+    history: "/admin/history",
+    companyPages: "/admin/company-pages",
+    employees: "/admin/employees",
+    profile: "/admin/profile",
+    completeRegistration: "/admin/complete-registration",
+    forgotPassword: "/admin/forgot-password",
+    resetPassword: "/admin/reset-password",
   },
 } as const;

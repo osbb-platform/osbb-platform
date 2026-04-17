@@ -16,6 +16,7 @@ export async function getHouseBySlug(slug: string): Promise<HouseRecord | null> 
         osbb_name,
         short_description,
         public_description,
+        cover_image_path,
         is_active,
         district:districts (
           id,
@@ -37,5 +38,17 @@ export async function getHouseBySlug(slug: string): Promise<HouseRecord | null> 
     return null;
   }
 
-  return data as HouseRecord;
+  const typedData = data as unknown as HouseRecord;
+
+  if (typedData.cover_image_path) {
+    const { data: publicUrlData } = await supabase.storage
+      .from("house-cover-images")
+      .getPublicUrl(typedData.cover_image_path);
+
+    typedData.cover_image_url = publicUrlData.publicUrl;
+  } else {
+    typedData.cover_image_url = null;
+  }
+
+  return typedData;
 }

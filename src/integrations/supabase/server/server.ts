@@ -18,11 +18,19 @@ export async function createSupabaseServerClient() {
 
   return createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        return cookieStore.getAll();
       },
-      set() {},
-      remove() {},
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Server Components могут читать cookies, но не всегда могут их записывать.
+          // Для таких сценариев тихо пропускаем запись, чтобы не ломать рендер.
+        }
+      },
     },
   });
 }
