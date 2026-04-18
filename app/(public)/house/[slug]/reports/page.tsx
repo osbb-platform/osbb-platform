@@ -335,7 +335,6 @@ export default async function ReportsPage({
                   <PublicReportPdfViewer
                     filePath={report.pdfPath ?? ""}
                     fileName={report.pdfFileName}
-                    bucket="house-documents"
                   />
                 </article>
               ))}

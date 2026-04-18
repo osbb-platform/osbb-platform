@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 
 export async function GET(request: NextRequest) {
   const filePath = request.nextUrl.searchParams.get("path")?.trim();
@@ -15,13 +15,19 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Unsupported bucket", { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   const { data, error } = await supabase.storage
     .from(bucket)
     .createSignedUrl(filePath, 60 * 10);
 
   if (error || !data?.signedUrl) {
+    console.error("Failed to create signed URL", {
+      bucket,
+      filePath,
+      error: error?.message ?? null,
+    });
+
     return new NextResponse("Unable to create signed URL", { status: 404 });
   }
 
