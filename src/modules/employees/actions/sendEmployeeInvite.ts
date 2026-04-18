@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
@@ -22,23 +21,14 @@ function getActorDisplayName(params: {
   return params.fullName?.trim() || params.email?.trim() || "Сотрудник CMS";
 }
 
-async function resolveAppOrigin() {
-  const headerStore = await headers();
+function getAdminOrigin() {
+  const domain = process.env.NEXT_PUBLIC_ADMIN_DOMAIN;
 
-  const forwardedProto = headerStore.get("x-forwarded-proto");
-  const forwardedHost = headerStore.get("x-forwarded-host");
-  const host = headerStore.get("host");
+  if (!domain) {
+    throw new Error("Missing NEXT_PUBLIC_ADMIN_DOMAIN");
+  }
 
-  const protocol =
-    forwardedProto && forwardedProto.length > 0
-      ? forwardedProto
-      : process.env.NODE_ENV === "development"
-        ? "http"
-        : "https";
-
-  const resolvedHost = forwardedHost || host || "localhost:3000";
-
-  return `${protocol}://${resolvedHost}`;
+  return `https://${domain}`;
 }
 
 export async function sendEmployeeInvite(
@@ -91,27 +81,6 @@ export async function sendEmployeeInvite(
 
   const inviteEmail = String(membership.invite_email ?? "").trim().toLowerCase();
 
-  const lastInviteSentAt = membership.last_invite_sent_at
-    ? new Date(membership.last_invite_sent_at)
-    : null;
-
-  if (lastInviteSentAt) {
-    const cooldownMs = 5 * 60 * 1000;
-    const nextAllowedAt = lastInviteSentAt.getTime() + cooldownMs;
-
-    if (Date.now() < nextAllowedAt) {
-      const remainingMinutes = Math.max(
-        1,
-        Math.ceil((nextAllowedAt - Date.now()) / 60000),
-      );
-
-      return {
-        error: `Повторный инвайт будет доступен через ${remainingMinutes} мин.`,
-        success: null,
-      };
-    }
-  }
-
   if (!inviteEmail) {
     return {
       error: "У сотрудника не указан email для приглашения.",
@@ -121,13 +90,13 @@ export async function sendEmployeeInvite(
 
   if (membership.status === "active" && membership.user_id) {
     return {
-      error: "Этот сотрудник уже завершил регистрацию. Повторный инвайт не нужен.",
+      error: "Этот сотрудник уже завершил регистрацию.",
       success: null,
     };
   }
 
   const adminClient = createSupabaseAdminClient();
-  const origin = await resolveAppOrigin();
+  const origin = getAdminOrigin();
 
   const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     inviteEmail,
@@ -142,33 +111,21 @@ export async function sendEmployeeInvite(
 
   if (inviteError) {
     return {
-      error:
-        "Не удалось отправить приглашение. Проверьте email сотрудника и повторите попытку позже.",
+      error: "Не удалось отправить приглашение.",
       success: null,
     };
   }
 
   const inviteTimestamp = new Date().toISOString();
 
-  const { error: updateError } = await supabase
+  await supabase
     .from("admin_memberships")
     .update({
       status: "invited",
-      invited_at:
-        membership.status === "invited"
-          ? membership.invited_at ?? inviteTimestamp
-          : inviteTimestamp,
       last_invite_sent_at: inviteTimestamp,
       is_active: true,
     })
     .eq("id", membershipId);
-
-  if (updateError) {
-    return {
-      error: `Инвайт отправлен, но статус не обновился: ${updateError.message}`,
-      success: null,
-    };
-  }
 
   const actorName = getActorDisplayName({
     fullName: currentUser?.fullName ?? null,
@@ -199,6 +156,6 @@ export async function sendEmployeeInvite(
 
   return {
     error: null,
-    success: "Инвайт отправлен на почту сотрудника.",
+    success: "Инвайт отправлен.",
   };
 }
