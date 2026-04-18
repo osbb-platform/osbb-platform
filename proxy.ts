@@ -35,10 +35,17 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // admin.osbb-platform.com.ua/* -> /admin/*
+  // 🔐 ADMIN SUBDOMAIN FIX
   if (hostname === `admin.${ROOT_DOMAIN}`) {
-    const adminPath =
-      url.pathname === "/" ? "/admin" : `/admin${url.pathname}`;
+    let adminPath = url.pathname;
+
+    if (adminPath === "/") {
+      adminPath = "/admin";
+    }
+
+    if (!adminPath.startsWith("/admin")) {
+      adminPath = `/admin${adminPath}`;
+    }
 
     return NextResponse.rewrite(
       new URL(withSearch(adminPath, url.search), request.url),
@@ -46,7 +53,7 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // <slug>.osbb-platform.com.ua/* -> /house/<slug>/*
+  // 🏠 HOUSE SUBDOMAIN
   if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
     const slug = hostname.slice(0, -(`.${ROOT_DOMAIN}`).length);
 
