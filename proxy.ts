@@ -23,6 +23,10 @@ export async function proxy(request: NextRequest) {
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
 
+  if (pathname.startsWith("/api/")) {
+    return response;
+  }
+
   // локалка и vercel preview не трогаем
   if (
     hostname === "localhost" ||
