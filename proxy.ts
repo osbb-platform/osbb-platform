@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // 👉 www → apex (один источник правды)
+  // 👉 www → apex
   if (hostname === WWW_HOST) {
     return NextResponse.redirect(
       new URL(`https://${ROOT_DOMAIN}${withSearch(pathname, url.search)}`),
@@ -41,14 +41,12 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // 👉 ROOT DOMAIN (сайт компании)
+  // 👉 ROOT DOMAIN
   if (hostname === ROOT_DOMAIN) {
-    // ❗ полностью скрываем админку
     if (pathname.startsWith("/admin")) {
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    // ❗ запрещаем доступ к домам без поддомена
     if (pathname.startsWith("/house/")) {
       return new NextResponse("Not Found", { status: 404 });
     }
@@ -56,7 +54,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // 👉 ADMIN SUBDOMAIN
+  // 👉 ADMIN
   if (hostname === ADMIN_HOST) {
     let adminPath = pathname;
 
@@ -72,9 +70,9 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // 👉 HOUSE SUBDOMAINS (slug.osbb-platform.com.ua)
+  // 👉 HOUSE SUBDOMAINS
   if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
-    const slug = hostname.replace(`.\\${ROOT_DOMAIN}`, "");
+    const slug = hostname.replace(`.${ROOT_DOMAIN}`, ""); // ✅ FIX
 
     if (slug && slug !== "www" && slug !== "admin") {
       let housePath = pathname;
