@@ -3,15 +3,15 @@ import { NextResponse } from "next/server";
 import { createSupabaseMiddlewareClient } from "@/src/integrations/supabase/server/middleware";
 
 const ROOT_DOMAIN = "osbb-platform.com.ua";
-const ADMIN_HOST = \`admin.\${ROOT_DOMAIN}\`;
-const WWW_HOST = \`www.\${ROOT_DOMAIN}\`;
+const ADMIN_HOST = `admin.${ROOT_DOMAIN}`;
+const WWW_HOST = `www.${ROOT_DOMAIN}`;
 
 function getHostname(hostHeader: string | null) {
   return (hostHeader ?? "").split(":")[0].toLowerCase();
 }
 
 function withSearch(pathname: string, search: string) {
-  return \`\${pathname}\${search || ""}\`;
+  return `${pathname}${search || ""}`;
 }
 
 export async function proxy(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   // 👉 www → apex (один источник правды)
   if (hostname === WWW_HOST) {
     return NextResponse.redirect(
-      new URL(\`https://\${ROOT_DOMAIN}\${withSearch(pathname, url.search)}\`),
+      new URL(`https://${ROOT_DOMAIN}${withSearch(pathname, url.search)}`),
       308
     );
   }
@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
     if (adminPath === "/") {
       adminPath = "/admin";
     } else if (!adminPath.startsWith("/admin")) {
-      adminPath = \`/admin\${adminPath}\`;
+      adminPath = `/admin${adminPath}`;
     }
 
     return NextResponse.rewrite(
@@ -73,16 +73,16 @@ export async function proxy(request: NextRequest) {
   }
 
   // 👉 HOUSE SUBDOMAINS (slug.osbb-platform.com.ua)
-  if (hostname.endsWith(\`.\${ROOT_DOMAIN}\`)) {
-    const slug = hostname.replace(\`.\\\${ROOT_DOMAIN}\`, "");
+  if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
+    const slug = hostname.replace(`.\\${ROOT_DOMAIN}`, "");
 
     if (slug && slug !== "www" && slug !== "admin") {
       let housePath = pathname;
 
       if (housePath === "/") {
-        housePath = \`/house/\${slug}\`;
-      } else if (!housePath.startsWith(\`/house/\${slug}\`)) {
-        housePath = \`/house/\${slug}\${housePath}\`;
+        housePath = `/house/${slug}`;
+      } else if (!housePath.startsWith(`/house/${slug}`)) {
+        housePath = `/house/${slug}${housePath}`;
       }
 
       return NextResponse.rewrite(
