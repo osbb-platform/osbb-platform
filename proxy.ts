@@ -3,19 +3,15 @@ import { NextResponse } from "next/server";
 import { createSupabaseMiddlewareClient } from "@/src/integrations/supabase/server/middleware";
 
 const ROOT_DOMAIN = "osbb-platform.com.ua";
-const ADMIN_HOST = `admin.${ROOT_DOMAIN}`;
-const WWW_HOST = `www.${ROOT_DOMAIN}`;
+const ADMIN_HOST = \`admin.\${ROOT_DOMAIN}\`;
+const WWW_HOST = \`www.\${ROOT_DOMAIN}\`;
 
 function getHostname(hostHeader: string | null) {
   return (hostHeader ?? "").split(":")[0].toLowerCase();
 }
 
 function withSearch(pathname: string, search: string) {
-  return `${pathname}${search || ""}`;
-}
-
-function buildUrl(hostname: string, pathname: string, search: string) {
-  return new URL(`https://${hostname}${withSearch(pathname, search)}`);
+  return \`\${pathname}\${search || ""}\`;
 }
 
 export async function proxy(request: NextRequest) {
@@ -27,6 +23,7 @@ export async function proxy(request: NextRequest) {
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
 
+  // локалка и vercel preview не трогаем
   if (
     hostname === "localhost" ||
     hostname.endsWith(".localhost") ||
@@ -36,54 +33,61 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // 👉 www → apex (один источник правды)
   if (hostname === WWW_HOST) {
     return NextResponse.redirect(
-      buildUrl(ROOT_DOMAIN, pathname, url.search),
-      308,
+      new URL(\`https://\${ROOT_DOMAIN}\${withSearch(pathname, url.search)}\`),
+      308
     );
   }
 
+  // 👉 ROOT DOMAIN (сайт компании)
   if (hostname === ROOT_DOMAIN) {
-    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-      return NextResponse.redirect(
-        buildUrl(ADMIN_HOST, pathname, url.search),
-        307,
-      );
+    // ❗ полностью скрываем админку
+    if (pathname.startsWith("/admin")) {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+
+    // ❗ запрещаем доступ к домам без поддомена
+    if (pathname.startsWith("/house/")) {
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     return response;
   }
 
+  // 👉 ADMIN SUBDOMAIN
   if (hostname === ADMIN_HOST) {
     let adminPath = pathname;
 
     if (adminPath === "/") {
       adminPath = "/admin";
     } else if (!adminPath.startsWith("/admin")) {
-      adminPath = `/admin${adminPath}`;
+      adminPath = \`/admin\${adminPath}\`;
     }
 
     return NextResponse.rewrite(
       new URL(withSearch(adminPath, url.search), request.url),
-      { headers: response.headers },
+      { headers: response.headers }
     );
   }
 
-  if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
-    const slug = hostname.slice(0, -(`.${ROOT_DOMAIN}`).length);
+  // 👉 HOUSE SUBDOMAINS (slug.osbb-platform.com.ua)
+  if (hostname.endsWith(\`.\${ROOT_DOMAIN}\`)) {
+    const slug = hostname.replace(\`.\\\${ROOT_DOMAIN}\`, "");
 
     if (slug && slug !== "www" && slug !== "admin") {
       let housePath = pathname;
 
       if (housePath === "/") {
-        housePath = `/house/${slug}`;
-      } else if (!housePath.startsWith(`/house/${slug}`)) {
-        housePath = `/house/${slug}${housePath}`;
+        housePath = \`/house/\${slug}\`;
+      } else if (!housePath.startsWith(\`/house/\${slug}\`)) {
+        housePath = \`/house/\${slug}\${housePath}\`;
       }
 
       return NextResponse.rewrite(
         new URL(withSearch(housePath, url.search), request.url),
-        { headers: response.headers },
+        { headers: response.headers }
       );
     }
   }
