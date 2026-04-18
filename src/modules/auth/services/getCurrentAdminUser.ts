@@ -79,59 +79,69 @@ function pickBestMembership(rows: AdminMembershipRow[]) {
 }
 
 export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
-  const supabase = await createSupabaseServerClient();
+  try {
+    const supabase = await createSupabaseServerClient();
 
-  const {
-    data: { user: authUser },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user: authUser },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !authUser) {
+    if (userError) {
+      console.error("❌ getCurrentAdminUser auth.getUser error:", userError.message);
+      return null;
+    }
+
+    if (!authUser) {
+      return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, email, full_name")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("❌ getCurrentAdminUser profile error:", profileError.message);
+      return null;
+    }
+
+    const { data: memberships, error: membershipError } = await supabase
+      .from("admin_memberships")
+      .select("id, role, status, job_title, is_active, house_id, created_at, updated_at")
+      .eq("user_id", authUser.id)
+      .is("house_id", null)
+      .eq("is_active", true);
+
+    if (membershipError) {
+      console.error("❌ getCurrentAdminUser membership error:", membershipError.message);
+      return null;
+    }
+
+    const bestMembership = pickBestMembership(
+      (memberships ?? []) as AdminMembershipRow[],
+    );
+
+    const role = normalizeRole(bestMembership?.role ?? null);
+    const status = normalizeMembershipStatus(bestMembership?.status ?? null);
+    const access = getResolvedAccess(role);
+
+    return {
+      id: authUser.id,
+      email: profile?.email ?? authUser.email ?? null,
+      fullName: profile?.full_name ?? null,
+      role,
+      status,
+      jobTitle: bestMembership?.job_title ?? null,
+      canManageEmployees:
+        access.employees.createManager ||
+        access.employees.createAdmin ||
+        access.employees.delete ||
+        access.employees.resendInvite,
+    };
+  } catch (error) {
+    console.error("🔥 getCurrentAdminUser crash:", error);
     return null;
   }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, email, full_name")
-    .eq("id", authUser.id)
-    .maybeSingle();
-
-  if (profileError) {
-    throw new Error(`Failed to load profile: ${profileError.message}`);
-  }
-
-  const { data: memberships, error: membershipError } = await supabase
-    .from("admin_memberships")
-    .select("id, role, status, job_title, is_active, house_id, created_at, updated_at")
-    .eq("user_id", authUser.id)
-    .is("house_id", null)
-    .eq("is_active", true);
-
-  if (membershipError) {
-    throw new Error(
-      `Failed to load admin membership: ${membershipError.message}`,
-    );
-  }
-
-  const bestMembership = pickBestMembership(
-    (memberships ?? []) as AdminMembershipRow[],
-  );
-
-  const role = normalizeRole(bestMembership?.role ?? null);
-  const status = normalizeMembershipStatus(bestMembership?.status ?? null);
-  const access = getResolvedAccess(role);
-
-  return {
-    id: authUser.id,
-    email: profile?.email ?? authUser.email ?? null,
-    fullName: profile?.full_name ?? null,
-    role,
-    status,
-    jobTitle: bestMembership?.job_title ?? null,
-    canManageEmployees:
-      access.employees.createManager ||
-      access.employees.createAdmin ||
-      access.employees.delete ||
-      access.employees.resendInvite,
-  };
 }
