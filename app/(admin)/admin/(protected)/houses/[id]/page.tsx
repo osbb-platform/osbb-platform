@@ -197,18 +197,20 @@ export default async function AdminHouseDetailPage({
     notFound();
   }
 
+  const basePublicUrl = `https://${house.slug}.osbb-platform.com.ua`;
+
   const publicPreviewHref =
     {
-      announcements: `/house/${house.slug}/announcements`,
-      board: `/house/${house.slug}/board`,
-      information: `/house/${house.slug}/information`,
-      reports: `/house/${house.slug}/reports`,
-      debtors: `/house/${house.slug}/debtors`,
-      plan: `/house/${house.slug}/plan`,
-      meetings: `/house/${house.slug}/meetings`,
-      requisites: `/house/${house.slug}/requisites`,
-      specialists: `/house/${house.slug}/specialists`,
-    }[activeBlock] ?? `/house/${house.slug}`;
+      announcements: `${basePublicUrl}/announcements`,
+      board: `${basePublicUrl}/board`,
+      information: `${basePublicUrl}/information`,
+      reports: `${basePublicUrl}/reports`,
+      debtors: `${basePublicUrl}/debtors`,
+      plan: `${basePublicUrl}/plan`,
+      meetings: `${basePublicUrl}/meetings`,
+      requisites: `${basePublicUrl}/requisites`,
+      specialists: `${basePublicUrl}/specialists`,
+    }[activeBlock] ?? basePublicUrl;
 
   let pages = await getAdminHousePages(house.id);
   let informationPage =

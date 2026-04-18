@@ -381,7 +381,7 @@ function ArchivedHouseRestoreCard({
           </button>
 
           <Link
-            href={`/house/${house.slug}`}
+            href={`https://${house.slug}.osbb-platform.com.ua`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
