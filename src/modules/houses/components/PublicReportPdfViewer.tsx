@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 type Props = {
   filePath: string;
   fileName?: string;
-  bucket?: string;
+  bucket: string; // ❗ теперь обязательный
 };
 
 function buildViewerUrl(path: string, bucket: string) {
@@ -17,7 +17,7 @@ function buildViewerUrl(path: string, bucket: string) {
 export function PublicReportPdfViewer({
   filePath,
   fileName,
-  bucket = "house-reports",
+  bucket,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
