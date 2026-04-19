@@ -426,7 +426,7 @@ export default async function PublicMeetingsPage({
                               (vote) => vote.apartmentId === apartment.id,
                             ),
                         )
-                        .map((apartment) => apartment.apartment_label)
+                        .map((apartment) => apartment.label)
                         .join(",\n") || "Усі квартири вже враховані"}
                     </div>
                   </div>
