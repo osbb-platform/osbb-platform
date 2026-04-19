@@ -193,10 +193,10 @@ export default async function PublicHouseAnnouncementsPage({
   
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8 overflow-x-hidden">
-      <div className="grid gap-6">
-        <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="text-center">
+    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="grid min-w-0 gap-6">
+        <section className="w-full min-w-0 rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+          <div className="min-w-0 text-center">
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               {houseAnnouncementsCopy.page.title}
             </h1>
@@ -206,8 +206,8 @@ export default async function PublicHouseAnnouncementsPage({
             </p>
           </div>
 
-          <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+          <div className="mt-8 w-full min-w-0 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
+            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {filterItems.map((item) => {
                 const isActive = filter === item.key;
 
@@ -237,7 +237,7 @@ export default async function PublicHouseAnnouncementsPage({
           </div>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <div className="mb-4 flex flex-col items-start gap-2 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
             <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
               {houseAnnouncementsCopy.page.feedTitle}
@@ -248,7 +248,7 @@ export default async function PublicHouseAnnouncementsPage({
           </div>
 
           {pinnedAnnouncement ? (
-            <div className="mb-5">
+            <div className="mb-5 min-w-0">
               {(() => {
                 const content =
                   typeof pinnedAnnouncement.content === "object" && pinnedAnnouncement.content
@@ -261,7 +261,7 @@ export default async function PublicHouseAnnouncementsPage({
 
                 return (
                   <article
-                    className={`overflow-hidden rounded-[24px] border shadow-sm sm:rounded-[32px] ${styles.shell}`}
+                    className={`w-full min-w-0 overflow-hidden rounded-[24px] border shadow-sm sm:rounded-[32px] ${styles.shell}`}
                   >
                     <div className="flex min-w-0">
                       <div className={`hidden w-2 shrink-0 ${styles.accent} sm:block`} />
@@ -324,7 +324,7 @@ export default async function PublicHouseAnnouncementsPage({
                 return (
                   <article
                     key={section.id}
-                    className={`overflow-hidden rounded-[22px] border shadow-sm transition hover:shadow-md sm:rounded-[28px] ${styles.shell}`}
+                    className={`w-full min-w-0 overflow-hidden rounded-[22px] border shadow-sm transition hover:shadow-md sm:rounded-[28px] ${styles.shell}`}
                   >
                     <div className="flex min-w-0">
                       <div className={`hidden w-1.5 shrink-0 ${styles.accent} sm:block`} />
