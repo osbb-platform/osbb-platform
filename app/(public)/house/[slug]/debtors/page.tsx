@@ -178,8 +178,8 @@ export default async function DebtorsPage({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:p-8"><div className="text-center">
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+      <div className="rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:rounded-[32px] sm:p-8"><div className="text-center">
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
           Боржники
         </h1>
 
@@ -193,21 +193,21 @@ export default async function DebtorsPage({
       </div></div>
 
       <section className="mt-8 grid gap-4 lg:grid-cols-3">
-        <article className="rounded-[28px] border border-[var(--border)] bg-white p-6">
+        <article className="rounded-[22px] border border-[var(--border)] bg-white p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm text-[var(--muted)]">Кількість боржників</div>
           <div className="mt-3 text-3xl font-semibold text-slate-900">
             {activeItems.length}
           </div>
         </article>
 
-        <article className="rounded-[28px] border border-[var(--border)] bg-white p-6">
+        <article className="rounded-[22px] border border-[var(--border)] bg-white p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm text-[var(--muted)]">Загальна сума заборгованості</div>
           <div className="mt-3 text-3xl font-semibold text-slate-900">
             {formatCurrency(totalAmount)} ₴
           </div>
         </article>
 
-        <article className="rounded-[28px] border border-[var(--border)] bg-white p-6">
+        <article className="rounded-[22px] border border-[var(--border)] bg-white p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm text-[var(--muted)]">Статус публікації</div>
           <div className="mt-3 text-lg font-semibold text-slate-900">
             {noPublishedState

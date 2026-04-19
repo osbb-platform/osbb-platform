@@ -82,8 +82,8 @@ export default async function PublicHouseLayout({
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/95">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/75">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <Link
             href={`/house/${slug}`}
             className="flex min-w-0 items-center gap-4 rounded-full pr-3 transition hover:bg-slate-50"

@@ -333,7 +333,7 @@ export function HousePasswordGate({
                 </div>
               </div>
 
-              <div className="max-w-lg rounded-[26px] border border-white/12 bg-white/8 p-4 text-white backdrop-blur-md sm:p-5 lg:p-6">
+              <div className="hidden sm:block max-w-lg rounded-[26px] border border-white/12 bg-white/8 p-4 text-white backdrop-blur-md sm:p-5 lg:p-6">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
                   {houseCopy.passwordGate.heroBadge}
                 </div>
@@ -452,7 +452,7 @@ export function HousePasswordGate({
                     ) : (
                       <div className="rounded-[24px] border border-[#d7d9df] bg-[#f4f5f8] px-5 py-4 text-[15px] leading-7 text-[#5e6370]">
                         Немає коду доступу або він не підходить? Зверніться до
-                        управляющую компанию вашего дома.
+                        керуючої компанії вашого будинку.
                       </div>
                     )}
                   </div>

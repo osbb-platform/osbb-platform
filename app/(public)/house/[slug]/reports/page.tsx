@@ -289,17 +289,17 @@ export default async function ReportsPage({
 
         <section>
           {filteredReports.length === 0 ? (
-            <div className="rounded-[32px] border border-dashed border-[var(--border)] bg-[var(--card)] p-6 text-[var(--muted)]">
+            <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
               {selectedMode === "archive"
                 ? "Архів звітів за обраний період поки порожній."
-                : "{houseReportsCopy.page.title} текущего года пока не опубликованы."}
+                : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {filteredReports.map((report) => (
                 <article
                   key={report.id}
-                  className="rounded-[28px] border border-[var(--border)] bg-white p-5 shadow-sm"
+                  className="rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-5"
                 >
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">
@@ -319,7 +319,7 @@ export default async function ReportsPage({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 text-lg font-semibold">
+                  <div className="mt-4 text-base font-semibold sm:text-lg">
                     {report.title}
                   </div>
 

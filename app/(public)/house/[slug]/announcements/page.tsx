@@ -238,8 +238,8 @@ export default async function PublicHouseAnnouncementsPage({
         </section>
 
         <section>
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+          <div className="mb-4 flex flex-col items-start gap-2 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
               {houseAnnouncementsCopy.page.feedTitle}
             </h2>
             <div className="text-sm text-slate-500">
@@ -261,12 +261,12 @@ export default async function PublicHouseAnnouncementsPage({
 
                 return (
                   <article
-                    className={`overflow-hidden rounded-[32px] border shadow-sm ${styles.shell}`}
+                    className={`overflow-hidden rounded-[24px] border shadow-sm sm:rounded-[32px] ${styles.shell}`}
                   >
                     <div className="flex">
                       <div className={`hidden w-2 shrink-0 ${styles.accent} sm:block`} />
 
-                      <div className="flex-1 p-6 sm:p-8">
+                      <div className="flex-1 p-4 sm:p-6 lg:p-8">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                             <span>📌</span>
@@ -281,7 +281,7 @@ export default async function PublicHouseAnnouncementsPage({
                         </div>
 
                         <h2
-                          className={`mt-5 text-2xl font-semibold tracking-tight sm:text-3xl ${styles.title}`}
+                          className={`mt-4 text-xl font-semibold tracking-tight sm:mt-5 sm:text-3xl ${styles.title}`}
                         >
                           {pinnedAnnouncement.title ?? houseAnnouncementsCopy.page.importantFallback}
                         </h2>
@@ -291,7 +291,7 @@ export default async function PublicHouseAnnouncementsPage({
                         <div className="mt-5 h-px bg-black/5" />
 
                         <div
-                          className={`mt-5 whitespace-pre-wrap text-base leading-8 ${styles.body}`}
+                          className={`mt-4 whitespace-pre-wrap text-sm leading-7 sm:mt-5 sm:text-base sm:leading-8 ${styles.body}`}
                         >
                           {typeof content.body === "string" && content.body.trim()
                             ? content.body
@@ -306,7 +306,7 @@ export default async function PublicHouseAnnouncementsPage({
           ) : null}
 
           {filteredAnnouncements.length === 0 ? (
-            <div className="rounded-[32px] border border-dashed border-slate-200 bg-white p-6 text-slate-500">
+            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500 sm:rounded-[32px] sm:p-6">
               За обраним фільтром оголошення поки не знайдені.
             </div>
           ) : (
@@ -324,12 +324,12 @@ export default async function PublicHouseAnnouncementsPage({
                 return (
                   <article
                     key={section.id}
-                    className={`overflow-hidden rounded-[28px] border shadow-sm transition hover:shadow-md ${styles.shell}`}
+                    className={`overflow-hidden rounded-[22px] border shadow-sm transition hover:shadow-md sm:rounded-[28px] ${styles.shell}`}
                   >
                     <div className="flex">
                       <div className={`hidden w-1.5 shrink-0 ${styles.accent} sm:block`} />
 
-                      <div className="flex-1 p-5 sm:p-6">
+                      <div className="flex-1 p-4 sm:p-5 lg:p-6">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <h3 className={`text-lg font-semibold tracking-tight ${styles.title}`}>
@@ -346,7 +346,7 @@ export default async function PublicHouseAnnouncementsPage({
                         </div>
 
                         <div
-                          className={`mt-4 whitespace-pre-wrap text-sm leading-7 sm:text-[15px] ${styles.body}`}
+                          className={`mt-3 whitespace-pre-wrap text-sm leading-6 sm:mt-4 sm:text-[15px] sm:leading-7 ${styles.body}`}
                         >
                           {getBodyPreview(content.body, 320)}
                         </div>

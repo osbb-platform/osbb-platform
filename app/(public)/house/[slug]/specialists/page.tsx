@@ -277,13 +277,13 @@ export default async function SpecialistsPage({
     <>
       <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="grid gap-6">
-          <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+          <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
             <div className="text-center">
-              <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
                 {houseSpecialistsCopy.page.title}
               </h1>
 
-              <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
                 {houseSpecialistsCopy.page.description}
               </p>
             </div>
@@ -327,7 +327,7 @@ export default async function SpecialistsPage({
           </section>
 
           {filteredSpecialists.length > 0 ? (
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {filteredSpecialists.map((item) => (
                 <SpecialistCardView
                   key={item.id}
@@ -338,7 +338,7 @@ export default async function SpecialistsPage({
               ))}
             </div>
           ) : (
-            <div className="rounded-[32px] border border-dashed border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">
+            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white p-4 text-sm text-center text-slate-500 shadow-sm sm:rounded-[32px] sm:p-8">
               {houseSpecialistsCopy.page.title} скоро появятся.
             </div>
           )}
@@ -354,9 +354,9 @@ export default async function SpecialistsPage({
             aria-label={houseSpecialistsCopy.page.closeModal}
           />
 
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            <div className="w-full max-w-[720px] rounded-[32px] border border-slate-200 bg-white shadow-lg">
-              <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-6 sm:px-7">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-6">
+            <div className="w-full max-w-[720px] max-h-[85vh] overflow-y-auto rounded-[24px] border border-slate-200 bg-white shadow-lg sm:rounded-[32px]">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-7 sm:py-6">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Управляющая компания

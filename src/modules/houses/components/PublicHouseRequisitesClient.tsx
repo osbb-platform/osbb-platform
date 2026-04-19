@@ -36,7 +36,7 @@ function RequisiteCard({
 }: RequisiteCardProps) {
   return (
     <div
-      className={`rounded-[24px] border p-5 shadow-sm ${
+      className={`rounded-[20px] border p-4 sm:rounded-[24px] sm:p-5 shadow-sm ${
         isPrimary
           ? "border-slate-900 bg-slate-900 text-white"
           : "border-[var(--border)] bg-white text-slate-900"
@@ -89,7 +89,7 @@ type TextBlockProps = {
 
 function TextBlock({ label, value, onCopy, helper }: TextBlockProps) {
   return (
-    <div className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
+    <div className="rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6">
       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
         {label}
       </div>
@@ -146,7 +146,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
 
   return (
     <>
-      <section className="mt-8 grid gap-4 md:grid-cols-2">
+      <section className="mt-6 grid gap-3 md:grid-cols-2 sm:mt-8 sm:gap-4">
         <RequisiteCard
           label={houseRequisitesCopy.card.recipient}
           value={requisites.recipient}
@@ -177,7 +177,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         />
       </section>
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-2">
+      <section className="mt-6 grid gap-3 lg:grid-cols-2 sm:mt-8 sm:gap-4">
         <TextBlock
           label={houseRequisitesCopy.blocks.purpose}
           value={requisites.purposeTemplate}
@@ -193,7 +193,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         />
       </section>
 
-      <div className="mt-8 rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:mt-8 sm:rounded-[28px] sm:p-6">
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
           {houseRequisitesCopy.payment.title}
         </div>
@@ -227,7 +227,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         <div className="fixed bottom-6 right-6 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white shadow-xl">
           {copiedLabel === houseRequisitesCopy.toast.error
             ? copiedLabel
-            : `{houseRequisitesCopy.toast.copied}: ${copiedLabel}`}
+            : `${houseRequisitesCopy.toast.copied}: ${copiedLabel}`}
         </div>
       ) : null}
     </>

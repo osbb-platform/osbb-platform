@@ -169,13 +169,13 @@ export default async function InformationPage({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
         <div className="text-center">
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-6xl">
             {houseInformationCopy.page.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[var(--muted)]">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:mt-5 sm:text-base sm:leading-8">
             {houseInformationCopy.page.description}
           </p>
         </div>
@@ -214,7 +214,7 @@ export default async function InformationPage({
 
       <section className="mt-8">
         {visibleArticles.length === 0 ? (
-          <div className="rounded-[32px] border border-dashed border-[var(--border)] bg-[var(--card)] p-6 text-[var(--muted)]">
+          <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
             {houseInformationCopy.empty.noMaterials}
           </div>
         ) : (
@@ -225,12 +225,12 @@ export default async function InformationPage({
       </section>
 
       {documents.length > 0 ? (
-        <section className="mt-10 rounded-[32px] border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+        <section className="mt-8 rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
           <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
             {houseInformationCopy.documents.title}
           </div>
 
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight">
+          <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
             {houseInformationCopy.documents.subtitle}
           </h2>
 
@@ -263,16 +263,16 @@ export default async function InformationPage({
         </section>
       ) : null}
 
-      <section className="mt-10 rounded-[32px] border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+      <section className="mt-8 rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
         <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
           FAQ
         </div>
 
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight">
+        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
           {houseInformationCopy.faq.title}
         </h2>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
           {faqItems.map((item, index) => (
             <details
               key={index}

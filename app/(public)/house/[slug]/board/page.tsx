@@ -152,16 +152,16 @@ function ContactLine({
 
 function RoleCard({ role }: { role: BoardRoleItem }) {
   return (
-    <article className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
+    <article className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[30px] sm:p-7">
       <div className="inline-flex rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">
         {role.role || houseBoardCopy.card.roleFallback}
       </div>
 
-      <h3 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
+      <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
         {role.name || houseBoardCopy.card.nameFallback}
       </h3>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
         <ContactLine
           label={houseBoardCopy.card.phone}
           value={role.phone}
@@ -181,11 +181,11 @@ function RoleCard({ role }: { role: BoardRoleItem }) {
       </div>
 
       {role.description ? (
-        <div className="mt-6 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
+        <div className="mt-4 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 sm:mt-6 sm:rounded-[22px] sm:px-5 sm:py-4">
           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             {houseBoardCopy.card.description}
           </div>
-          <div className="mt-3 text-sm leading-7 text-slate-700">
+          <div className="mt-2 text-sm leading-6 text-slate-700 sm:mt-3 sm:leading-7">
             {role.description}
           </div>
         </div>
@@ -240,13 +240,13 @@ export default async function BoardPage({
   return (
     <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="grid gap-6">
-        <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+        <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
           <div className="text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
               {houseBoardCopy.page.title}
             </h1>
 
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
               {houseBoardCopy.page.description}
             </p>
           </div>
@@ -284,18 +284,18 @@ export default async function BoardPage({
         </section>
 
         {intro ? (
-          <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[30px] sm:p-8">
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               {houseBoardCopy.page.intro}
             </div>
-            <div className="mt-4 whitespace-pre-wrap text-base leading-8 text-slate-700 sm:text-lg">
+            <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700 sm:mt-4 sm:text-lg sm:leading-8">
               {intro}
             </div>
           </section>
         ) : null}
 
         {filteredRoles.length === 0 ? (
-          <div className="rounded-[32px] border border-dashed border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">
+          <div className="rounded-[24px] border border-dashed border-slate-200 bg-white p-4 text-sm text-center text-slate-500 shadow-sm sm:rounded-[32px] sm:p-8">
             {houseBoardCopy.page.empty}
           </div>
         ) : (

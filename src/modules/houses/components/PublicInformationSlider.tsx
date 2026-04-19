@@ -92,7 +92,7 @@ export function PublicInformationSlider({
   return (
     <div className="mt-6">
       <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white shadow-sm">
-        <div className="grid min-h-[420px] lg:grid-cols-2">
+        <div className="grid min-h-[280px] sm:min-h-[420px] lg:grid-cols-2">
           <div className="relative min-h-[280px] bg-slate-100">
             {coverImageUrl ? (
               <div
@@ -102,22 +102,22 @@ export function PublicInformationSlider({
             ) : null}
           </div>
 
-          <div className="flex flex-col justify-between p-8">
+          <div className="flex flex-col justify-between p-4 sm:p-8">
             <div>
               <div className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                 {publishedAt}
               </div>
 
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
+              <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:mt-4 sm:text-3xl">
                 {headline}
               </h2>
 
-              <div className="mt-6 whitespace-pre-wrap text-base leading-8 text-slate-700">
+              <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700 sm:mt-6 sm:text-base sm:leading-8">
                 {body}
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between sm:mt-8">
               <div className="flex items-center gap-2">
                 {sortedArticles.map((item, index) => (
                   <button

@@ -205,13 +205,13 @@ export default async function PublicMeetingsPage({
   return (
     <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="grid gap-6">
-        <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+        <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
           <div className="text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
               {houseMeetingsCopy.page.title}
             </h1>
 
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
               {houseMeetingsCopy.page.description}
             </p>
           </div>
@@ -293,11 +293,11 @@ export default async function PublicMeetingsPage({
         </section>
 
         {selectedMode === "scheduled" && nearestMeeting ? (
-          <section className="rounded-[32px] border border-emerald-200 bg-emerald-50 p-6">
+          <section className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 sm:rounded-[32px] sm:p-6">
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
               {houseMeetingsCopy.page.nearest}
             </div>
-            <h2 className="mt-4 text-3xl font-semibold text-emerald-900">
+            <h2 className="mt-3 text-xl font-semibold text-emerald-900 sm:mt-4 sm:text-3xl">
               {nearestMeeting.title}
             </h2>
             <div className="mt-3 text-sm text-emerald-800">
@@ -308,8 +308,8 @@ export default async function PublicMeetingsPage({
 
         <section className="space-y-4">
           {filteredMeetings.length === 0 ? (
-            <div className="rounded-[32px] border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <div className="text-xl font-semibold text-slate-900">
+            <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-center shadow-sm sm:rounded-[32px] sm:p-8">
+              <div className="text-base font-semibold text-slate-900 sm:text-xl">
                 {selectedMode === "scheduled"
                   ? houseMeetingsCopy.empty.scheduled
                   : selectedMode === "active"
@@ -336,10 +336,10 @@ export default async function PublicMeetingsPage({
             filteredMeetings.map((meeting) => (
             <article
               key={meeting.id}
-              className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
+              className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="text-2xl font-semibold text-slate-950">
+                <div className="text-lg font-semibold text-slate-950 sm:text-2xl">
                   {meeting.title}
                 </div>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -354,7 +354,7 @@ export default async function PublicMeetingsPage({
               {meeting.questions.map((question) => (
                 <div
                   key={question.id}
-                  className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mt-4 sm:rounded-2xl sm:p-4"
                 >
                   <div className="font-medium text-slate-950">
                     {question.title}
@@ -369,7 +369,7 @@ export default async function PublicMeetingsPage({
                   {(meeting.status === "review" ||
                     meeting.status === "completed" ||
                     meeting.status === "archived") ? (
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className="mt-3 space-y-2 sm:grid sm:gap-2 sm:grid-cols-3 sm:space-y-0">
                       <div className="rounded-xl bg-white p-3 text-xs text-slate-600">
                         {houseMeetingsCopy.votes.for}: {getVotePercent(question.votesFor, question.totalApartmentsVoted)}%
                       </div>
@@ -394,7 +394,7 @@ export default async function PublicMeetingsPage({
               {(meeting.status === "review" ||
                 meeting.status === "completed" ||
                 meeting.status === "archived") ? (
-                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="mt-3 space-y-3 sm:mt-4 sm:grid sm:gap-4 lg:grid-cols-2 sm:space-y-0">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-semibold text-slate-900">
                       {houseMeetingsCopy.voters.voted}
@@ -415,8 +415,8 @@ export default async function PublicMeetingsPage({
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-semibold text-slate-900">
                       {meeting.status === "completed" || meeting.status === "archived"
-                        ? "{houseMeetingsCopy.voters.notVoted}"
-                        : "{houseMeetingsCopy.voters.notYet}"}
+                        ? houseMeetingsCopy.voters.notVoted
+                        : houseMeetingsCopy.voters.notYet}
                     </div>
                     <div className="mt-3 text-sm text-slate-600">
                       {apartments
