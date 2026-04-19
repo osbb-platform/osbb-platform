@@ -4,6 +4,7 @@ import { SendInviteButton } from "@/src/modules/employees/components/SendInviteB
 import { DeleteEmployeeButton } from "@/src/modules/employees/components/DeleteEmployeeButton";
 
 type EmployeeCardProps = {
+  currentUserId: string | null;
   employee: AdminEmployeeRecord;
   access: ResolvedRoleAccess["employees"];
 };
@@ -39,19 +40,25 @@ function formatDate(value: string | null) {
   }).format(date);
 }
 
-export function EmployeeCard({
+export function EmployeeCard({ currentUserId,
   employee,
   access,
 }: EmployeeCardProps) {
   const isSuperadminTarget = employee.role === "superadmin";
+  const isMyEmployee =
+    employee.invitedBy && employee.invitedBy === currentUserId;
+
 
   const canSendInvite =
     employee.status === "invited" &&
-    (isSuperadminTarget ? access.editSuperadmin : access.resendInvite);
+    (isSuperadminTarget ? access.editSuperadmin : access.resendInvite) &&
+    (access.editSuperadmin || isMyEmployee);
 
-  const canDeleteEmployee = isSuperadminTarget
-    ? access.deleteSuperadmin
-    : access.delete;
+  const canDeleteEmployee =
+    (isSuperadminTarget
+      ? access.deleteSuperadmin
+      : access.delete) &&
+    (access.deleteSuperadmin || isMyEmployee);
 
   const employeeLabel = employee.fullName ?? employee.email ?? "Сотрудник";
 

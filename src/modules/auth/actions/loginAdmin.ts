@@ -16,7 +16,7 @@ export async function loginAdmin(
 
   if (!email || !password) {
     return {
-      error: "Введите email и пароль.",
+      error: "Введіть електронну пошту та пароль.",
     };
   }
 
@@ -29,7 +29,7 @@ export async function loginAdmin(
 
   if (error) {
     return {
-      error: "Неверный email или пароль.",
+      error: "Неправильна пошта або пароль.",
     };
   }
 

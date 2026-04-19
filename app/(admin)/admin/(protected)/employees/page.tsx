@@ -72,6 +72,7 @@ export default async function AdminEmployeesPage({
             <EmployeeCard
               key={employee.membershipId}
               employee={employee}
+              currentUserId={currentUser?.id ?? null}
               access={access.employees}
             />
           ))}

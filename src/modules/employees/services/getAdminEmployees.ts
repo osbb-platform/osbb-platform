@@ -15,6 +15,7 @@ export type AdminEmployeeRecord = {
   archivedAt: string | null;
   lastInviteSentAt: string | null;
   createdAt: string | null;
+  invitedBy: string | null;
 };
 
 type GetAdminEmployeesParams = {
@@ -53,7 +54,8 @@ export async function getAdminEmployees(
         activated_at,
         archived_at,
         last_invite_sent_at,
-        created_at
+        created_at,
+        invited_by
       `)
       .is("house_id", null)
       .neq("role", ROLES.SUPERADMIN)
@@ -127,6 +129,7 @@ export async function getAdminEmployees(
         archivedAt: membership.archived_at ?? null,
         lastInviteSentAt: membership.last_invite_sent_at ?? null,
         createdAt: membership.created_at ?? null,
+        invitedBy: membership.invited_by ?? null,
       };
     });
 

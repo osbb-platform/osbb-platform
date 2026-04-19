@@ -52,7 +52,7 @@ export async function sendEmployeeInvite(
   const { data: membership, error: membershipError } = await supabase
     .from("admin_memberships")
     .select(
-      "id, invite_email, full_name_snapshot, role, status, invited_at, user_id, last_invite_sent_at",
+      "id, invite_email, full_name_snapshot, role, status, invited_at, user_id, last_invite_sent_at, invited_by",
     )
     .eq("id", membershipId)
     .is("house_id", null)
@@ -75,6 +75,17 @@ export async function sendEmployeeInvite(
   if (!canResendInvite) {
     return {
       error: "У вас нет доступа к отправке инвайтов.",
+      success: null,
+    };
+  }
+
+  if (
+    currentUser?.role !== ROLES.SUPERADMIN &&
+    membership.invited_by &&
+    membership.invited_by !== currentUser?.id
+  ) {
+    return {
+      error: "Вы можете отправлять приглашения только своим сотрудникам.",
       success: null,
     };
   }

@@ -7,12 +7,11 @@ export default function AdminLoginPage() {
         <div className="w-full rounded-3xl border border-slate-800 bg-slate-900 p-10 shadow-sm">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-5xl font-semibold tracking-tight text-white">
-              Вход в панель управления
+              Вхід до кабінету
             </h1>
 
             <p className="mt-5 text-xl leading-9 text-slate-400">
-              Войдите под аккаунтом сотрудника управляющей компании, чтобы получить
-              доступ к административной панели.
+              Увійдіть, щоб працювати з будинками, оновлювати інформацію та керувати процесами.
             </p>
           </div>
 

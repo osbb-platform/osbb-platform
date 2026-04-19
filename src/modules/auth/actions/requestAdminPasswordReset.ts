@@ -40,7 +40,7 @@ export async function requestAdminPasswordReset(
 
   if (!email) {
     return {
-      error: "Введите email сотрудника.",
+      error: "Введіть електронну пошту.",
       success: null,
     };
   }
@@ -54,7 +54,7 @@ export async function requestAdminPasswordReset(
 
   if (error) {
     return {
-      error: "Не удалось отправить письмо для смены пароля.",
+      error: "Не вдалося надіслати лист. Спробуйте ще раз.",
       success: null,
     };
   }
@@ -62,6 +62,6 @@ export async function requestAdminPasswordReset(
   return {
     error: null,
     success:
-      "Мы отправили письмо со ссылкой для смены пароля. Проверьте почту.",
+      "Ми надіслали лист із посиланням для зміни пароля. Перевірте пошту.",
   };
 }

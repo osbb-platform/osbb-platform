@@ -123,7 +123,8 @@ export async function deleteEmployee(
       status,
       invite_email,
       full_name_snapshot,
-      house_id
+      house_id,
+      invited_by
     `)
     .eq("id", membershipId)
     .is("house_id", null)
@@ -153,6 +154,17 @@ export async function deleteEmployee(
   if (membership.user_id && membership.user_id === currentUser?.id) {
     return {
       error: "Нельзя удалить собственную учетку из текущей сессии.",
+      success: null,
+    };
+  }
+
+  if (
+    currentUser?.role !== ROLES.SUPERADMIN &&
+    membership.invited_by &&
+    membership.invited_by !== currentUser?.id
+  ) {
+    return {
+      error: "Вы можете удалять только сотрудников, которых пригласили сами.",
       success: null,
     };
   }

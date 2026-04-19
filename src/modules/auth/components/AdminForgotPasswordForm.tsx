@@ -23,7 +23,7 @@ export function AdminForgotPasswordForm() {
           htmlFor="email"
           className="mb-2 block text-sm font-medium text-slate-200"
         >
-          Email
+          Електронна пошта
         </label>
 
         <input
@@ -32,7 +32,7 @@ export function AdminForgotPasswordForm() {
           type="email"
           placeholder="admin@company.ua"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
-          autoComplete="email"
+          autoComplete="off"
         />
       </div>
 
@@ -54,14 +54,14 @@ export function AdminForgotPasswordForm() {
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
         >
-          {isPending ? "Отправляем..." : "Отправить ссылку"}
+          {isPending ? "Надсилаємо..." : "Надіслати посилання"}
         </button>
 
         <Link
           href={ROUTES.admin.login}
           className="text-sm font-medium text-slate-300 transition hover:text-white"
         >
-          Вернуться ко входу
+          Повернутися до входу
         </Link>
       </div>
     </form>

@@ -10,6 +10,7 @@ import {
   getRoleLabel,
   ROLES,
 } from "@/src/shared/constants/roles/roles.constants";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 
 const initialState: UpdateCurrentAdminProfileState = {
@@ -71,6 +72,7 @@ export function AdminProfileEditor({
   const [flashSuccess, setFlashSuccess] = useState<string | null>(null);
   const [copiedHouseId, setCopiedHouseId] = useState<string | null>(null);
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
   const [state, formAction, isPending] = useActionState(
     updateCurrentAdminProfile,
@@ -206,14 +208,13 @@ export function AdminProfileEditor({
               </button>
             ) : null}
 
-            <form action={logoutAdmin} className="w-full">
-              <button
-                type="submit"
-                className="inline-flex w-full min-w-[180px] items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
-              >
-                Выйти
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={() => setIsLogoutConfirmOpen(true)}
+              className="inline-flex w-full min-w-[180px] items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+            >
+              Вийти
+            </button>
           </div>
         </div>
       </div>
@@ -414,6 +415,21 @@ export function AdminProfileEditor({
           </div>
         </div>
       ) : null}
+    
+      <PlatformConfirmModal
+        open={isLogoutConfirmOpen}
+        title="Ви впевнені, що хочете вийти?"
+        description="Ви вийдете з кабінету і потрібно буде увійти знову."
+        confirmLabel="Вийти"
+        cancelLabel="Скасувати"
+        tone="warning"
+        onCancel={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setIsLogoutConfirmOpen(false);
+          logoutAdmin();
+        }}
+      />
+
     </div>
   );
 }

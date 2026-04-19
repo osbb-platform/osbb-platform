@@ -77,7 +77,7 @@ export function AdminPasswordSetupForm({
           await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
-          setError("Не удалось подтвердить ссылку из письма. Откройте письмо заново.");
+          setError("Не вдалося підтвердити посилання. Відкрийте лист ще раз.");
           return;
         }
 
@@ -97,7 +97,7 @@ export function AdminPasswordSetupForm({
         });
 
         if (sessionError) {
-          setError("Не удалось подготовить сессию. Откройте письмо заново.");
+          setError("Не вдалося підготувати сесію. Відкрийте лист ще раз.");
           return;
         }
 
@@ -110,7 +110,7 @@ export function AdminPasswordSetupForm({
         return;
       }
 
-      setError("Ссылка недействительна или истекла. Откройте письмо заново.");
+      setError("Посилання недійсне або застаріло. Відкрийте лист ще раз.");
     }
 
     prepareSession();
@@ -120,12 +120,12 @@ export function AdminPasswordSetupForm({
     event.preventDefault();
 
     if (password.length < 8) {
-      setError("Пароль должен содержать минимум 8 символов.");
+      setError("Пароль має містити щонайменше 8 символів.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Пароли не совпадают.");
+      setError("Паролі не співпадають.");
       return;
     }
 
@@ -137,7 +137,7 @@ export function AdminPasswordSetupForm({
     });
 
     if (updateError) {
-      setError(updateError.message);
+      setError("Не вдалося зберегти пароль. Спробуйте ще раз.");
       setStatus("ready");
       return;
     }
@@ -158,61 +158,61 @@ export function AdminPasswordSetupForm({
 
   const title =
     mode === "complete-registration"
-      ? "Завершение регистрации"
-      : "Смена пароля";
+      ? "Створення пароля"
+      : "Новий пароль";
 
   const description =
     mode === "complete-registration"
-      ? "Здесь сотрудник завершает первый вход и задает личный пароль для дальнейшей работы в платформе."
-      : "Задайте новый пароль для безопасного входа в систему.";
+      ? "Створіть пароль, щоб завершити вхід і почати роботу."
+      : "Введіть новий пароль для входу.";
 
   return (
-    <div className="w-full rounded-[32px] border border-white/10 bg-[#09162f] p-8 shadow-sm sm:p-10">
+    <div className="w-full rounded-[32px] border border-white/10 bg-[#09162f] p-6 shadow-sm">
       <div className="mb-6 inline-flex rounded-full bg-white/8 px-4 py-2 text-sm text-white/80 sm:text-lg">
         {mode === "complete-registration"
-          ? "Complete registration"
-          : "Reset password"}
+          ? "Створення пароля"
+          : "Відновлення доступу"}
       </div>
 
       <h1 className="mb-4 text-4xl font-semibold text-white sm:text-6xl">
         {title}
       </h1>
 
-      <p className="mb-8 max-w-4xl text-lg leading-8 text-[#94A3B8] sm:text-2xl sm:leading-10">
+      <p className="mb-8 max-w-md text-lg leading-8 text-[#94A3B8]  sm:leading-10">
         {description}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         <div>
           <label className="mb-3 block text-lg text-white sm:text-xl">
-            Новый пароль
+            Пароль
           </label>
           <input
-            type="password"
+            type="password" autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-6 py-5 text-xl text-white outline-none sm:text-2xl"
-            placeholder="Минимум 8 символов"
+            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-4 py-3 text-base text-white outline-none "
+            placeholder="Не менше 8 символів"
             disabled={status !== "ready"}
           />
         </div>
 
         <div>
           <label className="mb-3 block text-lg text-white sm:text-xl">
-            Подтвердите пароль
+            Підтвердіть пароль
           </label>
           <input
-            type="password"
+            type="password" autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-6 py-5 text-xl text-white outline-none sm:text-2xl"
-            placeholder="Повторите пароль"
+            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-4 py-3 text-base text-white outline-none "
+            placeholder="Повторіть пароль"
             disabled={status !== "ready"}
           />
         </div>
 
         {error ? (
-          <div className="rounded-3xl border border-red-500 bg-red-500/10 px-6 py-4 text-lg text-red-300 sm:text-2xl">
+          <div className="rounded-3xl border border-red-500 bg-red-500/10 px-6 py-4 text-lg text-red-300 ">
             {error}
           </div>
         ) : null}
@@ -220,9 +220,9 @@ export function AdminPasswordSetupForm({
         <button
           type="submit"
           disabled={status !== "ready"}
-          className="rounded-3xl bg-white px-10 py-5 text-xl font-medium text-[#0B1120] disabled:opacity-50 sm:text-2xl"
+          className="rounded-3xl bg-white px-5 py-3 text-base font-medium text-[#0B1120] disabled:opacity-50 "
         >
-          Сохранить пароль
+          Зберегти пароль
         </button>
       </form>
     </div>

@@ -20,7 +20,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
 
   if (userError || !user) {
     return {
-      error: "Не удалось получить пользователя для завершения регистрации.",
+      error: "Не вдалося завершити вхід. Спробуйте ще раз.",
     };
   }
 
@@ -28,7 +28,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
 
   if (!email) {
     return {
-      error: "У пользователя отсутствует email.",
+      error: "Не вдалося визначити електронну пошту.",
     };
   }
 
@@ -45,7 +45,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
 
   if (membershipError) {
     return {
-      error: `Не удалось загрузить employee membership: ${membershipError.message}`,
+      error: `Сталася помилка. Спробуйте ще раз.`,
     };
   }
 
@@ -59,7 +59,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
 
   if (!membership) {
     return {
-      error: "Не найден профиль сотрудника для завершения регистрации.",
+      error: "Не вдалося знайти ваш профіль. Зверніться до адміністратора.",
     };
   }
 
@@ -77,7 +77,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
 
   if (membershipUpdateError) {
     return {
-      error: `Не удалось активировать membership: ${membershipUpdateError.message}`,
+      error: `Не вдалося завершити реєстрацію. Спробуйте ще раз.`,
     };
   }
 
