@@ -193,7 +193,7 @@ export default async function PublicHouseAnnouncementsPage({
   
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8 overflow-x-hidden">
       <div className="grid gap-6">
         <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
           <div className="text-center">
@@ -263,7 +263,7 @@ export default async function PublicHouseAnnouncementsPage({
                   <article
                     className={`overflow-hidden rounded-[24px] border shadow-sm sm:rounded-[32px] ${styles.shell}`}
                   >
-                    <div className="flex">
+                    <div className="flex min-w-0">
                       <div className={`hidden w-2 shrink-0 ${styles.accent} sm:block`} />
 
                       <div className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -281,7 +281,7 @@ export default async function PublicHouseAnnouncementsPage({
                         </div>
 
                         <h2
-                          className={`mt-4 text-xl font-semibold tracking-tight sm:mt-5 sm:text-3xl ${styles.title}`}
+                          className={`mt-4 break-words text-xl font-semibold tracking-tight sm:mt-5 sm:text-3xl ${styles.title}`}
                         >
                           {pinnedAnnouncement.title ?? houseAnnouncementsCopy.page.importantFallback}
                         </h2>
@@ -291,7 +291,7 @@ export default async function PublicHouseAnnouncementsPage({
                         <div className="mt-5 h-px bg-black/5" />
 
                         <div
-                          className={`mt-4 whitespace-pre-wrap text-sm leading-7 sm:mt-5 sm:text-base sm:leading-8 ${styles.body}`}
+                          className={`mt-4 whitespace-pre-wrap break-words text-sm leading-7 sm:mt-5 sm:text-base sm:leading-8 ${styles.body}`}
                         >
                           {typeof content.body === "string" && content.body.trim()
                             ? content.body
@@ -326,13 +326,13 @@ export default async function PublicHouseAnnouncementsPage({
                     key={section.id}
                     className={`overflow-hidden rounded-[22px] border shadow-sm transition hover:shadow-md sm:rounded-[28px] ${styles.shell}`}
                   >
-                    <div className="flex">
+                    <div className="flex min-w-0">
                       <div className={`hidden w-1.5 shrink-0 ${styles.accent} sm:block`} />
 
                       <div className="flex-1 p-4 sm:p-5 lg:p-6">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <h3 className={`text-lg font-semibold tracking-tight ${styles.title}`}>
+                            <h3 className={`break-words text-lg font-semibold tracking-tight ${styles.title}`}>
                               {section.title ?? houseAnnouncementsCopy.page.importantFallback}
                             </h3>
                             <div className={`mt-2 text-sm ${styles.meta}`}>{publishedAt}</div>
@@ -346,7 +346,7 @@ export default async function PublicHouseAnnouncementsPage({
                         </div>
 
                         <div
-                          className={`mt-3 whitespace-pre-wrap text-sm leading-6 sm:mt-4 sm:text-[15px] sm:leading-7 ${styles.body}`}
+                          className={`mt-3 whitespace-pre-wrap break-words text-sm leading-6 sm:mt-4 sm:text-[15px] sm:leading-7 ${styles.body}`}
                         >
                           {getBodyPreview(content.body, 320)}
                         </div>
