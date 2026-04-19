@@ -4,7 +4,7 @@ import { ensureHouseSpecialistsSection } from "@/src/modules/houses/services/ens
 import { getEnsuredPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getEnsuredPublishedHomeSectionsBySlug";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
-import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
+import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -128,11 +128,11 @@ function ContactRow({
   if (!value) return null;
 
   return (
-    <div className="flex items-start gap-3">
-      <div className="min-w-[112px] text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:w-[112px]">
         {label}
       </div>
-      <div className="text-sm leading-7 text-slate-700">{value}</div>
+      <div className="min-w-0 break-words text-sm leading-7 text-slate-700">{value}</div>
     </div>
   );
 }
@@ -147,7 +147,7 @@ function SpecialistCardView({
   activeCategory: string;
 }) {
   return (
-    <article className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
+    <article className="w-full min-w-0 rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
         {item.isPinned ? (
           <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
@@ -165,7 +165,7 @@ function SpecialistCardView({
         ))}
       </div>
 
-      <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
+      <h2 className="mt-5 break-words text-3xl font-semibold tracking-tight text-slate-950">
         {item.title}
       </h2>
 
@@ -212,17 +212,9 @@ export default async function SpecialistsPage({
   });
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
-  const apartmentsData = await getAdminHouseApartments({
+  const apartmentOptions = await getPublicHouseApartmentOptions({
     houseId: house.id,
-    includeArchivedSummary: false,
   });
-  const apartmentOptions = apartmentsData.items
-    .map((item) => ({
-      id: item.id,
-      label: item.apartment_label,
-      ownerName: item.owner_name,
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label, "uk"));
 
   const specialistsSection = sections.find(
     (section) => section.kind === "specialists",
@@ -275,10 +267,10 @@ export default async function SpecialistsPage({
 
   return (
     <>
-      <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="grid gap-6">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-            <div className="text-center">
+      <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="grid min-w-0 gap-6">
+          <section className="w-full min-w-0 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
+            <div className="min-w-0 text-center">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
                 {houseSpecialistsCopy.page.title}
               </h1>
@@ -290,7 +282,7 @@ export default async function SpecialistsPage({
 
             {filterItems.length > 1 ? (
               <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-                <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+                <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
                   {filterItems.map((item) => {
                     const isActive = activeCategory === item.key;
 
@@ -327,7 +319,7 @@ export default async function SpecialistsPage({
           </section>
 
           {filteredSpecialists.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2">
               {filteredSpecialists.map((item) => (
                 <SpecialistCardView
                   key={item.id}

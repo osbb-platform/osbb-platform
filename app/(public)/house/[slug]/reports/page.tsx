@@ -150,10 +150,10 @@ export default async function ReportsPage({
         );
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid gap-6">
-        <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="text-center">
+    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="grid min-w-0 gap-6">
+        <section className="w-full min-w-0 rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+          <div className="min-w-0 text-center">
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               {houseReportsCopy.page.title}
             </h1>
@@ -164,7 +164,7 @@ export default async function ReportsPage({
           </div>
 
           <div className="mt-8">
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {[
                 {
                   key: "current",
@@ -206,8 +206,8 @@ export default async function ReportsPage({
             </div>
           </div>
 
-          <div className="mt-5 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+          <div className="mt-5 w-full min-w-0 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
+            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {selectedMode === "archive" ? (
               <>
                 <Link
@@ -295,11 +295,11 @@ export default async function ReportsPage({
                 : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
               {filteredReports.map((report) => (
                 <article
                   key={report.id}
-                  className="rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-5"
+                  className="w-full min-w-0 rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-5"
                 >
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">
@@ -319,11 +319,11 @@ export default async function ReportsPage({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 text-base font-semibold sm:text-lg">
+                  <div className="mt-4 break-words text-base font-semibold sm:text-lg">
                     {report.title}
                   </div>
 
-                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                  <p className="mt-3 break-words text-sm leading-7 text-slate-600">
                     {report.description}
                   </p>
 

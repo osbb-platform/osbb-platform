@@ -2,7 +2,7 @@ import { houseMeetingsCopy, houseSystemCopy } from "@/src/shared/publicCopy/hous
 import Link from "next/link";
 import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
-import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
+import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -103,7 +103,7 @@ export default async function PublicMeetingsPage({
   const districtColor = house.district?.theme_color ?? "#0f172a";
   const apartments =
     house?.id
-      ? (await getAdminHouseApartments({ houseId: house.id })).items
+      ? await getPublicHouseApartmentOptions({ houseId: house.id })
       : [];
 
 
@@ -203,10 +203,10 @@ export default async function PublicMeetingsPage({
         });
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid gap-6">
-        <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-          <div className="text-center">
+    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="grid min-w-0 gap-6">
+        <section className="w-full min-w-0 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
+          <div className="min-w-0 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
               {houseMeetingsCopy.page.title}
             </h1>
@@ -217,7 +217,7 @@ export default async function PublicMeetingsPage({
           </div>
 
           <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {[
                 ["scheduled", houseMeetingsCopy.tabs.scheduled],
                 ["active", houseMeetingsCopy.tabs.active],
@@ -254,7 +254,7 @@ export default async function PublicMeetingsPage({
           </div>
 
           {selectedMode === "archive" ? (
-            <div className="mt-4">
+            <div className="mt-4 w-full min-w-0">
               <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
                 <Link
                   href={`/house/${slug}/meetings?mode=archive&month=all`}
@@ -293,7 +293,7 @@ export default async function PublicMeetingsPage({
         </section>
 
         {selectedMode === "scheduled" && nearestMeeting ? (
-          <section className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 sm:rounded-[32px] sm:p-6">
+          <section className="w-full min-w-0 rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 sm:rounded-[32px] sm:p-6">
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
               {houseMeetingsCopy.page.nearest}
             </div>
@@ -306,7 +306,7 @@ export default async function PublicMeetingsPage({
           </section>
         ) : null}
 
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4">
           {filteredMeetings.length === 0 ? (
             <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-center shadow-sm sm:rounded-[32px] sm:p-8">
               <div className="text-base font-semibold text-slate-900 sm:text-xl">
@@ -336,10 +336,10 @@ export default async function PublicMeetingsPage({
             filteredMeetings.map((meeting) => (
             <article
               key={meeting.id}
-              className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6"
+              className="w-full min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-lg font-semibold text-slate-950 sm:text-2xl">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0 break-words text-lg font-semibold text-slate-950 sm:text-2xl">
                   {meeting.title}
                 </div>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -356,12 +356,12 @@ export default async function PublicMeetingsPage({
                   key={question.id}
                   className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mt-4 sm:rounded-2xl sm:p-4"
                 >
-                  <div className="font-medium text-slate-950">
+                  <div className="break-words font-medium text-slate-950">
                     {question.title}
                   </div>
 
                   {question.description ? (
-                    <div className="mt-2 text-sm text-slate-600">
+                    <div className="mt-2 break-words text-sm text-slate-600">
                       {question.description}
                     </div>
                   ) : null}
@@ -395,7 +395,7 @@ export default async function PublicMeetingsPage({
                 meeting.status === "completed" ||
                 meeting.status === "archived") ? (
                 <div className="mt-3 space-y-3 sm:mt-4 sm:grid sm:gap-4 lg:grid-cols-2 sm:space-y-0">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-semibold text-slate-900">
                       {houseMeetingsCopy.voters.voted}
                     </div>
@@ -412,13 +412,13 @@ export default async function PublicMeetingsPage({
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-semibold text-slate-900">
                       {meeting.status === "completed" || meeting.status === "archived"
                         ? houseMeetingsCopy.voters.notVoted
                         : houseMeetingsCopy.voters.notYet}
                     </div>
-                    <div className="mt-3 text-sm text-slate-600">
+                    <div className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-600">
                       {apartments
                         .filter(
                           (apartment) =>
@@ -427,7 +427,7 @@ export default async function PublicMeetingsPage({
                             ),
                         )
                         .map((apartment) => apartment.apartment_label)
-                        .join(", ") || "{houseMeetingsCopy.archive.all} квартиры уже учтены"}
+                        .join(",\n") || "Усі квартири вже враховані"}
                     </div>
                   </div>
                 </div>

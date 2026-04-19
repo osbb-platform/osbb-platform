@@ -177,8 +177,8 @@ export default async function DebtorsPage({
     hasPublishedSnapshot && activeItems.length > 0 && visibleItems.length === 0;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:rounded-[32px] sm:p-8"><div className="text-center">
+    <section className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="w-full min-w-0 rounded-[24px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:rounded-[32px] sm:p-8"><div className="min-w-0 text-center">
         <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
           Боржники
         </h1>
@@ -192,7 +192,7 @@ export default async function DebtorsPage({
         </div>
       </div></div>
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-3">
+      <section className="mt-8 grid min-w-0 gap-4 lg:grid-cols-3">
         <article className="rounded-[22px] border border-[var(--border)] bg-white p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm text-[var(--muted)]">Кількість боржників</div>
           <div className="mt-3 text-3xl font-semibold text-slate-900">
@@ -219,7 +219,7 @@ export default async function DebtorsPage({
         </article>
       </section>
 
-      <div className="mt-8 rounded-[28px] border border-[var(--border)] bg-white p-6">
+      <div className="mt-8 w-full min-w-0 rounded-[28px] border border-[var(--border)] bg-white p-6">
         <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <input
             type="text"
@@ -237,7 +237,7 @@ export default async function DebtorsPage({
         </form>
       </div>
 
-      <section className="mt-8">
+      <section className="mt-8 min-w-0">
         {noPublishedState ? (
           <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-white p-6 text-[var(--muted)]">
             Немає опублікованого списку заборгованостей.
@@ -251,9 +251,9 @@ export default async function DebtorsPage({
             За вашим запитом нічого не знайдено.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[28px] border border-[var(--border)] bg-white">
-            <div className="overflow-auto">
-              <table className="min-w-full border-collapse">
+          <div className="w-full min-w-0 overflow-hidden rounded-[28px] border border-[var(--border)] bg-white">
+            <div className="w-full overflow-x-auto overflow-y-hidden overscroll-x-contain">
+              <table className="min-w-[640px] border-collapse">
                 <thead className="bg-slate-50">
                   <tr className="border-b border-slate-200 text-left">
                     <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">

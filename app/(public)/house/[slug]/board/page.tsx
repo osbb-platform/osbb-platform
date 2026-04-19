@@ -132,19 +132,19 @@ function ContactLine({
   if (!value) return null;
 
   return (
-    <div className="flex items-start gap-3">
-      <div className="min-w-[110px] text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:w-[110px]">
         {label}
       </div>
       {href ? (
         <a
           href={href}
-          className="text-sm leading-7 text-slate-700 transition hover:text-slate-950"
+          className="min-w-0 break-words text-sm leading-7 text-slate-700 transition hover:text-slate-950"
         >
           {value}
         </a>
       ) : (
-        <div className="text-sm leading-7 text-slate-700">{value}</div>
+        <div className="min-w-0 break-words text-sm leading-7 text-slate-700">{value}</div>
       )}
     </div>
   );
@@ -152,12 +152,12 @@ function ContactLine({
 
 function RoleCard({ role }: { role: BoardRoleItem }) {
   return (
-    <article className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[30px] sm:p-7">
+    <article className="w-full min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[30px] sm:p-7">
       <div className="inline-flex rounded-full border border-slate-300 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900">
         {role.role || houseBoardCopy.card.roleFallback}
       </div>
 
-      <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
+      <h3 className="mt-3 break-words text-lg font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
         {role.name || houseBoardCopy.card.nameFallback}
       </h3>
 
@@ -185,7 +185,7 @@ function RoleCard({ role }: { role: BoardRoleItem }) {
           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             {houseBoardCopy.card.description}
           </div>
-          <div className="mt-2 text-sm leading-6 text-slate-700 sm:mt-3 sm:leading-7">
+          <div className="mt-2 break-words text-sm leading-6 text-slate-700 sm:mt-3 sm:leading-7">
             {role.description}
           </div>
         </div>
@@ -238,10 +238,10 @@ export default async function BoardPage({
       : roles.filter((item) => item.status === filter);
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid gap-6">
-        <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-          <div className="text-center">
+    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="grid min-w-0 gap-6">
+        <section className="w-full min-w-0 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
+          <div className="min-w-0 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
               {houseBoardCopy.page.title}
             </h1>
@@ -251,7 +251,7 @@ export default async function BoardPage({
             </p>
           </div>
           <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {FILTERS.map((item) => {
                 const isActive = filter === item.key;
                 const count =
@@ -284,11 +284,11 @@ export default async function BoardPage({
         </section>
 
         {intro ? (
-          <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[30px] sm:p-8">
+          <section className="w-full min-w-0 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[30px] sm:p-8">
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               {houseBoardCopy.page.intro}
             </div>
-            <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700 sm:mt-4 sm:text-lg sm:leading-8">
+            <div className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 sm:mt-4 sm:text-lg sm:leading-8">
               {intro}
             </div>
           </section>
@@ -299,7 +299,7 @@ export default async function BoardPage({
             {houseBoardCopy.page.empty}
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid min-w-0 gap-5 md:grid-cols-2">
             {filteredRoles.map((role) => (
               <RoleCard key={role.id} role={role} />
             ))}

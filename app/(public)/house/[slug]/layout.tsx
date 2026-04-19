@@ -6,7 +6,7 @@ import { HousePasswordGate } from "@/src/modules/houses/components/HousePassword
 import { PublicHouseBell } from "@/src/modules/houses/components/PublicHouseBell";
 import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFooter";
 import { PublicHouseNavigation } from "@/src/modules/houses/components/PublicHouseNavigation";
-import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
+import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublicHouseBellFeed } from "@/src/modules/houses/services/getPublicHouseBellFeed";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
@@ -67,18 +67,9 @@ export default async function PublicHouseLayout({
     houseId: house.id,
   });
 
-  const apartmentsData = await getAdminHouseApartments({
+  const apartmentOptions = await getPublicHouseApartmentOptions({
     houseId: house.id,
-    includeArchivedSummary: false,
   });
-
-  const apartmentOptions = apartmentsData.items
-    .map((item) => ({
-      id: item.id,
-      label: item.apartment_label,
-      ownerName: item.owner_name,
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label, "uk"));
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
