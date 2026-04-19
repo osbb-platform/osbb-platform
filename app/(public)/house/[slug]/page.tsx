@@ -41,19 +41,13 @@ export default async function PublicHouseHomePage({ params }: Props) {
 
       <PublicHouseDashboardAlert alert={dashboard.topAlert} />
 
-      <section className="md:hidden">
-        <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
-          <div className="flex snap-x snap-mandatory gap-4 pb-2">
-            {dashboard.widgets.map((widget) => (
-              <div
-                key={widget.kind}
-                className="min-w-[88%] snap-start sm:min-w-[72%]"
-              >
-                <PublicHouseDashboardCard widget={widget} />
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="grid gap-4 md:hidden">
+        {dashboard.widgets.map((widget) => (
+          <PublicHouseDashboardCard
+            key={widget.kind}
+            widget={widget}
+          />
+        ))}
       </section>
 
       <section className="hidden gap-4 md:grid md:grid-cols-2 lg:gap-6">

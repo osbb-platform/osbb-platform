@@ -90,7 +90,7 @@ export function PublicHouseNavigation({
         districtColor={districtColor}
         open={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
-        items={secondaryItems}
+        items={[...primaryItems, ...secondaryItems]}
       />
     </>
   );

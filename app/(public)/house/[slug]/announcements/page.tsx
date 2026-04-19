@@ -85,19 +85,6 @@ function formatPublishedAt(value: unknown) {
   });
 }
 
-function isRecentAnnouncement(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return false;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return false;
-  }
-
-  return Date.now() - date.getTime() <= 7 * 24 * 60 * 60 * 1000;
-}
 
 function getBodyPreview(value: unknown, maxLength = 320) {
   if (typeof value !== "string" || !value.trim()) {
@@ -203,14 +190,7 @@ export default async function PublicHouseAnnouncementsPage({
     ? filteredAnnouncements.filter((section) => section.id !== pinnedAnnouncement.id)
     : filteredAnnouncements;
 
-  const recentCount = allAnnouncements.filter((section) => {
-    const content =
-      typeof section.content === "object" && section.content
-        ? (section.content as Record<string, unknown>)
-        : {};
-
-    return isRecentAnnouncement(content.publishedAt);
-  }).length;
+  
 
   return (
     <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -227,7 +207,7 @@ export default async function PublicHouseAnnouncementsPage({
           </div>
 
           <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {filterItems.map((item) => {
                 const isActive = filter === item.key;
 
@@ -235,7 +215,7 @@ export default async function PublicHouseAnnouncementsPage({
                   <Link
                     key={item.key}
                     href={`/house/${slug}/announcements?filter=${item.key}`}
-                    className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                       isActive
                         ? "text-white shadow-sm"
                         : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"

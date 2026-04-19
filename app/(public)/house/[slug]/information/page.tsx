@@ -181,7 +181,7 @@ export default async function InformationPage({
         </div>
 
         <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
             {categories.map((category) => {
               const isActive = activeCategory === category;
               const count = categoryCounts[category] ?? 0;
@@ -190,7 +190,7 @@ export default async function InformationPage({
                 <Link
                   key={category}
                   href={`/house/${slug}/information?category=${encodeURIComponent(category)}`}
-                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
+                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                     isActive
                       ? "text-white shadow-sm"
                       : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"

@@ -14,7 +14,7 @@ export const houseCopy = {
     accessDescription:
       "Лише для мешканців та користувачів із кодом доступу",
     loginFormat: "Формат входу",
-    loginFormatDescription: "Персональний 6-значний код",
+    loginFormatDescription: "Персональний 6-значний код доступу",
     fallbackDescription:
       "Тут зібрана важлива інформація для мешканців будинку: оголошення, звіти, контакти та інші внутрішні розділи.",
     lockedMessage: "Для безпеки вхід тимчасово призупинено.",

@@ -290,7 +290,7 @@ export default async function SpecialistsPage({
 
             {filterItems.length > 1 ? (
               <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-                <div className="flex flex-wrap justify-center gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
                   {filterItems.map((item) => {
                     const isActive = activeCategory === item.key;
 
@@ -299,7 +299,7 @@ export default async function SpecialistsPage({
                         key={item.key}
                         href={`/house/${slug}/specialists?category=${encodeURIComponent(item.key)}`}
                         scroll={false}
-                        className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
+                        className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                           isActive
                             ? "text-white shadow-sm"
                             : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"

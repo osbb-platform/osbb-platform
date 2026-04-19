@@ -93,7 +93,6 @@ export default async function ReportsPage({
 
   const pastReports = visibleReports.filter((item) => item.periodType === "past");
 
-  const currentYearReports = currentReports;
 
   function sortReportsForGrid(items: PublicReport[]) {
     return [...items].sort((left, right) => {
@@ -160,12 +159,12 @@ export default async function ReportsPage({
             </h1>
 
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
-              {houseReportsCopy.page.title} по выполненным работам и ключевым обновлениям дома в одном месте.
+              {houseReportsCopy.page.title} про виконані роботи та ключові оновлення будинку в одному місці.
             </p>
           </div>
 
           <div className="mt-8">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {[
                 {
                   key: "current",
@@ -186,7 +185,7 @@ export default async function ReportsPage({
                   <Link
                     key={item.key}
                     href={item.href}
-                    className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                       isActive
                         ? "text-white shadow-sm"
                         : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -208,12 +207,12 @@ export default async function ReportsPage({
           </div>
 
           <div className="mt-5 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {selectedMode === "archive" ? (
               <>
                 <Link
                   href={`/house/${slug}/reports?mode=archive&year=all`}
-                  className={`inline-flex min-h-[44px] items-center rounded-full px-4 text-sm font-semibold transition ${
+                  className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                     selectedYear === "all"
                       ? "text-white"
                       : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -231,7 +230,7 @@ export default async function ReportsPage({
                   <Link
                     key={year}
                     href={`/house/${slug}/reports?mode=archive&year=${year}`}
-                    className={`inline-flex min-h-[44px] items-center rounded-full px-4 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                       selectedYear === String(year)
                         ? "text-white"
                         : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -250,7 +249,7 @@ export default async function ReportsPage({
               <>
                 <Link
                   href={`/house/${slug}/reports?mode=current&month=all`}
-                  className={`inline-flex min-h-[44px] items-center rounded-full px-4 text-sm font-semibold transition ${
+                  className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                     selectedMonth === "all"
                       ? "text-white"
                       : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -268,7 +267,7 @@ export default async function ReportsPage({
                   <Link
                     key={month}
                     href={`/house/${slug}/reports?mode=current&month=${month}`}
-                    className={`inline-flex min-h-[44px] items-center rounded-full px-4 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                       selectedMonth === month
                         ? "text-white"
                         : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -292,7 +291,7 @@ export default async function ReportsPage({
           {filteredReports.length === 0 ? (
             <div className="rounded-[32px] border border-dashed border-[var(--border)] bg-[var(--card)] p-6 text-[var(--muted)]">
               {selectedMode === "archive"
-                ? "Архив отчетов за выбранный период пока пуст."
+                ? "Архів звітів за обраний період поки порожній."
                 : "{houseReportsCopy.page.title} текущего года пока не опубликованы."}
             </div>
           ) : (
@@ -309,13 +308,13 @@ export default async function ReportsPage({
 
                     {report.isPinned ? (
                       <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
-                        Важный
+                        Важливе
                       </span>
                     ) : null}
 
                     {report.isNew && isStillNew(report.newUntil) ? (
                       <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
-                        Новый
+                        Нове
                       </span>
                     ) : null}
                   </div>

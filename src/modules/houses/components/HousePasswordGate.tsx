@@ -52,7 +52,7 @@ export function HousePasswordGate({
   const [code, setCode] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [uiMessage, setUiMessage] = useState<string | null>(null);
-  const [lockRemaining, setLockRemaining] = useState(Math.max(0, initialLockedUntil - Date.now()));
+  const [lockRemaining, setLockRemaining] = useState(0);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const description = useMemo(() => {
@@ -64,6 +64,11 @@ export function HousePasswordGate({
   }, [publicDescription, shortDescription]);
 
   const houseImageUrl = houseCoverImageUrl ?? HOUSE_IMAGE_FALLBACK_URL;
+
+  useEffect(() => {
+    setLockRemaining(Math.max(0, initialLockedUntil - Date.now()));
+  }, [initialLockedUntil]);
+
 
   useEffect(() => {
     if (!initialLockedUntil || initialLockedUntil <= Date.now()) {
@@ -316,9 +321,9 @@ export function HousePasswordGate({
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url("${houseImageUrl}")` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/56 via-slate-950/18 to-slate-900/8" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-slate-900/8" />
 
-            <div className="relative flex h-full flex-col justify-between p-5 sm:p-6 lg:p-8">
+            <div className="relative mx-auto flex h-full max-w-lg flex-col justify-between p-5 sm:p-6 lg:p-8">
               <div>
                 <div
                   className="inline-flex rounded-full px-5 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-sm"
@@ -328,7 +333,7 @@ export function HousePasswordGate({
                 </div>
               </div>
 
-              <div className="max-w-lg rounded-[26px] border border-white/12 bg-white/10 p-4 text-white backdrop-blur-md sm:p-5 lg:p-6">
+              <div className="max-w-lg rounded-[26px] border border-white/12 bg-white/8 p-4 text-white backdrop-blur-md sm:p-5 lg:p-6">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
                   {houseCopy.passwordGate.heroBadge}
                 </div>
@@ -446,7 +451,7 @@ export function HousePasswordGate({
                       </div>
                     ) : (
                       <div className="rounded-[24px] border border-[#d7d9df] bg-[#f4f5f8] px-5 py-4 text-[15px] leading-7 text-[#5e6370]">
-                        Нет кода доступа или он не подходит? Обратитесь в
+                        Немає коду доступу або він не підходить? Зверніться до
                         управляющую компанию вашего дома.
                       </div>
                     )}

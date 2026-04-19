@@ -14,13 +14,13 @@ type Props = {
 
 function formatPublishedAt(value: unknown) {
   if (typeof value !== "string" || !value) {
-    return "Дата публикации не указана";
+    return "Дату публікації не вказано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата публикации не указана";
+    return "Дату публікації не вказано";
   }
 
   return new Intl.DateTimeFormat("uk-UA", {
@@ -63,12 +63,12 @@ export function PublicInformationSlider({
   const headline =
     typeof content.headline === "string" && content.headline
       ? content.headline
-      : article.title ?? "Статья";
+      : article.title ?? "Матеріал";
 
   const body =
     typeof content.body === "string" && content.body.trim()
       ? content.body
-      : "Текст статьи пока не заполнен.";
+      : "Текст матеріалу поки не заповнено.";
 
   const coverImageUrl =
     typeof content.coverImageUrl === "string"
@@ -129,7 +129,7 @@ export function PublicInformationSlider({
                         ? "bg-slate-900"
                         : "bg-slate-300"
                     }`}
-                    aria-label={`Перейти к новости ${index + 1}`}
+                    aria-label={`Перейти до матеріалу ${index + 1}`}
                   />
                 ))}
               </div>
