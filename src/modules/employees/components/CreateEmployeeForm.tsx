@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createEmployee } from "@/src/modules/employees/actions/createEmployee";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 
@@ -13,9 +13,15 @@ type CreateEmployeeFormProps = {
   currentRole: string | null;
 };
 
-export function CreateEmployeeForm({
+type CreateEmployeeActionFormProps = {
+  currentRole: string | null;
+  onHandled: () => void;
+};
+
+function CreateEmployeeActionForm({
   currentRole,
-}: CreateEmployeeFormProps) {
+  onHandled,
+}: CreateEmployeeActionFormProps) {
   const [state, formAction, isPending] = useActionState(
     createEmployee,
     initialState,
@@ -24,7 +30,26 @@ export function CreateEmployeeForm({
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const canCreateAdmins = currentRole === ROLES.SUPERADMIN;
-  const canCreateEmployees = currentRole === ROLES.SUPERADMIN || currentRole === ROLES.ADMIN;
+  const canCreateEmployees =
+    currentRole === ROLES.SUPERADMIN || currentRole === ROLES.ADMIN;
+
+  const flash = state.success
+    ? { type: "success" as const, message: state.success }
+    : state.error
+      ? { type: "error" as const, message: state.error }
+      : null;
+
+  useEffect(() => {
+    if (!flash) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      onHandled();
+    }, 3000);
+
+    return () => window.clearTimeout(timeout);
+  }, [flash, onHandled]);
 
   async function handleSubmit(formData: FormData) {
     await formAction(formData);
@@ -33,10 +58,11 @@ export function CreateEmployeeForm({
       const successBanner = document.getElementById("employee-create-success");
       if (successBanner?.textContent?.trim()) {
         formRef.current?.reset();
-        setIsOpen(false);
       }
     });
   }
+
+  const shouldShowForm = canCreateEmployees && isOpen && !state.success;
 
   return (
     <section className="space-y-4">
@@ -51,25 +77,31 @@ export function CreateEmployeeForm({
           </h2>
         </div>
 
-        {canCreateEmployees ? <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
-        >
-          {isOpen ? "Скрыть форму" : "Создать сотрудника"}
-        </button> : null}
+        {canCreateEmployees ? (
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+          >
+            {shouldShowForm ? "Скрыть форму" : "Создать сотрудника"}
+          </button>
+        ) : null}
       </div>
 
-      {state.success ? (
+      {flash ? (
         <div
-          id="employee-create-success"
-          className="rounded-2xl border border-emerald-900/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300"
+          id={flash.type === "success" ? "employee-create-success" : undefined}
+          className={
+            flash.type === "success"
+              ? "rounded-2xl border border-emerald-900/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300"
+              : "rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
+          }
         >
-          {state.success}
+          {flash.message}
         </div>
       ) : null}
 
-      {canCreateEmployees && isOpen ? (
+      {shouldShowForm ? (
         <form
           ref={formRef}
           action={handleSubmit}
@@ -142,12 +174,6 @@ export function CreateEmployeeForm({
             </div>
           </div>
 
-          {state.error ? (
-            <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
-              {state.error}
-            </div>
-          ) : null}
-
           <div className="mt-5 flex items-center gap-3">
             <button
               type="submit"
@@ -168,5 +194,19 @@ export function CreateEmployeeForm({
         </form>
       ) : null}
     </section>
+  );
+}
+
+export function CreateEmployeeForm({
+  currentRole,
+}: CreateEmployeeFormProps) {
+  const [actionKey, setActionKey] = useState(0);
+
+  return (
+    <CreateEmployeeActionForm
+      key={actionKey}
+      currentRole={currentRole}
+      onHandled={() => setActionKey((value) => value + 1)}
+    />
   );
 }

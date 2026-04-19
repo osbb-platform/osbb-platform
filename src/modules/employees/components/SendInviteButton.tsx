@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { sendEmployeeInvite } from "@/src/modules/employees/actions/sendEmployeeInvite";
 
 const initialState = {
@@ -13,14 +13,39 @@ type SendInviteButtonProps = {
   disabled?: boolean;
 };
 
-export function SendInviteButton({
+type SendInviteActionButtonProps = {
+  membershipId: string;
+  disabled?: boolean;
+  onHandled: () => void;
+};
+
+function SendInviteActionButton({
   membershipId,
   disabled = false,
-}: SendInviteButtonProps) {
+  onHandled,
+}: SendInviteActionButtonProps) {
   const [state, formAction, isPending] = useActionState(
     sendEmployeeInvite,
     initialState,
   );
+
+  const flash = state.success
+    ? { type: "success" as const, message: state.success }
+    : state.error
+      ? { type: "error" as const, message: state.error }
+      : null;
+
+  useEffect(() => {
+    if (!flash) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      onHandled();
+    }, 3000);
+
+    return () => window.clearTimeout(timeout);
+  }, [flash, onHandled]);
 
   return (
     <form action={formAction} className="space-y-2">
@@ -34,13 +59,33 @@ export function SendInviteButton({
         {isPending ? "Отправляем..." : "Отправить инвайт"}
       </button>
 
-      {state.error ? (
-        <div className="text-xs text-red-300">{state.error}</div>
-      ) : null}
-
-      {state.success ? (
-        <div className="text-xs text-emerald-300">{state.success}</div>
+      {flash ? (
+        <div
+          className={
+            flash.type === "success"
+              ? "text-xs text-emerald-300"
+              : "text-xs text-red-300"
+          }
+        >
+          {flash.message}
+        </div>
       ) : null}
     </form>
+  );
+}
+
+export function SendInviteButton({
+  membershipId,
+  disabled = false,
+}: SendInviteButtonProps) {
+  const [actionKey, setActionKey] = useState(0);
+
+  return (
+    <SendInviteActionButton
+      key={actionKey}
+      membershipId={membershipId}
+      disabled={disabled}
+      onHandled={() => setActionKey((value) => value + 1)}
+    />
   );
 }

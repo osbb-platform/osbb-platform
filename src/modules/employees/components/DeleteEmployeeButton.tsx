@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { deleteEmployee } from "@/src/modules/employees/actions/deleteEmployee";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
@@ -16,11 +15,19 @@ type DeleteEmployeeButtonProps = {
   variant?: "icon" | "full";
 };
 
-export function DeleteEmployeeButton({
+type DeleteEmployeeActionButtonProps = {
+  membershipId: string;
+  employeeLabel: string;
+  variant?: "icon" | "full";
+  onHandled: () => void;
+};
+
+function DeleteEmployeeActionButton({
   membershipId,
   employeeLabel,
   variant = "full",
-}: DeleteEmployeeButtonProps) {
+  onHandled,
+}: DeleteEmployeeActionButtonProps) {
   void variant;
 
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -31,6 +38,23 @@ export function DeleteEmployeeButton({
     initialState,
   );
 
+  const flash = state.success
+    ? { type: "success" as const, message: state.success }
+    : state.error
+      ? { type: "error" as const, message: state.error }
+      : null;
+
+  useEffect(() => {
+    if (!flash) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      onHandled();
+    }, 3000);
+
+    return () => window.clearTimeout(timeout);
+  }, [flash, onHandled]);
 
   function handleOpenConfirm() {
     if (isPending) return;
@@ -44,11 +68,7 @@ export function DeleteEmployeeButton({
 
   return (
     <>
-      <form
-        ref={formRef}
-        action={formAction}
-        className="space-y-2"
-      >
+      <form ref={formRef} action={formAction} className="space-y-2">
         <input type="hidden" name="membershipId" value={membershipId} />
 
         <button
@@ -60,12 +80,16 @@ export function DeleteEmployeeButton({
           {isPending ? "Удаляем..." : "Удалить сотрудника"}
         </button>
 
-        {state.error ? (
-          <div className="text-xs text-red-300">{state.error}</div>
-        ) : null}
-
-        {state.success ? (
-          <div className="text-xs text-emerald-300">{state.success}</div>
+        {flash ? (
+          <div
+            className={
+              flash.type === "success"
+                ? "text-xs text-emerald-300"
+                : "text-xs text-red-300"
+            }
+          >
+            {flash.message}
+          </div>
         ) : null}
       </form>
 
@@ -81,5 +105,23 @@ export function DeleteEmployeeButton({
         onConfirm={handleConfirmDelete}
       />
     </>
+  );
+}
+
+export function DeleteEmployeeButton({
+  membershipId,
+  employeeLabel,
+  variant = "full",
+}: DeleteEmployeeButtonProps) {
+  const [actionKey, setActionKey] = useState(0);
+
+  return (
+    <DeleteEmployeeActionButton
+      key={actionKey}
+      membershipId={membershipId}
+      employeeLabel={employeeLabel}
+      variant={variant}
+      onHandled={() => setActionKey((value) => value + 1)}
+    />
   );
 }
