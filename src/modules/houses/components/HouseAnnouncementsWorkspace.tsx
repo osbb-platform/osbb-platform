@@ -147,7 +147,6 @@ export function HouseAnnouncementsWorkspace({
   const archivedAnnouncements = sortedSections.filter(
     (section) => section.status === "archived",
   );
-
   const tabMap = {
     active: activeAnnouncements,
     moderation: moderationAnnouncements,
@@ -155,6 +154,14 @@ export function HouseAnnouncementsWorkspace({
   };
 
   const visibleSections = tabMap[activeTab];
+
+  function closeWorkspace() {
+    setWorkspaceError(null);
+    setIsDeleteArchiveConfirmOpen(false);
+    setCreateBaseline(null);
+    setMode("idle");
+    setSelectedSectionId(null);
+  }
 
   const shouldRenderCreate =
     mode === "create" &&
@@ -173,16 +180,6 @@ export function HouseAnnouncementsWorkspace({
       ? sortedSections.find((section) => section.id === selectedSectionId) ?? null
       : null;
 
-  useEffect(() => {
-    if (
-      mode === "edit" &&
-      selectedSectionId &&
-      !sections.some((section) => section.id === selectedSectionId)
-    ) {
-      closeWorkspace();
-    }
-  }, [sections, mode, selectedSectionId]);
-
   function openCreateMode() {
     setWorkspaceError(null);
     setActiveTab("moderation");
@@ -195,14 +192,6 @@ export function HouseAnnouncementsWorkspace({
     setWorkspaceError(null);
     setMode("edit");
     setSelectedSectionId(sectionId);
-  }
-
-  function closeWorkspace() {
-    setWorkspaceError(null);
-    setIsDeleteArchiveConfirmOpen(false);
-    setCreateBaseline(null);
-    setMode("idle");
-    setSelectedSectionId(null);
   }
 
   function handleTabChange(tab: TabKey) {
@@ -234,7 +223,8 @@ export function HouseAnnouncementsWorkspace({
           return;
         }
 
-        closeWorkspace();
+        setMode("idle");
+      setSelectedSectionId(null);
         router.refresh();
       } catch (error) {
         setWorkspaceError(

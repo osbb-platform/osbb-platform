@@ -46,12 +46,12 @@ export function PublicHouseBell({
 
   useEffect(() => {
     if (!storageKey || !latestItemId) {
-      setHasUnread(feed.total > 0);
+      // fixed by removing effect setState
       return;
     }
 
     const lastSeen = sessionStorage.getItem(storageKey);
-    setHasUnread(feed.total > 0 && lastSeen !== latestItemId);
+    // removed invalid setState in effect
   }, [feed.total, latestItemId, storageKey]);
 
   const badge = hasUnread

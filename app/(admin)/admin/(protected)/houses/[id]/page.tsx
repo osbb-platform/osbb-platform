@@ -272,7 +272,7 @@ export default async function AdminHouseDetailPage({
         )
       : [];
 
-  let boardSectionList =
+  const boardSectionList =
     homeSections.find((section) => section.kind === "contacts") ?? null;
 
   let boardSection = null;
@@ -332,7 +332,7 @@ export default async function AdminHouseDetailPage({
         )
       : [];
 
-  let specialistsSectionList =
+  const specialistsSectionList =
     homeSections.find((section) => section.kind === "specialists") ?? null;
 
   let specialistsSection = null;
@@ -353,7 +353,7 @@ export default async function AdminHouseDetailPage({
     specialistsSection = null;
   }
 
-  let reportsSectionList =
+  const reportsSectionList =
     homeSections.find((section) => section.kind === "reports") ?? null;
 
   let reportsSection = null;
@@ -373,7 +373,7 @@ export default async function AdminHouseDetailPage({
     reportsSection = null;
   }
 
-  let planSectionList =
+  const planSectionList =
     homeSections.find((section) => section.kind === "plan") ?? null;
 
   let planSection = null;
@@ -393,7 +393,7 @@ export default async function AdminHouseDetailPage({
     planSection = null;
   }
 
-  let debtorsSectionList =
+  const debtorsSectionList =
     homeSections.find((section) => section.kind === "debtors") ?? null;
 
   let debtorsSection = null;
@@ -413,7 +413,7 @@ export default async function AdminHouseDetailPage({
     debtorsSection = null;
   }
 
-  let meetingsSectionList =
+  const meetingsSectionList =
     homeSections.find((section) => section.kind === "meetings") ?? null;
 
   let meetingsSection = null;
@@ -433,7 +433,7 @@ export default async function AdminHouseDetailPage({
     meetingsSection = null;
   }
 
-  let requisitesSectionList =
+  const requisitesSectionList =
     homeSections.find((section) => section.kind === "requisites") ?? null;
 
   let requisitesSection = null;
