@@ -155,6 +155,7 @@ function HouseEditorCard({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const archiveFormRef = useRef<HTMLFormElement | null>(null);
   const isArchiveConfirmedRef = useRef(false);
@@ -215,15 +216,26 @@ function HouseEditorCard({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
-          aria-label="Закрыть настройки дома"
-        >
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAnnouncementOpen(true)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            title="Объявление для жителей"
+          >
+            🧾
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            aria-label="Закрыть настройки дома"
+          >
           ×
         </button>
       </div>
+    </div>
 
       <EditHouseForm house={house} districts={districts} onSuccess={onClose} formId={`edit-house-${house.id}`} onPendingChange={setIsSavePending} />
 
@@ -265,6 +277,41 @@ function HouseEditorCard({
         onCancel={() => setIsArchiveConfirmOpen(false)}
         onConfirm={handleConfirmArchive}
       />
+
+      {isAnnouncementOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div className="text-sm font-medium text-slate-900">
+                Объявление для жителей
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&download=1&filename=${encodeURIComponent(`${house.slug}.pdf`)}`}
+                  download={`${house.slug}.pdf`}
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                >
+                  Скачать PDF
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAnnouncementOpen(false)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 hover:bg-slate-100"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <iframe
+              src={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements`}
+              className="h-[calc(85vh-73px)] w-full"
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -471,7 +518,9 @@ function ArchivedHouseRestoreCard({
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
       />
-    </div>
+          
+
+</div>
   );
 }
 
@@ -748,6 +797,8 @@ export function HousesRegistryWorkspace({
           </div>
         </div>
       ) : null}
-    </div>
+          
+
+</div>
   );
 }

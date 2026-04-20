@@ -12,6 +12,8 @@ export type UpdateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
+const DEFAULT_ANNOUNCEMENT_IMAGE_URL =
+  "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80";
 const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_COVER_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -38,7 +40,11 @@ export async function updateHouse(
   formData: FormData,
 ): Promise<UpdateHouseState> {
   const currentUser = await getCurrentAdminUser();
-  const accessError = assertRegistryActionAccess({ role: currentUser?.role, area: "houses", action: "edit" });
+  const accessError = assertRegistryActionAccess({
+    role: currentUser?.role,
+    area: "houses",
+    action: "edit",
+  });
   if (accessError) return { error: accessError.error, successMessage: null };
 
   const id = String(formData.get("id") ?? "").trim();
@@ -166,7 +172,7 @@ export async function updateHouse(
       cover_image_path: nextCoverImagePath,
     })
     .eq("id", id)
-    .select("id, slug, name")
+    .select("id, slug, name, district:districts(theme_color)")
     .maybeSingle();
 
   if (updateError) {
@@ -199,6 +205,28 @@ export async function updateHouse(
         districtChanged: existingHouse.district_id !== districtId,
       },
     });
+  }
+
+  // 🔽 Генерация PDF объявления (асинхронно)
+  try {
+    const { generateHouseAnnouncementPdf } = await import(
+      "@/src/modules/houses/services/generateHouseAnnouncementPdf"
+    );
+    await generateHouseAnnouncementPdf({
+      houseId: updatedHouse.id,
+      houseName: name,
+      address,
+      osbbName,
+      slug: updatedHouse.slug,
+      accentColor:
+        updatedHouse.district &&
+        typeof updatedHouse.district === "object" &&
+        "theme_color" in updatedHouse.district
+          ? String(updatedHouse.district.theme_color ?? "")
+          : null,
+    });
+  } catch (e) {
+    console.error("announcement pdf trigger error", e);
   }
 
   revalidatePath("/admin/houses");

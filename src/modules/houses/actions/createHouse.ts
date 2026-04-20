@@ -13,6 +13,8 @@ type CreateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
+const DEFAULT_ANNOUNCEMENT_IMAGE_URL =
+  "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80";
 const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_COVER_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -67,7 +69,11 @@ export async function createHouse(
   formData: FormData,
 ): Promise<CreateHouseState> {
   const currentUser = await getCurrentAdminUser();
-  const accessError = assertRegistryActionAccess({ role: currentUser?.role, area: "houses", action: "create" });
+  const accessError = assertRegistryActionAccess({
+    role: currentUser?.role,
+    area: "houses",
+    action: "create",
+  });
   if (accessError) return { error: accessError.error };
 
   const name = String(formData.get("name") ?? "").trim();
@@ -87,6 +93,8 @@ export async function createHouse(
   if (!districtId) {
     return { error: "Выберите район для дома." };
   }
+
+  let uploadedCoverImagePath: string | null = null;
 
   if (coverImage) {
     if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
@@ -138,7 +146,7 @@ export async function createHouse(
       is_active: true,
       current_access_code: defaultAccessCode,
     })
-    .select("id, name, slug, public_description")
+    .select("id, name, slug, public_description, district:districts(theme_color)")
     .single();
 
   if (insertError) {
@@ -170,6 +178,8 @@ export async function createHouse(
         cover_image_path: coverImagePath,
       })
       .eq("id", createdHouse.id);
+
+    uploadedCoverImagePath = coverImagePath;
 
     if (coverUpdateError) {
       await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePath]);
@@ -222,6 +232,28 @@ export async function createHouse(
   revalidatePath("/admin/districts");
   revalidatePath("/admin/history");
   revalidatePath(`/house/${createdHouse.slug}`);
+
+  // 🔽 Генерация PDF объявления (асинхронно)
+  try {
+    const { generateHouseAnnouncementPdf } = await import(
+      "@/src/modules/houses/services/generateHouseAnnouncementPdf"
+    );
+    await generateHouseAnnouncementPdf({
+      houseId: createdHouse.id,
+      houseName: createdHouse.name,
+      address,
+      osbbName,
+      slug: createdHouse.slug,
+      accentColor:
+        createdHouse.district &&
+        typeof createdHouse.district === "object" &&
+        "theme_color" in createdHouse.district
+          ? String(createdHouse.district.theme_color ?? "")
+          : null,
+    });
+  } catch (e) {
+    console.error("announcement pdf trigger error FULL:", e); throw e;
+  }
 
   return { error: null };
 }
