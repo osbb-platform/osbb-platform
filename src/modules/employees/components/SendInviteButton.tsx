@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { sendEmployeeInvite } from "@/src/modules/employees/actions/sendEmployeeInvite";
 
 const initialState = {
@@ -29,11 +29,13 @@ function SendInviteActionButton({
     initialState,
   );
 
-  const flash = state.success
-    ? { type: "success" as const, message: state.success }
-    : state.error
-      ? { type: "error" as const, message: state.error }
-      : null;
+  const flash = useMemo(() => {
+    return state.success
+      ? { type: "success" as const, message: state.success }
+      : state.error
+        ? { type: "error" as const, message: state.error }
+        : null;
+  }, [state.success, state.error]);
 
   useEffect(() => {
     if (!flash) {

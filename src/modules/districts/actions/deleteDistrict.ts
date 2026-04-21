@@ -63,6 +63,15 @@ export async function deleteDistrict(
   _prevState: DeleteDistrictState,
   formData: FormData,
 ): Promise<DeleteDistrictState> {
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для удаления района.",
+      success: null,
+    };
+  }
+
   const districtId = String(formData.get("id") ?? "").trim();
 
   if (!districtId) {
@@ -167,7 +176,6 @@ export async function deleteDistrict(
     };
   }
 
-  const currentAdmin = await getCurrentAdminUser();
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,

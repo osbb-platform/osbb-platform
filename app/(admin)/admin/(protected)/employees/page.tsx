@@ -1,9 +1,13 @@
+import { redirect } from "next/navigation";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { CreateEmployeeForm } from "@/src/modules/employees/components/CreateEmployeeForm";
 import { EmployeeCard } from "@/src/modules/employees/components/EmployeeCard";
 import { EmployeesToolbar } from "@/src/modules/employees/components/EmployeesToolbar";
 import { getAdminEmployees } from "@/src/modules/employees/services/getAdminEmployees";
-import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+import {
+  assertTopLevelAccess,
+  getResolvedAccess,
+} from "@/src/shared/permissions/rbac.guards";
 
 type AdminEmployeesPageProps = {
   searchParams?: Promise<{
@@ -17,30 +21,15 @@ export default async function AdminEmployeesPage({
   searchParams,
 }: AdminEmployeesPageProps) {
   const currentUser = await getCurrentAdminUser();
-  const resolvedSearchParams = (await searchParams) ?? {};
 
-  const access = getResolvedAccess(currentUser?.role);
-  const hasAccess = access.topLevel.employees;
-
-  if (!hasAccess) {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-3xl border border-amber-800/40 bg-amber-950/30 p-6">
-          <div className="inline-flex rounded-full bg-amber-900/60 px-3 py-1 text-xs font-medium text-amber-200">
-            Access limited
-          </div>
-
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-            Сотрудники
-          </h1>
-
-          <p className="mt-3 max-w-3xl text-base leading-7 text-slate-300">
-            У текущего профиля пока нет доступа к разделу управления сотрудниками.
-          </p>
-        </div>
-      </div>
-    );
+  if (!currentUser) {
+    redirect("/admin/login");
   }
+
+  assertTopLevelAccess(currentUser.role, "employees");
+
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const access = getResolvedAccess(currentUser.role);
 
   const selectedRole = resolvedSearchParams.role?.trim() ?? "";
   const selectedStatus = resolvedSearchParams.status?.trim() ?? "";
@@ -54,7 +43,7 @@ export default async function AdminEmployeesPage({
 
   return (
     <div className="space-y-6">
-      <CreateEmployeeForm currentRole={currentUser?.role ?? null} />
+      <CreateEmployeeForm currentRole={currentUser.role} />
 
       <EmployeesToolbar
         selectedRole={selectedRole}
@@ -72,7 +61,7 @@ export default async function AdminEmployeesPage({
             <EmployeeCard
               key={employee.membershipId}
               employee={employee}
-              currentUserId={currentUser?.id ?? null}
+              currentUserId={currentUser.id}
               access={access.employees}
             />
           ))}

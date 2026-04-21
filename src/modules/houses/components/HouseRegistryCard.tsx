@@ -182,6 +182,7 @@ export function HouseRegistryCard({
 
   const access = getResolvedAccess(currentUser.role);
   const canManageSensitiveSettings = access.housesRegistry.changeAccessCode;
+  const canManageSettings = access.housesRegistry.edit;
 
   function openMessagesPanel() {
     setIsMessagesOpen(true);
@@ -230,6 +231,7 @@ export function HouseRegistryCard({
                     {house.district.name}
                   </span>
                 ) : null}
+                
               </div>
             </div>
 
@@ -243,54 +245,56 @@ export function HouseRegistryCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            {canManageSensitiveSettings ? (
-              <button
-                type="button"
-                onClick={() => setIsPasswordOpen(true)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-                aria-label={`Изменить код доступа дома ${house.name}`}
-                title="Изменить код доступа"
-              >
-                <KeyIcon />
-              </button>
-            ) : null}
+  {canManageSensitiveSettings ? (
+    <button
+      type="button"
+      onClick={() => setIsPasswordOpen(true)}
+      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      aria-label={`Изменить код доступа дома ${house.name}`}
+      title="Изменить код доступа"
+    >
+      <KeyIcon />
+    </button>
+  ) : null}
 
-            <button
-              type="button"
-              onClick={openMessagesPanel}
-              className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-              aria-label={`Открыть центр обращений дома ${house.name}`}
-              title="Центр обращений"
-            >
-              <MessageIcon />
-              {localUnreadCount > 0 ? (
-                <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white shadow-[0_8px_24px_rgba(244,63,94,0.45)]">
-                  {localUnreadCount > 9 ? "9+" : localUnreadCount}
-                </span>
-              ) : null}
-            </button>
+  <button
+    type="button"
+    onClick={openMessagesPanel}
+    className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+    aria-label={`Открыть центр обращений дома ${house.name}`}
+    title="Центр обращений"
+  >
+    <MessageIcon />
+    {localUnreadCount > 0 ? (
+      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+        {localUnreadCount > 9 ? "9+" : localUnreadCount}
+      </span>
+    ) : null}
+  </button>
 
-            <button
-              type="button"
-              onClick={() => onOpenSettings(house)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-              aria-label={`Настройки дома ${house.name}`}
-              title="Настройки"
-            >
-              <SettingsIcon />
-            </button>
+  {canManageSettings ? (
+    <button
+      type="button"
+      onClick={() => onOpenSettings(house)}
+      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      aria-label={`Настройки дома ${house.name}`}
+      title="Настройки"
+    >
+      <SettingsIcon />
+    </button>
+  ) : null}
 
-            <Link
-              href={`https://${house.slug}.osbb-platform.com.ua`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-              aria-label={`Открыть сайт дома ${house.name}`}
-              title="Открыть сайт дома"
-            >
-              <EyeIcon />
-            </Link>
-          </div>
+  <Link
+    href={`https://${house.slug}.osbb-platform.com.ua`}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+    aria-label={`Открыть сайт дома ${house.name}`}
+    title="Открыть сайт дома"
+  >
+    <EyeIcon />
+  </Link>
+</div>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -358,52 +362,53 @@ export function HouseRegistryCard({
                 <div className="space-y-4">
                   {localMessageItems.map((item) => (
                     <article
-                      key={item.id}
-                      className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-200">
-                          {getMessageTypeLabel(item.category)}
-                        </span>
-                        <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
-                          Квартира: {item.apartment || "—"}
-                        </span>
-                        <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
-                          {formatMessageDate(item.created_at)}
-                        </span>
-                        {item.status === "new" ? (
-                          <span className="rounded-full bg-rose-950/70 px-3 py-1 text-[11px] font-medium text-rose-200">
-                            Новое
-                          </span>
-                        ) : null}
-                      </div>
+  key={item.id}
+  className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5"
+>
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-200">
+      {getMessageTypeLabel(item.category)}
+    </span>
+    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
+      Квартира: {item.apartment || "—"}
+    </span>
+    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
+      {formatMessageDate(item.created_at)}
+    </span>
 
-                      <div className="mt-4">
-                        <div className="text-base font-semibold text-white">
-                          {item.requester_name || "Без имени"}
-                        </div>
-                        <div className="mt-1 text-sm text-slate-400">
-                          {item.requester_email || "Email не указан"}
-                          {item.requester_phone ? ` · ${item.requester_phone}` : ""}
-                        </div>
-                      </div>
+    {item.status === "new" ? (
+      <span className="rounded-full bg-rose-950/70 px-3 py-1 text-[11px] font-medium text-rose-200">
+        Новое
+      </span>
+    ) : null}
+  </div>
 
-                      {item.specialist_label ? (
-                        <div className="mt-3 text-sm text-slate-400">
-                          Специалист: {item.specialist_label}
-                        </div>
-                      ) : null}
+  <div className="mt-4">
+    <div className="text-base font-semibold text-white">
+      {item.requester_name || "Без имени"}
+    </div>
+    <div className="mt-1 text-sm text-slate-400">
+      {item.requester_email || "Email не указан"}
+      {item.requester_phone ? ` · ${item.requester_phone}` : ""}
+    </div>
+  </div>
 
-                      <div className="mt-4 text-sm leading-7 text-slate-300">
-                        {getMessagePreview(item)}
-                      </div>
+  {item.specialist_label ? (
+    <div className="mt-3 text-sm text-slate-400">
+      Специалист: {item.specialist_label}
+    </div>
+  ) : null}
 
-                      {item.comment ? (
-                        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm leading-7 text-slate-400">
-                          {item.comment}
-                        </div>
-                      ) : null}
-                    </article>
+  <div className="mt-4 text-sm leading-7 text-slate-300">
+    {getMessagePreview(item)}
+  </div>
+
+  {item.comment ? (
+    <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm leading-7 text-slate-400">
+      {item.comment}
+    </div>
+  ) : null}
+</article>
                   ))}
                 </div>
               ) : (
@@ -460,6 +465,7 @@ export function HouseRegistryCard({
           </div>
         </div>
       ) : null}
+
     </>
   );
 }

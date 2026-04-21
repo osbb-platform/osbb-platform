@@ -64,6 +64,15 @@ export async function updateDistrict(
   _prevState: UpdateDistrictState,
   formData: FormData,
 ): Promise<UpdateDistrictState> {
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для редактирования района.",
+      success: null,
+    };
+  }
+
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const themeColor = normalizeHexColor(String(formData.get("themeColor") ?? ""));
@@ -156,7 +165,6 @@ export async function updateDistrict(
     };
   }
 
-  const currentAdmin = await getCurrentAdminUser();
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,

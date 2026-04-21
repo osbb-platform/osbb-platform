@@ -36,6 +36,14 @@ export async function sendEmployeeInvite(
   formData: FormData,
 ): Promise<SendEmployeeInviteState> {
   const currentUser = await getCurrentAdminUser();
+
+  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для отправки инвайта.",
+      success: null,
+    };
+  }
+
   const access = getResolvedAccess(currentUser?.role);
 
   const membershipId = String(formData.get("membershipId") ?? "").trim();

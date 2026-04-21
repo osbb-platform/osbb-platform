@@ -11,5 +11,10 @@ export default async function AdminDistrictsPage() {
 
   const districts = await getAdminDistricts();
 
-  return <DistrictsRegistryWorkspace districts={districts} />;
+  return (
+    <DistrictsRegistryWorkspace
+      districts={districts}
+      currentUserRole={currentUser?.role ?? null}
+    />
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { deleteEmployee } from "@/src/modules/employees/actions/deleteEmployee";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
@@ -38,11 +38,13 @@ function DeleteEmployeeActionButton({
     initialState,
   );
 
-  const flash = state.success
-    ? { type: "success" as const, message: state.success }
-    : state.error
-      ? { type: "error" as const, message: state.error }
-      : null;
+  const flash = useMemo(() => {
+    return state.success
+      ? { type: "success" as const, message: state.success }
+      : state.error
+        ? { type: "error" as const, message: state.error }
+        : null;
+  }, [state.success, state.error]);
 
   useEffect(() => {
     if (!flash) {

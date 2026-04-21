@@ -101,6 +101,14 @@ export async function deleteEmployee(
   formData: FormData,
 ): Promise<DeleteEmployeeState> {
   const currentUser = await getCurrentAdminUser();
+
+  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для удаления сотрудника.",
+      success: null,
+    };
+  }
+
   const access = getResolvedAccess(currentUser?.role);
 
   const membershipId = String(formData.get("membershipId") ?? "").trim();

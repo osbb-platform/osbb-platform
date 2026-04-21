@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createEmployee } from "@/src/modules/employees/actions/createEmployee";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 
@@ -33,11 +33,13 @@ function CreateEmployeeActionForm({
   const canCreateEmployees =
     currentRole === ROLES.SUPERADMIN || currentRole === ROLES.ADMIN;
 
-  const flash = state.success
-    ? { type: "success" as const, message: state.success }
-    : state.error
-      ? { type: "error" as const, message: state.error }
-      : null;
+  const flash = useMemo(() => {
+    return state.success
+      ? { type: "success" as const, message: state.success }
+      : state.error
+        ? { type: "error" as const, message: state.error }
+        : null;
+  }, [state.success, state.error]);
 
   useEffect(() => {
     if (!flash) {

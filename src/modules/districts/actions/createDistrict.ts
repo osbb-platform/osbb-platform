@@ -57,6 +57,15 @@ export async function createDistrict(
   _prevState: CreateDistrictState,
   formData: FormData,
 ): Promise<CreateDistrictState> {
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для создания района.",
+      success: null,
+    };
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const themeColor = normalizeHexColor(String(formData.get("themeColor") ?? ""));
 
@@ -100,7 +109,6 @@ export async function createDistrict(
     return { error: `Ошибка создания района: ${error.message}`, success: null };
   }
 
-  const currentAdmin = await getCurrentAdminUser();
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,

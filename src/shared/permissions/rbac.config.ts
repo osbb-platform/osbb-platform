@@ -66,12 +66,12 @@ managerWorkspaces.announcements = {
   create: true,
   edit: true,
   saveDraft: true,
-  changeWorkflowStatus: true,
+  changeWorkflowStatus: false,
   publish: false,
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.board = {
@@ -97,20 +97,20 @@ managerWorkspaces.information = {
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.reports = {
   view: true,
-  create: false,
-  edit: false,
-  saveDraft: false,
+  create: true,
+  edit: true,
+  saveDraft: true,
   changeWorkflowStatus: false,
   publish: false,
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.plan = {
@@ -123,7 +123,7 @@ managerWorkspaces.plan = {
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.meetings = {
@@ -136,7 +136,7 @@ managerWorkspaces.meetings = {
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.requisites = {
@@ -162,7 +162,7 @@ managerWorkspaces.specialists = {
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 managerWorkspaces.debtors = {
@@ -175,18 +175,18 @@ managerWorkspaces.debtors = {
   confirm: false,
   archive: false,
   restore: false,
-  delete: false,
+  delete: true,
 };
 
 export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
   [ROLES.MANAGER]: {
     topLevel: {
       dashboard: true,
-      districts: false,
+      districts: true,
       houses: true,
       apartments: true,
       history: true,
-      employees: false,
+      employees: true,
       companyPages: false,
       profile: true,
     },
@@ -277,7 +277,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
       archive: true,
       restore: true,
       delete: true,
-      changeAccessCode: false,
+      changeAccessCode: true,
       manageCredentials: false,
     },
     apartmentsRegistry: {

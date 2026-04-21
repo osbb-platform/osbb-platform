@@ -16,6 +16,14 @@ export async function createEmployee(
   formData: FormData,
 ): Promise<CreateEmployeeState> {
   const currentUser = await getCurrentAdminUser();
+
+  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "superadmin")) {
+    return {
+      error: "Недостаточно прав для создания сотрудника.",
+      success: null,
+    };
+  }
+
   const access = getResolvedAccess(currentUser?.role);
 
   const fullName = String(formData.get("fullName") ?? "").trim();

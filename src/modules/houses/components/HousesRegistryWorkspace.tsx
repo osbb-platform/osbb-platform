@@ -583,7 +583,8 @@ export function HousesRegistryWorkspace({
   }, [activeHouses, searchQuery, districtFilter]);
 
   function openSettings(house: HouseItem) {
-    setEditingHouse(house);
+    if (!access.housesRegistry.edit) return;
+      setEditingHouse(house);
   }
 
   function closeSettings() {

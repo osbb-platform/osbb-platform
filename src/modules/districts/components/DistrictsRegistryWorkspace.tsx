@@ -23,6 +23,7 @@ import {
 } from "@/src/modules/districts/actions/deleteDistrict";
 import { slugify } from "@/src/shared/utils/slug/slugify";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 
 type DistrictListItem = {
   id: string;
@@ -35,6 +36,7 @@ type DistrictListItem = {
 
 type Props = {
   districts: DistrictListItem[];
+  currentUserRole: string | null;
 };
 
 type DistrictEditorMode =
@@ -86,10 +88,12 @@ function DistrictFormCard({
   mode,
   district,
   onCancel,
+  canManageDistricts,
 }: {
   mode: "create" | "edit";
   district?: DistrictListItem;
   onCancel: () => void;
+  canManageDistricts: boolean;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -141,7 +145,11 @@ function DistrictFormCard({
   }
 }, [deleteState.success, onCancel, router, state.success]);
 
-  const canDelete = mode === "edit" && district && !district.is_system_default;
+  const canDelete =
+    mode === "edit" &&
+    district &&
+    !district.is_system_default &&
+    canManageDistricts;
 
   function handleDeleteSubmit(event: React.FormEvent<HTMLFormElement>) {
     if (isDeleteConfirmedRef.current) {
@@ -184,7 +192,8 @@ function DistrictFormCard({
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
+          disabled={!canManageDistricts}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
           aria-label="Закрыть форму"
         >
           ×
@@ -337,7 +346,13 @@ function DistrictFormCard({
   );
 }
 
-export function DistrictsRegistryWorkspace({ districts }: Props) {
+export function DistrictsRegistryWorkspace({
+  districts,
+  currentUserRole,
+}: Props) {
+  const canManageDistricts =
+    currentUserRole === ROLES.ADMIN ||
+    currentUserRole === ROLES.SUPERADMIN;
   const [editorMode, setEditorMode] = useState<DistrictEditorMode>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useState("name_asc");
@@ -418,7 +433,10 @@ export function DistrictsRegistryWorkspace({ districts }: Props) {
 
           <button
             type="button"
-            onClick={openCreateForm}
+            onClick={() => {
+              if (!canManageDistricts) return;
+              openCreateForm();
+            }}
             className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
             Создать район
@@ -473,7 +491,11 @@ export function DistrictsRegistryWorkspace({ districts }: Props) {
       </div>
 
       {editorMode?.type === "create" ? (
-        <DistrictFormCard mode="create" onCancel={closeEditor} />
+        <DistrictFormCard
+          mode="create"
+          onCancel={closeEditor}
+          canManageDistricts={canManageDistricts}
+        />
       ) : null}
 
       {editorMode?.type === "edit" ? (
@@ -481,6 +503,7 @@ export function DistrictsRegistryWorkspace({ districts }: Props) {
           mode="edit"
           district={editorMode.district}
           onCancel={closeEditor}
+          canManageDistricts={canManageDistricts}
         />
       ) : null}
 
@@ -494,7 +517,10 @@ export function DistrictsRegistryWorkspace({ districts }: Props) {
           </div>
           <button
             type="button"
-            onClick={openCreateForm}
+            onClick={() => {
+              if (!canManageDistricts) return;
+              openCreateForm();
+            }}
             className="mt-6 inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
             Создать первый район
