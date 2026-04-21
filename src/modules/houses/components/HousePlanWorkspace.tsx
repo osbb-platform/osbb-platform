@@ -10,10 +10,7 @@ import {
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
-import {
-  getMultiplePdfHintMessage,
-  validateMultiplePdfFiles,
-} from "@/src/shared/utils/validators/pdfUpload";
+import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 
 type PlanWorkspaceState = {
   error: string | null;
@@ -296,8 +293,15 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
   function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
-    const availableSlots = Math.max(0, 5 - draft.images.length);
-    setSelectedImageFiles(files.slice(0, availableSlots));
+
+    setSelectedImageFiles((prev) => {
+      const alreadyCount = draft.images.length + prev.length;
+      const availableSlots = Math.max(0, 5 - alreadyCount);
+
+      const nextFiles = files.slice(0, availableSlots);
+
+      return [...prev, ...nextFiles];
+    });
   }
 
   function handlePdfChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -354,11 +358,6 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setRemovedDocumentIds((prev) =>
       prev.includes(attachmentId) ? prev : [...prev, attachmentId],
     );
-  }
-
-  function submitDeleteArchivedTask() {
-    setSubmitIntent("delete");
-    formRef.current?.requestSubmit();
   }
 
   const nextDraftStatus: PlanTaskStatus =
