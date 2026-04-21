@@ -10,6 +10,10 @@ import {
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import {
+  getMultiplePdfHintMessage,
+  validateMultiplePdfFiles,
+} from "@/src/shared/utils/validators/pdfUpload";
 
 type PlanWorkspaceState = {
   error: string | null;
@@ -196,6 +200,7 @@ export function HousePlanWorkspace({
 
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedPdfFiles, setSelectedPdfFiles] = useState<File[]>([]);
+const [pdfError, setPdfError] = useState<string | null>(null);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
 
@@ -298,7 +303,27 @@ export function HousePlanWorkspace({
   function handlePdfChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     const availableSlots = Math.max(0, 2 - draft.documents.length);
-    setSelectedPdfFiles(files.slice(0, availableSlots));
+    const nextFiles = files.slice(0, availableSlots);
+
+    if (nextFiles.length === 0) {
+      setSelectedPdfFiles([]);
+      setPdfError(null);
+      return;
+    }
+
+    const validation = validateMultiplePdfFiles(nextFiles, {
+      maxCount: 2,
+    });
+
+    if (!validation.isValid) {
+      setSelectedPdfFiles([]);
+      setPdfError(validation.error);
+      event.target.value = "";
+      return;
+    }
+
+    setPdfError(null);
+    setSelectedPdfFiles(nextFiles);
   }
 
   function clearSelectedImages() {
@@ -768,7 +793,13 @@ export function HousePlanWorkspace({
                     Выбрать
                   </label>
 
-                  {selectedPdfFiles.length > 0 ? (
+                  {pdfError ? (
+                  <div className="mt-2 text-xs text-red-400">
+                    {pdfError}
+                  </div>
+                ) : null}
+
+                {selectedPdfFiles.length > 0 ? (
                     <button
                       type="button"
                       onClick={clearSelectedPdfs}

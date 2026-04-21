@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 
 type UpdateHouseDocumentResult = {
   error: string | null;
@@ -83,6 +84,15 @@ export async function updateHouseDocument(
   const nextFile =
     isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
 
+
+  if (nextFile) {
+    const validation = validateSinglePdfFile(nextFile);
+
+    if (!validation.isValid) {
+      return { error: validation.error };
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const { data: existingDocument, error: existingDocumentError } = await supabase
@@ -132,7 +142,7 @@ export async function updateHouseDocument(
 
     if (removeError) {
       return {
-        error: `Не удалось удалить старый файл документа: ${removeError.message}`,
+        error: `Не удалось обновить файл документа. ${removeError.message}`,
       };
     }
 
@@ -158,7 +168,7 @@ export async function updateHouseDocument(
 
     if (uploadError) {
       return {
-        error: `Не удалось загрузить файл документа: ${uploadError.message}`,
+        error: `Не удалось загрузить файл документа. Попробуйте еще раз. ${uploadError.message}`,
       };
     }
 
@@ -198,7 +208,7 @@ export async function updateHouseDocument(
     .eq("house_id", houseId);
 
   if (updateError) {
-    return { error: `Не удалось обновить документ: ${updateError.message}` };
+    return { error: `Не удалось обновить документ. ${updateError.message}` };
   }
 
   const currentAdmin = await getCurrentAdminUser();

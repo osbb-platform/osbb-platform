@@ -5,6 +5,10 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import {
+  validateMultiplePdfFiles,
+  validateSinglePdfFile,
+} from "@/src/shared/utils/validators/pdfUpload";
 
 type UpdateHouseSectionState = {
   error: string | null;
@@ -521,12 +525,10 @@ export async function updateHouseSection(
     }
 
     if (nextFile) {
-      const lowerName = nextFile.name.toLowerCase();
-      const isPdf =
-        nextFile.type === "application/pdf" || lowerName.endsWith(".pdf");
+      const validation = validateSinglePdfFile(nextFile);
 
-      if (!isPdf) {
-        return { error: "Для отчета можно загружать только PDF файл." };
+      if (!validation.isValid) {
+        return { error: validation.error };
       }
     }
 
@@ -850,7 +852,7 @@ export async function updateHouseSection(
 
           if (removeError) {
             return {
-              error: `Не удалось удалить старый PDF задачи: ${removeError.message}`,
+              error: `Не удалось обновить PDF задачи. ${removeError.message}`,
             };
           }
         }
@@ -917,17 +919,16 @@ export async function updateHouseSection(
         });
       }
 
-      for (let index = 0; index < pdfFiles.length; index += 1) {
-        const nextFile = pdfFiles[index];
-        const lowerName = nextFile.name.toLowerCase();
-        const isPdf =
-          nextFile.type === "application/pdf" || lowerName.endsWith(".pdf");
+      const pdfValidation = validateMultiplePdfFiles(pdfFiles, {
+      maxCount: 2,
+    });
 
-        if (!isPdf) {
-          return {
-            error: `Файл «${nextFile.name}» не является PDF документом.`,
-          };
-        }
+    if (!pdfValidation.isValid) {
+      return { error: pdfValidation.error };
+    }
+
+    for (let index = 0; index < pdfFiles.length; index += 1) {
+        const nextFile = pdfFiles[index];
 
         const safeFileName = sanitizeFileName(nextFile.name);
         const nextStoragePath = `${houseId}/${activePlanTaskId}/documents/${Date.now()}-${index}-${safeFileName}`;
@@ -941,7 +942,7 @@ export async function updateHouseSection(
 
         if (uploadError) {
           return {
-            error: `Не удалось загрузить PDF задачи: ${uploadError.message}`,
+            error: `Не удалось загрузить PDF задачи. Попробуйте еще раз. ${uploadError.message}`,
           };
         }
 

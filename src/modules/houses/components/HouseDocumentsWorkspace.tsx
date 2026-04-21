@@ -7,6 +7,10 @@ import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSect
 import { createHouseDocument } from "@/src/modules/houses/actions/createHouseDocument";
 import { deleteHouseDocument } from "@/src/modules/houses/actions/deleteHouseDocument";
 import { updateHouseDocument } from "@/src/modules/houses/actions/updateHouseDocument";
+import {
+  getSinglePdfHintMessage,
+  validateSinglePdfFile,
+} from "@/src/shared/utils/validators/pdfUpload";
 import type {
   HouseDocumentCategory,
   HouseDocumentListItem,
@@ -142,6 +146,7 @@ export function HouseDocumentsWorkspace({
     useState<HouseDocumentVisibility>("draft");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const [fileError, setFileError] = useState<string | null>(null);
   const [removeAttachment, setRemoveAttachment] = useState(false);
 
   const selectedDocument = useMemo(
@@ -379,15 +384,51 @@ export function HouseDocumentsWorkspace({
                   ref={fileInputRef}
                   type="file"
                   accept="application/pdf"
-                  onChange={(event) =>
-                    setSelectedFile(event.target.files?.[0] ?? null)
-                  }
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+
+                    if (!file) {
+                      setSelectedFile(null);
+                      setFileError(null);
+                      return;
+                    }
+
+                    const validation = validateSinglePdfFile(file);
+
+                    if (!validation.isValid) {
+                      setSelectedFile(null);
+                      setFileError(validation.error);
+                      event.target.value = "";
+                      return;
+                    }
+
+                    setFileError(null);
+                    setSelectedFile(file);
+                  }}
                   className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                 />
 
                 <p className="mt-2 text-xs text-slate-500">
-                  Допускается только один PDF файл.
+                  {getSinglePdfHintMessage()}
                 </p>
+
+                {fileError ? (
+                  <div className="mt-2 text-xs text-red-400">
+                    {fileError}
+                  </div>
+                ) : null}
+
+                {fileError ? (
+                  <div className="mt-2 text-xs text-red-400">
+                    {fileError}
+                  </div>
+                ) : null}
+
+                {fileError ? (
+                  <div className="mt-2 text-xs text-red-400">
+                    {fileError}
+                  </div>
+                ) : null}
 
                 {selectedFile ? (
                   <div className="mt-2 text-xs text-slate-400">
@@ -493,16 +534,37 @@ export function HouseDocumentsWorkspace({
                       ref={fileInputRef}
                       type="file"
                       onChange={(event) => {
-                        const next = event.target.files?.[0] ?? null;
-                        setSelectedFile(next);
-                        if (next) {
-                          setRemoveAttachment(false);
+                        const file = event.target.files?.[0] ?? null;
+
+                        if (!file) {
+                          setSelectedFile(null);
+                          setFileError(null);
+                          return;
                         }
+
+                        const validation = validateSinglePdfFile(file);
+
+                        if (!validation.isValid) {
+                          setSelectedFile(null);
+                          setFileError(validation.error);
+                          event.target.value = "";
+                          return;
+                        }
+
+                        setFileError(null);
+                        setSelectedFile(file);
+                        setRemoveAttachment(false);
                       }}
                       className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                     />
 
-                    {selectedFile ? (
+                    {fileError ? (
+                  <div className="mt-2 text-xs text-red-400">
+                    {fileError}
+                  </div>
+                ) : null}
+
+                {selectedFile ? (
                       <div className="mt-2 text-xs text-slate-400">
                         Будет загружен файл: {selectedFile.name} (
                         {formatFileSize(selectedFile.size)})
@@ -523,7 +585,7 @@ export function HouseDocumentsWorkspace({
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  disabled={isPending}
+                  disabled={isPending || Boolean(fileError)}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
                 >
                   {isPending ? "Сохраняем..." : "Сохранить"}
@@ -534,7 +596,7 @@ export function HouseDocumentsWorkspace({
                   <button
                     type="button"
                     onClick={handleDeleteDocument}
-                    disabled={isPending}
+                    disabled={isPending || Boolean(fileError)}
                     className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/30 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
                   >
                     Удалить
@@ -547,7 +609,7 @@ export function HouseDocumentsWorkspace({
                 selectedDocument?.visibility_status !== "published" ? (
                   <button
                     type="button"
-                    disabled={isPending}
+                    disabled={isPending || Boolean(fileError)}
                     onClick={() => {
                       setVisibility("published");
                       setTimeout(() => {
@@ -568,7 +630,7 @@ export function HouseDocumentsWorkspace({
                   <button
                     type="button"
                     onClick={handleDeleteDocument}
-                    disabled={isPending}
+                    disabled={isPending || Boolean(fileError)}
                     className="inline-flex items-center justify-center rounded-2xl border border-amber-700 bg-amber-950/40 px-5 py-3 text-sm font-medium text-amber-200 transition hover:bg-amber-950/70 disabled:opacity-60"
                   >
                     Архивировать

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 
 type CreateHouseDocumentResult = {
   error: string | null;
@@ -69,11 +70,15 @@ export async function createHouseDocument(
   }
 
   if (!attachment) {
-    return { error: "Загрузи PDF файл документа." };
+    return { error: "Добавьте PDF-файл документа, чтобы сохранить карточку." };
   }
 
-  if (attachment.type && attachment.type !== "application/pdf") {
-    return { error: "Допускается только PDF файл." };
+  const validation = validateSinglePdfFile(attachment, {
+    required: true,
+  });
+
+  if (!validation.isValid) {
+    return { error: validation.error };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -118,7 +123,7 @@ export async function createHouseDocument(
       .eq("house_id", houseId);
 
     return {
-      error: `Не удалось загрузить PDF документа: ${uploadError.message}`,
+      error: `Не удалось загрузить PDF-документ. ${uploadError.message}`,
     };
   }
 
@@ -146,7 +151,7 @@ export async function createHouseDocument(
       .eq("house_id", houseId);
 
     return {
-      error: `Не удалось сохранить PDF документа: ${attachUpdateError.message}`,
+      error: `Не удалось сохранить документ. ${attachUpdateError.message}`,
     };
   }
 

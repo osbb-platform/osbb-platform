@@ -4,6 +4,10 @@ import { startTransition, useActionState, useMemo, useRef, useState, useTransiti
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import {
+  getSinglePdfHintMessage,
+  validateSinglePdfFile,
+} from "@/src/shared/utils/validators/pdfUpload";
 
 const initialState = {
   error: null,
@@ -60,8 +64,6 @@ const CURRENT_MONTH_OPTIONS = [
   { value: "11", label: "Ноябрь" },
   { value: "12", label: "Декабрь" },
 ];
-
-const MAX_REPORT_PDF_SIZE_BYTES = 1024 * 1024;
 
 const DEFAULT_CATEGORIES = [
   "Выполненные работы",
@@ -402,29 +404,18 @@ export function HouseReportsWorkspace({
       return;
     }
 
-    const isPdf =
-      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    const validation = validateSinglePdfFile(file);
 
-    if (!isPdf) {
+    if (!validation.isValid) {
       setSelectedPdfLabel("");
-      setReportPdfError("Можно загрузить только PDF файл.");
-      event.target.value = "";
-      return;
-    }
-
-    if (file.size > MAX_REPORT_PDF_SIZE_BYTES) {
-      setSelectedPdfLabel("");
-      setReportPdfError("PDF файл превышает лимит 1 МБ. Выберите файл меньше 1 МБ.");
+      setReportPdfError(validation.error);
       event.target.value = "";
       return;
     }
 
     setReportPdfError(null);
     setSelectedPdfLabel(file.name);
-
-    if (file) {
-      setRemoveReportPdf(false);
-    }
+    setRemoveReportPdf(false);
   }
 
 
@@ -740,7 +731,7 @@ export function HouseReportsWorkspace({
               </label>
 
               <div className="mt-2 text-xs text-slate-500">
-                Допустим только PDF до 1 МБ.
+                {getSinglePdfHintMessage()}
               </div>
 
               {reportPdfError ? (

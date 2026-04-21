@@ -143,7 +143,18 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
           });
         }
 
-        const sections = await getAdminHouseSections(page.id);
+        let sections: Awaited<ReturnType<typeof getAdminHouseSections>> = [];
+
+        try {
+          sections = await getAdminHouseSections(page.id);
+        } catch (e) {
+          console.error("Dashboard: failed to load sections", {
+            houseId: house.id,
+            pageId: page.id,
+            error: e,
+          });
+          sections = [];
+        }
 
         for (const section of sections) {
           if (section.status === "draft") {
