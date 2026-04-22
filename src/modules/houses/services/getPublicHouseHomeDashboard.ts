@@ -21,7 +21,7 @@ type HomeWidgetBase = {
 };
 
 export type PublicHouseHomeStatusItem = {
-  id: "announcements" | "plan" | "meetings" | "tariff";
+  id: string;
   label: string;
   value: string;
 };
@@ -221,6 +221,20 @@ function formatCurrency(amount: number) {
     minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+function formatWidgetValue(value: unknown) {
+  const raw = asString(value);
+  if (!raw) {
+    return "";
+  }
+
+  const normalized = Number(raw.replace(/\s+/g, "").replace(",", "."));
+  if (Number.isFinite(normalized)) {
+    return `${formatCurrency(normalized)} ₴`;
+  }
+
+  return raw.includes("₴") ? raw : raw;
 }
 
 function normalizeAmount(value: unknown) {
@@ -687,57 +701,6 @@ function buildDebtorsWidget(
   };
 }
 
-function buildStatusStrip(
-  announcementsSections: HouseSectionRecord[],
-  planSections: HouseSectionRecord[],
-  meetingsSections: HouseSectionRecord[],
-  tariffAmount: number | null | undefined,
-): PublicHouseHomeStatusItem[] {
-  const announcementCount = announcementsSections.length;
-
-  const planSection = planSections[0];
-  const planTasks = planSection ? normalizePlanTasks(asRecord(planSection.content).items) : [];
-  const inProgressCount = planTasks.filter((task) => task.status === "in_progress").length;
-
-  const meetingsSection = meetingsSections[0];
-  const meetings = meetingsSection
-    ? normalizeMeetings(asRecord(meetingsSection.content).items).filter((item) => item.status !== "draft")
-    : [];
-
-  const nearestMeeting =
-    [...meetings]
-      .filter((item) => item.status === "scheduled")
-      .sort((left, right) => getTime(left.meetingDateTime) - getTime(right.meetingDateTime))[0] ?? null;
-
-  return [
-    {
-      id: "announcements",
-      label: houseSystemCopy.homeDashboard.statusStrip.announcements,
-      value: announcementCount > 0 ? String(announcementCount) : houseSystemCopy.homeDashboard.common.none,
-    },
-    {
-      id: "plan",
-      label: houseSystemCopy.homeDashboard.statusStrip.plan,
-      value: inProgressCount > 0 ? String(inProgressCount) : houseSystemCopy.homeDashboard.common.none,
-    },
-    {
-      id: "meetings",
-      label: houseSystemCopy.homeDashboard.statusStrip.meetings,
-      value: nearestMeeting
-        ? formatDate(nearestMeeting.meetingDateTime)
-        : houseSystemCopy.homeDashboard.statusStrip.notScheduled,
-    },
-    {
-      id: "tariff",
-      label: "ТАРИФ",
-      value:
-        tariffAmount !== null && tariffAmount !== undefined
-          ? `${formatCurrency(tariffAmount)} ₴`
-          : "—",
-    },
-  ];
-}
-
 function pickTopAlert(
   slug: string,
   informationSections: HouseSectionRecord[],
@@ -832,16 +795,29 @@ export async function getPublicHouseHomeDashboard({
   const planSections = homeSections.filter((section) => section.kind === "plan");
   const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
   const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
+  const dashboardSection = homeSections.find(
+    (section) => section.kind === "custom" && section.title === "Home widgets",
+  );
+
+  const dashboardContent = dashboardSection?.content ?? {};
+  const rawWidgets = Array.isArray(dashboardContent["statusWidgets"])
+    ? dashboardContent["statusWidgets"]
+    : [];
+
+  const statusWidgets: PublicHouseHomeStatusItem[] = rawWidgets
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .map((item, index) => ({
+      id: typeof item.id === "string" && item.id.trim() ? item.id : `widget-${index}`,
+      label: String(item.label ?? "").slice(0, 30),
+      value: formatWidgetValue(item.value),
+    }))
+    .filter((item) => item.label && item.value);
+
 
   console.log("BUILD_STATUS_STRIP_RESULT", {
     slug,
     tariffAmount: house?.tariff_amount,
-    statusStrip: buildStatusStrip(
-      announcementsSections,
-      planSections,
-      meetingsSections,
-      house?.tariff_amount,
-    ),
+    statusStrip: statusWidgets,
   });
 
   return {
@@ -852,12 +828,7 @@ export async function getPublicHouseHomeDashboard({
         asString(heroContent.subheadline) ||
         houseSystemCopy.homeDashboard.hero.subheadlineFallback,
     },
-    statusStrip: buildStatusStrip(
-      announcementsSections,
-      planSections,
-      meetingsSections,
-      house?.tariff_amount,
-    ),
+    statusStrip: statusWidgets,
     topAlert: pickTopAlert(slug, informationSections, meetingsSections),
     widgets: [
       buildAnnouncementsWidget(slug, announcementsSections),

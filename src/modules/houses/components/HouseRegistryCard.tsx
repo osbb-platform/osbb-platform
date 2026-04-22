@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeHousePasswordForm } from "@/src/modules/houses/components/ChangeHousePasswordForm";
-import { ChangeHouseTariffForm } from "@/src/modules/houses/components/ChangeHouseTariffForm";
+import { ChangeHouseDashboardWidgetsForm } from "@/src/modules/houses/components/ChangeHouseDashboardWidgetsForm";
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
@@ -265,8 +265,8 @@ export function HouseRegistryCard({
       type="button"
       onClick={() => setIsTariffOpen(true)}
       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-      aria-label={`Изменить тариф дома ${house.name}`}
-      title="Изменить тариф"
+      aria-label={`Настроить виджеты дома ${house.name}`}
+      title="Настроить виджеты"
     >
       💰
     </button>
@@ -494,11 +494,11 @@ export function HouseRegistryCard({
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
               <div>
                 <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Тариф дома
+                  Виджеты главной
                 </div>
 
                 <h2 className="mt-4 text-2xl font-semibold text-white">
-                  Изменить тариф
+                  Настроить виджеты
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-400">
@@ -516,10 +516,11 @@ export function HouseRegistryCard({
             </div>
 
             <div className="flex-1 px-6 py-6">
-              <ChangeHouseTariffForm
+              <ChangeHouseDashboardWidgetsForm
+                sectionId=""
                 houseId={house.id}
                 houseSlug={house.slug}
-                initialValue={house.tariff_amount}
+                initialWidgets={[]}
               />
             </div>
           </div>

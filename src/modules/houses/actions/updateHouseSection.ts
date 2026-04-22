@@ -362,10 +362,30 @@ export async function updateHouseSection(
       : {};
 
   let content: Record<string, unknown> = {};
-
   let historyDescription = "Обновлена секция.";
   let historySubSection = "information";
   let nextPlanItems: unknown[] | null = null;
+
+  if (kind === "custom") {
+    const rawPayload = formData.get("payload");
+
+    if (typeof rawPayload === "string") {
+      try {
+        const parsed = JSON.parse(rawPayload);
+
+        content = {
+          ...existingContent,
+          ...parsed,
+        };
+
+        historyDescription = "Обновлены показатели главной страницы.";
+        historySubSection = "home";
+      } catch (error) {
+        console.error("Failed to parse custom home widgets payload", error);
+        return { error: "Не удалось сохранить показатели. Проверьте заполнение полей." };
+      }
+    }
+  }
 
 
 
