@@ -152,25 +152,25 @@ function HouseTechnicalPlaceholder({
   description: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-      <div className="inline-flex rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
+    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+      <div className="inline-flex rounded-full border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
         CMS placeholder
       </div>
 
-      <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+      <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
         {title}
       </h2>
 
-      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--cms-text-muted)]">
         {description}
       </p>
 
-      <div className="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-5">
-        <div className="text-sm font-medium text-white">
+      <div className="mt-6 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
+        <div className="text-sm font-medium text-[var(--cms-text)]">
           Техническая заглушка
         </div>
 
-        <p className="mt-2 text-sm leading-6 text-slate-400">
+        <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
           Публичная страница для этого раздела уже предусмотрена в структуре
           сайта дома. Здесь зафиксировано безопасное место под будущий CMS
           editor без изменения existing public rendering path.
@@ -486,44 +486,44 @@ export default async function AdminHouseDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
               <Link
                 href="/admin/houses"
-                className="transition hover:text-white"
+                className="transition hover:text-[var(--cms-text)]"
               >
                 Дома
               </Link>
               <span>/</span>
-              <span className="text-white">{house.name}</span>
+              <span className="text-[var(--cms-text)]">{house.name}</span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               {house.name}
             </h1>
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
               Рабочая панель управления разделами и контентом сайта дома.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 slug: {house.slug}
               </span>
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 {house.is_active ? "Активен" : "Архив"}
               </span>
               {house.district ? (
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-medium text-white"
+                  className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-text)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
                 </span>
               ) : null}
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 Раздел: {
                   {
                     announcements: "Объявления",
@@ -540,7 +540,7 @@ export default async function AdminHouseDetailPage({
               </span>
             </div>
 
-            <div className="mt-4 text-sm text-slate-500">
+            <div className="mt-4 text-sm text-[var(--cms-text-muted)]">
               {house.address}
               {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
             </div>
@@ -548,7 +548,7 @@ export default async function AdminHouseDetailPage({
 
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
             <div className="w-full xl:w-[320px]">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                 Раздел дома
               </div>
               <HouseBlockSelector
@@ -562,7 +562,7 @@ export default async function AdminHouseDetailPage({
                 href={publicPreviewHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
                 aria-label={`Открыть сайт дома ${house.name}`}
                 title="Открыть сайт дома"
               >
@@ -583,7 +583,7 @@ export default async function AdminHouseDetailPage({
 
               <Link
                 href="/admin/houses"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
               >
                 Назад к реестру
               </Link>

@@ -43,3 +43,71 @@ textarea,
 select {
   font: inherit;
 }
+
+.cms-theme-root {
+  --cms-bg: #020617;
+  --cms-surface: #0f172a;
+  --cms-surface-muted: rgba(2, 6, 23, 0.7);
+  --cms-surface-elevated: #020617;
+
+  --cms-border: #1e293b;
+  --cms-border-strong: #334155;
+
+  --cms-text: #ffffff;
+  --cms-text-muted: #94a3b8;
+  --cms-text-soft: #64748b;
+
+  --cms-pill-bg: #1e293b;
+  --cms-pill-text: #e2e8f0;
+
+  --cms-primary: #ffffff;
+  --cms-primary-contrast: #020617;
+
+  --cms-overlay: rgba(2, 6, 23, 0.8);
+
+  --cms-success-bg: rgba(6, 78, 59, 0.28);
+  --cms-success-border: rgba(16, 185, 129, 0.42);
+  --cms-success-text: #a7f3d0;
+
+  --cms-danger-bg: rgba(127, 29, 29, 0.26);
+  --cms-danger-border: rgba(248, 113, 113, 0.4);
+  --cms-danger-text: #fecaca;
+
+  --cms-warning-bg: rgba(120, 53, 15, 0.24);
+  --cms-warning-border: rgba(245, 158, 11, 0.42);
+  --cms-warning-text: #fde68a;
+}
+
+html[data-admin-theme="light"] .cms-theme-root {
+  --cms-bg: #f3f6fb;
+  --cms-surface: #ffffff;
+  --cms-surface-muted: #f7f9fc;
+  --cms-surface-elevated: #f8fafc;
+
+  --cms-border: rgba(203, 213, 225, 0.9);
+  --cms-border-strong: rgba(148, 163, 184, 0.95);
+
+  --cms-text: #0f172a;
+  --cms-text-muted: #475569;
+  --cms-text-soft: #64748b;
+
+  --cms-pill-bg: #e2e8f0;
+  --cms-pill-text: #1e293b;
+
+  --cms-primary: #0f172a;
+  --cms-primary-contrast: #f8fafc;
+
+  --cms-overlay: rgba(15, 23, 42, 0.22);
+
+  --cms-success-bg: rgba(16, 185, 129, 0.1);
+  --cms-success-border: rgba(5, 150, 105, 0.35);
+  --cms-success-text: #065f46;
+
+  --cms-danger-bg: rgba(239, 68, 68, 0.1);
+  --cms-danger-border: rgba(220, 38, 38, 0.28);
+  --cms-danger-text: #991b1b;
+
+  --cms-warning-bg: rgba(245, 158, 11, 0.12);
+  --cms-warning-border: rgba(217, 119, 6, 0.28);
+  --cms-warning-text: #92400e;
+}

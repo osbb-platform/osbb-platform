@@ -1,11 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
 import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/EditAnnouncementSectionForm";
 import { deleteArchivedHouseAnnouncements } from "@/src/modules/houses/actions/deleteArchivedHouseAnnouncements";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import {
+  adminBodyClass,
+  adminDangerButtonClass,
+  adminEmptyStateClass,
+  adminInsetSurfaceClass,
+  adminPrimaryButtonClass,
+  
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type AnnouncementItem = {
   id: string;
@@ -64,20 +75,13 @@ function getStatusLabel(status: AnnouncementItem["status"]) {
   return "Черновик";
 }
 
-function getStatusBadgeClasses(status: AnnouncementItem["status"]) {
-  if (status === "published") {
-    return "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20";
-  }
-
-  if (status === "in_review") {
-    return "bg-amber-500/15 text-amber-300 border border-amber-500/20";
-  }
-
-  if (status === "archived") {
-    return "bg-slate-700 text-slate-200 border border-slate-600";
-  }
-
-  return "bg-sky-500/15 text-sky-300 border border-sky-500/20";
+function getStatusTone(
+  status: AnnouncementItem["status"],
+): "success" | "warning" | "neutral" | "info" {
+  if (status === "published") return "success";
+  if (status === "in_review") return "warning";
+  if (status === "archived") return "neutral";
+  return "info";
 }
 
 function getLevelLabel(level: string) {
@@ -89,7 +93,7 @@ function getLevelLabel(level: string) {
 function getLevelDotClasses(level: string) {
   if (level === "danger") return "bg-red-400";
   if (level === "warning") return "bg-amber-400";
-  return "bg-slate-400";
+  return "bg-[#85e874]";
 }
 
 function getPreviewText(value: unknown) {
@@ -147,6 +151,7 @@ export function HouseAnnouncementsWorkspace({
   const archivedAnnouncements = sortedSections.filter(
     (section) => section.status === "archived",
   );
+
   const tabMap = {
     active: activeAnnouncements,
     moderation: moderationAnnouncements,
@@ -224,7 +229,7 @@ export function HouseAnnouncementsWorkspace({
         }
 
         setMode("idle");
-      setSelectedSectionId(null);
+        setSelectedSectionId(null);
         router.refresh();
       } catch (error) {
         setWorkspaceError(
@@ -237,13 +242,13 @@ export function HouseAnnouncementsWorkspace({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+    <div className={[adminSurfaceClass, "p-6"].join(" ")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             Объявления дома
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className={["mt-2", adminBodyClass].join(" ")}>
             Операционный экран уведомлений для жильцов.
           </p>
         </div>
@@ -252,7 +257,7 @@ export function HouseAnnouncementsWorkspace({
           <button
             type="button"
             onClick={openCreateMode}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+            className={[adminPrimaryButtonClass, "min-h-12 px-6"].join(" ")}
           >
             Новое объявление
           </button>
@@ -260,39 +265,27 @@ export function HouseAnnouncementsWorkspace({
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-3">
-          {[
-            ["active", "Активные объявления", activeAnnouncements.length],
-            ["moderation", "Черновики", moderationAnnouncements.length],
-            ["archive", "Архив", archivedAnnouncements.length],
-          ].map(([key, label, count]) => {
-            const isActive = key === activeTab;
-
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleTabChange(key as TabKey)}
-                className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-white text-slate-950"
-                    : "border border-slate-700 bg-slate-950/40 text-white"
-                }`}
-              >
-                <span>{label}</span>
-                <span
-                  className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    isActive
-                      ? "bg-slate-200 text-slate-950"
-                      : "bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <AdminSegmentedTabs
+          activeKey={activeTab}
+          onChange={(key) => handleTabChange(key as TabKey)}
+          items={[
+            {
+              key: "active",
+              label: "Активные объявления",
+              count: activeAnnouncements.length,
+            },
+            {
+              key: "moderation",
+              label: "Черновики",
+              count: moderationAnnouncements.length,
+            },
+            {
+              key: "archive",
+              label: "Архив",
+              count: archivedAnnouncements.length,
+            },
+          ]}
+        />
 
         {activeTab === "archive" &&
         archivedAnnouncements.length > 0 &&
@@ -301,7 +294,7 @@ export function HouseAnnouncementsWorkspace({
             type="button"
             disabled={isDeletingArchive}
             onClick={() => setIsDeleteArchiveConfirmOpen(true)}
-            className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+            className={[adminDangerButtonClass, "disabled:opacity-60"].join(" ")}
           >
             {isDeletingArchive ? "Удаляем архив..." : "Удалить все"}
           </button>
@@ -309,7 +302,7 @@ export function HouseAnnouncementsWorkspace({
       </div>
 
       {workspaceError ? (
-        <div className="mt-6 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {workspaceError}
         </div>
       ) : null}
@@ -325,17 +318,16 @@ export function HouseAnnouncementsWorkspace({
         ) : null}
 
         {shouldRenderEdit && selectedSection ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
+          <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
             <EditAnnouncementSectionForm
               houseId={houseId}
               houseSlug={houseSlug}
               housePageId={housePageId}
-            section={selectedSection}
+              section={selectedSection}
               onClose={closeWorkspace}
             />
           </div>
         ) : null}
-
       </div>
 
       <PlatformConfirmModal
@@ -378,8 +370,8 @@ export function HouseAnnouncementsWorkspace({
                 onClick={() => openEditMode(section.id)}
                 className={`block w-full rounded-2xl border p-4 text-left transition ${
                   isSelected
-                    ? "border-white bg-slate-800"
-                    : "border-slate-800 bg-slate-950/40 hover:border-slate-600 hover:bg-slate-950/70"
+                    ? "border-[var(--cms-primary)] bg-[var(--cms-pill-bg)]"
+                    : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                 }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -390,33 +382,29 @@ export function HouseAnnouncementsWorkspace({
                           level,
                         )}`}
                       />
-                      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      <span className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Объявление #{index + 1}
                       </span>
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadgeClasses(
-                          section.status,
-                        )}`}
-                      >
+                      <AdminStatusBadge tone={getStatusTone(section.status)}>
                         {getStatusLabel(section.status)}
-                      </span>
+                      </AdminStatusBadge>
                     </div>
 
-                    <div className="truncate text-base font-semibold text-white">
+                    <div className="truncate text-base font-semibold text-[var(--cms-text)]">
                       {section.title ?? "Объявление без заголовка"}
                     </div>
 
-                    <div className="mt-2 text-sm leading-6 text-slate-300">
+                    <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                       {bodyPreview}
                     </div>
                   </div>
 
-                  <div className="shrink-0 rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-300">
+                  <div className="shrink-0 rounded-full border border-[var(--cms-border-strong)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                     {getLevelLabel(level)}
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                <div className="mt-4 grid gap-2 text-xs text-[var(--cms-text-soft)] sm:grid-cols-2">
                   <div>Опубликовано: {publishedAt}</div>
                   <div>Обновлено: {updatedAt}</div>
                 </div>
@@ -424,12 +412,12 @@ export function HouseAnnouncementsWorkspace({
             );
           })
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-700 px-4 py-4 text-sm leading-6 text-slate-400">
+          <div className={adminEmptyStateClass}>
             {activeTab === "active"
               ? "Сейчас нет активных объявлений для жильцов. После подтверждения они будут отображаться здесь."
               : activeTab === "moderation"
-                ? "Сейчас нет черновиков объявлений. Новое объявление появится здесь сразу после сохранения."
-                : "Архив объявлений пока пуст. Перенесенные из активных объявления будут отображаться здесь."}
+                ? "Черновиков пока нет. Создай новое объявление, чтобы начать работу."
+                : "Архив объявлений пока пуст."}
           </div>
         )}
       </div>

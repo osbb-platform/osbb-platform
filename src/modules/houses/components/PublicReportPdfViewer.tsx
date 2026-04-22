@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { PublicDocumentActionButton } from "@/src/shared/ui/public/PublicDocumentActionButton";
 
 type Props = {
@@ -9,20 +10,23 @@ type Props = {
   bucket?: string;
 };
 
-function buildViewerUrl(path: string, bucket: string) {
-  if (!path.trim()) return "";
-
-  return `/api/reports/view?path=${encodeURIComponent(path)}&bucket=${encodeURIComponent(bucket)}`;
-}
-
 export function PublicReportPdfViewer({
   filePath,
   fileName,
   bucket = "house-reports",
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const viewerUrl = useMemo(() => buildViewerUrl(filePath, bucket), [filePath, bucket]);
+  const viewerUrl = useMemo(() => {
+    if (!filePath.trim()) return "";
+    const params = new URLSearchParams({ path: filePath, bucket });
+    if (fileName?.trim()) {
+      params.set("filename", fileName);
+    }
+    return `/api/reports/view?${params.toString()}`;
+  }, [bucket, fileName, filePath]);
 
   if (!filePath.trim()) {
     return (
@@ -32,41 +36,58 @@ export function PublicReportPdfViewer({
     );
   }
 
+  const modal =
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4">
+      <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <div className="text-sm font-medium text-slate-900">
+            {fileName || "Перегляд звіту"}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              setIsLoading(false);
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-100"
+            aria-label="Закрити PDF"
+          >
+            ×
+          </button>
+        </div>
+
+        <iframe
+          src={viewerUrl}
+          title={fileName || "PDF report"}
+          className="h-[calc(85vh-73px)] w-full"
+          onLoad={() => setIsLoading(false)}
+        />
+      </div>
+    </div>;
+
   return (
     <>
       <PublicDocumentActionButton
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setLoadError(null);
+          setIsLoading(true);
+          setIsOpen(true);
+        }}
         className="mt-5"
       >
-        Ознайомитися
+        {isLoading ? "Відкриваємо..." : "Ознайомитися"}
       </PublicDocumentActionButton>
 
-      {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div className="text-sm font-medium text-slate-900">
-                {fileName || "Перегляд звіту"}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-100"
-                aria-label="Закрити PDF"
-              >
-                ×
-              </button>
-            </div>
-
-            <iframe
-              src={viewerUrl}
-              title={fileName || "PDF report"}
-              className="h-[calc(85vh-73px)] w-full"
-            />
-          </div>
+      {loadError ? (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
         </div>
       ) : null}
+
+      {isOpen && typeof window !== "undefined"
+        ? createPortal(modal, document.body)
+        : null}
     </>
   );
 }

@@ -17,6 +17,7 @@ export type HouseRecord = {
   cover_image_path: string | null;
   cover_image_url?: string | null;
   is_active: boolean;
+  tariff_amount: number | null;
   district: DistrictRecord | null;
 };
 

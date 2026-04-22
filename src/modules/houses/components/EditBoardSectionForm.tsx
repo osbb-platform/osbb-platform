@@ -2,6 +2,13 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminDangerButtonClass,
+  adminInputClass,
+  adminIconButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = {
   error: null,
@@ -509,12 +516,12 @@ export function EditBoardSectionForm({
         <input type="hidden" name="status" value={section.status} />
         <input type="hidden" name="boardPayload" value={serializedBoardPayload} />
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Правление</h2>
-                <p className="mt-2 text-sm text-slate-400">
+                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Правление</h2>
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   Состав правления, контакты ответственных лиц и карточки, которые жители видят на сайте дома.
                 </p>
               </div>
@@ -522,7 +529,7 @@ export function EditBoardSectionForm({
               <button
                 type="button"
                 onClick={openCreateMode}
-                className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-white px-5 text-sm font-medium whitespace-nowrap text-slate-950 transition hover:bg-slate-200"
+                className={[adminPrimaryButtonClass, "h-12 shrink-0 whitespace-nowrap"].join(" ")}
               >
                 Создать роль
               </button>
@@ -553,16 +560,16 @@ export function EditBoardSectionForm({
                       onClick={() => setActiveTab(tab.key)}
                       className={`inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-medium whitespace-nowrap transition ${
                         isActive
-                          ? "bg-white text-slate-950"
-                          : "border border-slate-700 bg-slate-950/40 text-white"
+                          ? "bg-[var(--cms-primary)] text-white"
+                          : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 text-[var(--cms-text)]"
                       }`}
                     >
                       <span>{tab.label}</span>
                       <span
                         className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                           isActive
-                            ? "bg-slate-200 text-slate-950"
-                            : "bg-slate-800 text-slate-200"
+                            ? "bg-white text-[var(--cms-text)]"
+                            : "bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
                         }`}
                       >
                         {count}
@@ -575,13 +582,13 @@ export function EditBoardSectionForm({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
                 Обращение от правления
               </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                 Этот текст будет отображаться в самом верху публичной страницы
                 правления.
               </p>
@@ -594,7 +601,7 @@ export function EditBoardSectionForm({
                   setIntro(savedIntro);
                   setIsEditingIntro(false);
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+                className={adminIconButtonClass}
                 aria-label="Закрыть форму"
               >
                 ×
@@ -603,7 +610,7 @@ export function EditBoardSectionForm({
               <button
                 type="button"
                 onClick={() => setIsEditingIntro(true)}
-                className="inline-flex rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                className={adminSecondaryButtonClass}
               >
                 Редактировать
               </button>
@@ -617,35 +624,35 @@ export function EditBoardSectionForm({
                 onChange={(event) => setIntro(event.target.value)}
                 rows={6}
                 placeholder="Введите обращение от правления..."
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               />
 
               <button
                 type="button"
                 onClick={handleSaveIntro}
                 disabled={!introDirty || isPending}
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
               >
                 {isPending ? "Сохраняем..." : "Сохранить обращение"}
               </button>
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-sm leading-7 text-slate-300">
+            <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-sm leading-7 text-[var(--cms-text-muted)]">
               {intro || "Обращение пока не заполнено"}
             </div>
           )}
         </div>
 
         {workspaceMode !== "idle" && draft ? (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <div className="text-lg font-semibold text-white">
+                <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {workspaceMode === "create"
                     ? "Новая роль"
                     : "Редактирование роли"}
                 </div>
-                <div className="mt-2 text-sm leading-6 text-slate-400">
+                <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                   После сохранения карточка автоматически закроется и появится в
                   соответствующем табе.
                 </div>
@@ -655,7 +662,7 @@ export function EditBoardSectionForm({
                 type="button"
                 onClick={closeWorkspace}
                 aria-label="Закрыть форму"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+                className={adminIconButtonClass}
               >
                 ×
               </button>
@@ -664,7 +671,7 @@ export function EditBoardSectionForm({
             <div className="grid gap-6">
               <div className="grid gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Должность
                   </label>
                   <select
@@ -675,7 +682,7 @@ export function EditBoardSectionForm({
                         event.target.value as BoardRoleStatus,
                       )
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                   >
                     <option value="chairman">Председатель</option>
                     <option value="vice_chairman">
@@ -689,7 +696,7 @@ export function EditBoardSectionForm({
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Имя
                   </label>
                   <input
@@ -697,13 +704,13 @@ export function EditBoardSectionForm({
                     onChange={(event) =>
                       handleDraftChange("name", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="Введите имя"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Телефон
                   </label>
                   <input
@@ -713,13 +720,13 @@ export function EditBoardSectionForm({
                     onChange={(event) =>
                       handleDraftChange("phone", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="+380 67 123 45 67"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Email
                   </label>
                   <input
@@ -727,13 +734,13 @@ export function EditBoardSectionForm({
                     onChange={(event) =>
                       handleDraftChange("email", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="name@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Часы приема / связи
                   </label>
                   <input
@@ -741,13 +748,13 @@ export function EditBoardSectionForm({
                     onChange={(event) =>
                       handleDraftChange("officeHours", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="Пн–Пт, 10:00–18:00"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                     Описание
                   </label>
                   <textarea
@@ -756,17 +763,17 @@ export function EditBoardSectionForm({
                       handleDraftChange("description", event.target.value)
                     }
                     rows={5}
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="Короткое описание функций и зоны ответственности"
                   />
                 </div>
               </div>
-              <div className="overflow-x-auto border-t border-slate-800 pt-5">
+              <div className="overflow-x-auto border-t border-[var(--cms-border)] pt-5">
                 <div className="flex min-w-max flex-nowrap items-end gap-3">
                   <button
                     type="button"
                     onClick={handleSaveDraft}
-                    className="inline-flex items-center justify-center rounded-3xl bg-white px-8 py-4 text-base font-medium text-slate-950 transition hover:bg-slate-200"
+                    className="inline-flex items-center justify-center rounded-3xl ${adminPrimaryButtonClass} px-8 py-4 text-base"
                   >
                     Сохранить
                   </button>
@@ -775,7 +782,7 @@ export function EditBoardSectionForm({
                     <button
                       type="button"
                       onClick={handleDeleteDraftRole}
-                      className="inline-flex items-center justify-center rounded-3xl border border-red-900 px-8 py-4 text-base font-medium text-red-300 transition hover:bg-red-950/40"
+                      className={[adminDangerButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ")}
                     >
                       Удалить
                     </button>
@@ -786,12 +793,12 @@ export function EditBoardSectionForm({
           </div>
         ) : null}
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
               {activeTabConfig?.label ?? "Роли правления"}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
               Здесь отображаются карточки, которые будут опубликованы на сайте
               дома в соответствующем разделе.
             </p>
@@ -804,20 +811,20 @@ export function EditBoardSectionForm({
                   key={role.id}
                   type="button"
                   onClick={() => openEditMode(role.id)}
-                  className="w-full rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-left transition hover:border-slate-700 hover:bg-slate-950/70"
+                  className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-left transition hover:border-[var(--cms-border)] hover:bg-[var(--cms-surface-muted)]/70"
                 >
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-300">
+                      <span className="inline-flex rounded-full border border-[var(--cms-border)] bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                         {role.role || getRoleLabel(role.status)}
                       </span>
                     </div>
 
-                    <div className="truncate text-base font-semibold text-white">
+                    <div className="truncate text-base font-semibold text-[var(--cms-text)]">
                       {role.name || "Без имени"}
                     </div>
 
-                    <div className="mt-3 text-sm leading-6 text-slate-300">
+                    <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                       {buildRolePreview(role)}
                     </div>
 
@@ -832,7 +839,7 @@ export function EditBoardSectionForm({
                 </button>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-700 px-4 py-4 text-slate-400">
+              <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                 {activeTabConfig?.emptyText ?? "В этом табе пока нет карточек."}
               </div>
             )}

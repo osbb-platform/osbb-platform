@@ -366,7 +366,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
                   <div className="max-h-[780px] space-y-3 overflow-y-auto pr-1">
                     {columnItems.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-[#DDD4CA] bg-white p-4 text-sm text-slate-400">
-                        Пока задач нет
+                        Поки задач немає
                       </div>
                     ) : (
                       columnItems.map((task) => (
@@ -390,7 +390,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
               {housePlanCopy.archive.title}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Здесь собраны уже завершенные работы по дому, чтобы жители могли в любой момент посмотреть историю выполненных задач.
+              Тут зібрані вже завершені роботи по будинку, щоб мешканці могли в будь-який момент переглянути історію виконаних задач.
             </p>
           </div>
 
@@ -421,7 +421,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
             ))
           ) : (
             <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/60 p-4 text-sm text-[var(--muted)]">
-              За выбранный период завершенных работ пока нет.
+              За обраний період завершених робіт поки немає.
             </div>
           )}
         </div>

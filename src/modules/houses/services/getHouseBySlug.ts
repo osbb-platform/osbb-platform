@@ -17,6 +17,7 @@ export async function getHouseBySlug(slug: string): Promise<HouseRecord | null> 
         short_description,
         public_description,
         cover_image_path,
+        tariff_amount,
         is_active,
         district:districts (
           id,

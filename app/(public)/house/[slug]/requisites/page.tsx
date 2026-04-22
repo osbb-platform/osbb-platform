@@ -24,7 +24,7 @@ function normalizeSnapshot(value: unknown): RequisitesSnapshot {
       edrpou: "",
       bank: "",
       purposeTemplate:
-        "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}",
+        "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
       paymentUrl: "",
       paymentButtonLabel: houseRequisitesCopy.payment.buttonFallback,
     };
@@ -40,9 +40,9 @@ function normalizeSnapshot(value: unknown): RequisitesSnapshot {
     purposeTemplate:
       String(
         raw.purposeTemplate ??
-          "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}",
+          "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
       ).trim() ||
-      "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}",
+      "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
     paymentUrl: String(raw.paymentUrl ?? "").trim(),
     paymentButtonLabel:
       String(raw.paymentButtonLabel ?? houseRequisitesCopy.payment.buttonFallback).trim() ||

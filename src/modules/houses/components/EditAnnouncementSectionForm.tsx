@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  adminDangerButtonClass,
+  adminIconButtonClass,
+  adminInputClass,
+  adminInsetSurfaceClass,
+  adminPrimaryButtonClass,
+  adminSuccessButtonClass,
+  adminWarningButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
@@ -162,10 +171,10 @@ export function EditAnnouncementSectionForm({
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-medium text-slate-200">
+          <div className="text-sm font-medium text-[var(--cms-text)]">
             Редактирование объявления
           </div>
-          <div className="mt-1 text-sm text-slate-400">
+          <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
             Изменения сохраняются в house_sections и version history.
           </div>
         </div>
@@ -175,7 +184,7 @@ export function EditAnnouncementSectionForm({
             type="button"
             onClick={onClose}
             aria-label="Закрыть редактор"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+            className={adminIconButtonClass}
           >
             ×
           </button>
@@ -183,19 +192,19 @@ export function EditAnnouncementSectionForm({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-          <div className="text-sm text-slate-400">Дата публикации</div>
-          <div className="mt-1 font-medium text-white">{publishedAt}</div>
+        <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
+          <div className="text-sm text-[var(--cms-text-muted)]">Дата публикации</div>
+          <div className="mt-1 font-medium text-[var(--cms-text)]">{publishedAt}</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-          <div className="text-sm text-slate-400">Последнее обновление</div>
-          <div className="mt-1 font-medium text-white">{updatedAt}</div>
+        <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
+          <div className="text-sm text-[var(--cms-text-muted)]">Последнее обновление</div>
+          <div className="mt-1 font-medium text-[var(--cms-text)]">{updatedAt}</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-          <div className="text-sm text-slate-400">Текущий тип</div>
-          <div className="mt-1 font-medium text-white">
+        <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
+          <div className="text-sm text-[var(--cms-text-muted)]">Текущий тип</div>
+          <div className="mt-1 font-medium text-[var(--cms-text)]">
             {getLevelLabel(level)}
           </div>
         </div>
@@ -210,46 +219,46 @@ export function EditAnnouncementSectionForm({
         <input type="hidden" name="status" value={section.status} />
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-200">
+          <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок объявления
           </label>
           <input
             name="title"
             type="text"
             defaultValue={section.title ?? ""}
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+            className={adminInputClass}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-200">
+          <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Тип объявления
           </label>
           <select
             name="level"
             defaultValue={level}
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+            className={adminInputClass}
           >
             <option value="danger">Красный — важное</option>
             <option value="warning">Оранжевый — обратить внимание</option>
-            <option value="info">Серый — обычное объявление</option>
+            <option value="info">Салатовый — обычное объявление</option>
           </select>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-200">
+          <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Текст объявления
           </label>
           <textarea
             name="body"
             defaultValue={body}
             rows={6}
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+            className={adminInputClass}
           />
         </div>
 
         {combinedError ? (
-          <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {combinedError}
           </div>
         ) : null}
@@ -269,10 +278,8 @@ export function EditAnnouncementSectionForm({
                     formRef.current?.requestSubmit();
                   });
                 }}
-                className={`inline-flex min-h-16 items-center justify-center rounded-3xl px-10 py-5 text-2xl font-medium transition ${
-                  isSaving
-                    ? "bg-slate-300 text-slate-700 opacity-90 cursor-wait"
-                    : "bg-white text-slate-950 hover:bg-slate-200"
+                className={`${adminPrimaryButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl ${
+                  isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
                 {isSaving ? "Сохраняем..." : "Сохранить"}
@@ -283,7 +290,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-red-900 px-10 py-5 text-2xl font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                  className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Удаляем..." : "Удалить"}
                 </button>
@@ -296,7 +303,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("publish")}
-                  className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-emerald-500 px-10 py-5 text-2xl font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                  className={`${adminSuccessButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "publish" ? "Подтверждаем..." : "Подтвердить"}
                 </button>
@@ -309,7 +316,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("archive")}
-                  className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-amber-700 px-10 py-5 text-2xl font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
+                  className={`${adminWarningButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "archive" ? "Архивируем..." : "Архивировать"}
                 </button>
@@ -322,7 +329,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-red-900 px-10 py-5 text-2xl font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                  className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Удаляем..." : "Удалить"}
                 </button>

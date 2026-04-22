@@ -23,6 +23,7 @@ type HouseItem = {
   public_description: string | null;
   cover_image_path: string | null;
   cover_image_url?: string | null;
+  tariff_amount: number | null;
   is_active: boolean;
   archived_at: string | null;
   created_at: string;

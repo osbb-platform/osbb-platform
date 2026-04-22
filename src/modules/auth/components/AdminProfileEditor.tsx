@@ -6,13 +6,13 @@ import {
   type UpdateCurrentAdminProfileState,
 } from "@/src/modules/auth/actions/updateCurrentAdminProfile";
 import { logoutAdmin } from "@/src/modules/auth/actions/logoutAdmin";
+import { AdminThemeSwitch } from "@/src/modules/cms/components/AdminThemeSwitch";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import {
   getRoleLabel,
   ROLES,
 } from "@/src/shared/constants/roles/roles.constants";
-import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
-
 const initialState: UpdateCurrentAdminProfileState = {
   error: null,
   success: null,
@@ -197,7 +197,9 @@ export function AdminProfileEditor({
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-3">
+            <AdminThemeSwitch />
+
             {!isEditing ? (
               <button
                 type="button"
@@ -213,7 +215,7 @@ export function AdminProfileEditor({
               onClick={() => setIsLogoutConfirmOpen(true)}
               className="inline-flex w-full min-w-[180px] items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Вийти
+              Выйти
             </button>
           </div>
         </div>

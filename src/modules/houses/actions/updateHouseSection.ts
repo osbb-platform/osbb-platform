@@ -517,21 +517,6 @@ export async function updateHouseSection(
     const removeReportPdf =
       String(formData.get("removeReportPdf") ?? "") === "true";
     const fileEntry = formData.get("reportPdf");
-    const nextFile =
-      isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
-
-    if (!rawPayload) {
-      return { error: "Не передан payload отчетов." };
-    }
-
-    if (nextFile) {
-      const validation = validateSinglePdfFile(nextFile);
-
-      if (!validation.isValid) {
-        return { error: validation.error };
-      }
-    }
-
     let parsedPayload: Record<string, unknown>;
 
     try {
@@ -539,6 +524,9 @@ export async function updateHouseSection(
     } catch {
       return { error: "Не удалось обработать reports payload." };
     }
+
+    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
+    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
     const nowIso = new Date().toISOString();
     const reports: Array<Record<string, unknown>> = [];
@@ -570,8 +558,7 @@ export async function updateHouseSection(
             raw.status === "active" || raw.status === "archived"
               ? raw.status
               : "draft",
-          pdfFileName:
-            typeof raw.pdfFileName === "string" ? raw.pdfFileName : "",
+          pdfFileName: typeof raw.pdfFileName === "string" ? raw.pdfFileName : "",
           pdfPath: typeof raw.pdfPath === "string" ? raw.pdfPath : "",
           createdAt:
             typeof raw.createdAt === "string" && raw.createdAt
@@ -586,7 +573,7 @@ export async function updateHouseSection(
       }
     }
 
-    if ((nextFile || removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !activeReportId) {
+    if ((removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !activeReportId) {
       return { error: "Не удалось определить отчет для операции." };
     }
 
@@ -595,47 +582,18 @@ export async function updateHouseSection(
         ? reports.find((item) => String(item.id ?? "") === activeReportId)
         : null;
 
-    if ((nextFile || removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !targetReport) {
+    if ((removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !targetReport) {
       return { error: "Не найден отчет для выполнения операции." };
     }
 
     if (targetReport) {
-      const previousPdfPath =
-        typeof targetReport.pdfPath === "string" ? targetReport.pdfPath : "";
 
-      if ((removeReportPdf || nextFile || reportAction === "delete") && previousPdfPath) {
-        const { error: removeError } = await supabase.storage
-          .from(REPORTS_BUCKET)
-          .remove([previousPdfPath]);
-
-        if (removeError) {
-          return {
-            error: `Не удалось удалить предыдущий PDF отчета: ${removeError.message}`,
-          };
-        }
-      }
-
-      if (nextFile) {
-        const safeFileName = sanitizeFileName(nextFile.name);
-        const nextStoragePath = `${houseId}/${activeReportId}/${safeFileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from(REPORTS_BUCKET)
-          .upload(nextStoragePath, nextFile, {
-            upsert: true,
-            contentType: nextFile.type || undefined,
-          });
-
-        if (uploadError) {
-          return {
-            error: `Не удалось загрузить PDF отчета: ${uploadError.message}`,
-          };
-        }
-
-        targetReport.pdfFileName = nextFile.name;
-        targetReport.pdfPath = nextStoragePath;
+      if (uploadedPdfPath && uploadedPdfName) {
+        targetReport.pdfFileName = uploadedPdfName;
+        targetReport.pdfPath = uploadedPdfPath;
         targetReport.updatedAt = nowIso;
-      } else if (removeReportPdf || reportAction == "delete") {
+      }
+      if (removeReportPdf || reportAction === "delete") {
         targetReport.pdfFileName = "";
         targetReport.pdfPath = "";
         targetReport.updatedAt = nowIso;
@@ -738,6 +696,9 @@ export async function updateHouseSection(
     } catch {
       return { error: "Не удалось обработать plan payload." };
     }
+
+    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
+    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
     const nowIso = new Date().toISOString();
 
@@ -1018,6 +979,9 @@ export async function updateHouseSection(
         return { error: "Не удалось обработать payload должников." };
       }
     }
+
+    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
+    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
     const nowIso = new Date().toISOString();
 

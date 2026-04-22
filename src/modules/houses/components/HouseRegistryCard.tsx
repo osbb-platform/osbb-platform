@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeHousePasswordForm } from "@/src/modules/houses/components/ChangeHousePasswordForm";
+import { ChangeHouseTariffForm } from "@/src/modules/houses/components/ChangeHouseTariffForm";
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
@@ -19,6 +20,7 @@ type HouseRegistryCardProps = {
     public_description: string | null;
     cover_image_path: string | null;
     cover_image_url?: string | null;
+    tariff_amount: number | null;
     is_active: boolean;
     archived_at: string | null;
     created_at: string;
@@ -174,6 +176,7 @@ export function HouseRegistryCard({
   onOpenSettings,
 }: HouseRegistryCardProps) {
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [isTariffOpen, setIsTariffOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [localUnreadCount, setLocalUnreadCount] = useState(house.unread_messages_count);
   const [localMessageItems, setLocalMessageItems] = useState(house.message_items);
@@ -254,6 +257,18 @@ export function HouseRegistryCard({
       title="Изменить код доступа"
     >
       <KeyIcon />
+    </button>
+  ) : null}
+
+  {canManageSensitiveSettings ? (
+    <button
+      type="button"
+      onClick={() => setIsTariffOpen(true)}
+      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      aria-label={`Изменить тариф дома ${house.name}`}
+      title="Изменить тариф"
+    >
+      💰
     </button>
   ) : null}
 
@@ -460,6 +475,51 @@ export function HouseRegistryCard({
               <ChangeHousePasswordForm
                 houseId={house.id}
                 houseSlug={house.slug}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isTariffOpen ? (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setIsTariffOpen(false)}
+            aria-label="Закрыть изменение тарифа"
+          />
+
+          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+              <div>
+                <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                  Тариф дома
+                </div>
+
+                <h2 className="mt-4 text-2xl font-semibold text-white">
+                  Изменить тариф
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-400">
+                  Дом: {house.name}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTariffOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 px-6 py-6">
+              <ChangeHouseTariffForm
+                houseId={house.id}
+                houseSlug={house.slug}
+                initialValue={house.tariff_amount}
               />
             </div>
           </div>

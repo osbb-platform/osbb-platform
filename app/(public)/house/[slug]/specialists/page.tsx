@@ -331,7 +331,7 @@ export default async function SpecialistsPage({
             </div>
           ) : (
             <div className="rounded-[24px] border border-dashed border-[#DDD4CA] bg-white p-4 text-sm text-center text-[#7A746B] shadow-sm sm:rounded-[32px] sm:p-8">
-              {houseSpecialistsCopy.page.title} скоро появятся.
+              {houseSpecialistsCopy.page.title} скоро з’являться.
             </div>
           )}
         </div>

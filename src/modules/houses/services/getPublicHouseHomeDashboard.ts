@@ -2,6 +2,7 @@ import { houseSystemCopy } from "@/src/shared/publicCopy/house";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import type { HouseSectionRecord } from "@/src/shared/types/entities/house.types";
 
 type HomeWidgetKind = "announcements" | "plan" | "meetings" | "debtors";
@@ -20,7 +21,7 @@ type HomeWidgetBase = {
 };
 
 export type PublicHouseHomeStatusItem = {
-  id: "announcements" | "plan" | "meetings";
+  id: "announcements" | "plan" | "meetings" | "tariff";
   label: string;
   value: string;
 };
@@ -690,6 +691,7 @@ function buildStatusStrip(
   announcementsSections: HouseSectionRecord[],
   planSections: HouseSectionRecord[],
   meetingsSections: HouseSectionRecord[],
+  tariffAmount: number | null | undefined,
 ): PublicHouseHomeStatusItem[] {
   const announcementCount = announcementsSections.length;
 
@@ -724,6 +726,14 @@ function buildStatusStrip(
       value: nearestMeeting
         ? formatDate(nearestMeeting.meetingDateTime)
         : houseSystemCopy.homeDashboard.statusStrip.notScheduled,
+    },
+    {
+      id: "tariff",
+      label: "ТАРИФ",
+      value:
+        tariffAmount !== null && tariffAmount !== undefined
+          ? `${formatCurrency(tariffAmount)} ₴`
+          : "—",
     },
   ];
 }
@@ -803,6 +813,7 @@ export async function getPublicHouseHomeDashboard({
   houseId,
   slug,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
+  const house = await getHouseBySlug(slug);
   const homePage = await ensureHouseHomePage({ houseId });
   const informationPage = await ensureHouseInformationPage({ houseId });
 
@@ -822,6 +833,17 @@ export async function getPublicHouseHomeDashboard({
   const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
   const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
 
+  console.log("BUILD_STATUS_STRIP_RESULT", {
+    slug,
+    tariffAmount: house?.tariff_amount,
+    statusStrip: buildStatusStrip(
+      announcementsSections,
+      planSections,
+      meetingsSections,
+      house?.tariff_amount,
+    ),
+  });
+
   return {
     heroContent: {
       headline:
@@ -834,6 +856,7 @@ export async function getPublicHouseHomeDashboard({
       announcementsSections,
       planSections,
       meetingsSections,
+      house?.tariff_amount,
     ),
     topAlert: pickTopAlert(slug, informationSections, meetingsSections),
     widgets: [

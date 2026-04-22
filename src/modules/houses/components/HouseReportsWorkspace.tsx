@@ -1,5 +1,6 @@
 "use client";
 
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { startTransition, useActionState, useMemo, useRef, useState, useTransition } from "react";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
@@ -188,6 +189,8 @@ function getEmptyDraft(tab: TabKey, firstCategory: string): ReportItem {
     archivedAt: null,
   };
 }
+
+const supabase = createSupabaseBrowserClient();
 
 export function HouseReportsWorkspace({
   houseId,
@@ -386,9 +389,32 @@ export function HouseReportsWorkspace({
               : "Создаем отчет...",
     );
 
-    await formAction(formData);
+    const file = formData.get("reportPdf");
 
-    startTransition(() => {
+    if (file && file instanceof File && file.size > 0) {
+      const fileExt = file.name.split(".").pop() ?? "pdf";
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `${houseId}/${normalizedDraft.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("house-reports")
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: "application/pdf",
+        });
+
+      if (uploadError) {
+        setActionLabel("Обрабатываем отчет...");
+        return;
+      }
+
+      formData.delete("reportPdf");
+      formData.set("uploadedPdfPath", filePath);
+      formData.set("uploadedPdfName", file.name);
+    }
+
+    startTransition(async () => {
+      await formAction(formData);
       resetWorkspace();
       setSubmitIntent("save");
       setActionLabel("Обрабатываем отчет...");

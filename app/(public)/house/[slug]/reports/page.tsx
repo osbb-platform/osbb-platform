@@ -152,7 +152,7 @@ export default async function ReportsPage({
   return (
     <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="grid min-w-0 gap-6">
-        <section className="w-full min-w-0 rounded-[36px] border border-[#E4DBD1] bg-[#F3EEE8] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:p-8 lg:p-10">
+        <section className="w-full min-w-0 rounded-[36px] border border-[#E4DBD1] bg-[#F3EEE8] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:p-8 lg:p-10">
           <div className="min-w-0 text-center">
             <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A37] sm:text-5xl lg:text-6xl">
               {houseReportsCopy.page.title}
@@ -216,7 +216,7 @@ export default async function ReportsPage({
             </div>
           </div>
 
-          <div className="mt-5 w-full min-w-0 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
+          <div className="mt-5 w-full min-w-0 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
             <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {selectedMode === "archive" ? (
               <>
@@ -325,7 +325,7 @@ export default async function ReportsPage({
               {filteredReports.map((report) => (
                 <article
                   key={report.id}
-                  className="w-full min-w-0 rounded-[22px] border border-[#E2D8CC] bg-[#F9F6F2] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:rounded-[28px] sm:p-5"
+                  className="w-full min-w-0 rounded-[22px] border border-[#E2D8CC] bg-[#F9F6F2] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:rounded-[28px] sm:p-5"
                 >
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-[#E7DED3] px-3 py-1 text-xs font-medium">
