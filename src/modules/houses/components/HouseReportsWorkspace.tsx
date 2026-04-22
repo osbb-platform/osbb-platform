@@ -1,5 +1,5 @@
-import { useRouter } from "next/navigation";
 "use client";
+import { useRouter } from "next/navigation";
 
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { startTransition, useActionState, useMemo, useRef, useState, useTransition } from "react";
