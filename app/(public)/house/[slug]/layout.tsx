@@ -68,7 +68,19 @@ export default async function PublicHouseLayout({
   const { sections } = await getPublishedHomeSectionsBySlug(slug);
 
   const boardSection = sections.find((s) => s.kind === "contacts");
-  const chairman = boardSection?.content?.roles?.find((r) => r.status === "chairman") ?? null;
+  const boardContent =
+    boardSection &&
+    typeof boardSection.content === "object" &&
+    boardSection.content
+      ? (boardSection.content as Record<string, unknown>)
+      : null;
+
+  const boardRoles = Array.isArray(boardContent?.roles)
+    ? (boardContent.roles as Array<Record<string, unknown>>)
+    : [];
+
+  const chairman =
+    boardRoles.find((role) => role.status === "chairman") ?? null;
 
   const bellFeed = await getPublicHouseBellFeed({
     houseId: house.id,
