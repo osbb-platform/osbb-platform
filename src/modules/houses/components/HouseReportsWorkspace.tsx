@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 "use client";
 
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -201,6 +202,7 @@ export function HouseReportsWorkspace({
   reports,
   categoriesCatalog = [],
 }: Props) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(
     updateHouseSection,
     initialState,
@@ -415,6 +417,7 @@ export function HouseReportsWorkspace({
 
     startTransition(async () => {
       await formAction(formData);
+      router.refresh();
       resetWorkspace();
       setSubmitIntent("save");
       setActionLabel("Обрабатываем отчет...");
