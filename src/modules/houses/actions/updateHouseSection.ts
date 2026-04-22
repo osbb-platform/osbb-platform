@@ -1113,10 +1113,20 @@ export async function updateHouseSection(
     }
   }
 
-  const nextSectionStatus =
-    kind === "reports"
-      ? "published"
-      : (status || "draft");
+  let nextSectionStatus = status || "draft";
+
+  if (kind === "reports") {
+    const reportsList = Array.isArray(content.reports)
+      ? (content.reports as Array<Record<string, unknown>>)
+      : [];
+
+    const hasDraftReports = reportsList.some(
+      (item) => item.status === "draft"
+    );
+
+    nextSectionStatus = hasDraftReports ? "in_review" : "published";
+  }
+
 
   const { error: updateError } = await supabase
     .from("house_sections")
