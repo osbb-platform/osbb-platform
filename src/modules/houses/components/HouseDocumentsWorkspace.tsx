@@ -1,4 +1,5 @@
 "use client";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -210,6 +211,32 @@ const [fileError, setFileError] = useState<string | null>(null);
     );
 
     startTransition(async () => {
+      const supabase = createSupabaseBrowserClient();
+
+      let uploadedPdfPath = "";
+      let uploadedPdfName = "";
+
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop() ?? "pdf";
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const filePath = `${houseId}/documents/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("house-documents")
+          .upload(filePath, selectedFile, {
+            upsert: true,
+            contentType: "application/pdf",
+          });
+
+        if (uploadError) {
+          setActionError(uploadError.message);
+          return;
+        }
+
+        uploadedPdfPath = filePath;
+        uploadedPdfName = selectedFile.name;
+      }
+
       try {
         const formData = new FormData();
         formData.set("houseId", houseId);
@@ -218,12 +245,17 @@ const [fileError, setFileError] = useState<string | null>(null);
         formData.set("visibilityStatus", visibility);
         formData.set("description", description);
 
+        if (uploadedPdfPath) {
+          formData.set("uploadedPdfPath", uploadedPdfPath);
+          formData.set("uploadedPdfName", uploadedPdfName);
+        }
+
+
         if (formMode === "edit" && selectedDocument) {
           formData.set("documentId", selectedDocument.id);
           formData.set("removeAttachment", removeAttachment ? "true" : "false");
 
           if (selectedFile) {
-            formData.set("attachment", selectedFile);
           }
 
           const result = await updateHouseDocument(formData);
@@ -234,7 +266,6 @@ const [fileError, setFileError] = useState<string | null>(null);
           }
         } else {
           if (selectedFile) {
-            formData.set("attachment", selectedFile);
           }
 
           const result = await createHouseDocument(formData);
