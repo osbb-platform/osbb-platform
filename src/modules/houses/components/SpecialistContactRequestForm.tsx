@@ -59,8 +59,8 @@ export function SpecialistContactRequestForm({
 
   if (state.successMessage) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-        <div className="text-base font-semibold text-emerald-900">
+      <div className="rounded-2xl border border-[#CFE3D6] bg-[#EAF4EE] px-5 py-4">
+        <div className="text-base font-semibold text-[#1F2A37]">
           {houseSpecialistsCopy.form.successTitle}
         </div>
         <div className="mt-2 text-sm leading-7 text-emerald-800">
@@ -80,7 +80,7 @@ export function SpecialistContactRequestForm({
       <input type="hidden" name="specialistLabel" value={specialistLabel} />
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-800">
+        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
           {houseSpecialistsCopy.form.name}
         </label>
         <input
@@ -88,12 +88,12 @@ export function SpecialistContactRequestForm({
           type="text"
           required
           placeholder={houseSpecialistsCopy.form.namePlaceholder}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-800">
+        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
           Email
         </label>
         <input
@@ -101,12 +101,12 @@ export function SpecialistContactRequestForm({
           type="email"
           required
           placeholder="you@example.com"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-800">
+        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
           {houseSpecialistsCopy.form.phone}
         </label>
         <input
@@ -115,19 +115,19 @@ export function SpecialistContactRequestForm({
           value={phone}
           onChange={(event) => setPhone(formatUaPhone(event.target.value))}
           placeholder="+380 67 123 45 67"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-800">
+        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
           {houseSpecialistsCopy.form.apartment}
         </label>
         <select
           name="apartment"
           required
           defaultValue=""
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         >
           <option value="" disabled>
             {houseSpecialistsCopy.form.selectApartment}
@@ -143,14 +143,14 @@ export function SpecialistContactRequestForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-800">
+        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
           {houseSpecialistsCopy.form.comment}
         </label>
         <textarea
           name="comment"
           rows={4}
           placeholder={houseSpecialistsCopy.form.commentPlaceholder}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         />
       </div>
 
@@ -163,7 +163,7 @@ export function SpecialistContactRequestForm({
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center rounded-2xl bg-[#2F3A4F] px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#1F2A37] disabled:opacity-60"
       >
         {isPending ? houseSpecialistsCopy.form.sending : houseSpecialistsCopy.form.send}
       </button>
