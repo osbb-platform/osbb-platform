@@ -197,14 +197,16 @@ export function PublicHouseFooter({
   return (
     <>
       <footer
-        className="border-t border-white/15"
-        style={{ backgroundColor: districtColor }}
+        className="border-t border-white/10"
+        style={{
+          background: `linear-gradient(180deg, ${districtColor} 0%, ${districtColor}DD 100%)`,
+        }}
       >
         <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
           <div className="grid gap-10 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
             <div className="min-w-0">
               <div className="flex items-start gap-5">
-                <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-white/20">
+                <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[24px] bg-white/90 shadow-sm ring-1 ring-white/20 backdrop-blur">
                   <Image
                     src="/uk-logo.png"
                     alt={houseCopy.footer.companyLogoAlt}
@@ -219,7 +221,7 @@ export function PublicHouseFooter({
                   <div className="text-2xl font-semibold tracking-tight text-white">
                     ТОВ Бухгалтер онлайн
                   </div>
-                  <div className="mt-1 text-base text-white/80">
+                  <div className="mt-1 text-base text-white/90">
                     Робимо те, у що віримо
                   </div>
                 </div>
@@ -228,11 +230,12 @@ export function PublicHouseFooter({
               <button
                 type="button"
                 onClick={() => openModal("contact")}
-                className="mt-6 inline-flex min-h-[58px] w-full items-center justify-center rounded-[22px] border border-white/40 px-6 text-base font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.22)] transition hover:shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
+                className="mt-6 inline-flex min-h-[58px] w-full items-center justify-center rounded-[22px] border border-white/30 px-6 text-base font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
                 style={{
-                  backgroundColor: districtColor,
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))",
+                  backdropFilter: "blur(6px)",
                   boxShadow:
-                    "0 10px 30px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255,255,255,0.18)",
+                    "0 10px 30px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
                 }}
               >
                 {houseCopy.footer.writeUs}
@@ -241,7 +244,7 @@ export function PublicHouseFooter({
 
             <div className="grid gap-6 text-white sm:grid-cols-2">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
                   Телефон
                 </div>
                 <div className="mt-2 text-lg font-semibold text-white">
@@ -250,7 +253,7 @@ export function PublicHouseFooter({
               </div>
 
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
                   E-mail
                 </div>
                 <div className="mt-2 break-all text-base text-white">
@@ -259,7 +262,7 @@ export function PublicHouseFooter({
               </div>
 
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
                   Адрес
                 </div>
                 <div className="mt-2 text-lg leading-8 text-white">
@@ -268,7 +271,7 @@ export function PublicHouseFooter({
               </div>
 
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
                   {houseCopy.footer.schedule}
                 </div>
                 <div className="mt-2 text-lg leading-8 text-white">

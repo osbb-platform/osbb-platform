@@ -129,10 +129,10 @@ function ContactRow({
 
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:w-[112px]">
+      <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-[#7A746B] sm:w-[112px]">
         {label}
       </div>
-      <div className="min-w-0 break-words text-sm leading-7 text-slate-700">{value}</div>
+      <div className="min-w-0 break-words text-sm leading-7 text-[#34465B]">{value}</div>
     </div>
   );
 }
@@ -147,10 +147,10 @@ function SpecialistCardView({
   activeCategory: string;
 }) {
   return (
-    <article className="w-full min-w-0 rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
+    <article className="w-full min-w-0 rounded-[30px] border border-[#E4DBD1] bg-[#F6F2EC] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
         {item.isPinned ? (
-          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+          <span className="inline-flex rounded-full border border-[#E7B6B2] bg-[#F7DFDC] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B42318]">
             {houseSpecialistsCopy.card.primary}
           </span>
         ) : null}
@@ -158,14 +158,14 @@ function SpecialistCardView({
         {item.categories.map((category) => (
           <span
             key={`${item.id}-${category}`}
-            className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700"
+            className="inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F3A4F]"
           >
             {category}
           </span>
         ))}
       </div>
 
-      <h2 className="mt-5 break-words text-3xl font-semibold tracking-tight text-slate-950">
+      <h2 className="mt-5 break-words text-3xl font-semibold tracking-tight text-[#1F2A37]">
         {item.title}
       </h2>
 
@@ -184,7 +184,7 @@ function SpecialistCardView({
           <Link
             href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}&specialist=${encodeURIComponent(item.id)}`}
             scroll={false}
-            className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+            className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#E4DBD1] bg-[#EFE7DD] px-5 text-sm font-semibold text-[#2A3642] transition hover:bg-[#E5DBCF]"
           >
             {houseSpecialistsCopy.card.request}
           </Link>
@@ -269,20 +269,20 @@ export default async function SpecialistsPage({
     <>
       <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="grid min-w-0 gap-6">
-          <section className="w-full min-w-0 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
+          <section className="w-full min-w-0 rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
             <div className="min-w-0 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-6xl">
+              <h1 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-4xl lg:text-6xl">
                 {houseSpecialistsCopy.page.title}
               </h1>
 
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-lg sm:leading-8">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#606773] sm:mt-5 sm:text-lg sm:leading-8">
                 {houseSpecialistsCopy.page.description}
               </p>
             </div>
 
             {filterItems.length > 1 ? (
-              <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-                <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+              <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm backdrop-blur-sm">
+                <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
                   {filterItems.map((item) => {
                     const isActive = activeCategory === item.key;
 
@@ -293,19 +293,19 @@ export default async function SpecialistsPage({
                         scroll={false}
                         className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                           isActive
-                            ? "text-white shadow-sm"
-                            : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                            ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                            : "border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] hover:bg-[#F0E9E1]"
                         }`}
                         style={
-                          isActive ? { backgroundColor: districtColor } : undefined
+                          isActive ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", borderColor: districtColor } as React.CSSProperties : undefined
                         }
                       >
                         <span>{item.label}</span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
+                          className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                             isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-white text-slate-500"
+                              ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]"
+                              : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
                           }`}
                         >
                           {item.count}
@@ -330,7 +330,7 @@ export default async function SpecialistsPage({
               ))}
             </div>
           ) : (
-            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white p-4 text-sm text-center text-slate-500 shadow-sm sm:rounded-[32px] sm:p-8">
+            <div className="rounded-[24px] border border-dashed border-[#DDD4CA] bg-white p-4 text-sm text-center text-[#7A746B] shadow-sm sm:rounded-[32px] sm:p-8">
               {houseSpecialistsCopy.page.title} скоро появятся.
             </div>
           )}
@@ -342,30 +342,26 @@ export default async function SpecialistsPage({
           <Link
             href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
             scroll={false}
-            className="fixed inset-0 z-40 bg-slate-950/15"
+            className="fixed inset-0 z-40 bg-[#1F2A37]/30 backdrop-blur-sm"
             aria-label={houseSpecialistsCopy.page.closeModal}
           />
 
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-6">
-            <div className="w-full max-w-[720px] max-h-[85vh] overflow-y-auto rounded-[24px] border border-slate-200 bg-white shadow-lg sm:rounded-[32px]">
-              <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-7 sm:py-6">
+            <div className="w-full max-w-[720px] max-h-[85vh] overflow-y-auto rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:rounded-[32px]">
+              <div className="flex items-start justify-between gap-3 border-b border-[#E4DBD1] px-4 py-4 sm:px-7 sm:py-6">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Управляющая компания
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                    Заявка специалисту
+                  <h2 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-3xl">
+                    Заявка спеціалісту
                   </h2>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
-                    Телефон цього спеціаліста приховано. Залиште заявку, і
-                    управляющая компания передаст обращение.
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-[#606773]">
+                    Телефон спеціаліста приховано. Залиште заявку — і ми передамо звернення в управляючу компанію.
                   </p>
                 </div>
 
                 <Link
                   href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
                   scroll={false}
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] transition hover:bg-[#F0E9E1]"
                 >
                   ✕
                 </Link>

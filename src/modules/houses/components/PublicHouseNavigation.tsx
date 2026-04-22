@@ -7,8 +7,11 @@ import { useState } from "react";
 import { PublicHouseSidePanel } from "@/src/modules/houses/components/PublicHouseSidePanel";
 
 type PublicHouseNavigationProps = {
+  chairman?: any;
   slug: string;
   houseName: string;
+  houseAddress: string;
+  districtName: string;
   districtColor: string;
 };
 
@@ -27,9 +30,11 @@ const secondaryItems = [
   { label: houseCopy.navigation.debtors, href: (slug: string) => `/house/${slug}/debtors` },
 ];
 
-export function PublicHouseNavigation({
+export function PublicHouseNavigation({ chairman,
   slug,
   houseName,
+  houseAddress,
+  districtName,
   districtColor,
 }: PublicHouseNavigationProps) {
   const pathname = usePathname();
@@ -51,10 +56,18 @@ export function PublicHouseNavigation({
                 href={href}
                 className={`inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm font-semibold transition ${
                   isActive
-                    ? "text-white shadow-sm"
-                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "shadow-sm border"
+                    : "border border-[#DDD6CE] bg-[#F7F5F2] text-slate-700 hover:border-[#D8CEC2] hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
                 }`}
-                style={isActive ? { backgroundColor: districtColor } : undefined}
+                style={
+                  isActive
+                    ? {
+                        backgroundColor: `${districtColor}20`,
+                        borderColor: `${districtColor}55`,
+                        color: districtColor,
+                      }
+                    : undefined
+                }
               >
                 {item.label}
               </Link>
@@ -65,7 +78,7 @@ export function PublicHouseNavigation({
         <button
           type="button"
           onClick={() => setIsPanelOpen(true)}
-          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 transition hover:bg-slate-50"
+          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#DDD6CE] bg-[#F7F5F2] text-slate-800 transition hover:border-[#D8CEC2] hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
           aria-label={houseCopy.navigation.openMenu}
         >
           <svg
@@ -84,9 +97,11 @@ export function PublicHouseNavigation({
         </button>
       </div>
 
-      <PublicHouseSidePanel
+      <PublicHouseSidePanel chairman={chairman}
         slug={slug}
         houseName={houseName}
+        houseAddress={houseAddress}
+        districtName={districtName}
         districtColor={districtColor}
         open={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}

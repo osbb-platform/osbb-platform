@@ -23,7 +23,6 @@ type RequisiteCardProps = {
   label: string;
   value: string;
   onCopy: (label: string, value: string) => void;
-  isPrimary?: boolean;
   helper?: string;
 };
 
@@ -31,35 +30,20 @@ function RequisiteCard({
   label,
   value,
   onCopy,
-  isPrimary = false,
   helper,
 }: RequisiteCardProps) {
   return (
-    <div
-      className={`rounded-[20px] border p-4 sm:rounded-[24px] sm:p-5 shadow-sm ${
-        isPrimary
-          ? "border-slate-900 bg-slate-900 text-white"
-          : "border-[var(--border)] bg-white text-slate-900"
-      }`}
-    >
-      <div
-        className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-          isPrimary ? "text-slate-300" : "text-[var(--muted)]"
-        }`}
-      >
+    <div className="rounded-[20px] border border-[#E3D9CE] bg-[#F7F3EE] p-4 text-[var(--foreground)] shadow-sm sm:rounded-[24px] sm:p-5">
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
         {label}
       </div>
 
-      <div className="mt-3 break-all text-base font-semibold sm:text-lg">
+      <div className="mt-3 break-all text-base font-semibold tracking-wide sm:text-lg">
         {value || houseRequisitesCopy.card.empty}
       </div>
 
       {helper ? (
-        <div
-          className={`mt-2 text-sm ${
-            isPrimary ? "text-slate-300" : "text-[var(--muted)]"
-          }`}
-        >
+        <div className="mt-2 text-sm text-[var(--muted)]">
           {helper}
         </div>
       ) : null}
@@ -68,11 +52,7 @@ function RequisiteCard({
         type="button"
         onClick={() => onCopy(label, value)}
         disabled={!value}
-        className={`mt-4 rounded-full px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-          isPrimary
-            ? "border border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
-            : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-        }`}
+        className="mt-4 rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {value ? houseRequisitesCopy.card.copy : houseRequisitesCopy.card.noData}
       </button>
@@ -89,16 +69,16 @@ type TextBlockProps = {
 
 function TextBlock({ label, value, onCopy, helper }: TextBlockProps) {
   return (
-    <div className="rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:rounded-[28px] sm:p-6">
-      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+    <div className="rounded-[24px] border border-[#DED3C6] bg-[#F3EEE8] p-5 shadow-sm sm:rounded-[30px] sm:p-6">
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7A746B]">
         {label}
       </div>
 
       {helper ? (
-        <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{helper}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6B7280]">{helper}</p>
       ) : null}
 
-      <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-900 sm:text-base">
+      <div className="mt-5 rounded-[26px] border border-[#D8CCBE] bg-[#F8F3EC] p-5 text-base leading-8 text-[#1F2A37] sm:text-[1.05rem]">
         {value || houseRequisitesCopy.card.empty}
       </div>
 
@@ -106,7 +86,7 @@ function TextBlock({ label, value, onCopy, helper }: TextBlockProps) {
         type="button"
         onClick={() => onCopy(label, value)}
         disabled={!value}
-        className="mt-4 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-5 inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {value ? houseRequisitesCopy.card.copy : houseRequisitesCopy.card.noData}
       </button>
@@ -137,7 +117,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
 
   if (!requisites.hasPublishedSnapshot) {
     return (
-      <div className="mt-8 rounded-[28px] border border-dashed border-[var(--border)] bg-white p-6 text-[var(--muted)]">
+      <div className="mt-8 rounded-[28px] border border-dashed border-[#DDD1C3] bg-[#F6F1EB] p-6 text-[var(--muted)]">
         {houseRequisitesCopy.page.empty}
         появятся данные для ручной оплаты и копирования.
       </div>
@@ -159,7 +139,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
           value={requisites.iban}
           helper={houseRequisitesCopy.card.helperIban}
           onCopy={handleCopy}
-          isPrimary
+          
         />
 
         <RequisiteCard
@@ -193,30 +173,30 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         />
       </section>
 
-      <div className="mt-6 rounded-[22px] border border-[var(--border)] bg-white p-4 shadow-sm sm:mt-8 sm:rounded-[28px] sm:p-6">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="mt-6 rounded-[26px] border border-[#D6C9B8] bg-[#E8DED1] p-5 shadow-[0_10px_28px_rgba(31,42,55,0.05)] sm:mt-8 sm:rounded-[32px] sm:p-7">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#73685D]">
           {houseRequisitesCopy.payment.title}
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted)]">
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5F5A54] sm:text-base">
           {houseRequisitesCopy.payment.description}, вы можете перейти по
           кнопке ниже. Иначе используйте реквизиты выше для ручного перевода.
         </p>
 
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           {requisites.paymentUrl ? (
             <a
               href={requisites.paymentUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex rounded-[22px] border border-[#C7B9A8] bg-[#D8CABA] px-6 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#CFBEAC]"
             >
               <span className="break-words text-center">
                 {requisites.paymentButtonLabel || houseRequisitesCopy.payment.buttonFallback}
               </span>
             </a>
           ) : (
-            <div className="inline-flex rounded-2xl border border-slate-200 px-5 py-3 text-sm text-slate-500">
+            <div className="inline-flex rounded-[22px] border border-[#D2C6B8] bg-[#EFE7DC] px-5 py-3 text-sm text-[#7A746B]">
               {houseRequisitesCopy.payment.disabled}
             </div>
           )}

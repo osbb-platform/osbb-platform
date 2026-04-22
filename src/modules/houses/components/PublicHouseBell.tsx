@@ -81,10 +81,12 @@ export function PublicHouseBell({
             return next;
           });
         }}
-        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border text-slate-800 transition ${
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border text-slate-800 transition duration-200 ${
           open
-            ? "border-slate-300 bg-slate-100 shadow-sm"
-            : "border-slate-200 bg-white hover:bg-slate-50"
+            ? "border-[#D5CCC3] bg-white shadow-[0_6px_20px_rgba(28,24,19,0.08)]"
+            : hasUnread
+              ? "border-[#E6D8D8] bg-[#FDF3F3] text-[#7A3E3E] shadow-[0_4px_16px_rgba(120,40,40,0.08)] hover:bg-[#FBEAEA]"
+              : "border-[#DDD6CE] bg-[#F3EFEA] hover:bg-white hover:-translate-y-[1px] hover:shadow-[0_6px_20px_rgba(28,24,19,0.06)]"
         }`}
         aria-label={houseCopy.bell.aria}
       >

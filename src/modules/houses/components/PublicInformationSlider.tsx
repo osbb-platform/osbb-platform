@@ -91,9 +91,9 @@ export function PublicInformationSlider({
 
   return (
     <div className="mt-6">
-      <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-[32px] border border-[#E4DBD1] bg-[#F9F6F2] shadow-[0_8px_24px_rgba(31,42,55,0.05)]">
         <div className="grid min-h-[280px] sm:min-h-[420px] lg:grid-cols-2">
-          <div className="relative min-h-[280px] bg-slate-100">
+          <div className="relative min-h-[280px] bg-[#ECE6DF]">
             {coverImageUrl ? (
               <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -104,7 +104,7 @@ export function PublicInformationSlider({
 
           <div className="flex flex-col justify-between p-4 sm:p-8">
             <div>
-              <div className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+              <div className="text-xs font-medium uppercase tracking-[0.2em] text-[#7B8A9A]">
                 {publishedAt}
               </div>
 
@@ -112,7 +112,7 @@ export function PublicInformationSlider({
                 {headline}
               </h2>
 
-              <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700 sm:mt-6 sm:text-base sm:leading-8">
+              <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#42546A] sm:mt-6 sm:text-base sm:leading-8">
                 {body}
               </div>
             </div>
@@ -126,8 +126,8 @@ export function PublicInformationSlider({
                     onClick={() => setActiveIndex(index)}
                     className={`h-2.5 w-2.5 rounded-full transition ${
                       index === activeIndex
-                        ? "bg-slate-900"
-                        : "bg-slate-300"
+                        ? "bg-[#1F2A37]"
+                        : "bg-[#D6CEC2]"
                     }`}
                     aria-label={`Перейти до матеріалу ${index + 1}`}
                   />
@@ -138,7 +138,7 @@ export function PublicInformationSlider({
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-lg text-slate-900 transition hover:bg-slate-100"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D8CEC2] bg-[#F5F1EB] text-lg text-[#1F2A37] transition-all duration-200 hover:border-[#CFC3B6] hover:bg-[#EEE7DE]"
                 >
                   ←
                 </button>
@@ -146,7 +146,7 @@ export function PublicInformationSlider({
                 <button
                   type="button"
                   onClick={goNext}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-lg text-slate-900 transition hover:bg-slate-100"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D8CEC2] bg-[#F5F1EB] text-lg text-[#1F2A37] transition-all duration-200 hover:border-[#CFC3B6] hover:bg-[#EEE7DE]"
                 >
                   →
                 </button>

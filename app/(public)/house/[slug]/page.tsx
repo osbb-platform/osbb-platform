@@ -25,6 +25,12 @@ export default async function PublicHouseHomePage({ params }: Props) {
     slug,
   });
 
+  console.log("PUBLIC_HOME_STATUS_STRIP", {
+    slug,
+    count: dashboard.statusStrip.length,
+    items: dashboard.statusStrip,
+  });
+
   const headline = dashboard.heroContent.headline;
   const subheadline = dashboard.heroContent.subheadline;
 

@@ -28,12 +28,12 @@ const LEVEL_META = {
   },
   info: {
     label: houseAnnouncementsCopy.levels.info,
-    shell: "border-slate-200 bg-white",
-    accent: "bg-slate-300",
-    title: "text-slate-900",
-    body: "text-slate-800",
-    meta: "text-slate-500",
-    badge: "bg-slate-100 text-slate-700",
+    shell: "border-[#85e874]/30 bg-[#85e874]/10",
+    accent: "bg-[#85e874]",
+    title: "text-[#2f5e2a]",
+    body: "text-[#2f5e2a]",
+    meta: "text-[#4b7d45]",
+    badge: "bg-[#85e874]/20 text-[#2f5e2a]",
   },
 } as const;
 
@@ -195,19 +195,19 @@ export default async function PublicHouseAnnouncementsPage({
   return (
     <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="grid min-w-0 gap-6">
-        <section className="w-full min-w-0 rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+        <section className="w-full min-w-0 rounded-[36px] border border-[#E3D9CD] bg-[#F3EEE7] p-6 shadow-sm sm:p-8 lg:p-10">
           <div className="min-w-0 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A44] sm:text-5xl lg:text-6xl">
               {houseAnnouncementsCopy.page.title}
             </h1>
 
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5B667A] sm:text-lg">
               {houseAnnouncementsCopy.page.description}
             </p>
           </div>
 
-          <div className="mt-8 w-full min-w-0 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+          <div className="mt-8 w-full min-w-0 rounded-[28px] border border-[#DDD2C6] bg-[#ECE5DC] p-3 shadow-sm backdrop-blur-sm">
+            <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {filterItems.map((item) => {
                 const isActive = filter === item.key;
 
@@ -215,17 +215,27 @@ export default async function PublicHouseAnnouncementsPage({
                   <Link
                     key={item.key}
                     href={`/house/${slug}/announcements?filter=${item.key}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? "text-white shadow-sm"
-                        : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#4F5B6C] hover:bg-[#F0E9E1]"
                     }`}
-                    style={isActive ? { backgroundColor: districtColor } : undefined}
+                    style={
+                      isActive
+                        ? {
+                            "--tab-active-bg": `${districtColor}20`,
+                            "--tab-active-text": districtColor,
+                            borderColor: districtColor,
+                          } as React.CSSProperties
+                        : undefined
+                    }
                   >
                     <span>{item.label}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs ${
-                        isActive ? "bg-white/20 text-white" : "bg-white text-slate-500"
+                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
+                        isActive
+                          ? "bg-[#D9CFC3] text-[#1F2A44] border-[#C4B7A7]"
+                          : "bg-[#E7DED3] text-[#2F3A4F] border-[#D2C6B8]"
                       }`}
                     >
                       {item.count}
@@ -239,7 +249,7 @@ export default async function PublicHouseAnnouncementsPage({
 
         <section className="min-w-0">
           <div className="mb-4 flex flex-col items-start gap-2 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-            <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
+            <h2 className="text-xl font-semibold tracking-tight text-[#1F2A44] sm:text-2xl">
               {houseAnnouncementsCopy.page.feedTitle}
             </h2>
             <div className="text-sm text-slate-500">
@@ -306,7 +316,7 @@ export default async function PublicHouseAnnouncementsPage({
           ) : null}
 
           {filteredAnnouncements.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500 sm:rounded-[32px] sm:p-6">
+            <div className="rounded-[24px] border border-dashed border-[#DDD2C6] bg-white p-4 text-sm text-slate-500 sm:rounded-[32px] sm:p-6">
               За обраним фільтром оголошення поки не знайдені.
             </div>
           ) : (

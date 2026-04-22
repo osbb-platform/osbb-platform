@@ -84,15 +84,17 @@ export default async function RequisitesPage({ params }: Props) {
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:p-8"><div className="text-center">
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-          {houseRequisitesCopy.page.title}
-        </h1>
+      <div className="rounded-[32px] border border-[#E3D9CE] bg-[#F3EEE8] p-6 shadow-sm sm:p-10">
+        <div className="text-center">
+          <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A37] sm:text-5xl">
+            {houseRequisitesCopy.page.title}
+          </h1>
 
-        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[var(--muted)]">
-          {houseRequisitesCopy.page.description}
-        </p>
-      </div></div>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#6B7280]">
+            {houseRequisitesCopy.page.description}
+          </p>
+        </div>
+      </div>
 
       <PublicHouseRequisitesClient
         requisites={{

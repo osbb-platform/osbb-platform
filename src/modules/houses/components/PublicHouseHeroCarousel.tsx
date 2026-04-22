@@ -81,19 +81,19 @@ export function PublicHouseHeroCarousel({
   }
 
   return (
-    <section className="rounded-[36px] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-      <div className="relative overflow-hidden rounded-[30px]">
+    <section className="w-full">
+      <div className="relative overflow-hidden overflow-hidden rounded-[30px]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
           style={{ backgroundImage: `url("${currentSlide.image}")` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/36 to-slate-950/18" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
 
-        <div className="relative flex min-h-[460px] flex-col justify-between p-6 text-white sm:min-h-[540px] sm:p-8 lg:min-h-[620px] lg:p-10">
+        <div className="relative overflow-hidden flex min-h-[460px] flex-col justify-between p-6 text-white sm:min-h-[540px] sm:p-8 lg:min-h-[620px] lg:p-10">
           <div className="flex items-start justify-between gap-4">
             <div
               className="inline-flex rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white shadow-sm"
-              style={{ backgroundColor: districtColor }}
+              style={{ backgroundColor: districtColor + "CC" }}
             >
               {houseHomeCopy.hero.badge}
             </div>
@@ -102,7 +102,7 @@ export function PublicHouseHeroCarousel({
               <button
                 type="button"
                 onClick={goToPrev}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/25 backdrop-blur-md text-white shadow-md transition hover:bg-white/40"
                 aria-label={houseHomeCopy.hero.navigation.prev}
               >
                 <svg
@@ -121,7 +121,7 @@ export function PublicHouseHeroCarousel({
               <button
                 type="button"
                 onClick={goToNext}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/25 backdrop-blur-md text-white shadow-md transition hover:bg-white/40"
                 aria-label={houseHomeCopy.hero.navigation.next}
               >
                 <svg
@@ -152,17 +152,7 @@ export function PublicHouseHeroCarousel({
               {currentSlide.description}
             </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              {sectionLinks.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href(slug)}
-                  className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/18 bg-white/12 px-5 text-sm font-semibold text-white transition hover:bg-white/20"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            
           </div>
 
           <div className="flex items-center gap-2">

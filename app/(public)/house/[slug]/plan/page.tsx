@@ -57,7 +57,7 @@ const activeColumns = [
   {
     key: "planned",
     title: housePlanCopy.columns.planned,
-    style: "border-slate-200 bg-slate-50",
+    style: "border-[#85e874]/30 bg-[#85e874]/10",
   },
   {
     key: "in_progress",
@@ -67,7 +67,7 @@ const activeColumns = [
   {
     key: "completed",
     title: housePlanCopy.columns.completed,
-    style: "border-emerald-200 bg-emerald-50",
+    style: "border-[#5475e3]/30 bg-[#5475e3]/10",
   },
 ] as const;
 
@@ -279,31 +279,31 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+      <div className="rounded-[36px] border border-[#E4DBD1] bg-[#F3EEE8] p-6 shadow-sm sm:p-8 lg:p-10">
         <div className="text-center">
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A37] sm:text-5xl lg:text-6xl">
             {housePlanCopy.page.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5B6B7C] sm:text-lg">
             {housePlanCopy.page.description}
           </p>
         </div>
 
-        <div className="mt-8 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-sm">
+        <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm">
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               href={`/house/${slug}/plan`}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "active"
-                  ? "text-white shadow-sm"
-                  : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                  : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
               }`}
-              style={selectedMode === "active" ? { backgroundColor: districtColor } : undefined}
+              style={selectedMode === "active" ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
             >
               <span>{housePlanCopy.tabs.active}</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs ${
-                selectedMode === "active" ? "bg-white/20 text-white" : "bg-white text-slate-500"
+              <span className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                selectedMode === "active" ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]" : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
               }`}>
                 {activeTasks.length}
               </span>
@@ -313,14 +313,14 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
               href={`/house/${slug}/plan?mode=archive`}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "archive"
-                  ? "text-white shadow-sm"
-                  : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                  : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
               }`}
-              style={selectedMode === "archive" ? { backgroundColor: districtColor } : undefined}
+              style={selectedMode === "archive" ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
             >
               <span>{housePlanCopy.tabs.archive}</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs ${
-                selectedMode === "archive" ? "bg-white/20 text-white" : "bg-white text-slate-500"
+              <span className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                selectedMode === "archive" ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]" : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
               }`}>
                 {archivedTasks.length}
               </span>
@@ -358,14 +358,14 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
                     <h3 className="text-lg font-semibold text-slate-900">
                       {column.title}
                     </h3>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#5B6B7C]">
                       {columnItems.length}
                     </span>
                   </div>
 
                   <div className="max-h-[780px] space-y-3 overflow-y-auto pr-1">
                     {columnItems.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-400">
+                      <div className="rounded-2xl border border-dashed border-[#DDD4CA] bg-white p-4 text-sm text-slate-400">
                         Пока задач нет
                       </div>
                     ) : (
@@ -386,7 +386,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
       <section className="mt-8">
         <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+            <h2 className="text-2xl font-semibold tracking-tight text-[#1F2A37]">
               {housePlanCopy.archive.title}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
@@ -408,7 +408,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
                   label: getArchiveMonthLabel(month),
                 }))}
                 emptyLabel={housePlanCopy.archive.empty}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition"
+                className="w-full rounded-2xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm text-slate-900 outline-none transition"
               />
             </label>
           </form>

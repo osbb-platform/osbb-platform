@@ -63,6 +63,13 @@ export default async function PublicHouseLayout({
     );
   }
 
+  const { getPublishedHomeSectionsBySlug } = await import("@/src/modules/houses/services/getPublishedHomeSectionsBySlug");
+
+  const { sections } = await getPublishedHomeSectionsBySlug(slug);
+
+  const boardSection = sections.find((s) => s.kind === "contacts");
+  const chairman = boardSection?.content?.roles?.find((r) => r.status === "chairman") ?? null;
+
   const bellFeed = await getPublicHouseBellFeed({
     houseId: house.id,
   });
@@ -72,12 +79,12 @@ export default async function PublicHouseLayout({
   });
 
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/75">
+    <main className="min-h-screen bg-[#F7F5F2] text-[var(--foreground)]">
+      <header className="sticky top-0 z-50 border-b border-[#E2D9CF] bg-[#F1ECE6]">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <Link
             href={`/house/${slug}`}
-            className="flex min-w-0 items-center gap-4 rounded-full pr-3 transition hover:bg-slate-50"
+            className="flex min-w-0 items-center gap-4 rounded-full pr-3 transition-all duration-200 hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
           >
             <div
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
@@ -121,9 +128,11 @@ export default async function PublicHouseLayout({
           <div className="flex items-center gap-3">
             <PublicHouseBell feed={bellFeed} />
 
-            <PublicHouseNavigation
+            <PublicHouseNavigation chairman={chairman}
               slug={slug}
               houseName={house.name}
+              houseAddress={house.address}
+              districtName={house.district?.name ?? houseCopy.common.houseFallback}
               districtColor={districtColor}
             />
           </div>

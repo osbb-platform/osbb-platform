@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PublicDocumentActionButton } from "@/src/shared/ui/public/PublicDocumentActionButton";
 
 type Props = {
   filePath: string;
   fileName?: string;
-  bucket?: string; // ✅ снова optional
+  bucket?: string;
 };
 
 function buildViewerUrl(path: string, bucket: string) {
@@ -17,7 +18,7 @@ function buildViewerUrl(path: string, bucket: string) {
 export function PublicReportPdfViewer({
   filePath,
   fileName,
-  bucket = "house-reports", // ✅ дефолт для отчетов и meetings
+  bucket = "house-reports",
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -25,28 +26,27 @@ export function PublicReportPdfViewer({
 
   if (!filePath.trim()) {
     return (
-      <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-        PDF файл будет подключен следующим шагом через CMS upload.
+      <div className="mt-5 rounded-2xl border border-dashed border-[#D8CEC2] bg-[#F3EEE8] px-4 py-3 text-sm text-[#5F5A54]">
+        PDF файл буде підключено наступним кроком через CMS upload.
       </div>
     );
   }
 
   return (
     <>
-      <button
-        type="button"
+      <PublicDocumentActionButton
         onClick={() => setIsOpen(true)}
-        className="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+        className="mt-5"
       >
         Ознайомитися
-      </button>
+      </PublicDocumentActionButton>
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
           <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div className="text-sm font-medium text-slate-900">
-                {fileName || "Просмотр отчета"}
+                {fileName || "Перегляд звіту"}
               </div>
 
               <button
