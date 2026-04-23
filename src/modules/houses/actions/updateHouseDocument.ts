@@ -137,7 +137,16 @@ export async function updateHouseDocument(
     houseId,
   });
 
+  const { data: house } = await supabase
+    .from("houses")
+    .select("slug")
+    .eq("id", houseId)
+    .maybeSingle();
+
   revalidatePath(`/admin/houses/${houseId}`);
+  if (house?.slug) {
+    revalidatePath(`/house/${house.slug}/information`);
+  }
 
   return { error: null };
 }
