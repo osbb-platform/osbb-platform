@@ -5,6 +5,7 @@ export type PublicHouseInformationDocumentItem = {
   title: string;
   category: string;
   description: string | null;
+  document_year: number | null;
   created_at: string;
   updated_at: string;
   storage_path: string | null;
@@ -24,6 +25,7 @@ export async function getPublicHouseInformationDocuments(
         "title",
         "category",
         "description",
+        "document_year",
         "created_at",
         "updated_at",
         "storage_path",

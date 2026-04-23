@@ -23,6 +23,16 @@ function normalizeCategory(value: string) {
   return allowed.has(value) ? value : "regulations";
 }
 
+function normalizeDocumentYear(value: string) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    return null;
+  }
+
+  return parsed >= 2016 && parsed <= 2026 ? parsed : null;
+}
+
 function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
@@ -39,6 +49,9 @@ export async function createHouseDocument(
     String(formData.get("category") ?? "regulations").trim(),
   );
   const description = String(formData.get("description") ?? "").trim();
+  const documentYear = normalizeDocumentYear(
+    String(formData.get("documentYear") ?? "").trim(),
+  );
 
   const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
   const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
@@ -58,6 +71,7 @@ export async function createHouseDocument(
       category,
       visibility_status: "draft",
       description: description || null,
+      document_year: documentYear,
       storage_bucket: DOCUMENT_BUCKET,
       storage_path: uploadedPdfPath,
       original_file_name: uploadedPdfName,

@@ -12,6 +12,23 @@ type Props = {
   articles: ArticleItem[];
 };
 
+const CATEGORY_LABELS: Record<string, string> = {
+  "О доме": "Про будинок",
+  "Правила проживания": "Правила проживання",
+  "Полезная информация": "Корисна інформація",
+  "Контакты служб": "Контакти служб",
+  "Инструкции для жильцов": "Інструкції для мешканців",
+};
+
+function normalizeCategoryLabel(value: unknown) {
+  const category = typeof value === "string" ? value.trim() : "";
+  if (!category) {
+    return "";
+  }
+
+  return CATEGORY_LABELS[category] ?? category;
+}
+
 function formatPublishedAt(value: unknown) {
   if (typeof value !== "string" || !value) {
     return "Дату публікації не вказано";
@@ -76,6 +93,7 @@ export function PublicInformationSlider({
       : "";
 
   const publishedAt = formatPublishedAt(content.publishedAt);
+  const categoryLabel = normalizeCategoryLabel(content.category);
 
   function goPrev() {
     setActiveIndex((prev) =>
@@ -104,8 +122,16 @@ export function PublicInformationSlider({
 
           <div className="flex flex-col justify-between p-4 sm:p-8">
             <div>
-              <div className="text-xs font-medium uppercase tracking-[0.2em] text-[#7B8A9A]">
-                {publishedAt}
+              <div className="flex flex-wrap items-center gap-3">
+                {categoryLabel ? (
+                  <span className="inline-flex rounded-full border border-[#D8CEC2] bg-[#F3EEE8] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5B6B7C]">
+                    {categoryLabel}
+                  </span>
+                ) : null}
+
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-[#7B8A9A]">
+                  {publishedAt}
+                </div>
               </div>
 
               <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:mt-4 sm:text-3xl">

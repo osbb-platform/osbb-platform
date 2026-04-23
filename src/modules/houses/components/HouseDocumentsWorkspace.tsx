@@ -42,6 +42,10 @@ const visibilityOptions: Array<{
   { value: "published", label: "Опубліковано для мешканців" },
 ];
 
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) =>
+  String(2026 - index),
+);
+
 function getCategoryLabel(category: HouseDocumentCategory) {
   return (
     categoryOptions.find((item) => item.value === category)?.label ?? category
@@ -145,6 +149,7 @@ export function HouseDocumentsWorkspace({
     useState<HouseDocumentCategory>("regulations");
   const [visibility, setVisibility] =
     useState<HouseDocumentVisibility>("draft");
+  const [documentYear, setDocumentYear] = useState<string>(YEAR_OPTIONS[0]);
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 const [fileError, setFileError] = useState<string | null>(null);
@@ -166,6 +171,7 @@ const [fileError, setFileError] = useState<string | null>(null);
     setTitle("");
     setCategory("regulations");
     setVisibility("draft");
+    setDocumentYear(YEAR_OPTIONS[0]);
     setDescription("");
     setSelectedFile(null);
     setRemoveAttachment(false);
@@ -190,6 +196,9 @@ const [fileError, setFileError] = useState<string | null>(null);
     setTitle(document.title);
     setCategory(document.category);
     setVisibility(document.visibility_status);
+    setDocumentYear(
+      document.document_year ? String(document.document_year) : YEAR_OPTIONS[0],
+    );
     setDescription(document.description ?? "");
     setSelectedFile(null);
     setRemoveAttachment(false);
@@ -243,6 +252,7 @@ const [fileError, setFileError] = useState<string | null>(null);
         formData.set("title", title);
         formData.set("category", category);
         formData.set("visibilityStatus", visibility);
+        formData.set("documentYear", documentYear);
         formData.set("description", description);
 
         if (uploadedPdfPath) {
@@ -401,6 +411,23 @@ const [fileError, setFileError] = useState<string | null>(null);
                 {categoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                Рік
+              </label>
+              <select
+                value={documentYear}
+                onChange={(event) => setDocumentYear(event.target.value)}
+                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              >
+                {YEAR_OPTIONS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
                   </option>
                 ))}
               </select>
@@ -723,8 +750,11 @@ const [fileError, setFileError] = useState<string | null>(null);
                       ) : null}
                     </div>
 
-                    <div className="mt-2 text-sm text-slate-400">
-                      {getCategoryLabel(document.category)}
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                      <span>{getCategoryLabel(document.category)}</span>
+                      <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-300">
+                        {document.document_year ? `Рік: ${document.document_year}` : "Рік не вказано"}
+                      </span>
                     </div>
 
                     <div className="mt-3 line-clamp-2 text-sm leading-6 text-slate-300">

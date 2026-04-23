@@ -29,6 +29,16 @@ function normalizeVisibility(value: string) {
   return allowed.has(value) ? value : "draft";
 }
 
+function normalizeDocumentYear(value: string) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    return null;
+  }
+
+  return parsed >= 2016 && parsed <= 2026 ? parsed : null;
+}
+
 function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
@@ -49,6 +59,9 @@ export async function updateHouseDocument(
     String(formData.get("visibilityStatus") ?? "draft").trim(),
   );
   const description = String(formData.get("description") ?? "").trim();
+  const documentYear = normalizeDocumentYear(
+    String(formData.get("documentYear") ?? "").trim(),
+  );
 
   const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
   const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
@@ -104,6 +117,7 @@ export async function updateHouseDocument(
       category,
       visibility_status: visibilityStatus,
       description: description || null,
+      document_year: documentYear,
       updated_at: nowIso,
       storage_bucket: storageBucket,
       storage_path: storagePath,

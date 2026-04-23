@@ -150,27 +150,33 @@ export function PublicHouseSidePanel({ chairman,
         </div>
 
         <div className="border-t border-[#DDD4CA] px-5 py-5">
-          {chairman ? (
-          <div className="rounded-[24px] border border-[#DDD4CA] bg-[#ECE6DF] p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66758A]">
-              Голова правління
-            </div>
+          {chairman ? (() => {
+            const normalizedRole = normalizeBoardRoleLabel(chairman.role);
 
-            <div className="mt-3 text-[16px] font-semibold text-[#1F2A37]">
-              {chairman.name}
-            </div>
+            return (
+              <div className="rounded-[24px] border border-[#DDD4CA] bg-[#ECE6DF] p-5 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66758A]">
+                  Голова правління
+                </div>
 
-            <div className="mt-1 text-sm text-[#5B6B7C]">
-              {normalizeBoardRoleLabel(chairman.role)}
-            </div>
+                <div className="mt-3 text-[16px] font-semibold text-[#1F2A37]">
+                  {chairman.name}
+                </div>
 
-            {chairman.phone ? (
-              <div className="mt-3 text-sm font-medium text-[#2F3A4F]">
-                {chairman.phone}
+                {normalizedRole && normalizedRole !== "Голова правління" ? (
+                  <div className="mt-1 text-sm text-[#5B6B7C]">
+                    {normalizedRole}
+                  </div>
+                ) : null}
+
+                {chairman.phone ? (
+                  <div className="mt-3 text-sm font-medium text-[#2F3A4F]">
+                    {chairman.phone}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        ) : null}
+            );
+          })() : null}
         </div>
       </aside>
     </>

@@ -1,5 +1,4 @@
 import { houseInformationCopy } from "@/src/shared/publicCopy/house";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
@@ -7,33 +6,16 @@ import { getPublishedHouseSections } from "@/src/modules/houses/services/getPubl
 import { getPublicHouseInformationDocuments } from "@/src/modules/houses/services/getPublicHouseInformationDocuments";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { PublicInformationSlider } from "@/src/modules/houses/components/PublicInformationSlider";
+import Link from "next/link";
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{
-    category?: string;
+    year?: string;
   }>;
 };
 
-const CMS_CATEGORIES = [
-  "О доме",
-  "Правила проживания",
-  "Полезная информация",
-  "Контакты служб",
-  "Инструкции для жильцов",
-] as const;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  "О доме": "Про будинок",
-  "Правила проживания": "Правила проживання",
-  "Полезная информация": "Корисна інформація",
-  "Контакты служб": "Контакти служб",
-  "Инструкции для жильцов": "Інструкції для мешканців",
-};
-
-function getCategoryLabel(category: string) {
-  return CATEGORY_LABELS[category] ?? category;
-}
+const DOCUMENT_YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => String(2026 - index));
 
 function getSortTimestamp(content: Record<string, unknown>) {
   const candidates = [content.publishedAt, content.updatedAt, content.createdAt];
@@ -112,51 +94,25 @@ export default async function InformationPage({
       return getSortTimestamp(bContent) - getSortTimestamp(aContent);
     });
 
-  const categoriesWithContent = CMS_CATEGORIES.filter((category) =>
-    articles.some((section) => {
-      const content =
-        typeof section.content === "object" && section.content
-          ? (section.content as Record<string, unknown>)
-          : {};
+  const documentYearsWithContent = Array.from(
+    new Set(
+      documents
+        .map((item) => item.document_year)
+        .filter((item): item is number => Number.isInteger(item)),
+    ),
+  )
+    .sort((a, b) => b - a)
+    .map(String);
 
-      return content.category === category;
-    }),
+  const selectedDocumentYear =
+    resolvedSearchParams.year &&
+    documentYearsWithContent.includes(resolvedSearchParams.year)
+      ? resolvedSearchParams.year
+      : (documentYearsWithContent[0] ?? null);
+
+  const filteredDocuments = documents.filter((document) =>
+    document.document_year ? String(document.document_year) === selectedDocumentYear : false,
   );
-
-  const categories: string[] = [houseInformationCopy.filters.all, ...categoriesWithContent];
-  const requestedCategory = resolvedSearchParams.category ?? houseInformationCopy.filters.all;
-  const activeCategory = categories.includes(requestedCategory)
-    ? requestedCategory
-    : houseInformationCopy.filters.all;
-
-  const visibleArticles = articles.filter((section) => {
-    if (activeCategory === houseInformationCopy.filters.all) {
-      return true;
-    }
-
-    const content =
-      typeof section.content === "object" && section.content
-        ? (section.content as Record<string, unknown>)
-        : {};
-
-    return content.category === activeCategory;
-  });
-
-  const categoryCounts = Object.fromEntries(
-    categories.map((category) => [
-      category,
-      category === houseInformationCopy.filters.all
-        ? articles.length
-        : articles.filter((section) => {
-            const content =
-              typeof section.content === "object" && section.content
-                ? (section.content as Record<string, unknown>)
-                : {};
-
-            return content.category === category;
-          }).length,
-    ]),
-  ) as Record<string, number>;
 
   const faqSection = sections.find((section) => section.kind === "faq");
   const faqItems =
@@ -179,48 +135,17 @@ export default async function InformationPage({
             {houseInformationCopy.page.description}
           </p>
         </div>
-
-        <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm backdrop-blur-sm">
-          <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-            {categories.map((category) => {
-              const isActive = activeCategory === category;
-              const count = categoryCounts[category] ?? 0;
-
-              return (
-                <Link
-                  key={category}
-                  href={`/house/${slug}/information?category=${encodeURIComponent(category)}`}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
-                    isActive
-                      ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                      : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                  }`}
-                  style={isActive ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
-                >
-                  <span>{getCategoryLabel(category)}</span>
-                  <span
-                    className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      isActive ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]" : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       <section className="mt-8">
         <div className="rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-3 shadow-[0_6px_20px_rgba(31,42,55,0.05)] sm:p-5">
-          {visibleArticles.length === 0 ? (
+          {articles.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
               {houseInformationCopy.empty.noMaterials}
             </div>
           ) : (
             <PublicInformationSlider
-              articles={visibleArticles}
+              articles={articles}
             />
           )}
         </div>
@@ -228,44 +153,103 @@ export default async function InformationPage({
 
       {documents.length > 0 ? (
         <section className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
-          
-
           <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
             {houseInformationCopy.documents.subtitle}
           </h2>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {documents.map((document) => (
-              <div
-                key={document.id}
-                className="rounded-3xl border border-[#E4DBD1] bg-[#F3EEE8] p-5 shadow-sm"
-              >
-                <div className="text-base font-semibold text-slate-900">
-                  {document.title}
-                </div>
+          {documentYearsWithContent.length > 0 ? (
+            <div className="mt-6 rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8] p-3 shadow-sm backdrop-blur-sm">
+              <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+              {documentYearsWithContent.map((year) => {
+                const isActive = selectedDocumentYear === year;
+                const count = documents.filter((document) => String(document.document_year ?? "") === year).length;
 
-                <div className="mt-2 text-sm leading-6 text-[#5B6B7C]">
-                  {document.description || houseInformationCopy.documents.pdfFallback}
-                </div>
-
-                <div className="mt-3 text-xs text-slate-500">
-                  {formatPublishedAt(document.updated_at || document.created_at)}
-                </div>
-
-                <PublicReportPdfViewer
-                  filePath={document.storage_path || ""}
-                  fileName={document.original_file_name || document.title}
-                  bucket="house-documents"
-                />
+                return (
+                  <Link
+                    key={year}
+                    href={`/house/${slug}/information?year=${year}`}
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
+                      isActive
+                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
+                    }`}
+                    style={
+                      isActive
+                        ? {
+                            "--tab-active-bg": `${districtColor}20`,
+                            "--tab-active-text": "#1F2A37",
+                            borderColor: districtColor,
+                          } as React.CSSProperties
+                        : undefined
+                    }
+                  >
+                    <span>{year}</span>
+                    <span
+                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        isActive
+                          ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]"
+                          : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </Link>
+                );
+              })}
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[24px] border border-dashed border-[#D8CEC2] bg-[#F9F6F2] p-4 text-sm text-[#5F5A54] shadow-sm sm:rounded-[32px] sm:p-6">
+              Для матеріалів ще не вказано роки. Оновіть матеріали в CMS та виберіть рік для відображення.
+            </div>
+          )}
+
+          {filteredDocuments.length > 0 ? (
+            <div className="mt-6 max-h-[840px] overflow-y-auto pr-1">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {filteredDocuments.map((document) => (
+                  <div
+                    key={document.id}
+                    className="rounded-3xl border border-[#E4DBD1] bg-[#F3EEE8] p-5 shadow-sm"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      {document.document_year ? (
+                        <span className="rounded-full border border-[#D8CEC2] bg-[#F6F2EC] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5B6B7C]">
+                          {document.document_year}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-3 text-base font-semibold text-slate-900">
+                      {document.title}
+                    </div>
+
+                    <div className="mt-2 text-sm leading-6 text-[#5B6B7C]">
+                      {document.description || houseInformationCopy.documents.pdfFallback}
+                    </div>
+
+                    <div className="mt-3 text-xs text-slate-500">
+                      {formatPublishedAt(document.updated_at || document.created_at)}
+                    </div>
+
+                    <PublicReportPdfViewer
+                      filePath={document.storage_path || ""}
+                      fileName={document.original_file_name || document.title}
+                      bucket="house-documents"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[24px] border border-dashed border-[#D8CEC2] bg-[#F9F6F2] p-4 text-sm text-[#5F5A54] shadow-sm sm:rounded-[32px] sm:p-6">
+              Матеріали за {selectedDocumentYear} рік поки не додані.
+            </div>
+          )}
         </section>
       ) : null}
 
       <section className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
-        
-
         <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
           {houseInformationCopy.faq.title}
         </h2>

@@ -21,6 +21,7 @@ export type HouseDocumentListItem = {
   category: HouseDocumentCategory;
   visibility_status: HouseDocumentVisibility;
   description: string | null;
+  document_year: number | null;
   created_at: string;
   updated_at: string;
   storage_bucket: string | null;
@@ -50,6 +51,7 @@ export async function getHouseDocuments(
         "category",
         "visibility_status",
         "description",
+        "document_year",
         "created_at",
         "updated_at",
         "storage_bucket",
