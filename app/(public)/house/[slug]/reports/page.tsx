@@ -54,6 +54,23 @@ function getMonthLabel(value: string) {
   return MONTH_LABELS[value] ?? value;
 }
 
+function normalizeReportCategoryLabel(value: string | null | undefined) {
+  const normalized = String(value ?? "").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const map: Record<string, string> = {
+    "Выполненные работы": "Виконані роботи",
+    "Финансовый отчет": "Фінансовий звіт",
+    "Ремонт и обслуживание": "Ремонт та обслуговування",
+    "Инженерные системы": "Інженерні системи",
+  };
+
+  return map[normalized] ?? normalized;
+}
+
 function isStillNew(value?: string | null) {
   if (!value) return false;
   const date = new Date(value);
@@ -313,7 +330,7 @@ export default async function ReportsPage({
                 >
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-[#E7DED3] px-3 py-1 text-xs font-medium">
-                      {report.category}
+                      {normalizeReportCategoryLabel(report.category)}
                     </span>
 
                     {report.isPinned ? (
