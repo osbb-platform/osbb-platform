@@ -55,6 +55,26 @@ function normalizePhoneForHref(value: string) {
   return `+${digits}`;
 }
 
+function normalizeBoardRoleLabel(value: string | null | undefined) {
+  const normalized = String(value ?? "").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const map: Record<string, string> = {
+    "Председатель": "Голова правління",
+    "Председатель правления": "Голова правління",
+    "Голова ОСББ": "Голова правління",
+    "Заместитель председателя": "Заступник голови правління",
+    "Член правления": "Член правління",
+    "Члены правления": "Члени правління",
+    "Ревизионная комиссия": "Ревізійна комісія",
+  };
+
+  return map[normalized] ?? normalized;
+}
+
 function normalizeBoardContent(content: Record<string, unknown>) {
   const intro =
     typeof content.intro === "string"
@@ -85,7 +105,7 @@ function normalizeBoardContent(content: Record<string, unknown>) {
                   : `role-${index + 1}`,
               status,
               name: String(raw.name ?? "").trim(),
-              role: String(raw.role ?? "").trim(),
+              role: normalizeBoardRoleLabel(String(raw.role ?? "")),
               phone: String(raw.phone ?? "").trim(),
               email: String(raw.email ?? "").trim(),
               officeHours: String(raw.officeHours ?? "").trim(),

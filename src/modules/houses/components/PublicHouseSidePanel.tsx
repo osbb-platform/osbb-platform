@@ -10,6 +10,26 @@ type NavigationItem = {
   href: (slug: string) => string;
 };
 
+function normalizeBoardRoleLabel(value: string | null | undefined) {
+  const normalized = String(value ?? "").trim();
+
+  if (!normalized) {
+    return "Голова правління";
+  }
+
+  const map: Record<string, string> = {
+    "Председатель": "Голова правління",
+    "Председатель правления": "Голова правління",
+    "Голова ОСББ": "Голова правління",
+    "Заместитель председателя": "Заступник голови правління",
+    "Член правления": "Член правління",
+    "Члены правления": "Члени правління",
+    "Ревизионная комиссия": "Ревізійна комісія",
+  };
+
+  return map[normalized] ?? normalized;
+}
+
 type PublicHouseSidePanelProps = {
   chairman?: any;
   slug: string;
@@ -133,7 +153,7 @@ export function PublicHouseSidePanel({ chairman,
           {chairman ? (
           <div className="rounded-[24px] border border-[#DDD4CA] bg-[#ECE6DF] p-5 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66758A]">
-              Голова ОСББ
+              Голова правління
             </div>
 
             <div className="mt-3 text-[16px] font-semibold text-[#1F2A37]">
@@ -141,7 +161,7 @@ export function PublicHouseSidePanel({ chairman,
             </div>
 
             <div className="mt-1 text-sm text-[#5B6B7C]">
-              {chairman.role}
+              {normalizeBoardRoleLabel(chairman.role)}
             </div>
 
             {chairman.phone ? (

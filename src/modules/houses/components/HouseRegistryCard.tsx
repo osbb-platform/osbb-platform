@@ -184,7 +184,8 @@ export function HouseRegistryCard({
   const router = useRouter();
 
   const access = getResolvedAccess(currentUser.role);
-  const canManageSensitiveSettings = access.housesRegistry.changeAccessCode;
+  const canManageSensitiveSettings =
+    access.housesRegistry.changeAccessCode;
   const canManageSettings = access.housesRegistry.edit;
 
   function openMessagesPanel() {

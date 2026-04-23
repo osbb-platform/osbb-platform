@@ -48,6 +48,19 @@ function isValidIban(value: string) {
   const iban = normalizeIban(value);
   return /^UA\d{27}$/.test(iban);
 }
+function normalizeLegacyPurposeTemplate(value: string) {
+  const normalized = value.trim();
+
+  if (
+    normalized ===
+    "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}"
+  ) {
+    return "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}";
+  }
+
+  return normalized;
+}
+
 function normalizeSnapshot(value: unknown): RequisitesSnapshot {
   if (!value || typeof value !== "object") {
     return DEFAULT_SNAPSHOT;
@@ -61,8 +74,9 @@ function normalizeSnapshot(value: unknown): RequisitesSnapshot {
     edrpou: String(raw.edrpou ?? "").trim(),
     bank: String(raw.bank ?? "").trim(),
     purposeTemplate:
-      String(raw.purposeTemplate ?? DEFAULT_SNAPSHOT.purposeTemplate).trim() ||
-      DEFAULT_SNAPSHOT.purposeTemplate,
+      normalizeLegacyPurposeTemplate(
+        String(raw.purposeTemplate ?? DEFAULT_SNAPSHOT.purposeTemplate),
+      ) || DEFAULT_SNAPSHOT.purposeTemplate,
     paymentUrl: String(raw.paymentUrl ?? "").trim(),
     paymentButtonLabel:
       String(raw.paymentButtonLabel ?? DEFAULT_SNAPSHOT.paymentButtonLabel).trim() ||
