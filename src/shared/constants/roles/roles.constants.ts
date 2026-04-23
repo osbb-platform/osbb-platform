@@ -26,5 +26,5 @@ export function getRoleLabel(role: string | null | undefined) {
   if (role === ROLES.SUPERADMIN) return "Superadmin";
   if (role === ROLES.ADMIN) return "Admin";
   if (role === ROLES.MANAGER) return "Manager";
-  return "Без роли";
+  return "Без ролі";
 }

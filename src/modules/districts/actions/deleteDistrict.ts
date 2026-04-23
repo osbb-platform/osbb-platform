@@ -10,7 +10,7 @@ export type DeleteDistrictState = {
   success: string | null;
 };
 
-const DEFAULT_DISTRICT_NAME = "Без района";
+const DEFAULT_DISTRICT_NAME = "Без району";
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 const DEFAULT_DISTRICT_COLOR = "#9CA3AF";
 
@@ -18,7 +18,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 async function ensureDefaultDistrict() {
@@ -32,7 +32,7 @@ async function ensureDefaultDistrict() {
 
   if (existingDistrictError) {
     throw new Error(
-      `Не удалось проверить системный район: ${existingDistrictError.message}`,
+      `Не вдалося перевірити системний район: ${existingDistrictError.message}`,
     );
   }
 
@@ -52,7 +52,7 @@ async function ensureDefaultDistrict() {
 
   if (createError || !createdDistrict) {
     throw new Error(
-      `Не удалось создать системный район "Без района": ${createError?.message ?? "Unknown error"}`,
+      `Не вдалося створити системний район "Без району": ${createError?.message ?? "Unknown error"}`,
     );
   }
 
@@ -67,7 +67,7 @@ export async function deleteDistrict(
 
   if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
     return {
-      error: "Недостаточно прав для удаления района.",
+      error: "Недостатньо прав для видалення району.",
       success: null,
     };
   }
@@ -76,7 +76,7 @@ export async function deleteDistrict(
 
   if (!districtId) {
     return {
-      error: "Не удалось определить район для удаления.",
+      error: "Не вдалося визначити район для видалення.",
       success: null,
     };
   }
@@ -91,21 +91,21 @@ export async function deleteDistrict(
 
   if (districtError) {
     return {
-      error: `Ошибка загрузки района: ${districtError.message}`,
+      error: `Помилка завантаження району: ${districtError.message}`,
       success: null,
     };
   }
 
   if (!district) {
     return {
-      error: "Район не найден.",
+      error: "Район не знайдено.",
       success: null,
     };
   }
 
   if (district.slug === DEFAULT_DISTRICT_SLUG) {
     return {
-      error: 'Системный район "Без района" нельзя удалить.',
+      error: 'Системний район "Без району" не можна видалити.',
       success: null,
     };
   }
@@ -119,7 +119,7 @@ export async function deleteDistrict(
       error:
         error instanceof Error
           ? error.message
-          : 'Не удалось подготовить район "Без района".',
+          : 'Не вдалося підготувати район "Без району".',
       success: null,
     };
   }
@@ -131,7 +131,7 @@ export async function deleteDistrict(
 
   if (housesLookupError) {
     return {
-      error: `Не удалось проверить дома района: ${housesLookupError.message}`,
+      error: `Не вдалося перевірити будинки району: ${housesLookupError.message}`,
       success: null,
     };
   }
@@ -148,7 +148,7 @@ export async function deleteDistrict(
 
     if (reassignError) {
       return {
-        error: `Не удалось перенести дома в район "Без района": ${reassignError.message}`,
+        error: `Не вдалося перенести будинки до району "Без району": ${reassignError.message}`,
         success: null,
       };
     }
@@ -163,7 +163,7 @@ export async function deleteDistrict(
 
   if (deleteError) {
     return {
-      error: `Ошибка удаления района: ${deleteError.message}`,
+      error: `Помилка видалення району: ${deleteError.message}`,
       success: null,
     };
   }
@@ -171,7 +171,7 @@ export async function deleteDistrict(
   if (!deletedDistrict) {
     return {
       error:
-        "Район не был удален. Скорее всего, у текущего пользователя нет прав на delete для таблицы districts.",
+        "Район не було видалено. Ймовірно, у поточного користувача немає прав на delete для таблиці districts.",
       success: null,
     };
   }
@@ -190,7 +190,7 @@ export async function deleteDistrict(
     entityId: district.id,
     entityLabel: district.name,
     actionType: "delete_district",
-    description: `Удален район «${district.name}».`,
+    description: `Видалено район «${district.name}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "districts",
@@ -216,7 +216,7 @@ export async function deleteDistrict(
     error: null,
     success:
       housesCount > 0
-        ? `Район «${district.name}» удален. Домов перенесено в «Без района»: ${housesCount}.`
-        : `Район «${district.name}» удален.`,
+        ? `Район «${district.name}» видалено. Будинків перенесено в «Без району»: ${housesCount}.`
+        : `Район «${district.name}» видалено.`,
   };
 }

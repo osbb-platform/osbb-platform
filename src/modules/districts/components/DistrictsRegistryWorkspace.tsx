@@ -126,7 +126,7 @@ function DistrictFormCard({
 
   const slugPreview = useMemo(() => {
     const generated = slugify(name);
-    return generated || "slug-budet-sozdan-avtomaticheski";
+    return generated || "slug-bude-stvoreno-avtomatychno";
   }, [name]);
 
   useEffect(() => {
@@ -180,12 +180,12 @@ function DistrictFormCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">
-            {mode === "create" ? "Создать новый район" : "Настройки района"}
+            {mode === "create" ? "Створити новий район" : "Налаштування району"}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             {mode === "create"
-              ? "Создай район, чтобы затем привязывать к нему дома, страницы и структуру CMS."
-              : "Измените название и фирменный цвет района. Slug обновляется автоматически."}
+              ? "Створіть район, щоб потім прив’язувати до нього будинки, сторінки та структуру CMS."
+              : "Змініть назву та фірмовий колір району. Slug оновлюється автоматично."}
           </p>
         </div>
 
@@ -194,7 +194,7 @@ function DistrictFormCard({
           onClick={onCancel}
           disabled={!canManageDistricts}
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
-          aria-label="Закрыть форму"
+          aria-label="Закрити форму"
         >
           ×
         </button>
@@ -207,21 +207,21 @@ function DistrictFormCard({
 
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-200">
-            Название района
+            Назва району
           </label>
           <input
             name="name"
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="Например, Вознесеновский"
+            placeholder="Наприклад, Вознесенівський"
             className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
           />
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-200">
-            Системный slug
+            Системний slug
           </label>
           <input
             type="text"
@@ -234,9 +234,9 @@ function DistrictFormCard({
         <div className="md:col-span-2 rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="text-sm font-medium text-white">Фирменный цвет района</div>
+              <div className="text-sm font-medium text-white">Фірмовий колір району</div>
               <div className="mt-1 text-sm text-slate-400">
-                Этот цвет используется в карточках, фильтрах и связанной навигации.
+                Цей колір використовується в картках, фільтрах і пов’язаній навігації.
               </div>
             </div>
 
@@ -255,7 +255,7 @@ function DistrictFormCard({
                   setThemeColor(event.target.value.toUpperCase())
                 }
                 className="h-12 w-full cursor-pointer rounded-2xl border border-slate-700 bg-slate-950 p-1"
-                aria-label="Выбор цвета района"
+                aria-label="Вибір кольору району"
               />
             </div>
 
@@ -294,11 +294,11 @@ function DistrictFormCard({
           >
             {isPending
               ? mode === "create"
-                ? "Создаем..."
-                : "Сохраняем..."
+                ? "Створюємо..."
+                : "Зберігаємо..."
               : mode === "create"
-                ? "Создать район"
-                : "Сохранить"}
+                ? "Створити район"
+                : "Зберегти"}
           </button>
 
           <button
@@ -306,7 +306,7 @@ function DistrictFormCard({
             onClick={onCancel}
             className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
           >
-            Отмена
+            Скасувати
           </button>
         </div>
       </form>
@@ -320,7 +320,7 @@ function DistrictFormCard({
               disabled={isDeletePending}
               className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
             >
-              {isDeletePending ? "Удаляем..." : "Удалить район"}
+              {isDeletePending ? "Видаляємо..." : "Видалити район"}
             </button>
           </form>
         </div>
@@ -328,16 +328,16 @@ function DistrictFormCard({
       <PlatformConfirmModal
         open={isDeleteConfirmOpen}
         tone="destructive"
-        title="Удалить район?"
+        title="Видалити район?"
         description={
           district
             ? district.houses_count > 0
-              ? `После подтверждения район «${district.name}» будет удален из CMS. Дома (${district.houses_count}) автоматически перейдут в «Без района».`
-              : `После подтверждения район «${district.name}» будет удален из CMS.`
-            : "После подтверждения район будет удален из CMS."
+              ? `Після підтвердження район «${district.name}» буде видалений із CMS. Будинки (${district.houses_count}) автоматично перейдуть до «Без району».`
+              : `Після підтвердження район «${district.name}» буде видалений із CMS.`
+            : "Після підтвердження район буде видалений із CMS."
         }
-        confirmLabel="Удалить район"
-        pendingLabel="Удаляем..."
+        confirmLabel="Видалити район"
+        pendingLabel="Видаляємо..."
         isPending={isDeletePending}
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
@@ -413,20 +413,20 @@ export function DistrictsRegistryWorkspace({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-white">
-              Управление районами
+              Керування районами
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
-              Районы — базовая структура платформы. Сначала создается район, затем
-              к нему привязываются дома и вся CMS-логика объекта.
+              Райони — базова структура платформи. Спочатку створюється район, потім
+              до нього прив’язуються будинки та вся CMS-логіка об’єкта.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Районов: {visibleDistricts.length}
+                Районів: {visibleDistricts.length}
               </span>
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Домов в системе: {totalHousesCount}
+                Будинків у системі: {totalHousesCount}
               </span>
             </div>
           </div>
@@ -439,7 +439,7 @@ export function DistrictsRegistryWorkspace({
             }}
             className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
-            Создать район
+            Створити район
           </button>
         </div>
       </div>
@@ -447,44 +447,44 @@ export function DistrictsRegistryWorkspace({
       <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">Поиск по районам</h2>
+            <h2 className="text-xl font-semibold text-white">Пошук по районах</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Быстрый поиск района по названию или slug.
+              Швидкий пошук району за назвою або slug.
             </p>
           </div>
 
           <div className="rounded-full bg-slate-800 px-3 py-1 text-sm font-medium text-slate-200">
-            Найдено: {filteredDistricts.length}
+            Знайдено: {filteredDistricts.length}
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Поиск
+              Пошук
             </label>
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Например: Вознесеновский или voznesenovskyi"
+              placeholder="Наприклад: Вознесенівський або voznesenovskyi"
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Сортировка
+              Сортування
             </label>
             <select
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             >
-              <option value="name_asc">По названию А–Я</option>
-              <option value="houses_desc">По количеству домов</option>
-              <option value="empty_first">Сначала пустые</option>
-              <option value="filled_first">Сначала заполненные</option>
+              <option value="name_asc">За назвою А–Я</option>
+              <option value="houses_desc">За кількістю будинків</option>
+              <option value="empty_first">Спочатку порожні</option>
+              <option value="filled_first">Спочатку заповнені</option>
             </select>
           </div>
         </div>
@@ -510,10 +510,10 @@ export function DistrictsRegistryWorkspace({
       {filteredDistricts.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-8 text-slate-300">
           <div className="text-xl font-semibold text-white">
-            Пока нет ни одного района
+            Поки немає жодного району
           </div>
           <div className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-            Начни со структуры платформы: создай первый район, а затем добавляй в него дома.
+            Почніть зі структури платформи: створіть перший район, а потім додавайте до нього будинки.
           </div>
           <button
             type="button"
@@ -523,7 +523,7 @@ export function DistrictsRegistryWorkspace({
             }}
             className="mt-6 inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
-            Создать первый район
+            Створити перший район
           </button>
         </div>
       ) : (
@@ -547,7 +547,7 @@ export function DistrictsRegistryWorkspace({
                   <span
                     className="h-5 w-5 rounded-full border border-slate-700"
                     style={{ backgroundColor: district.theme_color }}
-                    aria-label={`Цвет района ${district.theme_color}`}
+                    aria-label={`Колір району ${district.theme_color}`}
                     title={district.theme_color}
                   />
                   {!district.is_system_default ? (
@@ -555,14 +555,14 @@ export function DistrictsRegistryWorkspace({
                       type="button"
                       onClick={() => openEditForm(district)}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-200 transition hover:border-slate-500 hover:text-white"
-                      aria-label={`Настроить район ${district.name}`}
-                      title="Настроить район"
+                      aria-label={`Налаштувати район ${district.name}`}
+                      title="Налаштувати район"
                     >
                       <SettingsIcon />
                     </button>
                   ) : (
                     <span className="inline-flex items-center rounded-2xl border border-slate-700 px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-                      Системный
+                      Системний
                     </span>
                   )}
                 </div>
@@ -573,10 +573,10 @@ export function DistrictsRegistryWorkspace({
                   {padHousesCount(district.houses_count)}
                 </div>
                 <div className="mt-2 text-sm text-slate-400">
-                  домов в районе
+                  будинків у районі
                 </div>
                 <div className="mt-3 text-xs font-medium text-slate-500">
-                  {district.houses_count > 0 ? "Заполнен домами" : "Пока пустой"}
+                  {district.houses_count > 0 ? "Заповнений будинками" : "Поки порожній"}
                 </div>
               </div>
             </article>

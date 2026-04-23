@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 const DEFAULT_TEMPLATE =
-  "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}";
+  "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}";
 
 export async function ensureHouseRequisitesSection(params: {
   housePageId: string;
@@ -33,7 +33,7 @@ export async function ensureHouseRequisitesSection(params: {
     .insert({
       house_page_id: housePageId,
       kind: "requisites",
-      title: "Реквизиты",
+      title: "Реквізити",
       sort_order: 160,
       status: "published",
       content: {
@@ -43,7 +43,7 @@ export async function ensureHouseRequisitesSection(params: {
         bank: "",
         purposeTemplate: DEFAULT_TEMPLATE,
         paymentUrl: "",
-        paymentButtonLabel: "Перейти к оплате",
+        paymentButtonLabel: "Перейти до оплати",
         updatedAt: now,
       },
     })

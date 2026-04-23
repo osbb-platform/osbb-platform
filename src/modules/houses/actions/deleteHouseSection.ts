@@ -14,7 +14,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function deleteHouseSection(
@@ -122,8 +122,8 @@ export async function deleteHouseSection(
       actionType: "delete_house_section",
       description:
         existingSection.kind === "faq"
-          ? "Удален FAQ блок."
-          : `Удален информационный блок «${existingSection.title ?? "Без названия"}».`,
+          ? "Видалено FAQ блок."
+          : `Видалено інформаційний блок «${existingSection.title ?? "Без назви"}».`,
       houseId,
       metadata: {
         sourceType: "cms",

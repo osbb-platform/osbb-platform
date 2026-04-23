@@ -23,7 +23,7 @@ export async function deleteArchivedHouse(
 
   if (!houseId) {
     return {
-      error: "Не удалось определить дом для удаления.",
+      error: "Не вдалося визначити будинок для видалення.",
       successMessage: null,
     };
   }
@@ -38,14 +38,14 @@ export async function deleteArchivedHouse(
 
   if (houseError || !house) {
     return {
-      error: `Дом не найден: ${houseError?.message ?? "Unknown error"}`,
+      error: `Будинок не знайдено: ${houseError?.message ?? "Unknown error"}`,
       successMessage: null,
     };
   }
 
   if (!house.archived_at) {
     return {
-      error: "Окончательно удалить можно только архивный дом.",
+      error: "Остаточно видалити можна лише архівний будинок.",
       successMessage: null,
     };
   }
@@ -57,7 +57,7 @@ export async function deleteArchivedHouse(
 
   if (deletePagesError) {
     return {
-      error: `Не удалось удалить страницы дома перед финальным удалением: ${deletePagesError.message}`,
+      error: `Не вдалося видалити сторінки будинку перед фінальним видаленням: ${deletePagesError.message}`,
       successMessage: null,
     };
   }
@@ -71,7 +71,7 @@ export async function deleteArchivedHouse(
 
   if (deleteError) {
     return {
-      error: `Ошибка окончательного удаления дома: ${deleteError.message}`,
+      error: `Помилка остаточного видалення будинку: ${deleteError.message}`,
       successMessage: null,
     };
   }
@@ -79,7 +79,7 @@ export async function deleteArchivedHouse(
   if (!deletedHouse) {
     return {
       error:
-        "Дом не был удален. Скорее всего, удаление блокируется связанными записями или у текущего пользователя нет прав на delete для таблицы houses.",
+        "Будинок не було видалено. Ймовірно, видалення блокується пов’язаними записами або у поточного користувача немає прав на delete для таблиці houses.",
       successMessage: null,
     };
   }
@@ -88,14 +88,14 @@ export async function deleteArchivedHouse(
 
   await logPlatformChange({
     actorAdminId: currentAdmin?.id ?? null,
-    actorName: currentAdmin?.fullName ?? currentAdmin?.email ?? "Администратор",
+    actorName: currentAdmin?.fullName ?? currentAdmin?.email ?? "Адміністратор",
     actorEmail: currentAdmin?.email ?? null,
     actorRole: currentAdmin?.role ?? null,
     entityType: "house",
     entityId: house.id,
     entityLabel: house.name,
     actionType: "delete_house",
-    description: `Дом «${house.name}» удален из системы навсегда.`,
+    description: `Будинок «${house.name}» видалено із системи назавжди.`,
     metadata: {
       sourceType: "cms",
       sourceModule: "houses",
@@ -114,6 +114,6 @@ export async function deleteArchivedHouse(
 
   return {
     error: null,
-    successMessage: `Дом «${house.name}» окончательно удален.`,
+    successMessage: `Будинок «${house.name}» остаточно видалено.`,
   };
 }

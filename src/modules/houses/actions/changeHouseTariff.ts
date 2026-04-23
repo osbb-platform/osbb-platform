@@ -32,11 +32,11 @@ export async function changeHouseTariff(
   const tariff = rawTariff ? Number(rawTariff) : null;
 
   if (rawTariff && Number.isNaN(tariff)) {
-    return { error: "Введите корректное число", successMessage: null };
+    return { error: "Введіть коректне число", successMessage: null };
   }
 
   if (!houseId) {
-    return { error: "Дом не найден", successMessage: null };
+    return { error: "Будинок не знайдено", successMessage: null };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -55,6 +55,6 @@ export async function changeHouseTariff(
 
   return {
     error: null,
-    successMessage: "Тариф сохранен",
+    successMessage: "Тариф збережено",
   };
 }

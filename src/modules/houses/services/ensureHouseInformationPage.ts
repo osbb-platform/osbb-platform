@@ -31,7 +31,7 @@ export async function ensureHouseInformationPage({
     .insert({
       house_id: houseId,
       slug: "information",
-      title: "Информация",
+      title: "Інформація",
       status: "published",
     })
     .select("id, slug, title, status")

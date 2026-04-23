@@ -83,13 +83,13 @@ export function EmployeesToolbar({
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
-            Поиск
+            Пошук
           </label>
           <input
             type="text"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Имя, email, должность"
+            placeholder="Ім’я, email, посада"
             className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
           />
         </div>
@@ -103,7 +103,7 @@ export function EmployeesToolbar({
             onChange={(event) => setRoleValue(event.target.value)}
             className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
           >
-            <option value="">Все роли</option>
+            <option value="">Усі ролі</option>
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
           </select>
@@ -118,11 +118,11 @@ export function EmployeesToolbar({
             onChange={(event) => setStatusValue(event.target.value)}
             className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
           >
-            <option value="">Все статусы</option>
-            <option value="invited">Invited</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="archived">Archived</option>
+            <option value="">Усі статуси</option>
+            <option value="invited">Запрошено</option>
+            <option value="active">Активний</option>
+            <option value="inactive">Неактивний</option>
+            <option value="archived">Архівний</option>
           </select>
         </div>
       </div>
@@ -134,11 +134,11 @@ export function EmployeesToolbar({
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-60"
         >
-          Сбросить
+          Скинути
         </button>
 
         {isPending ? (
-          <div className="text-xs text-slate-500">Обновляем список...</div>
+          <div className="text-xs text-slate-500">Оновлюємо список...</div>
         ) : null}
       </div>
     </div>

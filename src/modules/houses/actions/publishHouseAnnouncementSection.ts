@@ -51,7 +51,7 @@ export async function publishHouseAnnouncementSection(
   const level = normalizeLevel(String(formData.get("level") ?? "info").trim());
 
   if (!sectionId || !houseId || !houseSlug) {
-    return { error: "Не переданы данные для подтверждения объявления." };
+    return { error: "Не передано дані для підтвердження оголошення." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -65,7 +65,7 @@ export async function publishHouseAnnouncementSection(
   if (existingSectionError || !existingSection) {
     return {
       error:
-        existingSectionError?.message ?? "Не удалось получить объявление.",
+        existingSectionError?.message ?? "Не вдалося отримати оголошення.",
     };
   }
 
@@ -101,7 +101,7 @@ export async function publishHouseAnnouncementSection(
     .eq("id", sectionId);
 
   if (updateError) {
-    return { error: `Не удалось подтвердить объявление: ${updateError.message}` };
+    return { error: `Не вдалося підтвердити оголошення: ${updateError.message}` };
   }
 
   try {
@@ -115,8 +115,8 @@ export async function publishHouseAnnouncementSection(
     return {
       error:
         error instanceof Error
-          ? `Объявление подтверждено, но версия не сохранена: ${error.message}`
-          : "Объявление подтверждено, но версия не сохранена.",
+          ? `Оголошення підтверджено, але версію не збережено: ${error.message}`
+          : "Оголошення підтверджено, але версію не збережено.",
     };
   }
 

@@ -22,7 +22,7 @@ export function downloadApartmentsImportTemplate() {
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Квартиры");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Квартири");
 
   saveWorkbook(workbook, "apartments-import-template.xlsx");
 }
@@ -35,19 +35,19 @@ export function exportApartmentsRegistry(params: {
 
   const rows = items.map((item) => ({
     "Квартира": item.apartment_label,
-    "Лицевой счет": item.account_number,
-    "Владелец": item.owner_name,
-    "Квадраты": formatAreaForSheet(item.area),
-    "Источник": item.source_type === "import" ? "Импорт" : "Вручную",
-    "Дата создания": item.created_at,
-    "Дата обновления": item.updated_at,
-    "Архивирована": item.archived_at ?? "",
+    "Особовий рахунок": item.account_number,
+    "Власник": item.owner_name,
+    "Площа": formatAreaForSheet(item.area),
+    "Джерело": item.source_type === "import" ? "Імпорт" : "Вручну",
+    "Дата створення": item.created_at,
+    "Дата оновлення": item.updated_at,
+    "Архівовано": item.archived_at ?? "",
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Реестр квартир");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Реєстр квартир");
 
   const safeHouseName = houseName
     .trim()

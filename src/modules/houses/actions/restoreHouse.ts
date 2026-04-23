@@ -23,7 +23,7 @@ export async function restoreHouse(
 
   if (!id) {
     return {
-      error: "Не удалось определить дом для восстановления.",
+      error: "Не вдалося визначити будинок для відновлення.",
       successMessage: null,
     };
   }
@@ -38,21 +38,21 @@ export async function restoreHouse(
 
   if (existingHouseError) {
     return {
-      error: `Ошибка загрузки дома: ${existingHouseError.message}`,
+      error: `Помилка завантаження будинку: ${existingHouseError.message}`,
       successMessage: null,
     };
   }
 
   if (!existingHouse) {
     return {
-      error: "Дом не найден.",
+      error: "Будинок не знайдено.",
       successMessage: null,
     };
   }
 
   if (!existingHouse.archived_at) {
     return {
-      error: "Этот дом уже находится в активном списке.",
+      error: "Цей будинок уже знаходиться в активному списку.",
       successMessage: null,
     };
   }
@@ -67,7 +67,7 @@ export async function restoreHouse(
 
   if (restoreError) {
     return {
-      error: `Ошибка восстановления дома: ${restoreError.message}`,
+      error: `Помилка відновлення будинку: ${restoreError.message}`,
       successMessage: null,
     };
   }
@@ -81,7 +81,7 @@ export async function restoreHouse(
 
   if (restoreApartmentsError) {
     return {
-      error: `Дом восстановлен, но квартиры не удалось вернуть из архива: ${restoreApartmentsError.message}`,
+      error: `Будинок відновлено, але квартири не вдалося повернути з архіву: ${restoreApartmentsError.message}`,
       successMessage: null,
     };
   }
@@ -96,7 +96,7 @@ export async function restoreHouse(
       entityId: existingHouse.id,
       entityLabel: existingHouse.slug,
       actionType: "restore_house",
-      description: `Дом ${existingHouse.name} восстановлен из архива.`,
+      description: `Будинок ${existingHouse.name} відновлено з архіву.`,
       metadata: {
         houseSlug: existingHouse.slug,
       },
@@ -110,6 +110,6 @@ export async function restoreHouse(
 
   return {
     error: null,
-    successMessage: `Дом «${existingHouse.name}» восстановлен.`,
+    successMessage: `Будинок «${existingHouse.name}» відновлено.`,
   };
 }

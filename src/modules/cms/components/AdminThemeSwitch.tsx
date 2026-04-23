@@ -75,7 +75,7 @@ export function AdminThemeSwitch() {
               : "right-3 text-[var(--cms-text-muted)]"
           }`}
         >
-          {isLight ? "Светлая" : "Тёмная"}
+          {isLight ? "Світла" : "Темна"}
         </span>
 
         <span

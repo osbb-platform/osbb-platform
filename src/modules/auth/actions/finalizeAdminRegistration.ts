@@ -101,7 +101,7 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
     entityId: membership.id,
     entityLabel: membership.full_name_snapshot ?? email,
     actionType: "activate_employee",
-    description: `Сотрудник «${membership.full_name_snapshot ?? email}» завершил регистрацию.`,
+    description: `Співробітник «${membership.full_name_snapshot ?? email}» завершив реєстрацію.`,
     metadata: {
       sourceType: "cms",
       sourceModule: "employees",

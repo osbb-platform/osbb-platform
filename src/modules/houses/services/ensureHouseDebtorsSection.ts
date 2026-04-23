@@ -5,9 +5,9 @@ const DEFAULT_CONTENT = {
   draftItems: [],
   payment: {
     url: "",
-    title: "Оплата задолженности",
+    title: "Оплата заборгованості",
     note: "",
-    buttonLabel: "Оплатить",
+    buttonLabel: "Сплатити",
   },
 };
 
@@ -32,7 +32,7 @@ export async function ensureHouseDebtorsSection(params: {
     .insert({
       house_page_id: params.housePageId,
       kind: "debtors",
-      title: "Должники",
+      title: "Боржники",
       status: "published",
       sort_order: 140,
       content: DEFAULT_CONTENT,

@@ -39,7 +39,7 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
 
   const slugPreview = useMemo(() => {
     const generated = slugify(name);
-    return generated || "slug-budet-sozdan-avtomaticheski";
+    return generated || "slug-bude-stvoreno-avtomatychno";
   }, [name]);
 
   const orderedDistricts = useMemo(() => {
@@ -67,21 +67,21 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
     <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Название дома
+          Назва будинку
         </label>
         <input
           name="name"
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Название дома"
+          placeholder="Назва будинку"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
       </div>
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Системный slug
+          Системний slug
         </label>
         <input
           type="text"
@@ -90,18 +90,18 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-slate-400 outline-none"
         />
         <div className="mt-2 text-xs text-slate-500">
-          Slug формируется автоматически по названию дома и дальше не редактируется.
+          Slug формується автоматично за назвою будинку та далі не редагується.
         </div>
       </div>
 
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Адрес
+          Адреса
         </label>
         <input
           name="address"
           type="text"
-          placeholder="г. Запорожье, ..."
+          placeholder="м. Запоріжжя, ..."
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
       </div>
@@ -129,7 +129,7 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           defaultValue=""
         >
           <option value="" disabled>
-            Выберите район
+            Оберіть район
           </option>
           {orderedDistricts.map((district) => (
             <option key={district.id} value={district.id}>
@@ -141,24 +141,24 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Короткое описание
+          Короткий опис
         </label>
         <input
           name="shortDescription"
           type="text"
-          placeholder="Короткое описание"
+          placeholder="Короткий опис"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
       </div>
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Публичное описание
+          Публічний опис
         </label>
         <input
           name="publicDescription"
           type="text"
-          placeholder="Публичное описание"
+          placeholder="Публічний опис"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
       </div>
@@ -174,7 +174,7 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center px-4 text-center text-xs leading-5 text-slate-500">
-                  Предпросмотр появится после выбора фотографии
+                  Попередній перегляд з’явиться після вибору фотографії
                 </div>
               )}
             </div>
@@ -183,9 +183,9 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           <div className="min-w-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-200">Фото дома</div>
+                <div className="text-sm font-medium text-slate-200">Фото будинку</div>
                 <div className="mt-1 text-xs leading-5 text-slate-400">
-                  Используется на странице входа в кабинет дома.
+                  Використовується на сторінці входу до кабінету будинку.
                 </div>
               </div>
 
@@ -213,17 +213,17 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
-                  Выбрать файл
+                  Обрати файл
                 </button>
               </div>
             </div>
 
             <div className="mt-3 grid gap-1 text-xs leading-5 text-slate-500">
-              <div>Рекомендуется: 1600×900 px</div>
-              <div>Минимум: 1280×720 px</div>
-              <div>Формат: JPG, PNG или WebP</div>
-              <div>Размер файла: до 5 МБ</div>
-              <div>Лучше загружать горизонтальную фотографию, где дом находится по центру кадра</div>
+              <div>Рекомендовано: 1600×900 px</div>
+              <div>Мінімум: 1280×720 px</div>
+              <div>Формат: JPG, PNG або WebP</div>
+              <div>Розмір файлу: до 5 МБ</div>
+              <div>Краще завантажувати горизонтальну фотографію, де будинок знаходиться по центру кадру</div>
             </div>
 
             {selectedImage ? (
@@ -247,7 +247,7 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
         >
-          {isPending ? "Создаем..." : "Создать дом"}
+          {isPending ? "Створюємо..." : "Створити будинок"}
         </button>
       </div>
     </form>

@@ -37,13 +37,13 @@ const initialState = {
 
 function formatDateTime(value: unknown) {
   if (typeof value !== "string" || !value) {
-    return "Не опубликовано";
+    return "Не опубліковано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Не опубликовано";
+    return "Не опубліковано";
   }
 
   return date.toLocaleString("ru-RU");
@@ -51,14 +51,14 @@ function formatDateTime(value: unknown) {
 
 function getLevelLabel(level: string) {
   if (level === "danger") {
-    return "Важное";
+    return "Важливе";
   }
 
   if (level === "warning") {
-    return "Обратить внимание";
+    return "Звернути увагу";
   }
 
-  return "Обычное объявление";
+  return "Звичайне оголошення";
 }
 
 export function EditAnnouncementSectionForm({
@@ -104,7 +104,7 @@ export function EditAnnouncementSectionForm({
     const formElement = formRef.current;
 
     if (!formElement) {
-      throw new Error("Форма объявления не найдена.");
+      throw new Error("Форму оголошення не знайдено.");
     }
 
     return new FormData(formElement);
@@ -133,7 +133,7 @@ export function EditAnnouncementSectionForm({
         setActionError(
           error instanceof Error
             ? error.message
-            : "Не удалось выполнить действие.",
+            : "Не вдалося виконати дію.",
         );
       } finally {
         setPendingAction(null);
@@ -172,10 +172,10 @@ export function EditAnnouncementSectionForm({
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-sm font-medium text-[var(--cms-text)]">
-            Редактирование объявления
+            Редагування оголошення
           </div>
           <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
-            Изменения сохраняются в house_sections и version history.
+            Зміни зберігаються в секції та історії версій.
           </div>
         </div>
 
@@ -183,7 +183,7 @@ export function EditAnnouncementSectionForm({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Закрыть редактор"
+            aria-label="Закрити редактор"
             className={adminIconButtonClass}
           >
             ×
@@ -193,17 +193,17 @@ export function EditAnnouncementSectionForm({
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
-          <div className="text-sm text-[var(--cms-text-muted)]">Дата публикации</div>
+          <div className="text-sm text-[var(--cms-text-muted)]">Дата публікації</div>
           <div className="mt-1 font-medium text-[var(--cms-text)]">{publishedAt}</div>
         </div>
 
         <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
-          <div className="text-sm text-[var(--cms-text-muted)]">Последнее обновление</div>
+          <div className="text-sm text-[var(--cms-text-muted)]">Останнє оновлення</div>
           <div className="mt-1 font-medium text-[var(--cms-text)]">{updatedAt}</div>
         </div>
 
         <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
-          <div className="text-sm text-[var(--cms-text-muted)]">Текущий тип</div>
+          <div className="text-sm text-[var(--cms-text-muted)]">Поточний тип</div>
           <div className="mt-1 font-medium text-[var(--cms-text)]">
             {getLevelLabel(level)}
           </div>
@@ -220,7 +220,7 @@ export function EditAnnouncementSectionForm({
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Заголовок объявления
+            Заголовок оголошення
           </label>
           <input
             name="title"
@@ -232,22 +232,22 @@ export function EditAnnouncementSectionForm({
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Тип объявления
+            Тип оголошення
           </label>
           <select
             name="level"
             defaultValue={level}
             className={adminInputClass}
           >
-            <option value="danger">Красный — важное</option>
-            <option value="warning">Оранжевый — обратить внимание</option>
-            <option value="info">Салатовый — обычное объявление</option>
+            <option value="danger">Червоний — важливе</option>
+            <option value="warning">Помаранчевий — звернути увагу</option>
+            <option value="info">Салатовий — звичайне оголошення</option>
           </select>
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Текст объявления
+            Текст оголошення
           </label>
           <textarea
             name="body"
@@ -282,7 +282,7 @@ export function EditAnnouncementSectionForm({
                   isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
-                {isSaving ? "Сохраняем..." : "Сохранить"}
+                {isSaving ? "Зберігаємо..." : "Зберегти"}
               </button>
 
               {isDraftLike ? (
@@ -292,7 +292,7 @@ export function EditAnnouncementSectionForm({
                   onClick={() => setConfirmAction("delete")}
                   className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
-                  {pendingAction === "delete" ? "Удаляем..." : "Удалить"}
+                  {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
               ) : null}
             </div>
@@ -305,7 +305,7 @@ export function EditAnnouncementSectionForm({
                   onClick={() => setConfirmAction("publish")}
                   className={`${adminSuccessButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
-                  {pendingAction === "publish" ? "Подтверждаем..." : "Подтвердить"}
+                  {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                 </button>
               </div>
             ) : null}
@@ -318,7 +318,7 @@ export function EditAnnouncementSectionForm({
                   onClick={() => setConfirmAction("archive")}
                   className={`${adminWarningButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
-                  {pendingAction === "archive" ? "Архивируем..." : "Архивировать"}
+                  {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
                 </button>
               </div>
             ) : null}
@@ -331,7 +331,7 @@ export function EditAnnouncementSectionForm({
                   onClick={() => setConfirmAction("delete")}
                   className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
                 >
-                  {pendingAction === "delete" ? "Удаляем..." : "Удалить"}
+                  {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
               </div>
             ) : null}
@@ -341,14 +341,14 @@ export function EditAnnouncementSectionForm({
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}
-        title={isArchived ? "Удалить архивное объявление?" : "Удалить черновик объявления?"}
+        title={isArchived ? "Видалити архівне оголошення?" : "Видалити чернетку оголошення?"}
         description={
           isArchived
-            ? "Архивное объявление будет удалено из системы без возможности восстановления."
-            : "Черновик объявления будет удален без возможности восстановления. Это действие затронет только текущую запись."
+            ? "Архівне оголошення буде видалено із системи без можливості відновлення."
+            : "Чернетку оголошення буде видалено без можливості відновлення. Ця дія торкнеться лише поточного запису."
         }
-        confirmLabel="Удалить объявление"
-        pendingLabel="Удаляем..."
+        confirmLabel="Видалити оголошення"
+        pendingLabel="Видаляємо..."
         tone="destructive"
         isPending={pendingAction === "delete" && isMutating}
         onCancel={() => {
@@ -364,10 +364,10 @@ export function EditAnnouncementSectionForm({
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}
-        title="Подтвердить публикацию объявления?"
-        description="После подтверждения объявление станет видимым для жильцов на сайте дома."
-        confirmLabel="Подтвердить публикацию"
-        pendingLabel="Подтверждаем..."
+        title="Підтвердити публікацію оголошення?"
+        description="Після підтвердження оголошення стане видимим для мешканців на сайті будинку."
+        confirmLabel="Підтвердити публікацію"
+        pendingLabel="Підтверджуємо..."
         tone="publish"
         isPending={pendingAction === "publish" && isMutating}
         onCancel={() => {
@@ -383,10 +383,10 @@ export function EditAnnouncementSectionForm({
 
       <PlatformConfirmModal
         open={confirmAction === "archive"}
-        title="Перенести объявление в архив?"
-        description="После архивации объявление исчезнет из публичной части сайта и перестанет быть видимым жильцам. В CMS оно останется доступным в архиве."
-        confirmLabel="Архивировать объявление"
-        pendingLabel="Архивируем..."
+        title="Перенести оголошення в архів?"
+        description="Після архівації оголошення зникне з публічної частини сайту і перестане бути видимим мешканцям. У CMS воно залишиться доступним в архіві."
+        confirmLabel="Архівувати оголошення"
+        pendingLabel="Архівуємо..."
         tone="warning"
         isPending={pendingAction === "archive" && isMutating}
         onCancel={() => {

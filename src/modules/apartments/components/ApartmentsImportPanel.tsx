@@ -107,22 +107,22 @@ export function ApartmentsImportPanel({
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Закрыть панель импорта квартир"
+        aria-label="Закрити панель імпорту квартир"
       />
 
       <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-slate-800 bg-slate-950 shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
           <div>
             <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-              Импорт квартир
+              Імпорт квартир
             </div>
 
             <h2 className="mt-3 text-xl font-semibold text-white">
-              Загрузка для дома {houseName}
+              Завантаження для будинку {houseName}
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-slate-400">
-              Загрузите CSV, XLS или XLSX. Активный список квартир будет полностью заменен данными из файла.
+              Завантажте CSV, XLS або XLSX. Активний список квартир буде повністю замінено даними з файлу.
             </p>
           </div>
 
@@ -130,7 +130,7 @@ export function ApartmentsImportPanel({
             type="button"
             onClick={onClose}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
-            aria-label="Закрыть"
+            aria-label="Закрити"
           >
             ×
           </button>
@@ -145,7 +145,7 @@ export function ApartmentsImportPanel({
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-200">
-                    Файл импорта
+                    Файл імпорту
                   </label>
 
                   <input
@@ -157,23 +157,23 @@ export function ApartmentsImportPanel({
                   />
 
                   <div className="mt-2 text-xs text-slate-400">
-                    Обязательные колонки: {APARTMENTS_IMPORT_HEADERS.join(" / ")}
+                    Обов’язкові колонки: {APARTMENTS_IMPORT_HEADERS.join(" / ")}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                    Строк всего: {previewSummary.rows}
+                    Усього рядків: {previewSummary.rows}
                   </span>
                   <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                    С площадью: {previewSummary.withArea}
+                    З площею: {previewSummary.withArea}
                   </span>
                 </div>
               </div>
 
               {isParsing ? (
                 <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
-                  Читаем файл и проверяем структуру...
+                  Читаємо файл і перевіряємо структуру...
                 </div>
               ) : null}
 
@@ -192,7 +192,7 @@ export function ApartmentsImportPanel({
               {previewRows.length > 0 ? (
                 <>
                   <div className="mt-4 rounded-2xl border border-amber-900 bg-amber-950/30 px-4 py-2.5 text-sm text-amber-200">
-                    После подтверждения активный список квартир выбранного дома будет полностью заменен новым файлом.
+                    Після підтвердження активний список квартир обраного будинку буде повністю замінено новим файлом.
                   </div>
 
                   <div className="mt-4 overflow-hidden rounded-3xl border border-slate-800">
@@ -204,16 +204,16 @@ export function ApartmentsImportPanel({
                               #
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                              Лицевой счет
+                              Особовий рахунок
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                               Квартира
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                              Владелец
+                              Власник
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                              Квадраты
+                              Площа
                             </th>
                           </tr>
                         </thead>
@@ -261,7 +261,7 @@ export function ApartmentsImportPanel({
                   disabled={previewRows.length === 0}
                 />
                 <span className="leading-6">
-                  Подтверждаю, что нужно полностью заменить текущий активный список квартир выбранного дома данными из файла.
+                  Підтверджую, що потрібно повністю замінити поточний активний список квартир обраного будинку даними з файлу.
                 </span>
               </label>
 
@@ -271,7 +271,7 @@ export function ApartmentsImportPanel({
                   onClick={onClose}
                   className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
                 >
-                  Отмена
+                  Скасувати
                 </button>
 
                 <button
@@ -279,7 +279,7 @@ export function ApartmentsImportPanel({
                   disabled={!canSubmit}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPending ? "Импортируем..." : "Подтвердить импорт"}
+                  {isPending ? "Імпортуємо..." : "Підтвердити імпорт"}
                 </button>
               </div>
             </div>

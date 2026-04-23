@@ -20,7 +20,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 async function resolveUniqueDistrictSlug(params: {
@@ -61,7 +61,7 @@ export async function createDistrict(
 
   if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
     return {
-      error: "Недостаточно прав для создания района.",
+      error: "Недостатньо прав для створення району.",
       success: null,
     };
   }
@@ -70,13 +70,13 @@ export async function createDistrict(
   const themeColor = normalizeHexColor(String(formData.get("themeColor") ?? ""));
 
   if (!name || !themeColor) {
-    return { error: "Заполните название и выберите цвет района.", success: null };
+    return { error: "Заповніть назву та виберіть колір району.", success: null };
   }
 
   const baseSlug = slugify(name);
 
   if (!baseSlug) {
-    return { error: "Не удалось сформировать slug района.", success: null };
+    return { error: "Не вдалося сформувати slug району.", success: null };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -90,7 +90,7 @@ export async function createDistrict(
       error:
         error instanceof Error
           ? error.message
-          : "Не удалось сформировать уникальный slug района.",
+          : "Не вдалося сформувати унікальний slug району.",
       success: null,
     };
   }
@@ -106,7 +106,7 @@ export async function createDistrict(
     .single();
 
   if (error) {
-    return { error: `Ошибка создания района: ${error.message}`, success: null };
+    return { error: `Помилка створення району: ${error.message}`, success: null };
   }
 
   const actorName = getActorDisplayName({
@@ -123,7 +123,7 @@ export async function createDistrict(
     entityId: createdDistrict.id,
     entityLabel: createdDistrict.name,
     actionType: "create_district",
-    description: `Создан район «${createdDistrict.name}».`,
+    description: `Створено район «${createdDistrict.name}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "districts",
@@ -144,6 +144,6 @@ export async function createDistrict(
 
   return {
     error: null,
-    success: `Район «${createdDistrict.name}» создан.`,
+    success: `Район «${createdDistrict.name}» створено.`,
   };
 }

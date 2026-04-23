@@ -34,7 +34,7 @@ function formatDate(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   return date.toLocaleString("ru-RU", {
@@ -111,14 +111,14 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 
 function getRetentionMessage(tab: PlatformHistoryTab) {
   if (tab === "cms") {
-    return "Во вкладке отображаются CMS-события за последние 60 дней. Более старые записи очищаются автоматически в Supabase.";
+    return "У вкладці відображаються CMS-події за останні 60 днів. Старіші записи автоматично очищаються в Supabase.";
   }
 
   if (tab === "incoming") {
-    return "Во вкладке отображаются входящие события за последние 90 дней. Более старые записи очищаются автоматически в Supabase.";
+    return "У вкладці відображаються вхідні події за останні 90 днів. Старіші записи автоматично очищаються в Supabase.";
   }
 
-  return "История отображается по политике хранения: CMS — 60 дней, входящие события — 90 дней. Старые записи очищаются автоматически.";
+  return "Історія відображається відповідно до політики зберігання: CMS — 60 днів, вхідні події — 90 днів. Старі записи очищаються автоматично.";
 }
 
 function getSourceBadgeClasses(sourceType: "cms" | "house_portal") {
@@ -175,48 +175,48 @@ function getEmptyStateCopy(params: {
 
   if (tab === "incoming" && !districtId) {
     return {
-      title: "Сначала выберите район",
+      title: "Спочатку оберіть район",
       description:
-        "После выбора района станут доступны дом, раздел сайта, период и сортировка для входящих событий.",
+        "Після вибору району стануть доступні будинок, розділ сайту, період і сортування для вхідних подій.",
     };
   }
 
   if (tab === "incoming" && districtId && houseId) {
     return {
-      title: "По выбранному дому событий не найдено",
+      title: "За обраним будинком подій не знайдено",
       description:
-        "Попробуйте изменить период, выбрать другой раздел сайта или сбросить фильтры входящих событий.",
+        "Спробуйте змінити період, обрати інший розділ сайту або скинути фільтри вхідних подій.",
     };
   }
 
   if (tab === "incoming") {
     return {
-      title: "Во входящих событиях пока пусто",
+      title: "У вхідних подіях поки порожньо",
       description:
-        "Для выбранного района и текущих фильтров новые обращения пока не найдены.",
+        "Для обраного району та поточних фільтрів нових звернень поки не знайдено.",
     };
   }
 
   if (tab === "cms" && hasFilters) {
     return {
-      title: "По фильтрам ничего не найдено",
+      title: "За фільтрами нічого не знайдено",
       description:
-        "Измените сотрудника, раздел, подраздел или период, чтобы увидеть подходящие записи журнала действий.",
+        "Змініть співробітника, розділ, підрозділ або період, щоб побачити відповідні записи журналу дій.",
     };
   }
 
   if (tab === "cms") {
     return {
-      title: "Журнал действий пока пуст",
+      title: "Журнал дій поки порожній",
       description:
-        "Когда сотрудники начнут работать с CMS, здесь появятся системные события по разделам платформы.",
+        "Коли співробітники почнуть працювати з CMS, тут з’являться системні події за розділами платформи.",
     };
   }
 
   return {
-    title: "История пока пустая",
+    title: "Історія поки порожня",
     description:
-      "Когда в системе появятся действия сотрудников или входящие события с сайтов домов, они будут отображаться здесь.",
+      "Коли в системі з’являться дії співробітників або вхідні події з сайтів будинків, вони відображатимуться тут.",
   };
 }
 
@@ -315,15 +315,15 @@ export default async function AdminHistoryPage({
     <div className="space-y-5">
       <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-          History
+          Історія
         </div>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-          История
+          Історія
         </h1>
 
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
-          Общий журнал действий сотрудников платформы и входящих событий с сайтов домов.
+          Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
         </p>
       </div>
 
@@ -359,14 +359,14 @@ export default async function AdminHistoryPage({
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-white">
             {tab === "all"
-              ? "Все события"
+              ? "Усі події"
               : tab === "cms"
-                ? "CMS события"
-                : "События домов"}
+                ? "CMS події"
+                : "Події будинків"}
           </h2>
 
           <div className="text-sm text-slate-400">
-            Записей: {result.totalCount}
+            Записів: {result.totalCount}
           </div>
         </div>
 
@@ -383,12 +383,12 @@ export default async function AdminHistoryPage({
           <div className="overflow-x-auto rounded-2xl border border-slate-800">
             <div className="min-w-[1320px]">
               <div className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-slate-800 bg-slate-950/80 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                <div>Действие</div>
+                <div>Дія</div>
                 <div>Дата</div>
-                <div>Поток</div>
-                <div>Объект</div>
-                <div>Раздел</div>
-                <div>Подраздел</div>
+                <div>Потік</div>
+                <div>Об’єкт</div>
+                <div>Розділ</div>
+                <div>Підрозділ</div>
                 <div>Автор</div>
               </div>
 
@@ -399,10 +399,10 @@ export default async function AdminHistoryPage({
                     ? item.actor_email ??
                       item.metadata?.apartment ??
                       item.actor_name ??
-                      "Автор не указан"
+                      "Автор не вказаний"
                     : item.actor_name ??
                       item.actor_email ??
-                      "Сотрудник не указан";
+                      "Співробітник не вказаний";
 
                 const actorText =
                   typeof actorRaw === "string"
@@ -438,13 +438,13 @@ export default async function AdminHistoryPage({
                         )}`}
                       >
                         {item.source_type === "house_portal"
-                          ? "Входящее"
+                          ? "Вхідне"
                           : "CMS"}
                       </span>
                     </div>
 
                     <div className="text-slate-300">
-                      <div>{item.entity_label ?? "Объект не указан"}</div>
+                      <div>{item.entity_label ?? "Об’єкт не вказано"}</div>
                       <div className="mt-1 text-xs text-slate-500">
                         {houseText}
                       </div>

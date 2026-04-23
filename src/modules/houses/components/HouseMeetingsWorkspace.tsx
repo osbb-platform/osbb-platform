@@ -78,18 +78,18 @@ const initialState = { error: null };
 type WorkspaceTab = "active" | "draft" | "archived";
 
 const tabs: Array<{ key: WorkspaceTab; label: string }> = [
-  { key: "active", label: "Активные" },
-  { key: "draft", label: "Черновики" },
-  { key: "archived", label: "Архив" },
+  { key: "active", label: "Активні" },
+  { key: "draft", label: "Чернетки" },
+  { key: "archived", label: "Архів" },
 ];
 
 const scheduledStatusOptions: Array<{
   value: MeetingLifecycleStatus;
   label: string;
 }> = [
-  { value: "scheduled", label: "Запланировано" },
-  { value: "active", label: "Голосование" },
-  { value: "review", label: "На проверке" },
+  { value: "scheduled", label: "Заплановано" },
+  { value: "active", label: "Голосування" },
+  { value: "review", label: "На перевірці" },
   { value: "completed", label: "Завершено" },
 ];
 
@@ -222,10 +222,10 @@ function normalizeMeetings(content: Record<string, unknown>): MeetingItem[] {
 }
 
 function formatDate(value: string) {
-  if (!value) return "Дата не указана";
+  if (!value) return "Дату не вказано";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дата не указана";
-  return date.toLocaleString("ru-RU");
+  if (Number.isNaN(date.getTime())) return "Дату не вказано";
+  return date.toLocaleString("uk-UA");
 }
 
 function splitMeetingDateTime(value: string) {
@@ -262,12 +262,12 @@ function splitMeetingDateTime(value: string) {
 }
 
 function getMeetingStatusLabel(status: MeetingLifecycleStatus) {
-  if (status === "draft") return "Черновик";
-  if (status === "scheduled") return "Запланировано";
-  if (status === "active") return "Голосование";
-  if (status === "review") return "Проверка";
-  if (status === "completed") return "Решение";
-  return "Архив";
+  if (status === "draft") return "Чернетка";
+  if (status === "scheduled") return "Заплановано";
+  if (status === "active") return "Голосування";
+  if (status === "review") return "Перевірка";
+  if (status === "completed") return "Рішення";
+  return "Архів";
 }
 
 function getMeetingStatusBadgeClasses(status: MeetingLifecycleStatus) {
@@ -365,7 +365,7 @@ export function HouseMeetingsWorkspace({
   function openCreateMode() {
     if (!hasApartments) {
       window.alert(
-        "Сначала заполните раздел «Квартиры» для этого дома. Без списка квартир невозможно создать собрание и запустить голосование.",
+        "Спочатку заповніть розділ «Квартири» для цього будинку. Без списку квартир неможливо створити збори та запустити голосування.",
       );
       return;
     }
@@ -460,7 +460,7 @@ export function HouseMeetingsWorkspace({
       formData.set("houseSlug", houseSlug);
       formData.set("sectionId", section.id);
       formData.set("kind", "meetings");
-      formData.set("title", section.title ?? "Собрания");
+      formData.set("title", section.title ?? "Збори");
       formData.set("status", section.status ?? "published");
       formData.set("content", JSON.stringify(payload));
       formAction(formData);
@@ -497,10 +497,10 @@ export function HouseMeetingsWorkspace({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-white">
-            Собрания
+            Збори
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-            Управляйте собраниями дома, повесткой, этапами голосования и итоговыми решениями в едином рабочем пространстве.
+            Керуйте зборами будинку, порядком денним, етапами голосування та підсумковими рішеннями в єдиному робочому просторі.
           </p>
         </div>
 
@@ -510,7 +510,7 @@ export function HouseMeetingsWorkspace({
             onClick={openCreateMode}
             className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950"
           >
-            Новое собрание
+            Нові збори
           </button>
 
         </div>
@@ -551,14 +551,14 @@ export function HouseMeetingsWorkspace({
         <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950 p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="text-lg font-semibold text-white">
-              {mode === "create" ? "Новое собрание" : "Редактирование"}
+              {mode === "create" ? "Нові збори" : "Редагування"}
             </div>
 
             <button
               type="button"
               onClick={closeWorkspace}
               className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
-              aria-label="Закрыть форму"
+              aria-label="Закрити форму"
             >
               ×
             </button>
@@ -569,7 +569,7 @@ export function HouseMeetingsWorkspace({
           draft.status !== "archived" ? (
             <label className="mt-4 block">
               <span className="mb-2 block text-sm font-medium text-white">
-                Статус после сохранения
+                Статус після збереження
               </span>
               <select
                 value={draft.status}
@@ -597,7 +597,7 @@ export function HouseMeetingsWorkspace({
               onChange={(e) =>
                 setDraft((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Название собрания"
+              placeholder="Назва зборів"
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
             />
 
@@ -610,7 +610,7 @@ export function HouseMeetingsWorkspace({
                   shortDescription: e.target.value,
                 }))
               }
-              placeholder="Краткое описание"
+              placeholder="Короткий опис"
               rows={4}
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
             />
@@ -618,7 +618,7 @@ export function HouseMeetingsWorkspace({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-white">
-                  Дата собрания
+                  Дата зборів
                 </span>
                 <input
                   type="date"
@@ -631,7 +631,7 @@ export function HouseMeetingsWorkspace({
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-white">
-                  Время собрания
+                  Час зборів
                 </span>
                 <input
                   type="time"
@@ -652,17 +652,17 @@ export function HouseMeetingsWorkspace({
                   location: e.target.value,
                 }))
               }
-              placeholder="Место проведения"
+              placeholder="Місце проведення"
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
             />
 
             {mode === "edit" && draft.status === "review" ? (
               <div className="rounded-2xl border border-violet-900/40 bg-violet-950/10 p-4">
                 <div className="text-sm font-semibold text-white">
-                  Ручной ввод голосов
+                  Ручне внесення голосів
                 </div>
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  Внесите полный голос квартиры по всем вопросам. После сохранения запись появится в списке ниже.
+                  Внесіть повний голос квартири за всіма питаннями. Після збереження запис з’явиться у списку нижче.
                 </p>
 
                 <div className="mt-4 space-y-4">
@@ -673,7 +673,7 @@ export function HouseMeetingsWorkspace({
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white"
                   >
-                    <option value="">Выберите квартиру</option>
+                    <option value="">Оберіть квартиру</option>
                     {availableVotingApartments.map((apartment) => (
                       <option key={apartment.id} value={apartment.id}>
                         {apartment.ownerName
@@ -689,14 +689,14 @@ export function HouseMeetingsWorkspace({
                       className="rounded-2xl border border-slate-800 p-4"
                     >
                       <div className="text-sm font-medium text-white">
-                        {question.title || `Вопрос ${index + 1}`}
+                        {question.title || `Питання ${index + 1}`}
                       </div>
 
                       <div className="mt-3 grid gap-2 sm:grid-cols-3">
                         {[
                           ["for", "За"],
-                          ["against", "Против"],
-                          ["abstained", "Воздержался"],
+                          ["against", "Проти"],
+                          ["abstained", "Утримався"],
                         ].map(([value, label]) => (
                           <button
                             key={`${question.id}-${value}`}
@@ -728,7 +728,7 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartmentVote || !isComplete) {
-                        window.alert("Заполните квартиру и все ответы.");
+                        window.alert("Заповніть квартиру та всі відповіді.");
                         return;
                       }
 
@@ -737,7 +737,7 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartment) {
-                        window.alert("Выберите квартиру из списка.");
+                        window.alert("Оберіть квартиру зі списку.");
                         return;
                       }
 
@@ -763,13 +763,13 @@ export function HouseMeetingsWorkspace({
                     }}
                     className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-emerald-300"
                   >
-                    Сохранить голос квартиры
+                    Зберегти голос квартири
                   </button>
 
                   {(draft.manualVotes ?? []).length > 0 ? (
                     <div className="space-y-3 border-t border-slate-800 pt-4">
                       <div className="text-sm font-semibold text-white">
-                        Уже внесенные голоса
+                        Уже внесені голоси
                       </div>
 
                       {(draft.manualVotes ?? []).map((vote) => (
@@ -787,8 +787,8 @@ export function HouseMeetingsWorkspace({
                                 answer.choice === "for"
                                   ? "За"
                                   : answer.choice === "against"
-                                    ? "Против"
-                                    : "Воздержался",
+                                    ? "Проти"
+                                    : "Утримався",
                               )
                               .join(" / ")}
                           </div>
@@ -819,7 +819,7 @@ export function HouseMeetingsWorkspace({
             {draft.status !== "review" && draft.status !== "completed" ? (
               <div className="border-t border-slate-800 pt-4">
               <div className="mb-3 text-sm font-semibold text-white">
-                Повестка / вопросы
+                Порядок денний / питання
               </div>
 
               <div className="space-y-3">
@@ -841,7 +841,7 @@ export function HouseMeetingsWorkspace({
                         }))
                       }
                       disabled={isContentLocked || isPending}
-                      placeholder={`Вопрос ${index + 1}`}
+                      placeholder={`Питання ${index + 1}`}
                       className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 disabled:opacity-60"
                     />
 
@@ -859,7 +859,7 @@ export function HouseMeetingsWorkspace({
                       }
                       rows={3}
                       disabled={isContentLocked || isPending}
-                      placeholder="Описание вопроса"
+                      placeholder="Опис питання"
                       className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 disabled:opacity-60"
                     />
 
@@ -911,10 +911,10 @@ export function HouseMeetingsWorkspace({
 
                       const outcome =
                         totalVotes === 0
-                          ? "Нет данных"
+                          ? "Немає даних"
                           : votesFor > votesAgainst
-                            ? "Принято"
-                            : "Не принято";
+                            ? "Прийнято"
+                            : "Не прийнято";
 
                       return (
                         <div className="mt-3 space-y-3">
@@ -923,10 +923,10 @@ export function HouseMeetingsWorkspace({
                               За: {votesFor} ({forPercent}%)
                             </div>
                             <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                              Против: {votesAgainst} ({againstPercent}%)
+                              Проти: {votesAgainst} ({againstPercent}%)
                             </div>
                             <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                              Воздержались: {votesAbstained} ({abstainedPercent}%)
+                              Утрималися: {votesAbstained} ({abstainedPercent}%)
                             </div>
                             <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
                               Квартир: {totalVotes}
@@ -934,7 +934,7 @@ export function HouseMeetingsWorkspace({
                           </div>
 
                           <div className="rounded-xl border border-violet-900/40 bg-violet-950/20 px-3 py-2 text-xs font-medium text-violet-200">
-                            Итог: {outcome}
+                            Підсумок: {outcome}
                           </div>
                         </div>
                       );
@@ -950,7 +950,7 @@ export function HouseMeetingsWorkspace({
                       }
                       className="mt-3 text-xs text-rose-400 disabled:opacity-40"
                     >
-                      Удалить вопрос
+                      Видалити питання
                     </button>
                   </div>
                 ))}
@@ -962,7 +962,7 @@ export function HouseMeetingsWorkspace({
                 disabled={isPending}
                 className="mt-4 rounded-2xl border border-slate-700 px-4 py-2 text-sm text-white"
               >
-                Добавить вопрос
+                Додати питання
               </button>
             </div>
             ) : null}
@@ -975,14 +975,14 @@ export function HouseMeetingsWorkspace({
                     onClick={() => {
                       if (
                         selectedMeetingId &&
-                        window.confirm("Удалить черновик собрания без возможности восстановления?")
+                        window.confirm("Видалити чернетку зборів без можливості відновлення?")
                       ) {
                         deleteMeetingFromRegistry(selectedMeetingId);
                       }
                     }}
                     className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-rose-300"
                   >
-                    Удалить
+                    Видалити
                   </button>
                 ) : null}
 
@@ -992,7 +992,7 @@ export function HouseMeetingsWorkspace({
                   disabled={isPending}
                   className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:opacity-60"
                 >
-                  Сохранить
+                  Зберегти
                 </button>
 
               </div>
@@ -1002,14 +1002,14 @@ export function HouseMeetingsWorkspace({
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm("Подтвердить собрание и переместить его в активные?")) {
+                      if (window.confirm("Підтвердити збори та перемістити їх в активні?")) {
                         saveDraftToRegistry("scheduled");
                       }
                     }}
                     disabled={isPending}
                     className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-emerald-300 disabled:opacity-60"
                   >
-                    Подтвердить
+                    Підтвердити
                   </button>
                 ) : null}
 
@@ -1022,7 +1022,7 @@ export function HouseMeetingsWorkspace({
                     disabled={isPending}
                     className="rounded-2xl border border-amber-500/30 px-4 py-3 text-sm font-medium text-amber-300 disabled:opacity-60"
                   >
-                    Архивировать
+                    Архівувати
                   </button>
                 ) : null}
               </div>
@@ -1036,17 +1036,17 @@ export function HouseMeetingsWorkspace({
           <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/60 p-6">
             <div className="text-base font-semibold text-white">
               {activeTab === "draft"
-                ? "Черновиков пока нет"
+                ? "Чернеток поки немає"
                 : activeTab === "archived"
-                  ? "Архив собраний пока пуст"
-                  : "Активных собраний пока нет"}
+                  ? "Архів зборів поки порожній"
+                  : "Активних зборів поки немає"}
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
               {activeTab === "draft"
-                ? "Создайте новое собрание — оно появится здесь как черновик, пока вы не подтвердите публикацию."
+                ? "Створіть нові збори — вони з’являться тут як чернетка, доки ви не підтвердите публікацію."
                 : activeTab === "archived"
-                  ? "После завершения работы собрания можно будет перенести в архив. Здесь будут храниться завершенные записи для истории дома."
-                  : "После подтверждения черновика собрание появится здесь. В этой вкладке собираются все этапы работы: запланировано, голосование, на проверке и завершено."}
+                  ? "Після завершення роботи збори можна буде перенести в архів. Тут зберігатимуться завершені записи для історії будинку."
+                  : "Після підтвердження чернетки збори з’являться тут. У цій вкладці зібрано всі етапи роботи: заплановано, голосування, на перевірці та завершено."}
             </p>
           </div>
         ) : (
@@ -1058,7 +1058,7 @@ export function HouseMeetingsWorkspace({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="text-lg font-semibold text-white">
-                  {meeting.title || "Без названия"}
+                  {meeting.title || "Без назви"}
                 </div>
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-wide ${getMeetingStatusBadgeClasses(
@@ -1072,7 +1072,7 @@ export function HouseMeetingsWorkspace({
                 {formatDate(meeting.meetingDateTime)}
               </div>
               <div className="mt-3 text-sm text-slate-500">
-                {meeting.questions.length} вопросов
+                {meeting.questions.length} питань
               </div>
             </article>
           ))

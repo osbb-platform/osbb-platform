@@ -35,9 +35,9 @@ const DEFAULT_SNAPSHOT: RequisitesSnapshot = {
   edrpou: "",
   bank: "",
   purposeTemplate:
-    "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}",
+    "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
   paymentUrl: "",
-  paymentButtonLabel: "Перейти к оплате",
+  paymentButtonLabel: "Перейти до оплати",
 };
 
 function normalizeIban(value: string) {
@@ -156,9 +156,9 @@ export function HouseRequisitesWorkspace({
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Реквизиты</h2>
+                <h2 className="text-xl font-semibold text-white">Реквізити</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  Банковские реквизиты и данные для оплаты, которые жители видят на сайте дома.
+                  Банківські реквізити та дані для оплати, які мешканці бачать на сайті будинку.
                 </p>
               </div>
 
@@ -168,22 +168,22 @@ export function HouseRequisitesWorkspace({
                   onClick={handleOpenSettings}
                   className="inline-flex rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
-                  Редактировать
+                  Редагувати
                 </button>
               ) : null}
             </div>
 
             <div className="rounded-3xl border border-slate-700 bg-slate-950 p-6 text-white">
               <div className="space-y-3">
-                <div><span className="text-slate-400">Получатель:</span> {snapshot.recipient || "—"}</div>
+                <div><span className="text-slate-400">Отримувач:</span> {snapshot.recipient || "—"}</div>
                 <div><span className="text-slate-400">IBAN:</span> {snapshot.iban || "—"}</div>
                 <div><span className="text-slate-400">ЕДРПОУ:</span> {snapshot.edrpou || "—"}</div>
                 <div><span className="text-slate-400">Банк:</span> {snapshot.bank || "—"}</div>
-                <div><span className="text-slate-400">Назначение платежа:</span> {snapshot.purposeTemplate || "—"}</div>
+                <div><span className="text-slate-400">Призначення платежу:</span> {snapshot.purposeTemplate || "—"}</div>
                 <div className="break-words">
                   <span className="text-slate-400">Онлайн-оплата:</span>{" "}
                   <span className="break-all text-slate-200">
-                    {snapshot.paymentUrl || "Не подключена"}
+                    {snapshot.paymentUrl || "Не підключена"}
                   </span>
                 </div>
               </div>
@@ -197,10 +197,10 @@ export function HouseRequisitesWorkspace({
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-semibold text-white">
-                    Редактирование реквизитов
+                    Редагування реквізитів
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    После сохранения изменения сразу обновят публичную страницу дома.
+                    Після збереження зміни одразу оновлять публічну сторінку будинку.
                   </p>
                 </div>
 
@@ -208,7 +208,7 @@ export function HouseRequisitesWorkspace({
                   type="button"
                   onClick={handleCloseEditing}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
-                  aria-label="Закрыть форму"
+                  aria-label="Закрити форму"
                 >
                   ×
                 </button>
@@ -217,7 +217,7 @@ export function HouseRequisitesWorkspace({
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <div className="mb-2 text-sm font-medium text-slate-200">
-                    Получатель платежа
+                    Отримувач платежу
                   </div>
                   <input
                     value={snapshot.recipient}
@@ -229,7 +229,7 @@ export function HouseRequisitesWorkspace({
 
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-slate-200">
-                    IBAN для копирования
+                    IBAN для копіювання
                   </div>
                   <input
                     value={snapshot.iban}
@@ -243,7 +243,7 @@ export function HouseRequisitesWorkspace({
                   />
                   {!ibanValid ? (
                     <div className="text-xs text-red-400">
-                      Введите корректный украинский IBAN в формате UA + 27 цифр.
+                      Введіть коректний український IBAN у форматі UA + 27 цифр.
                     </div>
                   ) : null}
                 </div>
@@ -262,7 +262,7 @@ export function HouseRequisitesWorkspace({
 
                 <div>
                   <div className="mb-2 text-sm font-medium text-slate-200">
-                    Банк получателя
+                    Банк отримувача
                   </div>
                   <input
                     value={snapshot.bank}
@@ -276,29 +276,29 @@ export function HouseRequisitesWorkspace({
 
             <div className="space-y-4">
               <div className="text-sm font-medium text-slate-200">
-                Назначение платежа
+                Призначення платежу
               </div>
 
               <p className="mt-2 text-sm text-slate-400">
-                Это текст, который будет показан жителю на странице оплаты.
+                Це текст, який буде показано мешканцю на сторінці оплати.
               </p>
 
               <textarea
                 value={snapshot.purposeTemplate}
                 onChange={(e) => updateField("purposeTemplate", e.target.value)}
                 rows={4}
-                placeholder="Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}"
+                placeholder="Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}"
                 className="mt-5 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
               />
             </div>
 
             <div className="space-y-4">
               <div className="text-sm font-medium text-slate-200">
-                Дополнительная онлайн-оплата
+                Додаткова онлайн-оплата
               </div>
 
               <p className="mt-2 text-sm text-slate-400">
-                Необязательный блок. Если ссылка не указана, жители будут использовать только реквизиты выше.
+                Необов’язковий блок. Якщо посилання не вказане, мешканці використовуватимуть лише реквізити вище.
               </p>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -311,7 +311,7 @@ export function HouseRequisitesWorkspace({
                 <input
                   value={snapshot.paymentButtonLabel}
                   onChange={(e) => updateField("paymentButtonLabel", e.target.value)}
-                  placeholder="Перейти к оплате"
+                  placeholder="Перейти до оплати"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
                 />
               </div>
@@ -319,17 +319,17 @@ export function HouseRequisitesWorkspace({
 
             <div className="space-y-4">
               <div className="text-sm font-medium text-slate-200">
-                Preview страницы для жителя
+                Попередній перегляд сторінки для мешканця
               </div>
 
               <div className="mt-5 rounded-3xl border border-slate-700 bg-slate-950 p-6 text-white">
                 <div className="space-y-3">
-                  <div><span className="text-slate-400">Получатель:</span> {snapshot.recipient || "—"}</div>
+                  <div><span className="text-slate-400">Отримувач:</span> {snapshot.recipient || "—"}</div>
                   <div><span className="text-slate-400">IBAN:</span> {snapshot.iban || "—"}</div>
                   <div><span className="text-slate-400">ЕДРПОУ:</span> {snapshot.edrpou || "—"}</div>
                   <div><span className="text-slate-400">Банк:</span> {snapshot.bank || "—"}</div>
-                  <div><span className="text-slate-400">Назначение платежа:</span> {snapshot.purposeTemplate || "—"}</div>
-                  <div><span className="text-slate-400">Онлайн-оплата:</span> {snapshot.paymentUrl ? (snapshot.paymentButtonLabel || "Перейти к оплате") : "Не подключена"}</div>
+                  <div><span className="text-slate-400">Призначення платежу:</span> {snapshot.purposeTemplate || "—"}</div>
+                  <div><span className="text-slate-400">Онлайн-оплата:</span> {snapshot.paymentUrl ? (snapshot.paymentButtonLabel || "Перейти до оплати") : "Не підключена"}</div>
                 </div>
               </div>
             </div>
@@ -338,7 +338,7 @@ export function HouseRequisitesWorkspace({
               <input type="hidden" name="houseId" value={houseId} />
               <input type="hidden" name="houseSlug" value={houseSlug} />
               <input type="hidden" name="sectionId" value={section?.id ?? ""} />
-              <input type="hidden" name="title" value="Реквизиты" />
+              <input type="hidden" name="title" value="Реквізити" />
               <input type="hidden" name="kind" value="requisites" />
               <input type="hidden" name="status" value="published" />
               <input type="hidden" name="content" value={JSON.stringify(snapshot)} />
@@ -349,7 +349,7 @@ export function HouseRequisitesWorkspace({
                   disabled={isPending || !isDirty || !publishReady}
                   className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isPending ? "Сохраняем..." : "Сохранить"}
+                  {isPending ? "Зберігаємо..." : "Зберегти"}
                 </button>
 
                 <button
@@ -358,7 +358,7 @@ export function HouseRequisitesWorkspace({
                   disabled={isPending}
                   className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Сбросить
+                  Скинути
                 </button>
               </div>
 

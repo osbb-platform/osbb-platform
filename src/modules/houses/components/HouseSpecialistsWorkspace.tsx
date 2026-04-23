@@ -11,11 +11,11 @@ const initialState = {
 };
 
 const SPECIALIST_CATEGORIES = [
-  "Сантехник",
-  "Электрик",
-  "Аварийная служба",
-  "Уборка / обслуживание",
-  "Управляющая компания",
+  "Сантехнік",
+  "Електрик",
+  "Аварійна служба",
+  "Прибирання / обслуговування",
+  "Керуюча компанія",
 ] as const;
 
 type SectionStatus = "draft" | "in_review" | "published" | "archived";
@@ -106,12 +106,20 @@ function createEmptyDraft(): SpecialistDraft {
 }
 
 function normalizeCategories(value: unknown) {
+  const legacyCategoryMap: Record<string, string> = {
+    "Сантехник": "Сантехнік",
+    "Электрик": "Електрик",
+    "Аварийная служба": "Аварійна служба",
+    "Прибирання / обслуговування": "Прибирання / обслуговування",
+    "Управляющая компания": "Керуюча компанія",
+  };
+
   if (!Array.isArray(value)) {
     return [] as string[];
   }
 
   return value
-    .map((item) => String(item ?? "").trim())
+    .map((item) => legacyCategoryMap[String(item ?? "").trim()] ?? String(item ?? "").trim())
     .filter(Boolean)
     .filter((item, index, array) => array.indexOf(item) === index);
 }
@@ -228,7 +236,7 @@ function formatDate(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   return date.toLocaleString("uk-UA", {
@@ -245,15 +253,15 @@ function getRequestPreview(request: HouseSpecialistContactRequestRecord) {
   if (subject) return subject;
 
   const comment = request.comment?.trim();
-  if (!comment) return "Без темы";
+  if (!comment) return "Без теми";
 
   return comment.length > 120 ? `${comment.slice(0, 120).trim()}…` : comment;
 }
 
 function getStatusLabel(status: SpecialistStatus) {
-  if (status === "active") return "Активный";
-  if (status === "archived") return "Архив";
-  return "Черновик";
+  if (status === "active") return "Активна";
+  if (status === "archived") return "Архів";
+  return "Чернетка";
 }
 
 export function HouseSpecialistsWorkspace({
@@ -411,17 +419,17 @@ export function HouseSpecialistsWorkspace({
     const normalizedCategories = draft.categories.filter(Boolean);
 
     if (!trimmedTitle) {
-      window.alert("Укажите имя и фамилию или название компании.");
+      window.alert("Вкажіть ім’я та прізвище або назву компанії.");
       return;
     }
 
     if (normalizedCategories.length === 0) {
-      window.alert("Выберите хотя бы одну категорию.");
+      window.alert("Оберіть хоча б одну категорію.");
       return;
     }
 
     if (trimmedPhone && trimmedPhone.replace(/\D/g, "").length < 12) {
-      window.alert("Введите телефон в украинском формате.");
+      window.alert("Введіть телефон в українському форматі.");
       return;
     }
 
@@ -509,7 +517,7 @@ export function HouseSpecialistsWorkspace({
   function handleDeleteArchivedItem(itemId: string) {
     const target = specialists.find((item) => item.id === itemId);
     if (!target || target.status !== "archived") {
-      window.alert("Удалять можно только карточки из архива.");
+      window.alert("Видаляти можна лише картки з архіву.");
       return;
     }
 
@@ -520,13 +528,13 @@ export function HouseSpecialistsWorkspace({
 
   return (
     <div className="relative space-y-6">
-      <PlatformSectionLoader active={isPending} delayMs={280} label="Обновляем карточки специалистов..." className="rounded-3xl" />
+      <PlatformSectionLoader active={isPending} delayMs={280} label="Оновлюємо картки спеціалістів..." className="rounded-3xl" />
       <form ref={formRef} action={formAction} className="space-y-6">
         <input type="hidden" name="sectionId" value={section.id} />
         <input type="hidden" name="houseId" value={houseId} />
         <input type="hidden" name="houseSlug" value={houseSlug} />
         <input type="hidden" name="kind" value="specialists" />
-        <input type="hidden" name="title" value={section.title ?? "Специалисты"} />
+        <input type="hidden" name="title" value={section.title ?? "Спеціалісти"} />
         <input type="hidden" name="status" value={section.status} />
         <input type="hidden" name="specialistsPayload" value={serializedPayload} />
 
@@ -534,9 +542,9 @@ export function HouseSpecialistsWorkspace({
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Специалисты</h2>
+                <h2 className="text-xl font-semibold text-white">Спеціалісти</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  Управление карточками специалистов и публикацией карточек на сайт дома.
+                  Керування картками спеціалістів і публікацією карток на сайт будинку.
                 </p>
               </div>
 
@@ -545,15 +553,15 @@ export function HouseSpecialistsWorkspace({
                 onClick={openCreateMode}
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
               >
-                Создать специалиста
+                Створити спеціаліста
               </button>
             </div>
 
             <div className="flex flex-wrap gap-3">
             {[
-              ["active", "Активные", activeItems.length],
-              ["draft", "Черновики", draftItems.length],
-              ["archive", "Архив", archivedItems.length],
+              ["active", "Активні", activeItems.length],
+              ["draft", "Чернетки", draftItems.length],
+              ["archive", "Архів", archivedItems.length],
             ].map(([key, label, count]) => {
               const isActive = activeTab === key;
 
@@ -567,7 +575,7 @@ export function HouseSpecialistsWorkspace({
                   }}
                   className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "bg-white text-slate-950"
+                      ? "border border-slate-600 bg-slate-800/70 text-white"
                       : "border border-slate-700 bg-slate-950/40 text-white"
                   }`}
                 >
@@ -575,7 +583,7 @@ export function HouseSpecialistsWorkspace({
                   <span
                     className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       isActive
-                        ? "bg-slate-200 text-slate-950"
+                        ? "bg-slate-950 text-white"
                         : "bg-slate-800 text-slate-200"
                     }`}
                   >
@@ -594,11 +602,11 @@ export function HouseSpecialistsWorkspace({
               <div>
                 <div className="text-lg font-semibold text-white">
                   {workspaceMode === "create"
-                    ? "Новый специалист"
-                    : "Редактирование специалиста"}
+                    ? "Новий спеціаліст"
+                    : "Редагування спеціаліста"}
                 </div>
                 <div className="mt-2 text-sm leading-6 text-slate-400">
-                  Карточка сохраняется внутрь секции и сразу попадает в черновики.
+                  Картка зберігається всередину секції та одразу потрапляє в чернетки.
                 </div>
               </div>
 
@@ -606,7 +614,7 @@ export function HouseSpecialistsWorkspace({
                 type="button"
                 onClick={closeWorkspace}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
-                aria-label="Закрыть форму"
+                aria-label="Закрити форму"
               >
                 ×
               </button>
@@ -616,7 +624,7 @@ export function HouseSpecialistsWorkspace({
               <div className="grid gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-200">
-                    Имя и фамилия / Компания
+                    Ім’я та прізвище / Компанія
                   </label>
                   <input
                     value={draft.title}
@@ -624,13 +632,13 @@ export function HouseSpecialistsWorkspace({
                       handleDraftChange("title", event.target.value)
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
-                    placeholder="Например: Иван Петренко или Аварком сервис"
+                    placeholder="Наприклад: Іван Петренко або Аварком сервіс"
                   />
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-200">
-                    Категории
+                    Категорії
                   </label>
 
                   <div className="flex flex-wrap gap-2">
@@ -644,7 +652,7 @@ export function HouseSpecialistsWorkspace({
                           onClick={() => handleCategoryToggle(category)}
                           className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                             isSelected
-                              ? "bg-white text-slate-950"
+                              ? "border border-slate-600 bg-slate-800/70 text-white"
                               : "border border-slate-700 bg-slate-950/40 text-white"
                           }`}
                         >
@@ -668,14 +676,14 @@ export function HouseSpecialistsWorkspace({
                     placeholder="+380 67 123 45 67"
                   />
                   <div className="mt-2 text-xs text-slate-500">
-                    Если телефон заполнен, на сайте дома будет кнопка «Позвонить».
-                    Если нет — кнопка «Оставить заявку».
+                    Якщо телефон заповнений, на сайті будинку буде кнопка «Подзвонити».
+                    Якщо ні — кнопка «Залишити заявку».
                   </div>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-200">
-                    Часы приема
+                    Години прийому
                   </label>
                   <input
                     value={draft.officeHours}
@@ -696,7 +704,7 @@ export function HouseSpecialistsWorkspace({
                         handleDraftChange("isPinned", event.target.checked)
                       }
                     />
-                    Закрепить сверху
+                    Закріпити зверху
                   </label>
                 </div>
               </div>
@@ -709,7 +717,7 @@ export function HouseSpecialistsWorkspace({
                       onClick={handleSaveDraft}
                       className="inline-flex items-center justify-center rounded-3xl bg-white px-8 py-4 text-base font-medium text-slate-950 transition hover:bg-slate-200"
                     >
-                      Сохранить
+                      Зберегти
                     </button>
 
                     {workspaceMode === "edit" &&
@@ -719,7 +727,7 @@ export function HouseSpecialistsWorkspace({
                         onClick={() => setConfirmAction("delete")}
                         className="inline-flex items-center justify-center rounded-3xl border border-red-900 px-8 py-4 text-base font-medium text-red-300 transition hover:bg-red-950/40"
                       >
-                        Удалить
+                        Видалити
                       </button>
                     ) : null}
                   </div>
@@ -731,7 +739,7 @@ export function HouseSpecialistsWorkspace({
                         onClick={() => setConfirmAction("publish")}
                         className="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-8 py-4 text-base font-medium text-white transition hover:bg-emerald-400"
                       >
-                        Подтвердить
+                        Підтвердити
                       </button>
                     </div>
                   ) : null}
@@ -743,7 +751,7 @@ export function HouseSpecialistsWorkspace({
                         onClick={() => setConfirmAction("archive")}
                         className="inline-flex items-center justify-center rounded-3xl border border-amber-700 px-8 py-4 text-base font-medium text-amber-300 transition hover:bg-amber-950/30"
                       >
-                        Архивировать
+                        Архівувати
                       </button>
                     </div>
                   ) : null}
@@ -770,7 +778,7 @@ export function HouseSpecialistsWorkspace({
 
                           {item.isPinned ? (
                             <span className="inline-flex rounded-full border border-blue-900 bg-blue-950/50 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-blue-300">
-                              Закреплен сверху
+                              Закріплено зверху
                             </span>
                           ) : null}
 
@@ -785,7 +793,7 @@ export function HouseSpecialistsWorkspace({
                         </div>
 
                         <div className="text-lg font-semibold text-white">
-                          {item.title || "Без названия"}
+                          {item.title || "Без назви"}
                         </div>
 
                         <div className="mt-3 grid gap-1.5 text-sm leading-6 text-slate-300 sm:grid-cols-[140px_1fr]">
@@ -793,11 +801,11 @@ export function HouseSpecialistsWorkspace({
                           <div>
                             {item.phone
                               ? item.phone
-                              : "Телефон не указан — на сайте будет кнопка «Оставить заявку»"}
+                              : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
                           </div>
 
-                          <div className="text-slate-500">Часы связи</div>
-                          <div>{item.officeHours || "Часы приема не указаны"}</div>
+                          <div className="text-slate-500">Години зв’язку</div>
+                          <div>{item.officeHours || "Години прийому не вказані"}</div>
                         </div>
                       </div>
 
@@ -807,10 +815,10 @@ export function HouseSpecialistsWorkspace({
               ) : (
                 <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
                   {activeTab === "active"
-                    ? "Пока нет опубликованных специалистов. Создайте первую карточку и подтвердите публикацию."
+                    ? "Поки немає опублікованих спеціалістів. Створіть першу картку та підтвердьте публікацію."
                     : activeTab === "draft"
-                      ? "Сохраненные черновики специалистов будут появляться здесь после создания или редактирования."
-                      : "Архив пока пуст. Снятые с публикации карточки специалистов будут отображаться здесь."}
+                      ? "Збережені чернетки спеціалістів з’являтимуться тут після створення або редагування."
+                      : "Архів поки порожній. Зняті з публікації картки спеціалістів відображатимуться тут."}
                 </div>
               )}
             </div>
@@ -825,10 +833,10 @@ export function HouseSpecialistsWorkspace({
       
         <PlatformConfirmModal
           open={confirmAction === "delete"}
-          title="Удалить карточку специалиста?"
-          description="Карточка будет удалена из раздела специалистов без возможности восстановления."
-          confirmLabel="Удалить"
-          cancelLabel="Отмена"
+          title="Видалити картку спеціаліста?"
+          description="Картку буде видалено з розділу спеціалістів без можливості відновлення."
+          confirmLabel="Видалити"
+          cancelLabel="Скасувати"
           tone="destructive"
           onCancel={() => setConfirmAction(null)}
           onConfirm={() => {
@@ -839,10 +847,10 @@ export function HouseSpecialistsWorkspace({
 
         <PlatformConfirmModal
           open={confirmAction === "publish"}
-          title="Подтвердить карточку специалиста?"
-          description="После подтверждения карточка появится в активных специалистах на сайте дома."
-          confirmLabel="Подтвердить"
-          cancelLabel="Отмена"
+          title="Підтвердити картку спеціаліста?"
+          description="Після підтвердження картка з’явиться в активних спеціалістах на сайті будинку."
+          confirmLabel="Підтвердити"
+          cancelLabel="Скасувати"
           tone="publish"
           onCancel={() => setConfirmAction(null)}
           onConfirm={() => {
@@ -853,10 +861,10 @@ export function HouseSpecialistsWorkspace({
 
         <PlatformConfirmModal
           open={confirmAction === "archive"}
-          title="Архивировать карточку?"
-          description="Карточка будет снята с публикации и перемещена в архив."
-          confirmLabel="Архивировать"
-          cancelLabel="Отмена"
+          title="Архівувати картку?"
+          description="Картку буде знято з публікації та переміщено в архів."
+          confirmLabel="Архівувати"
+          cancelLabel="Скасувати"
           tone="warning"
           onCancel={() => setConfirmAction(null)}
           onConfirm={() => {

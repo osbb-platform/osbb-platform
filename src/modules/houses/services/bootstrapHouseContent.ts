@@ -34,11 +34,11 @@ export async function bootstrapHouseContent({
 
   if (!existingHero) {
     const heroContent = {
-      headline: `Добро пожаловать на сайт дома ${houseName}`,
+      headline: `Ласкаво просимо на сайт будинку ${houseName}`,
       subheadline:
         publicDescription ||
-        "Здесь будут размещаться объявления, отчеты, важная информация, документы и сервисные обновления по дому.",
-      ctaLabel: "Открыть объявления",
+        "Тут будуть розміщуватися оголошення, звіти, важлива інформація, документи та сервісні оновлення по будинку.",
+      ctaLabel: "Відкрити оголошення",
     };
 
     const { data: createdHero, error: createHeroError } = await supabase
@@ -108,7 +108,7 @@ export async function bootstrapHouseContent({
       .insert({
         house_page_id: homePageId,
         kind: "contacts",
-        title: "Правление",
+        title: "Правління",
         sort_order: 10,
         status: "published",
         content: boardContent,

@@ -12,13 +12,13 @@ const MAX_ITEMS = 10;
 
 function formatDateTime(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   return date.toLocaleString("ru-RU", {
@@ -33,20 +33,20 @@ function formatDateTime(value: string | null) {
 function getSectionLabel(section: string) {
   const normalized = section.trim().toLowerCase();
 
-  if (normalized === "announcements") return "Объявления";
-  if (normalized === "contacts") return "Правление";
-  if (normalized === "specialists") return "Специалисты";
+  if (normalized === "announcements") return "Оголошення";
+  if (normalized === "contacts") return "Правління";
+  if (normalized === "specialists") return "Спеціалісти";
   if (normalized === "faq") return "FAQ";
   if (normalized === "rich_text" || normalized === "information") {
-    return "Информация";
+    return "Інформація";
   }
-  if (normalized === "meetings") return "Собрания";
-  if (normalized === "reports") return "Отчеты";
-  if (normalized === "plan") return "План работ";
-  if (normalized === "debtors") return "Должники";
-  if (normalized === "requisites") return "Реквизиты";
-  if (normalized === "board") return "Правление";
-  if (normalized === "home") return "Главная";
+  if (normalized === "meetings") return "Збори";
+  if (normalized === "reports") return "Звіти";
+  if (normalized === "plan") return "План робіт";
+  if (normalized === "debtors") return "Боржники";
+  if (normalized === "requisites") return "Реквізити";
+  if (normalized === "board") return "Правління";
+  if (normalized === "home") return "Головна";
   return section;
 }
 
@@ -78,7 +78,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
   if (!activeItem) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-400">
-        Сейчас нет материалов, ожидающих подтверждения.
+        Зараз немає матеріалів, що очікують підтвердження.
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-amber-200">
               <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1">
-                Требует внимания
+                Потребує уваги
               </span>
               <span>{activeItem.houseName}</span>
               <span className="text-amber-300/70">•</span>
@@ -102,7 +102,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             </div>
 
             <div className="mt-2 text-sm text-slate-300">
-              Обновлено: {formatDateTime(activeItem.updatedAt)}
+              Оновлено: {formatDateTime(activeItem.updatedAt)}
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             href={activeItem.href}
             className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-500/20"
           >
-            Перейти к разделу
+            Перейти до розділу
           </Link>
         </div>
 
@@ -119,21 +119,21 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             type="button"
             onClick={handlePrev}
             disabled={!canGoPrev}
-            aria-label="Предыдущий материал"
+            aria-label="Попередній матеріал"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/40 disabled:text-slate-500"
           >
             ←
           </button>
 
           <div className="min-w-[72px] text-center text-sm text-amber-100">
-            {safeIndex + 1} из {visibleItems.length}
+            {safeIndex + 1} із {visibleItems.length}
           </div>
 
           <button
             type="button"
             onClick={handleNext}
             disabled={!canGoNext}
-            aria-label="Следующий материал"
+            aria-label="Наступний матеріал"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/40 disabled:text-slate-500"
           >
             →

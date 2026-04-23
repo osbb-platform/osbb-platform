@@ -9,11 +9,11 @@ import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDo
 import { adminPrimaryButtonClass } from "@/src/shared/ui/admin/adminStyles";
 
 export const INFORMATION_CATEGORIES = [
-  "О доме",
-  "Правила проживания",
-  "Полезная информация",
-  "Контакты служб",
-  "Инструкции для жильцов",
+  "Про будинок",
+  "Правила проживання",
+  "Корисна інформація",
+  "Контакти служб",
+  "Інструкції для мешканців",
 ] as const;
 
 type InformationMainTab = "posts" | "faq" | "materials";
@@ -45,12 +45,12 @@ function getPostDate(content: Record<string, unknown>) {
 }
 
 function formatDate(value: string) {
-  if (!value) return "Дата не указана";
+  if (!value) return "Дату не вказано";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дата не указана";
+  if (Number.isNaN(date.getTime())) return "Дату не вказано";
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString("uk-UA", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -144,10 +144,10 @@ export function HouseInformationWorkspace({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[var(--cms-text)]">
-                Информация дома
+                Інформація будинку
               </h2>
               <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                Управление статьями, FAQ и PDF-материалами для жителей.
+                Керування статтями, FAQ і PDF-матеріалами для мешканців.
               </p>
             </div>
 
@@ -159,7 +159,7 @@ export function HouseInformationWorkspace({
               disabled={!housePageId}
               className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
             >
-              Новая статья
+              Нова стаття
             </button>
           ) : null}
 
@@ -169,7 +169,7 @@ export function HouseInformationWorkspace({
               onClick={openCreateDocument}
               className={adminPrimaryButtonClass}
             >
-              Новый материал
+              Новий матеріал
             </button>
           ) : null}
 
@@ -180,7 +180,7 @@ export function HouseInformationWorkspace({
               disabled={!housePageId}
               className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
             >
-              Новый FAQ
+              Новий FAQ
             </button>
           ) : null}
             </div>
@@ -192,14 +192,14 @@ export function HouseInformationWorkspace({
               onClick={() => handleMainTabChange("posts")}
               className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                 mainTab === "posts"
-                  ? "bg-[var(--cms-primary)] text-white"
+                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                   : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
               }`}
             >
-              <span>Информация</span>
+              <span>Інформація</span>
               <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                 mainTab === "posts"
-                  ? "bg-white text-[var(--cms-text)]"
+                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
               }`}>
                 {posts.length}
@@ -211,14 +211,14 @@ export function HouseInformationWorkspace({
               onClick={() => handleMainTabChange("faq")}
               className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                 mainTab === "faq"
-                  ? "bg-[var(--cms-primary)] text-white"
+                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                   : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
               }`}
             >
               <span>FAQ</span>
               <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                 mainTab === "faq"
-                  ? "bg-white text-[var(--cms-text)]"
+                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
               }`}>
                 {faqSections.length}
@@ -230,14 +230,14 @@ export function HouseInformationWorkspace({
               onClick={() => handleMainTabChange("materials")}
               className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                 mainTab === "materials"
-                  ? "bg-[var(--cms-primary)] text-white"
+                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                   : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
               }`}
             >
-              <span>Материалы</span>
+              <span>Матеріали</span>
               <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                 mainTab === "materials"
-                  ? "bg-white text-[var(--cms-text)]"
+                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
               }`}>
                 {documents.length}
@@ -276,7 +276,7 @@ export function HouseInformationWorkspace({
                   const category =
                     typeof content.category === "string"
                       ? content.category
-                      : "Без фильтра";
+                      : "Без фільтра";
                   const body =
                     typeof content.body === "string" ? content.body : "";
                   const preview =
@@ -310,7 +310,7 @@ export function HouseInformationWorkspace({
                                   : "border border-amber-500/20 bg-amber-500/15 text-amber-300"
                               }`}
                             >
-                              {section.status === "published" ? "Активно" : "Черновик"}
+                              {section.status === "published" ? "Активна" : "Чернетка"}
                             </span>
                             {Boolean(content.isPinned) ? (
                               <span className="inline-flex rounded-full border border-emerald-800 bg-emerald-950/30 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
@@ -324,7 +324,7 @@ export function HouseInformationWorkspace({
                           </div>
 
                           <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                            {preview || "Текст сообщения пока не заполнен"}
+                            {preview || "Текст повідомлення поки не заповнено"}
                           </div>
                         </div>
 
@@ -334,7 +334,7 @@ export function HouseInformationWorkspace({
                 })
               ) : (
                 <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                  Сообщений пока нет. Создай первую публикацию через кнопку сверху.
+                  Повідомлень поки немає. Створи першу публікацію через кнопку зверху.
                 </div>
               )}
             </div>
@@ -375,21 +375,21 @@ export function HouseInformationWorkspace({
                               : "border border-amber-500/20 bg-amber-500/15 text-amber-300"
                           }`}
                         >
-                          {section.status === "published" ? "Активно" : "Черновик"}
+                          {section.status === "published" ? "Активна" : "Чернетка"}
                         </span>
                         <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                          Вопросов: {Array.isArray(section.content.items) ? section.content.items.length : 0}
+                          Запитань: {Array.isArray(section.content.items) ? section.content.items.length : 0}
                         </span>
                       </div>
 
                       <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
-                        FAQ для жителей
+                        FAQ для мешканців
                       </div>
                     </button>
                   ))
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                    FAQ пока не создан. Используй кнопку сверху, чтобы добавить первый блок.
+                    FAQ поки не створено. Використай кнопку зверху, щоб додати перший блок.
                   </div>
                 )}
               </div>

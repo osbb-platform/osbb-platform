@@ -62,14 +62,14 @@ export async function updateHouse(
 
   if (!id || !name || !address) {
     return {
-      error: "Заполните обязательные поля: название и адрес.",
+      error: "Заповніть обов’язкові поля: назва та адреса.",
       successMessage: null,
     };
   }
 
   if (!districtId) {
     return {
-      error: "Выберите район для дома.",
+      error: "Оберіть район для будинку.",
       successMessage: null,
     };
   }
@@ -77,14 +77,14 @@ export async function updateHouse(
   if (coverImage) {
     if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
       return {
-        error: "Для фото дома допускаются только JPG, PNG или WebP.",
+        error: "Для фото будинку дозволені лише JPG, PNG або WebP.",
         successMessage: null,
       };
     }
 
     if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
       return {
-        error: "Фото дома должно быть не больше 5 МБ.",
+        error: "Фото будинку має бути не більше 5 МБ.",
         successMessage: null,
       };
     }
@@ -100,21 +100,21 @@ export async function updateHouse(
 
   if (existingHouseError) {
     return {
-      error: `Ошибка загрузки дома: ${existingHouseError.message}`,
+      error: `Помилка завантаження будинку: ${existingHouseError.message}`,
       successMessage: null,
     };
   }
 
   if (!existingHouse) {
     return {
-      error: "Дом не найден.",
+      error: "Будинок не знайдено.",
       successMessage: null,
     };
   }
 
   if (existingHouse.archived_at) {
     return {
-      error: "Нельзя редактировать архивный дом. Сначала восстановите его.",
+      error: "Не можна редагувати архівний будинок. Спочатку відновіть його.",
       successMessage: null,
     };
   }
@@ -131,7 +131,7 @@ export async function updateHouse(
 
     if (removeError) {
       return {
-        error: `Не удалось удалить текущее фото дома: ${removeError.message}`,
+        error: `Не вдалося видалити поточне фото будинку: ${removeError.message}`,
         successMessage: null,
       };
     }
@@ -152,7 +152,7 @@ export async function updateHouse(
 
     if (uploadError) {
       return {
-        error: `Не удалось загрузить фото дома: ${uploadError.message}`,
+        error: `Не вдалося завантажити фото будинку: ${uploadError.message}`,
         successMessage: null,
       };
     }
@@ -177,14 +177,14 @@ export async function updateHouse(
 
   if (updateError) {
     return {
-      error: `Ошибка обновления дома: ${updateError.message}`,
+      error: `Помилка оновлення будинку: ${updateError.message}`,
       successMessage: null,
     };
   }
 
   if (!updatedHouse) {
     return {
-      error: "Дом не был обновлен.",
+      error: "Будинок не було оновлено.",
       successMessage: null,
     };
   }
@@ -199,7 +199,7 @@ export async function updateHouse(
       entityId: id,
       entityLabel: existingHouse.slug ?? null,
       actionType: "update_house",
-      description: `Дом ${name} обновлен.`,
+      description: `Будинок ${name} оновлено.`,
       metadata: {
         houseSlug: updatedHouse.slug,
         districtChanged: existingHouse.district_id !== districtId,
@@ -236,6 +236,6 @@ export async function updateHouse(
 
   return {
     error: null,
-    successMessage: `Дом «${updatedHouse.name}» обновлен.`,
+    successMessage: `Будинок «${updatedHouse.name}» оновлено.`,
   };
 }

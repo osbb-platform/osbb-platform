@@ -31,6 +31,25 @@ type PublicReport = {
 
 const MONTH_LABELS: Record<string, string> = houseReportsCopy.months;
 
+const MONTH_ORDER = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+const MONTH_INDEX = new Map(
+  MONTH_ORDER.map((month, index) => [month, index]),
+);
+
 function getMonthLabel(value: string) {
   return MONTH_LABELS[value] ?? value;
 }
@@ -116,7 +135,11 @@ export default async function ReportsPage({
         .map((item) => item.month)
         .filter((item): item is string => typeof item === "string" && item.length > 0),
     ),
-  ).sort((a, b) => a.localeCompare(b, "ru"));
+  ).sort((left, right) => {
+    const leftIndex = MONTH_INDEX.get(left) ?? Number.MAX_SAFE_INTEGER;
+    const rightIndex = MONTH_INDEX.get(right) ?? Number.MAX_SAFE_INTEGER;
+    return leftIndex - rightIndex;
+  });
 
   const availableYears = Array.from(
     new Set(
@@ -132,20 +155,21 @@ export default async function ReportsPage({
   const selectedMonth =
     resolvedSearchParams.month && availableMonths.includes(resolvedSearchParams.month)
       ? resolvedSearchParams.month
-      : "all";
+      : (availableMonths[0] ?? null);
 
   const selectedYear =
-    resolvedSearchParams.year ??
-    (availableYears[0] ? String(availableYears[0]) : "all");
+    resolvedSearchParams.year && availableYears.includes(Number(resolvedSearchParams.year))
+      ? resolvedSearchParams.year
+      : (availableYears[0] ? String(availableYears[0]) : null);
 
   const filteredReports =
     selectedMode === "archive"
       ? pastReports.filter((item) =>
-          selectedYear === "all" ? true : String(item.year ?? "") === selectedYear,
+          selectedYear ? String(item.year ?? "") === selectedYear : false,
         )
       : sortReportsForGrid(
           currentReports.filter((item) =>
-            selectedMonth === "all" ? true : item.month === selectedMonth,
+            selectedMonth ? item.month === selectedMonth : false,
           ),
         );
 
@@ -169,13 +193,13 @@ export default async function ReportsPage({
                 {
                   key: "current",
                   label: houseReportsCopy.tabs.current,
-                  href: `/house/${slug}/reports?mode=current&month=all`,
+                  href: `/house/${slug}/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
                   count: currentReports.length,
                 },
                 {
                   key: "archive",
                   label: houseReportsCopy.tabs.archive,
-                  href: `/house/${slug}/reports?mode=archive&year=all`,
+                  href: `/house/${slug}/reports?mode=archive${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
                   count: pastReports.length,
                 },
               ].map((item) => {
@@ -220,26 +244,6 @@ export default async function ReportsPage({
             <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
               {selectedMode === "archive" ? (
               <>
-                <Link
-                  href={`/house/${slug}/reports?mode=archive&year=all`}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                    selectedYear === "all"
-                      ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                      : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                  }`}
-                  style={
-                    selectedYear === "all"
-                      ? {
-                          "--tab-active-bg": `${districtColor}20`,
-                          "--tab-active-text": "#1F2A37",
-                          borderColor: districtColor,
-                        } as React.CSSProperties
-                      : undefined
-                  }
-                >
-                  {houseReportsCopy.filters.all}
-                </Link>
-
                 {availableYears.map((year) => (
                   <Link
                     key={year}
@@ -265,26 +269,6 @@ export default async function ReportsPage({
               </>
             ) : (
               <>
-                <Link
-                  href={`/house/${slug}/reports?mode=current&month=all`}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                    selectedMonth === "all"
-                      ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                      : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                  }`}
-                  style={
-                    selectedYear === "all"
-                      ? {
-                          "--tab-active-bg": `${districtColor}20`,
-                          "--tab-active-text": "#1F2A37",
-                          borderColor: districtColor,
-                        } as React.CSSProperties
-                      : undefined
-                  }
-                >
-                  {houseReportsCopy.filters.all}
-                </Link>
-
                 {availableMonths.map((month) => (
                   <Link
                     key={month}

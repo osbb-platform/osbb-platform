@@ -39,7 +39,7 @@ export async function ensureHouseBoardSection({
     .insert({
       house_page_id: housePageId,
       kind: "contacts",
-      title: "Правление",
+      title: "Правління",
       sort_order: 10,
       status: "published",
       content: defaultContent,

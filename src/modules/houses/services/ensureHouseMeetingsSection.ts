@@ -30,7 +30,7 @@ export async function ensureHouseMeetingsSection(params: {
     .insert({
       house_page_id: housePageId,
       kind: "meetings",
-      title: "Собрания",
+      title: "Збори",
       sort_order: 150,
       status: "published",
       content: {

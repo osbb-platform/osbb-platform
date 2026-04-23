@@ -45,7 +45,7 @@ export function EditHeroSectionForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Название секции
+          Назва секції
         </label>
         <input
           name="title"
@@ -64,10 +64,10 @@ export function EditHeroSectionForm({
           defaultValue={section.status}
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
         >
-          <option value="draft">Черновик</option>
-          <option value="in_review">На модерации</option>
-          <option value="published">Опубликовано</option>
-          <option value="archived">Архив</option>
+          <option value="draft">Чернетка</option>
+          <option value="in_review">На модерації</option>
+          <option value="published">Опубліковано</option>
+          <option value="archived">Архів</option>
         </select>
       </div>
 
@@ -85,7 +85,7 @@ export function EditHeroSectionForm({
 
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Подзаголовок
+          Підзаголовок
         </label>
         <textarea
           name="subheadline"
@@ -119,7 +119,7 @@ export function EditHeroSectionForm({
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
         >
-          {isPending ? "Сохраняем..." : "Сохранить hero секцию"}
+          {isPending ? "Зберігаємо..." : "Зберегти hero секцію"}
         </button>
       </div>
     </form>

@@ -22,7 +22,7 @@ export async function archiveHouseInformationSection(formData: FormData) {
   const houseSlug = String(formData.get("houseSlug") ?? "").trim();
 
   if (!sectionId || !houseId || !houseSlug) {
-    throw new Error("Не переданы идентификаторы для архивации сообщения.");
+    throw new Error("Не передано ідентифікатори для архівації повідомлення.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -35,7 +35,7 @@ export async function archiveHouseInformationSection(formData: FormData) {
 
   if (sectionError || !section) {
     throw new Error(
-      `Ошибка чтения сообщения перед архивацией: ${sectionError?.message ?? "Not found"}`,
+      `Помилка читання повідомлення перед архівацією: ${sectionError?.message ?? "Not found"}`,
     );
   }
 
@@ -58,7 +58,7 @@ export async function archiveHouseInformationSection(formData: FormData) {
     .eq("id", sectionId);
 
   if (updateError) {
-    throw new Error(`Ошибка архивации сообщения: ${updateError.message}`);
+    throw new Error(`Помилка архівації повідомлення: ${updateError.message}`);
   }
 
   const { data: versions } = await supabase

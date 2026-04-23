@@ -1,11 +1,11 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 const DEFAULT_SPECIALIST_CATEGORIES = [
-  "Сантехник",
-  "Электрик",
-  "Аварийная служба",
-  "Уборка / обслуживание",
-  "Управляющая компания",
+  "Сантехнік",
+  "Електрик",
+  "Аварійна служба",
+  "Прибирання / обслуговування",
+  "Керуюча компанія",
 ] as const;
 
 export async function ensureHouseSpecialistsSection(params: {
@@ -39,7 +39,7 @@ export async function ensureHouseSpecialistsSection(params: {
     .insert({
       house_page_id: housePageId,
       kind: "specialists",
-      title: "Специалисты",
+      title: "Спеціалісти",
       sort_order: 110,
       status: "published",
       content: {

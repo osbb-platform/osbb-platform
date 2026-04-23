@@ -51,7 +51,7 @@ export async function archiveHouseAnnouncementSection(
   const level = normalizeLevel(String(formData.get("level") ?? "info").trim());
 
   if (!sectionId || !houseId || !houseSlug) {
-    return { error: "Не переданы данные для архивации объявления." };
+    return { error: "Не передано дані для архівації оголошення." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -65,7 +65,7 @@ export async function archiveHouseAnnouncementSection(
   if (existingSectionError || !existingSection) {
     return {
       error:
-        existingSectionError?.message ?? "Не удалось получить объявление.",
+        existingSectionError?.message ?? "Не вдалося отримати оголошення.",
     };
   }
 
@@ -101,7 +101,7 @@ export async function archiveHouseAnnouncementSection(
     .eq("id", sectionId);
 
   if (updateError) {
-    return { error: `Не удалось архивировать объявление: ${updateError.message}` };
+    return { error: `Не вдалося архівувати оголошення: ${updateError.message}` };
   }
 
   try {
@@ -115,8 +115,8 @@ export async function archiveHouseAnnouncementSection(
     return {
       error:
         error instanceof Error
-          ? `Объявление архивировано, но версия не сохранена: ${error.message}`
-          : "Объявление архивировано, но версия не сохранена.",
+          ? `Оголошення архівовано, але версію не збережено: ${error.message}`
+          : "Оголошення архівовано, але версію не збережено.",
     };
   }
 

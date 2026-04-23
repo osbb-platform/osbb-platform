@@ -35,7 +35,7 @@ export async function createFooterHouseMessage(
     !comment
   ) {
     return {
-      error: "Заполните имя, email, квартиру и сообщение.",
+      error: "Заповніть ім’я, email, квартиру та повідомлення.",
       successMessage: null,
     };
   }
@@ -53,15 +53,15 @@ export async function createFooterHouseMessage(
 
   if (!hasAccess) {
     return {
-      error: "Сессия доступа к дому не подтверждена.",
+      error: "Сесію доступу до будинку не підтверджено.",
       successMessage: null,
     };
   }
 
   const category =
     subjectType === "improvement"
-      ? "Предложение улучшения"
-      : "Управляющая компания";
+      ? "Пропозиція покращення"
+      : "Керуюча компанія";
 
   const subject =
     subjectType === "improvement"
@@ -75,7 +75,7 @@ export async function createFooterHouseMessage(
     house_slug: houseSlug,
     category,
     specialist_id: null,
-    specialist_label: "Footer / Написать нам",
+    specialist_label: "Footer / Написати нам",
     requester_name: requesterName,
     requester_email: requesterEmail,
     requester_phone: null,
@@ -87,7 +87,7 @@ export async function createFooterHouseMessage(
 
   if (error) {
     return {
-      error: `Не удалось отправить сообщение: ${error.message}`,
+      error: `Не вдалося надіслати повідомлення: ${error.message}`,
       successMessage: null,
     };
   }
@@ -101,7 +101,7 @@ export async function createFooterHouseMessage(
     entityId: houseId,
     entityLabel: category,
     actionType: "create_footer_house_message",
-    description: `Создано обращение через footer: ${category}.`,
+    description: `Створено звернення через footer: ${category}.`,
     metadata: {
       sourceType: "house_footer",
       houseId,
@@ -119,6 +119,6 @@ export async function createFooterHouseMessage(
   return {
     error: null,
     successMessage:
-      "Сообщение отправлено. Управляющая компания получит его в центре обращений.",
+      "Повідомлення надіслано. Керуюча компанія отримає його в центрі звернень.",
   };
 }

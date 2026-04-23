@@ -42,102 +42,102 @@ export type HistoryActionTone =
   | "neutral";
 
 const MAIN_SECTION_LABELS: Record<string, string> = {
-  houses: "Дома",
-  districts: "Районы",
-  apartments: "Квартиры",
-  employees: "Сотрудники",
-  house_portal: "Дома",
-  settings: "Районы",
-  company: "Сайт компании",
+  houses: "Будинки",
+  districts: "Райони",
+  apartments: "Квартири",
+  employees: "Співробітники",
+  house_portal: "Будинки",
+  settings: "Райони",
+  company: "Сайт компанії",
   system: "Система",
 };
 
 const SUB_SECTION_LABELS: Record<string, string> = {
-  house_settings: "Настройки дома",
-  announcements: "Объявления",
-  board: "Правление",
-  information: "Информация",
-  specialists: "Специалисты",
-  plan: "План работ",
-  reports: "Отчеты",
-  requisites: "Реквизиты",
-  debtors: "Должники",
-  meetings: "Собрания",
-  apartments: "Квартиры",
+  house_settings: "Налаштування будинку",
+  announcements: "Оголошення",
+  board: "Правління",
+  information: "Інформація",
+  specialists: "Спеціалісти",
+  plan: "План робіт",
+  reports: "Звіти",
+  requisites: "Реквізити",
+  debtors: "Боржники",
+  meetings: "Збори",
+  apartments: "Квартири",
   access: "Доступ",
-  requests: "Обращения",
-  districts: "Районы",
-  company_pages: "Сайт компании",
-  company_sections: "Секции сайта компании",
-  employees: "Сотрудники",
-  unknown: "Без подраздела",
+  requests: "Звернення",
+  districts: "Райони",
+  company_pages: "Сайт компанії",
+  company_sections: "Секції сайту компанії",
+  employees: "Співробітники",
+  unknown: "Без підрозділу",
 };
 
 const ACTION_LABELS: Record<string, string> = {
-  create_house: "Создание",
-  update_house: "Редактирование",
-  change_access_code: "Смена кода доступа",
-  create_house_announcement: "Создание",
-  publish_house_announcement: "Подтверждение",
-  archive_house_announcement: "Архивация",
-  delete_archived_house_announcements: "Удаление",
-  create_house_information_post: "Создание",
-  create_house_information_faq: "Создание",
-  publish_house_information_post: "Подтверждение",
-  archive_house_information_post: "Архивация",
-  delete_house_section: "Удаление",
-  update_house_section: "Редактирование",
-  create_house_document: "Создание",
-  update_house_document: "Редактирование",
-  delete_house_document: "Удаление",
-  create_specialist_contact_request: "Входящее событие",
-  create_specialist: "Создание",
-  update_specialist: "Редактирование",
-  confirm_specialist: "Подтверждение",
-  archive_specialist: "Архивация",
-  restore_specialist: "Восстановление",
-  delete_specialist: "Удаление",
-  create_district: "Создание",
-  update_district: "Редактирование",
-  archive_district: "Архивация",
-  restore_district: "Восстановление",
-  delete_district: "Удаление",
-  create_company_page: "Создание",
-  update_company_page: "Редактирование",
-  update_company_section: "Редактирование",
-  create_employee: "Создание",
-  invite_employee: "Приглашение",
-  activate_employee: "Подтверждение",
-  house_login: "Вход в дом",
-  update_employee_profile: "Редактирование профиля",
+  create_house: "Створення",
+  update_house: "Редагування",
+  change_access_code: "Зміна коду доступу",
+  create_house_announcement: "Створення",
+  publish_house_announcement: "Підтвердження",
+  archive_house_announcement: "Архівація",
+  delete_archived_house_announcements: "Видалення",
+  create_house_information_post: "Створення",
+  create_house_information_faq: "Створення",
+  publish_house_information_post: "Підтвердження",
+  archive_house_information_post: "Архівація",
+  delete_house_section: "Видалення",
+  update_house_section: "Редагування",
+  create_house_document: "Створення",
+  update_house_document: "Редагування",
+  delete_house_document: "Видалення",
+  create_specialist_contact_request: "Вхідна подія",
+  create_specialist: "Створення",
+  update_specialist: "Редагування",
+  confirm_specialist: "Підтвердження",
+  archive_specialist: "Архівація",
+  restore_specialist: "Відновлення",
+  delete_specialist: "Видалення",
+  create_district: "Створення",
+  update_district: "Редагування",
+  archive_district: "Архівація",
+  restore_district: "Відновлення",
+  delete_district: "Видалення",
+  create_company_page: "Створення",
+  update_company_page: "Редагування",
+  update_company_section: "Редагування",
+  create_employee: "Створення",
+  invite_employee: "Запрошення",
+  activate_employee: "Підтвердження",
+  house_login: "Вхід до будинку",
+  update_employee_profile: "Редагування профілю",
 };
 
 export function getMainSectionLabel(value: string | null | undefined) {
-  if (!value) return "Без раздела";
+  if (!value) return "Без розділу";
   return MAIN_SECTION_LABELS[value] ?? value;
 }
 
 export function getSubSectionLabel(value: string | null | undefined) {
-  if (!value) return "Без подраздела";
+  if (!value) return "Без підрозділу";
   return SUB_SECTION_LABELS[value] ?? value;
 }
 
 export function getActionLabel(value: string | null | undefined) {
-  if (!value) return "Действие";
+  if (!value) return "Дія";
   return ACTION_LABELS[value] ?? value;
 }
 
 export function getActionTone(value: string | null | undefined): HistoryActionTone {
   const label = getActionLabel(value).toLowerCase();
 
-  if (label.includes("входящее")) return "incoming";
-  if (label.includes("создание")) return "create";
-  if (label.includes("редактирование")) return "edit";
-  if (label.includes("подтверждение")) return "confirm";
-  if (label.includes("архивация")) return "archive";
-  if (label.includes("восстановление")) return "restore";
-  if (label.includes("удаление")) return "delete";
-  if (label.includes("смена")) return "access";
+  if (label.includes("вхідна")) return "incoming";
+  if (label.includes("створення")) return "create";
+  if (label.includes("редагування")) return "edit";
+  if (label.includes("підтвердження")) return "confirm";
+  if (label.includes("архівація")) return "archive";
+  if (label.includes("відновлення")) return "restore";
+  if (label.includes("видалення")) return "delete";
+  if (label.includes("зміна")) return "access";
 
   return "neutral";
 }

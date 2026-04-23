@@ -119,7 +119,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
     return (
       <div className="mt-8 rounded-[28px] border border-dashed border-[#DDD1C3] bg-[#F6F1EB] p-6 text-[var(--muted)]">
         {houseRequisitesCopy.page.empty}
-        появятся данные для ручной оплаты и копирования.
+        з’являться дані для ручної оплати та копіювання.
       </div>
     );
   }
@@ -179,8 +179,8 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         </div>
 
         <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5F5A54] sm:text-base">
-          {houseRequisitesCopy.payment.description}, вы можете перейти по
-          кнопке ниже. Иначе используйте реквизиты выше для ручного перевода.
+          {houseRequisitesCopy.payment.description}, ви можете перейти за
+          кнопкою нижче. Або використовуйте реквізити вище для ручного переказу.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">

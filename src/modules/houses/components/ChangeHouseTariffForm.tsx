@@ -48,7 +48,7 @@ export function ChangeHouseTariffForm({
           type="number"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Введите сумму"
+          placeholder="Введіть суму"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
         />
       </div>
@@ -66,7 +66,7 @@ export function ChangeHouseTariffForm({
         disabled={isPending}
         className="bg-white text-black px-5 py-3 rounded-2xl"
       >
-        {isPending ? "Сохраняем..." : "Сохранить"}
+        {isPending ? "Зберігаємо..." : "Зберегти"}
       </button>
     </form>
   );

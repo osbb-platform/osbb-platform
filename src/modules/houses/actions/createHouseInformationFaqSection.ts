@@ -33,7 +33,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function createHouseInformationFaqSection(
@@ -45,7 +45,7 @@ export async function createHouseInformationFaqSection(
   const housePageId = String(formData.get("housePageId") ?? "").trim();
 
   if (!houseId || !houseSlug || !housePageId) {
-    return { error: "Не переданы идентификаторы дома или страницы." };
+    return { error: "Не передано ідентифікатори будинку або сторінки." };
   }
 
   const items = parseFaqPayload(formData);
@@ -79,7 +79,7 @@ export async function createHouseInformationFaqSection(
 
     if (updateError) {
       return {
-        error: `Ошибка обновления FAQ: ${updateError.message}`,
+        error: `Помилка оновлення FAQ: ${updateError.message}`,
       };
     }
   } else {
@@ -98,7 +98,7 @@ export async function createHouseInformationFaqSection(
 
     if (createError || !section) {
       return {
-        error: `Ошибка создания FAQ: ${createError?.message ?? "Unknown error"}`,
+        error: `Помилка створення FAQ: ${createError?.message ?? "Unknown error"}`,
       };
     }
 
@@ -131,7 +131,7 @@ export async function createHouseInformationFaqSection(
     entityId: sectionId,
     entityLabel: "FAQ",
     actionType: "create_house_information_faq",
-    description: "Создан FAQ блок.",
+    description: "Створено блок FAQ.",
     houseId,
     metadata: {
       sourceType: "cms",

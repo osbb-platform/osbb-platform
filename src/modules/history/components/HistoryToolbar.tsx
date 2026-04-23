@@ -132,7 +132,7 @@ export function HistoryToolbar({
           {[
             { key: "all" as const, label: "Все" },
             { key: "cms" as const, label: "CMS" },
-            { key: "incoming" as const, label: "ДОМА" },
+            { key: "incoming" as const, label: "БУДИНКИ" },
           ].map((item) => {
             const isActive = tab === item.key;
 
@@ -158,7 +158,7 @@ export function HistoryToolbar({
         <div className="rounded-3xl border border-slate-800/90 bg-slate-900/95 p-4 backdrop-blur">
           <div className="mb-3 flex items-start justify-between gap-4">
             <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Фильтры журнала действий
+              Фільтри журналу дій
             </div>
 
             <button
@@ -166,14 +166,14 @@ export function HistoryToolbar({
               onClick={resetCurrentTab}
               className="text-sm text-slate-400 underline decoration-slate-600 underline-offset-4 transition hover:text-white"
             >
-              Сбросить
+              Скинути
             </button>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Сотрудник
+                Співробітник
               </label>
               <select
                 value={actor}
@@ -184,7 +184,7 @@ export function HistoryToolbar({
                 }
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none transition focus:border-slate-500"
               >
-                <option value="">Все сотрудники</option>
+                <option value="">Усі співробітники</option>
                 {cmsActors.map((item) => (
                   <option key={item} value={item}>
                     {item}
@@ -195,7 +195,7 @@ export function HistoryToolbar({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Раздел CMS
+                Розділ CMS
               </label>
               <select
                 value={mainSection}
@@ -207,7 +207,7 @@ export function HistoryToolbar({
                 }
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none transition focus:border-slate-500"
               >
-                <option value="">Все разделы</option>
+                <option value="">Усі розділи</option>
                 {cmsSections.map((section) => (
                   <option key={section.key} value={section.key}>
                     {section.label}
@@ -218,7 +218,7 @@ export function HistoryToolbar({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Подраздел
+                Підрозділ
               </label>
               <select
                 value={subSection}
@@ -234,7 +234,7 @@ export function HistoryToolbar({
                     : "cursor-not-allowed border-slate-800 bg-slate-950/40 text-slate-600"
                 }`}
               >
-                <option value="">Все подразделы</option>
+                <option value="">Усі підрозділи</option>
                 {(hasCmsSubSections
                   ? selectedCmsSection?.subSections ?? []
                   : []
@@ -248,7 +248,7 @@ export function HistoryToolbar({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Период
+                Період
               </label>
               <HistoryDateRangeFilter
                 valueFrom={dateFrom}
@@ -295,7 +295,7 @@ export function HistoryToolbar({
               onClick={resetCurrentTab}
               className="text-sm text-slate-400 underline decoration-slate-600 underline-offset-4 transition hover:text-white"
             >
-              Сбросить
+              Скинути
             </button>
           </div>
 
@@ -371,7 +371,7 @@ export function HistoryToolbar({
                     : "cursor-not-allowed border-slate-800 bg-slate-950/40 text-slate-600"
                 }`}
               >
-                <option value="">Все разделы</option>
+                <option value="">Усі розділи</option>
                 {incomingSections.map((section) => (
                   <option key={section.key} value={section.key}>
                     {section.label}
@@ -382,7 +382,7 @@ export function HistoryToolbar({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                Период
+                Період
               </label>
               <HistoryDateRangeFilter
                 valueFrom={dateFrom}

@@ -69,27 +69,27 @@ const TAB_CONFIG: Array<{
 }> = [
   {
     key: "chairman",
-    label: "Председатель",
+    label: "Голова правління",
     status: "chairman",
-    emptyText: "Карточка председателя пока не создана.",
+    emptyText: "Картку голови правління ще не створено.",
   },
   {
     key: "vice_chairman",
-    label: "Заместитель председателя",
+    label: "Заступник голови правління",
     status: "vice_chairman",
-    emptyText: "Карточка заместителя председателя пока не создана.",
+    emptyText: "Картку заступника голови правління ще не створено.",
   },
   {
     key: "members",
-    label: "Члены правления",
+    label: "Члени правління",
     status: "member",
-    emptyText: "В этом табе пока нет членов правления.",
+    emptyText: "У цій вкладці поки немає членів правління.",
   },
   {
     key: "revision_commission",
-    label: "Ревизионная комиссия",
+    label: "Ревізійна комісія",
     status: "revision_commission",
-    emptyText: "В этом табе пока нет карточек ревизионной комиссии.",
+    emptyText: "У цій вкладці поки немає карток ревізійної комісії.",
   },
 ];
 
@@ -112,15 +112,15 @@ function createEmptyDraft(status: BoardRoleStatus = "member"): BoardDraft {
 function getRoleLabel(status: BoardRoleStatus) {
   switch (status) {
     case "chairman":
-      return "Председатель";
+      return "Голова правління";
     case "vice_chairman":
-      return "Заместитель председателя";
+      return "Заступник голови правління";
     case "member":
-      return "Члены правления";
+      return "Члени правління";
     case "revision_commission":
-      return "Ревизионная комиссия";
+      return "Ревізійна комісія";
     default:
-      return "Роль";
+      return "Посада";
   }
 }
 
@@ -246,7 +246,7 @@ function normalizeLegacyContent(content: Record<string, unknown>) {
       id: "legacy-chairman",
       status: "chairman",
       name: String(legacyChairman.name ?? "").trim(),
-      role: "Председатель",
+      role: "Голова правління",
       phone: String(legacyChairman.phone ?? "").trim(),
       email: String(legacyChairman.email ?? "").trim(),
       officeHours: String(legacyChairman.officeHours ?? "").trim(),
@@ -260,7 +260,7 @@ function normalizeLegacyContent(content: Record<string, unknown>) {
       id: `legacy-member-${index + 1}`,
       status: "member",
       name: String(member.name ?? "").trim(),
-      role: "Члены правления",
+      role: "Члени правління",
       phone: String(member.phone ?? "").trim(),
       email: String(member.email ?? "").trim(),
       officeHours: String(member.officeHours ?? "").trim(),
@@ -286,7 +286,7 @@ function toDraft(role: BoardRoleItem): BoardDraft {
 
 function buildRolePreview(role: BoardRoleItem) {
   const parts = [role.phone, role.email, role.officeHours].filter(Boolean);
-  return parts.length > 0 ? parts.join(" • ") : "Контакты не указаны";
+  return parts.length > 0 ? parts.join(" • ") : "Контакти не вказані";
 }
 
 export function EditBoardSectionForm({
@@ -416,13 +416,13 @@ export function EditBoardSectionForm({
     const trimmedDescription = draft.description.trim();
 
     if (!trimmedName) {
-      window.alert("Укажите имя.");
+      window.alert("Вкажіть ім’я.");
       return;
     }
 
     if (draft.status === "chairman" && chairman && chairman.id !== draft.id) {
       window.alert(
-        "Председатель уже назначен. Чтобы добавить нового, сначала удалите текущую карточку председателя.",
+        "Голову правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку голови правління.",
       );
       return;
     }
@@ -433,7 +433,7 @@ export function EditBoardSectionForm({
       viceChairman.id !== draft.id
     ) {
       window.alert(
-        "Заместитель председателя уже назначен. Чтобы добавить нового, сначала удалите текущую карточку заместителя председателя.",
+        "Заступника голови правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку заступника голови правління.",
       );
       return;
     }
@@ -472,7 +472,7 @@ export function EditBoardSectionForm({
       return;
     }
 
-    const confirmed = window.confirm("Удалить эту роль?");
+    const confirmed = window.confirm("Видалити цю роль?");
     if (!confirmed) {
       return;
     }
@@ -512,7 +512,7 @@ export function EditBoardSectionForm({
         <input type="hidden" name="houseId" value={houseId} />
         <input type="hidden" name="houseSlug" value={houseSlug} />
         <input type="hidden" name="kind" value="contacts" />
-        <input type="hidden" name="title" value={section.title ?? "Правление"} />
+        <input type="hidden" name="title" value={section.title ?? "Правління"} />
         <input type="hidden" name="status" value={section.status} />
         <input type="hidden" name="boardPayload" value={serializedBoardPayload} />
 
@@ -520,9 +520,9 @@ export function EditBoardSectionForm({
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Правление</h2>
+                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Правління</h2>
                 <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                  Состав правления, контакты ответственных лиц и карточки, которые жители видят на сайте дома.
+                  Склад правління, контакти відповідальних осіб і картки, які мешканці бачать на сайті будинку.
                 </p>
               </div>
 
@@ -531,7 +531,7 @@ export function EditBoardSectionForm({
                 onClick={openCreateMode}
                 className={[adminPrimaryButtonClass, "h-12 shrink-0 whitespace-nowrap"].join(" ")}
               >
-                Создать роль
+                Створити роль
               </button>
             </div>
 
@@ -560,7 +560,7 @@ export function EditBoardSectionForm({
                       onClick={() => setActiveTab(tab.key)}
                       className={`inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-medium whitespace-nowrap transition ${
                         isActive
-                          ? "bg-[var(--cms-primary)] text-white"
+                          ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                           : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 text-[var(--cms-text)]"
                       }`}
                     >
@@ -568,7 +568,7 @@ export function EditBoardSectionForm({
                       <span
                         className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                           isActive
-                            ? "bg-white text-[var(--cms-text)]"
+                            ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
                             : "bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
                         }`}
                       >
@@ -586,11 +586,11 @@ export function EditBoardSectionForm({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                Обращение от правления
+                Звернення від правління
               </h3>
               <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                Этот текст будет отображаться в самом верху публичной страницы
-                правления.
+                Цей текст відображатиметься у верхній частині публічної сторінки
+                правління.
               </p>
             </div>
 
@@ -602,7 +602,7 @@ export function EditBoardSectionForm({
                   setIsEditingIntro(false);
                 }}
                 className={adminIconButtonClass}
-                aria-label="Закрыть форму"
+                aria-label="Закрити форму"
               >
                 ×
               </button>
@@ -612,7 +612,7 @@ export function EditBoardSectionForm({
                 onClick={() => setIsEditingIntro(true)}
                 className={adminSecondaryButtonClass}
               >
-                Редактировать
+                Редагувати
               </button>
             )}
           </div>
@@ -623,7 +623,7 @@ export function EditBoardSectionForm({
                 value={intro}
                 onChange={(event) => setIntro(event.target.value)}
                 rows={6}
-                placeholder="Введите обращение от правления..."
+                placeholder="Введіть звернення від правління..."
                 className={adminInputClass}
               />
 
@@ -633,12 +633,12 @@ export function EditBoardSectionForm({
                 disabled={!introDirty || isPending}
                 className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
               >
-                {isPending ? "Сохраняем..." : "Сохранить обращение"}
+                {isPending ? "Зберігаємо..." : "Зберегти звернення"}
               </button>
             </div>
           ) : (
             <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-sm leading-7 text-[var(--cms-text-muted)]">
-              {intro || "Обращение пока не заполнено"}
+              {intro || "Звернення поки не заповнено"}
             </div>
           )}
         </div>
@@ -649,19 +649,19 @@ export function EditBoardSectionForm({
               <div>
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {workspaceMode === "create"
-                    ? "Новая роль"
-                    : "Редактирование роли"}
+                    ? "Нова роль"
+                    : "Редагування ролі"}
                 </div>
                 <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  После сохранения карточка автоматически закроется и появится в
-                  соответствующем табе.
+                  Після збереження картка автоматично закриється і з’явиться у
+                  відповідній вкладці.
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={closeWorkspace}
-                aria-label="Закрыть форму"
+                aria-label="Закрити форму"
                 className={adminIconButtonClass}
               >
                 ×
@@ -672,7 +672,7 @@ export function EditBoardSectionForm({
               <div className="grid gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Должность
+                    Посада
                   </label>
                   <select
                     value={draft.status}
@@ -684,20 +684,20 @@ export function EditBoardSectionForm({
                     }
                     className={adminInputClass}
                   >
-                    <option value="chairman">Председатель</option>
+                    <option value="chairman">Голова правління</option>
                     <option value="vice_chairman">
-                      Заместитель председателя
+                      Заступник голови правління
                     </option>
-                    <option value="member">Члены правления</option>
+                    <option value="member">Члени правління</option>
                     <option value="revision_commission">
-                      Ревизионная комиссия
+                      Ревізійна комісія
                     </option>
                   </select>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Имя
+                    Ім’я
                   </label>
                   <input
                     value={draft.name}
@@ -705,7 +705,7 @@ export function EditBoardSectionForm({
                       handleDraftChange("name", event.target.value)
                     }
                     className={adminInputClass}
-                    placeholder="Введите имя"
+                    placeholder="Введіть ім’я"
                   />
                 </div>
 
@@ -741,7 +741,7 @@ export function EditBoardSectionForm({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Часы приема / связи
+                    Години прийому / зв’язку
                   </label>
                   <input
                     value={draft.officeHours}
@@ -755,7 +755,7 @@ export function EditBoardSectionForm({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Описание
+                    Опис
                   </label>
                   <textarea
                     value={draft.description}
@@ -764,7 +764,7 @@ export function EditBoardSectionForm({
                     }
                     rows={5}
                     className={adminInputClass}
-                    placeholder="Короткое описание функций и зоны ответственности"
+                    placeholder="Короткий опис функцій і зони відповідальності"
                   />
                 </div>
               </div>
@@ -773,9 +773,9 @@ export function EditBoardSectionForm({
                   <button
                     type="button"
                     onClick={handleSaveDraft}
-                    className="inline-flex items-center justify-center rounded-3xl ${adminPrimaryButtonClass} px-8 py-4 text-base"
+                    className={[adminPrimaryButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ") }
                   >
-                    Сохранить
+                    Зберегти
                   </button>
 
                   {workspaceMode === "edit" ? (
@@ -784,7 +784,7 @@ export function EditBoardSectionForm({
                       onClick={handleDeleteDraftRole}
                       className={[adminDangerButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ")}
                     >
-                      Удалить
+                      Видалити
                     </button>
                   ) : null}
                 </div>
@@ -796,11 +796,11 @@ export function EditBoardSectionForm({
         <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-              {activeTabConfig?.label ?? "Роли правления"}
+              {activeTabConfig?.label ?? "Ролі правління"}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-              Здесь отображаются карточки, которые будут опубликованы на сайте
-              дома в соответствующем разделе.
+              Тут відображаються картки, які будуть опубліковані на сайті
+              будинку у відповідному розділі.
             </p>
           </div>
 
@@ -821,7 +821,7 @@ export function EditBoardSectionForm({
                     </div>
 
                     <div className="truncate text-base font-semibold text-[var(--cms-text)]">
-                      {role.name || "Без имени"}
+                      {role.name || "Без імені"}
                     </div>
 
                     <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
@@ -840,7 +840,7 @@ export function EditBoardSectionForm({
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                {activeTabConfig?.emptyText ?? "В этом табе пока нет карточек."}
+                {activeTabConfig?.emptyText ?? "У цій вкладці поки немає карток."}
               </div>
             )}
           </div>

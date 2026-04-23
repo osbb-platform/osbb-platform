@@ -96,10 +96,10 @@ export function EditInformationPostForm({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-lg font-semibold text-[var(--cms-text)]">
-              Редактирование сообщения
+              Редагування повідомлення
             </div>
             <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Можно сохранить, опубликовать, архивировать или удалить.
+              Можна зберегти, опублікувати, архівувати або видалити.
             </div>
           </div>
 
@@ -127,7 +127,7 @@ export function EditInformationPostForm({
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Категория
+            Категорія
           </label>
           <select name="category" defaultValue={category} className={adminInputClass}>
             {INFORMATION_CATEGORIES.map((item) => (
@@ -147,10 +147,10 @@ export function EditInformationPostForm({
           />
           <div>
             <div className="text-sm font-medium text-[var(--cms-text)]">
-              Закрепить наверху
+              Закріпити вгорі
             </div>
             <div className="text-xs text-[var(--cms-text-muted)]">
-              Закрепленные сообщения отображаются первыми
+              Закріплені повідомлення відображаються першими
             </div>
           </div>
         </label>
@@ -191,14 +191,14 @@ export function EditInformationPostForm({
             onClick={() => (hasSubmittedRef.current = true)}
             className={`${adminPrimaryButtonClass} disabled:opacity-60`}
           >
-            {isPending ? "Сохраняем..." : "Сохранить"}
+            {isPending ? "Зберігаємо..." : "Зберегти"}
           </button>
 
           {isDraft && (
             <form action={deleteDraftAction}>
               <input type="hidden" name="sectionId" value={section.id} />
               <button className={adminDangerButtonClass}>
-                Удалить
+                Видалити
               </button>
             </form>
           )}
@@ -209,14 +209,14 @@ export function EditInformationPostForm({
             <form action={publishHouseInformationSection}>
               <input type="hidden" name="sectionId" value={section.id} />
               <button className={adminSuccessButtonClass}>
-                Подтвердить
+                Підтвердити
               </button>
             </form>
           ) : (
             <form action={archiveHouseInformationSection}>
               <input type="hidden" name="sectionId" value={section.id} />
               <button className={adminWarningButtonClass}>
-                Архивировать
+                Архівувати
               </button>
             </form>
           )}

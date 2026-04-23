@@ -77,10 +77,10 @@ export function CreateInformationPostInlineForm({
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="text-lg font-semibold text-[var(--cms-text)]">
-            Новое сообщение
+            Нове повідомлення
           </div>
           <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
-            Создается как черновик и публикуется отдельно
+            Створюється як чернетка і публікується окремо
           </div>
         </div>
 
@@ -105,7 +105,7 @@ export function CreateInformationPostInlineForm({
         {/* CATEGORY */}
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Категория
+            Категорія
           </label>
           <select
             name="category"
@@ -132,7 +132,7 @@ export function CreateInformationPostInlineForm({
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-xs text-[var(--cms-text-muted)]">
-                    Предпросмотр
+                    Попередній перегляд
                   </div>
                 )}
               </div>
@@ -140,7 +140,7 @@ export function CreateInformationPostInlineForm({
 
             <div>
               <div className="text-sm font-medium text-[var(--cms-text)]">
-                Обложка
+                Обкладинка
               </div>
 
               <button
@@ -148,7 +148,7 @@ export function CreateInformationPostInlineForm({
                 onClick={() => fileInputRef.current?.click()}
                 className={adminPrimaryButtonClass}
               >
-                Выбрать файл
+                Обрати файл
               </button>
 
               <input
@@ -175,10 +175,10 @@ export function CreateInformationPostInlineForm({
           />
           <div>
             <div className="text-sm font-medium text-[var(--cms-text)]">
-              Закрепить
+              Закріпити
             </div>
             <div className="text-xs text-[var(--cms-text-muted)]">
-              Показывать выше остальных
+              Показувати вище за інші
             </div>
           </div>
         </label>
@@ -217,7 +217,7 @@ export function CreateInformationPostInlineForm({
           onClick={() => (hasSubmittedRef.current = true)}
           className={adminPrimaryButtonClass}
         >
-          {isPending ? "Создаем..." : "Создать"}
+          {isPending ? "Створюємо..." : "Створити"}
         </button>
 
         <button
@@ -225,7 +225,7 @@ export function CreateInformationPostInlineForm({
           onClick={onClose}
           className="text-sm text-[var(--cms-text-muted)]"
         >
-          Отмена
+          Скасувати
         </button>
       </div>
     </form>

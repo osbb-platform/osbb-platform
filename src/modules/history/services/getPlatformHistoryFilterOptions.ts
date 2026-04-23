@@ -14,52 +14,52 @@ export type PlatformHistoryFilterOptions = {
 const CMS_SECTIONS = [
   {
     key: "districts",
-    label: "Районы",
+    label: "Райони",
     subSections: [],
   },
   {
     key: "houses",
-    label: "Дома",
+    label: "Будинки",
     subSections: [
-      { key: "house_settings", label: "Настройки дома" },
-      { key: "announcements", label: "Объявления" },
-      { key: "board", label: "Правление" },
-      { key: "information", label: "Информация" },
-      { key: "specialists", label: "Специалисты" },
-      { key: "plan", label: "План работ" },
-      { key: "reports", label: "Отчеты" },
-      { key: "requisites", label: "Реквизиты" },
-      { key: "debtors", label: "Должники" },
-      { key: "meetings", label: "Собрания" },
+      { key: "house_settings", label: "Налаштування будинку" },
+      { key: "announcements", label: "Оголошення" },
+      { key: "board", label: "Правління" },
+      { key: "information", label: "Інформація" },
+      { key: "specialists", label: "Спеціалісти" },
+      { key: "plan", label: "План робіт" },
+      { key: "reports", label: "Звіти" },
+      { key: "requisites", label: "Реквізити" },
+      { key: "debtors", label: "Боржники" },
+      { key: "meetings", label: "Збори" },
       { key: "access", label: "Доступ" },
     ],
   },
   {
     key: "apartments",
-    label: "Квартиры",
+    label: "Квартири",
     subSections: [],
   },
   {
     key: "employees",
-    label: "Сотрудники",
+    label: "Співробітники",
     subSections: [],
   },
 ] as const;
 
 const DEFAULT_INCOMING_SECTIONS = [
-  { key: "access", label: "Вход в дом" },
-  { key: "requests", label: "Обращения" },
-  { key: "specialists", label: "Запросы к специалистам" },
-  { key: "meetings", label: "Собрания и голосования" },
-  { key: "information", label: "Действия в разделах дома" },
+  { key: "access", label: "Вхід до будинку" },
+  { key: "requests", label: "Звернення" },
+  { key: "specialists", label: "Запити до спеціалістів" },
+  { key: "meetings", label: "Збори та голосування" },
+  { key: "information", label: "Дії в розділах будинку" },
 ] as const;
 
 const INCOMING_SECTION_LABELS: Record<string, string> = {
-  access: "Вход в дом",
-  requests: "Обращения",
-  specialists: "Запросы к специалистам",
-  meetings: "Собрания и голосования",
-  information: "Действия в разделах дома",
+  access: "Вхід до будинку",
+  requests: "Звернення",
+  specialists: "Запити до спеціалістів",
+  meetings: "Збори та голосування",
+  information: "Дії в розділах будинку",
 };
 
 export async function getPlatformHistoryFilterOptions(): Promise<PlatformHistoryFilterOptions> {

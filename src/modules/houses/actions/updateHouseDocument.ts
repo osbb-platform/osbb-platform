@@ -33,7 +33,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function updateHouseDocument(
@@ -55,9 +55,9 @@ export async function updateHouseDocument(
   const removeAttachment =
     String(formData.get("removeAttachment") ?? "") === "true";
 
-  if (!documentId) return { error: "Не передан идентификатор документа." };
-  if (!houseId) return { error: "Не передан идентификатор дома." };
-  if (!title) return { error: "Заполни название документа." };
+  if (!documentId) return { error: "Не передано ідентифікатор документа." };
+  if (!houseId) return { error: "Не передано ідентифікатор будинку." };
+  if (!title) return { error: "Заповни назву документа." };
 
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
@@ -69,7 +69,7 @@ export async function updateHouseDocument(
     .single();
 
   if (!existingDocument) {
-    return { error: "Документ не найден." };
+    return { error: "Документ не знайдено." };
   }
 
   let storageBucket = existingDocument.storage_bucket;
@@ -116,7 +116,7 @@ export async function updateHouseDocument(
     .eq("house_id", houseId);
 
   if (updateError) {
-    return { error: `Не удалось обновить документ. ${updateError.message}` };
+    return { error: `Не вдалося оновити документ. ${updateError.message}` };
   }
 
   const currentAdmin = await getCurrentAdminUser();
@@ -133,7 +133,7 @@ export async function updateHouseDocument(
     entityId: documentId,
     entityLabel: title,
     actionType: "update_house_document",
-    description: `Обновлен документ «${title}».`,
+    description: `Оновлено документ «${title}».`,
     houseId,
   });
 

@@ -28,10 +28,10 @@ export function CreateAnnouncementInlineForm({
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="text-sm font-medium text-[var(--cms-text)]">
-            Новое объявление
+            Нове оголошення
           </div>
           <div className={["mt-1", adminBodyClass].join(" ")}>
-            Новое объявление создается как черновик в табе «На модерации».
+            Нове оголошення створюється як чернетка у вкладці «Чернетки».
           </div>
         </div>
 
@@ -39,7 +39,7 @@ export function CreateAnnouncementInlineForm({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Закрыть форму"
+            aria-label="Закрити форму"
             className={adminIconButtonClass}
           >
             ×
@@ -54,39 +54,39 @@ export function CreateAnnouncementInlineForm({
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Заголовок объявления
+            Заголовок оголошення
           </label>
           <input
             name="title"
             type="text"
-            placeholder="Например: Отключение воды"
+            placeholder="Наприклад: Відключення води"
             className={adminInputClass}
           />
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Тип объявления
+            Тип оголошення
           </label>
           <select
             name="level"
             defaultValue="info"
             className={adminInputClass}
           >
-            <option value="danger">Красный — важное</option>
-            <option value="warning">Оранжевый — обратить внимание</option>
-            <option value="info">Салатовый — обычное объявление</option>
+            <option value="danger">Червоний — важливе</option>
+            <option value="warning">Помаранчевий — звернути увагу</option>
+            <option value="info">Салатовий — звичайне оголошення</option>
           </select>
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-            Текст объявления
+            Текст оголошення
           </label>
           <textarea
             name="body"
             rows={6}
-            placeholder="Введите текст объявления"
+            placeholder="Введіть текст оголошення"
             className={adminInputClass}
           />
         </div>
@@ -96,7 +96,7 @@ export function CreateAnnouncementInlineForm({
             type="submit"
             className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl"].join(" ")}
           >
-            Сохранить
+            Зберегти
           </button>
         </div>
       </form>

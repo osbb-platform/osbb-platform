@@ -27,7 +27,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function createHouseDocument(
@@ -43,9 +43,9 @@ export async function createHouseDocument(
   const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
   const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
-  if (!houseId) return { error: "Не передан идентификатор дома." };
-  if (!title) return { error: "Заполни название документа." };
-  if (!uploadedPdfPath) return { error: "PDF не загружен." };
+  if (!houseId) return { error: "Не передано ідентифікатор будинку." };
+  if (!title) return { error: "Заповни назву документа." };
+  if (!uploadedPdfPath) return { error: "PDF не завантажено." };
 
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
@@ -71,7 +71,7 @@ export async function createHouseDocument(
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Ошибка создания документа" };
+    return { error: error?.message ?? "Помилка створення документа" };
   }
 
   const currentAdmin = await getCurrentAdminUser();
@@ -88,7 +88,7 @@ export async function createHouseDocument(
     entityId: data.id,
     entityLabel: data.title,
     actionType: "create_house_document",
-    description: `Создан документ «${data.title}».`,
+    description: `Створено документ «${data.title}».`,
     houseId,
   });
 

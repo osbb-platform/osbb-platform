@@ -14,7 +14,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function deleteHouseDocument(
@@ -35,11 +35,11 @@ export async function deleteHouseDocument(
   const houseId = String(formData.get("houseId") ?? "").trim();
 
   if (!documentId) {
-    return { error: "Не передан идентификатор документа." };
+    return { error: "Не передано ідентифікатор документа." };
   }
 
   if (!houseId) {
-    return { error: "Не передан идентификатор дома." };
+    return { error: "Не передано ідентифікатор будинку." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -53,12 +53,12 @@ export async function deleteHouseDocument(
 
   if (existingDocumentError) {
     return {
-      error: `Не удалось получить документ перед удалением: ${existingDocumentError.message}`,
+      error: `Не вдалося отримати документ перед видаленням: ${existingDocumentError.message}`,
     };
   }
 
   if (!existingDocument) {
-    return { error: "Документ не найден." };
+    return { error: "Документ не знайдено." };
   }
 
   if (
@@ -73,7 +73,7 @@ export async function deleteHouseDocument(
 
     if (removeError) {
       return {
-        error: `Не удалось удалить файл документа: ${removeError.message}`,
+        error: `Не вдалося видалити файл документа: ${removeError.message}`,
       };
     }
   }
@@ -85,7 +85,7 @@ export async function deleteHouseDocument(
     .eq("house_id", houseId);
 
   if (error) {
-    return { error: `Не удалось удалить документ: ${error.message}` };
+    return { error: `Не вдалося видалити документ: ${error.message}` };
   }
 
   const actorName = getActorDisplayName({
@@ -102,7 +102,7 @@ export async function deleteHouseDocument(
     entityId: existingDocument.id,
     entityLabel: existingDocument.title ?? "Документ",
     actionType: "delete_house_document",
-    description: `Удален документ «${existingDocument.title ?? "Без названия"}».`,
+    description: `Видалено документ «${existingDocument.title ?? "Без назви"}».`,
     houseId,
     metadata: {
       sourceType: "cms",

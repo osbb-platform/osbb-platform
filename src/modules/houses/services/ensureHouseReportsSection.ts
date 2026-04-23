@@ -1,10 +1,10 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 const DEFAULT_REPORT_CATEGORIES = [
-  "Выполненные работы",
-  "Финансовый отчет",
-  "Ремонт и обслуживание",
-  "Инженерные системы",
+  "Виконані роботи",
+  "Фінансовий звіт",
+  "Ремонт та обслуговування",
+  "Інженерні системи",
 ] as const;
 
 export async function ensureHouseReportsSection(params: {
@@ -37,7 +37,7 @@ export async function ensureHouseReportsSection(params: {
     .insert({
       house_page_id: housePageId,
       kind: "reports",
-      title: "Отчеты",
+      title: "Звіти",
       sort_order: 130,
       status: "published",
       content: {

@@ -24,7 +24,7 @@ export async function archiveApartment(
 
   if (!apartmentId || !houseId) {
     return {
-      error: "Не переданы данные квартиры.",
+      error: "Не передано дані квартири.",
       success: null,
     };
   }
@@ -42,7 +42,7 @@ export async function archiveApartment(
   if (existingError || !existingApartment) {
     return {
       error:
-        existingError?.message ?? "Квартира не найдена для архивирования.",
+        existingError?.message ?? "Квартиру не знайдено для архівації.",
       success: null,
     };
   }
@@ -57,7 +57,7 @@ export async function archiveApartment(
 
   if (archiveError) {
     return {
-      error: `Не удалось архивировать квартиру: ${archiveError.message}`,
+      error: `Не вдалося архівувати квартиру: ${archiveError.message}`,
       success: null,
     };
   }
@@ -73,7 +73,7 @@ export async function archiveApartment(
       entityId: apartmentId,
       entityLabel: existingApartment.apartment_label,
       actionType: "archive_apartment",
-      description: `Квартира ${existingApartment.apartment_label} отправлена в архив.`,
+      description: `Квартира ${existingApartment.apartment_label} переміщена в архів.`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -90,6 +90,6 @@ export async function archiveApartment(
 
   return {
     error: null,
-    success: "Квартира отправлена в архив.",
+    success: "Квартира переміщена в архів.",
   };
 }

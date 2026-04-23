@@ -36,7 +36,7 @@ export async function replaceHouseApartmentsByImport(
 
   if (!houseId) {
     return {
-      error: "Сначала выберите дом.",
+      error: "Спочатку оберіть будинок.",
       success: null,
     };
   }
@@ -47,14 +47,14 @@ export async function replaceHouseApartmentsByImport(
     rows = JSON.parse(rawRows);
   } catch {
     return {
-      error: "Не удалось обработать импортируемые данные.",
+      error: "Не вдалося обробити імпортовані дані.",
       success: null,
     };
   }
 
   if (!rows.length) {
     return {
-      error: "Файл не содержит строк для импорта.",
+      error: "Файл не містить рядків для імпорту.",
       success: null,
     };
   }
@@ -69,7 +69,7 @@ export async function replaceHouseApartmentsByImport(
 
   if (existingActiveCountError) {
     return {
-      error: `Не удалось получить текущий активный список: ${existingActiveCountError.message}`,
+      error: `Не вдалося отримати поточний активний список: ${existingActiveCountError.message}`,
       success: null,
     };
   }
@@ -82,7 +82,7 @@ export async function replaceHouseApartmentsByImport(
 
   if (deleteError) {
     return {
-      error: `Не удалось удалить текущий активный список: ${deleteError.message}`,
+      error: `Не вдалося видалити поточний активний список: ${deleteError.message}`,
       success: null,
     };
   }
@@ -103,7 +103,7 @@ export async function replaceHouseApartmentsByImport(
 
   if (insertError) {
     return {
-      error: `Ошибка импорта: ${insertError.message}`,
+      error: `Помилка імпорту: ${insertError.message}`,
       success: null,
     };
   }
@@ -118,7 +118,7 @@ export async function replaceHouseApartmentsByImport(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "replace_apartments_by_import",
-      description: `Импортом полностью заменен реестр квартир (${rows.length} строк).`,
+      description: `Імпортом повністю замінено реєстр квартир (${rows.length} строк).`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -134,6 +134,6 @@ export async function replaceHouseApartmentsByImport(
 
   return {
     error: null,
-    success: `Импортировано ${rows.length} квартир.`,
+    success: `Імпортовано ${rows.length} квартир.`,
   };
 }

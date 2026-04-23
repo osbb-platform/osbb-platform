@@ -53,25 +53,25 @@ type Props = {
 };
 
 const CURRENT_MONTH_OPTIONS = [
-  { value: "01", label: "Январь" },
-  { value: "02", label: "Февраль" },
-  { value: "03", label: "Март" },
-  { value: "04", label: "Апрель" },
-  { value: "05", label: "Май" },
-  { value: "06", label: "Июнь" },
-  { value: "07", label: "Июль" },
-  { value: "08", label: "Август" },
-  { value: "09", label: "Сентябрь" },
-  { value: "10", label: "Октябрь" },
-  { value: "11", label: "Ноябрь" },
-  { value: "12", label: "Декабрь" },
+  { value: "01", label: "Січень" },
+  { value: "02", label: "Лютий" },
+  { value: "03", label: "Березень" },
+  { value: "04", label: "Квітень" },
+  { value: "05", label: "Травень" },
+  { value: "06", label: "Червень" },
+  { value: "07", label: "Липень" },
+  { value: "08", label: "Серпень" },
+  { value: "09", label: "Вересень" },
+  { value: "10", label: "Жовтень" },
+  { value: "11", label: "Листопад" },
+  { value: "12", label: "Грудень" },
 ];
 
 const DEFAULT_CATEGORIES = [
-  "Выполненные работы",
-  "Финансовый отчет",
-  "Ремонт и обслуживание",
-  "Инженерные системы",
+  "Виконані роботи",
+  "Фінансовий звіт",
+  "Ремонт та обслуговування",
+  "Інженерні системи",
 ];
 
 function createReportId() {
@@ -79,12 +79,12 @@ function createReportId() {
 }
 
 function formatDate(value: string) {
-  if (!value) return "Дата не указана";
+  if (!value) return "Дату не вказано";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дата не указана";
+  if (Number.isNaN(date.getTime())) return "Дату не вказано";
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString("uk-UA", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -92,9 +92,9 @@ function formatDate(value: string) {
 }
 
 function getStatusLabel(status: ReportStatus) {
-  if (status === "active") return "Активный";
-  if (status === "archived") return "Архив";
-  return "Черновик";
+  if (status === "active") return "Активна";
+  if (status === "archived") return "Архів";
+  return "Чернетка";
 }
 
 function getStatusBadgeClasses(status: ReportStatus) {
@@ -110,7 +110,7 @@ function getStatusBadgeClasses(status: ReportStatus) {
 }
 
 function getMonthLabel(value: string | undefined) {
-  if (!value) return "Месяц не указан";
+  if (!value) return "Місяць не вказано";
 
   return (
     CURRENT_MONTH_OPTIONS.find((item) => item.value === value)?.label ?? value
@@ -219,19 +219,28 @@ export function HouseReportsWorkspace({
   const [reportPdfError, setReportPdfError] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<"publish" | "archive" | "delete" | "delete_archive" | null>(null);
   const [submitIntent, setSubmitIntent] = useState<"save" | "publish" | "archive" | "delete" | "delete_archive">("save");
-  const [actionLabel, setActionLabel] = useState("Обрабатываем отчет...");
+  const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const categoryOptions = useMemo(() => {
+    const legacyReportCategoryMap: Record<string, string> = {
+      "Выполненные работы": "Виконані роботи",
+      "Финансовый отчет": "Фінансовий звіт",
+      "Ремонт и обслуживание": "Ремонт та обслуговування",
+      "Инженерные системы": "Інженерні системи",
+    };
+
+    const normalizeReportCategory = (value: string) => legacyReportCategoryMap[value.trim()] ?? value.trim();
+
     const dynamicCategories = reports
-      .map((item) => item.category)
+      .map((item) => normalizeReportCategory(item.category))
       .filter((item) => Boolean(item.trim()));
 
     return Array.from(
       new Set([
         ...DEFAULT_CATEGORIES,
-        ...categoriesCatalog.filter((item) => item.trim()),
+        ...categoriesCatalog.map((item) => normalizeReportCategory(item)).filter((item) => item),
         ...dynamicCategories,
       ]),
     );
@@ -381,14 +390,14 @@ export function HouseReportsWorkspace({
   async function handleSubmit(formData: FormData) {
     setActionLabel(
       submitIntent === "delete"
-        ? "Удаляем отчет..."
+        ? "Видаляємо звіт..."
         : submitIntent === "publish"
-          ? "Публикуем отчет..."
+          ? "Публікуємо звіт..."
           : selectedPdfLabel
-            ? "Загружаем и сохраняем PDF отчет..."
+            ? "Завантажуємо та зберігаємо PDF звіт..."
             : workspaceMode === "edit"
-              ? "Обновляем отчет..."
-              : "Создаем отчет...",
+              ? "Оновлюємо звіт..."
+              : "Створюємо звіт...",
     );
 
     const file = formData.get("reportPdf");
@@ -406,7 +415,7 @@ export function HouseReportsWorkspace({
         });
 
       if (uploadError) {
-        setActionLabel("Обрабатываем отчет...");
+        setActionLabel("Обробляємо звіт...");
         return;
       }
 
@@ -420,7 +429,7 @@ export function HouseReportsWorkspace({
       router.refresh();
       resetWorkspace();
       setSubmitIntent("save");
-      setActionLabel("Обрабатываем отчет...");
+      setActionLabel("Обробляємо звіт...");
     });
   }
 
@@ -455,7 +464,7 @@ export function HouseReportsWorkspace({
       formData.set("houseId", houseId);
       formData.set("houseSlug", houseSlug);
       formData.set("kind", "reports");
-      formData.set("title", sectionTitle ?? "Отчеты");
+      formData.set("title", sectionTitle ?? "Звіти");
       formData.set("status", getDefaultSectionStatus(sectionStatus));
       formData.set("reportAction", "delete_archive");
       formData.set(
@@ -476,7 +485,7 @@ export function HouseReportsWorkspace({
   }
 
   const currentPdfLabel =
-    selectedPdfLabel || draft.pdfFileName || "PDF пока не прикреплен";
+    selectedPdfLabel || draft.pdfFileName || "PDF поки не прикріплено";
 
   return (
     <div className="relative space-y-6">
@@ -490,9 +499,9 @@ export function HouseReportsWorkspace({
       <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">Реестр отчетов</h2>
+            <h2 className="text-xl font-semibold text-white">Реєстр звітів</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Управление финансовыми и операционными отчетами дома с публикацией для жильцов.
+              Керування фінансовими та операційними звітами будинку з публікацією для мешканців.
             </p>
           </div>
 
@@ -505,8 +514,8 @@ export function HouseReportsWorkspace({
                 className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
               >
                 {isDeletingArchive
-                  ? "Удаляем архив..."
-                  : "Удалить все"}
+                  ? "Видаляємо архів..."
+                  : "Видалити все"}
               </button>
             ) : <div />
           ) : (
@@ -515,7 +524,7 @@ export function HouseReportsWorkspace({
               onClick={openCreateMode}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
             >
-              Создать отчет
+              Створити звіт
             </button>
           )}
         </div>
@@ -523,9 +532,9 @@ export function HouseReportsWorkspace({
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3">
             {[
-              ["current", "Текущий год", currentReports.length],
-              ["past", "Прошлые годы", pastReports.length],
-              ["archive", "Архив", archivedReports.length],
+              ["current", "Поточний рік", currentReports.length],
+              ["past", "Минулі роки", pastReports.length],
+              ["archive", "Архів", archivedReports.length],
             ].map(([key, label, count]) => {
               const isActive = activeTab === key;
 
@@ -536,7 +545,7 @@ export function HouseReportsWorkspace({
                   onClick={() => handleTabChange(key as TabKey)}
                   className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "bg-white text-slate-950"
+                      ? "border border-slate-600 bg-slate-800/70 text-white"
                       : "border border-slate-700 bg-slate-950/40 text-white"
                   }`}
                 >
@@ -544,7 +553,7 @@ export function HouseReportsWorkspace({
                   <span
                     className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       isActive
-                        ? "bg-slate-200 text-slate-950"
+                        ? "bg-slate-950 text-white"
                         : "bg-slate-800 text-slate-200"
                     }`}
                   >
@@ -568,7 +577,7 @@ export function HouseReportsWorkspace({
           <input type="hidden" name="houseId" value={houseId} />
           <input type="hidden" name="houseSlug" value={houseSlug} />
           <input type="hidden" name="kind" value="reports" />
-          <input type="hidden" name="title" value={sectionTitle ?? "Отчеты"} />
+          <input type="hidden" name="title" value={sectionTitle ?? "Звіти"} />
           <input
             type="hidden"
             name="status"
@@ -598,14 +607,14 @@ export function HouseReportsWorkspace({
             <div>
               <div className="text-lg font-semibold text-white">
                 {workspaceMode === "edit"
-                  ? "Редактирование отчета"
+                  ? "Редагування звіту"
                   : isPastContext
-                    ? "Новый отчет за прошлый год"
-                    : "Новый отчет текущего года"}
+                    ? "Новий звіт за минулий рік"
+                    : "Новий звіт поточного року"}
               </div>
 
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                Новый отчет создается как черновик. После сохранения карточку можно открыть повторно и опубликовать.
+                Новий звіт створюється як чернетка. Після збереження картку можна повторно відкрити та опублікувати.
               </p>
             </div>
 
@@ -613,7 +622,7 @@ export function HouseReportsWorkspace({
               type="button"
               onClick={() => resetWorkspace()}
               className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 bg-slate-950/40 text-lg text-slate-300 transition hover:bg-slate-800 hover:text-white"
-              aria-label="Закрыть форму"
+              aria-label="Закрити форму"
             >
               ×
             </button>
@@ -635,14 +644,14 @@ export function HouseReportsWorkspace({
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, title: event.target.value }))
                 }
-                placeholder="Например: Отчет о выполненных работах за апрель"
+                placeholder="Наприклад: Звіт про виконані роботи за квітень"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
               />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-white">
-                Категория
+                Категорія
               </span>
               <select
                 value={draft.category}
@@ -661,7 +670,7 @@ export function HouseReportsWorkspace({
 
             <label className="block xl:col-span-2">
               <span className="mb-2 block text-sm font-medium text-white">
-                Краткое описание
+                Короткий опис
               </span>
               <textarea
                 value={draft.description}
@@ -672,14 +681,14 @@ export function HouseReportsWorkspace({
                   }))
                 }
                 rows={4}
-                placeholder="Короткое описание отчета для карточки на public и в CMS."
+                placeholder="Короткий опис звіту для картки на public та в CMS."
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
               />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-white">
-                Дата отчета
+                Дата звіту
               </span>
               <input
                 type="date"
@@ -694,7 +703,7 @@ export function HouseReportsWorkspace({
             {isPastContext ? (
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-white">
-                  Год
+                  Рік
                 </span>
                 <select
                   value={String(draft.year ?? "")}
@@ -716,7 +725,7 @@ export function HouseReportsWorkspace({
             ) : (
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-white">
-                  Месяц
+                  Місяць
                 </span>
                 <select
                   value={draft.month ?? ""}
@@ -725,7 +734,7 @@ export function HouseReportsWorkspace({
                   }
                   className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
                 >
-                  <option value="">Выберите месяц</option>
+                  <option value="">Оберіть місяць</option>
                   {CURRENT_MONTH_OPTIONS.map((item) => (
                     <option key={item.value} value={item.value}>
                       {item.label}
@@ -737,7 +746,7 @@ export function HouseReportsWorkspace({
 
             <div className="xl:col-span-2 rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
               <div className="text-sm font-medium text-white">
-                PDF файл отчета
+                PDF файл звіту
               </div>
 
               <div className="mt-2 text-sm text-slate-400">
@@ -746,7 +755,7 @@ export function HouseReportsWorkspace({
 
               <label className="mt-4 block">
                 <span className="mb-2 block text-sm font-medium text-white">
-                  Загрузить / заменить PDF
+                  Завантажити / замінити PDF
                 </span>
                 <input
                   ref={reportPdfInputRef}
@@ -787,7 +796,7 @@ export function HouseReportsWorkspace({
                     }
                     className="h-4 w-4 rounded border-slate-600 bg-slate-900"
                   />
-                  Закрепить как важный отчет
+                  Закріпити як важливий звіт
                 </label>
 
                 <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white">
@@ -808,14 +817,14 @@ export function HouseReportsWorkspace({
                     }
                     className="h-4 w-4 rounded border-slate-600 bg-slate-900"
                   />
-                  Показывать как новый
+                  Показувати як новий
                 </label>
               </div>
 
               {draft.isNew ? (
                 <label className="mt-4 block max-w-sm">
                   <span className="mb-2 block text-sm font-medium text-white">
-                    Новый до
+                    Новий до
                   </span>
                   <input
                     type="date"
@@ -847,7 +856,7 @@ export function HouseReportsWorkspace({
                   }}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPending && submitIntent === "save" ? "Сохраняем..." : "Сохранить"}
+                  {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                 </button>
 
                 {isDraftLikeEdit ? (
@@ -857,7 +866,7 @@ export function HouseReportsWorkspace({
                     onClick={() => setConfirmAction("delete")}
                     className="inline-flex items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/15 disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "delete" ? "Удаляем..." : "Удалить"}
+                    {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
                 ) : null}
               </div>
@@ -870,7 +879,7 @@ export function HouseReportsWorkspace({
                     onClick={() => setConfirmAction("publish")}
                     className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "publish" ? "Подтверждаем..." : "Подтвердить"}
+                    {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
                 </div>
               ) : null}
@@ -883,7 +892,7 @@ export function HouseReportsWorkspace({
                     onClick={() => setConfirmAction("archive")}
                     className="inline-flex items-center justify-center rounded-2xl border border-amber-700 px-5 py-3 text-sm font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "archive" ? "Архивируем..." : "Архивировать"}
+                    {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                   </button>
                 </div>
               ) : null}
@@ -896,7 +905,7 @@ export function HouseReportsWorkspace({
                     onClick={() => setConfirmAction("delete")}
                     className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "delete" ? "Удаляем..." : "Удалить"}
+                    {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
                 </div>
               ) : null}
@@ -906,10 +915,10 @@ export function HouseReportsWorkspace({
 
           <PlatformConfirmModal
             open={confirmAction === "publish"}
-            title="Подтвердить публикацию отчета?"
-            description="После подтверждения отчет станет видимым для жильцов на сайте дома."
-            confirmLabel="Подтвердить публикацию"
-            pendingLabel="Подтверждаем..."
+            title="Підтвердити публікацію звіту?"
+            description="Після підтвердження звіт стане видимим для мешканців на сайті будинку."
+            confirmLabel="Підтвердити публікацію"
+            pendingLabel="Підтверджуємо..."
             tone="publish"
             isPending={isPending}
             onCancel={() => {
@@ -928,10 +937,10 @@ export function HouseReportsWorkspace({
 
           <PlatformConfirmModal
             open={confirmAction === "archive"}
-            title="Перенести отчет в архив?"
-            description="После архивации отчет исчезнет из публичной части сайта и перестанет быть видимым жильцам. В CMS он останется доступным в архиве."
-            confirmLabel="Архивировать отчет"
-            pendingLabel="Архивируем..."
+            title="Перенести звіт до архіву?"
+            description="Після архівації звіт зникне з публічної частини сайту та перестане бути видимим мешканцям. У CMS він залишиться доступним в архіві."
+            confirmLabel="Архівувати звіт"
+            pendingLabel="Архівуємо..."
             tone="warning"
             isPending={isPending}
             onCancel={() => {
@@ -950,10 +959,10 @@ export function HouseReportsWorkspace({
 
           <PlatformConfirmModal
             open={confirmAction === "delete"}
-            title="Удалить черновик отчета?"
-            description="Черновик отчета будет удален без возможности восстановления вместе с PDF файлом."
-            confirmLabel="Удалить отчет"
-            pendingLabel="Удаляем..."
+            title="Видалити чернетку звіту?"
+            description="Чернетку звіту буде видалено без можливості відновлення разом із PDF файлом."
+            confirmLabel="Видалити звіт"
+            pendingLabel="Видаляємо..."
             tone="destructive"
             isPending={isPending}
             onCancel={() => {
@@ -974,10 +983,10 @@ export function HouseReportsWorkspace({
 
       <PlatformConfirmModal
         open={confirmAction === "delete_archive"}
-        title="Удалить все архивные отчеты?"
-        description="Все архивные отчеты будут безвозвратно удалены вместе с PDF файлами. Восстановление после этого невозможно."
-        confirmLabel="Удалить архив"
-        pendingLabel="Удаляем архив..."
+        title="Видалити всі архівні звіти?"
+        description="Усі архівні звіти будуть безповоротно видалені разом із PDF файлами. Відновлення після цього неможливе."
+        confirmLabel="Видалити архів"
+        pendingLabel="Видаляємо архів..."
         tone="destructive"
         isPending={isDeletingArchive}
         onCancel={() => {
@@ -995,10 +1004,10 @@ export function HouseReportsWorkspace({
           {visibleReports.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm text-slate-400">
               {activeTab === "current"
-                ? "Здесь будут отображаться отчеты текущего года после создания."
+                ? "Тут відображатимуться звіти поточного року після створення."
                 : activeTab == "past"
-                  ? "Здесь будут храниться отчеты за прошлые годы."
-                  : "Архивные отчеты будут отображаться в этом разделе."}
+                  ? "Тут зберігатимуться звіти за минулі роки."
+                  : "Архівні звіти відображатимуться в цьому розділі."}
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
@@ -1028,13 +1037,13 @@ export function HouseReportsWorkspace({
 
                     {report.isPinned ? (
                       <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-red-300">
-                        Важный
+                        Важливий
                       </span>
                     ) : null}
 
                     {report.isNew ? (
                       <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300">
-                        Новый
+                        Новий
                       </span>
                     ) : null}
                   </div>
@@ -1052,7 +1061,7 @@ export function HouseReportsWorkspace({
                     {report.periodType === "current" ? (
                       <span>{getMonthLabel(report.month)}</span>
                     ) : (
-                      <span>{report.year ?? "Год не указан"}</span>
+                      <span>{report.year ?? "Рік не вказано"}</span>
                     )}
                     {report.pdfFileName ? <span>{report.pdfFileName}</span> : null}
                   </div>

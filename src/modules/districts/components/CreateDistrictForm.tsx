@@ -18,12 +18,12 @@ export function CreateDistrictForm() {
     <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Название района
+          Назва району
         </label>
         <input
           name="name"
           type="text"
-          placeholder="Например, Вознесеновский"
+          placeholder="Наприклад, Вознесенівський"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
         />
       </div>
@@ -42,7 +42,7 @@ export function CreateDistrictForm() {
 
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Цвет темы
+          Колір теми
         </label>
         <input
           name="themeColor"
@@ -64,7 +64,7 @@ export function CreateDistrictForm() {
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
         >
-          {isPending ? "Создаем..." : "Создать район"}
+          {isPending ? "Створюємо..." : "Створити район"}
         </button>
       </div>
     </form>

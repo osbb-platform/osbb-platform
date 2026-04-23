@@ -23,22 +23,22 @@ function isPdfFile(file: File) {
 
 export function getPdfFormatErrorMessage(fileName?: string) {
   return fileName
-    ? `Файл «${fileName}» не подходит. Загрузите PDF-файл.`
-    : "Загрузите PDF-файл. Другие форматы здесь не поддерживаются.";
+    ? `Файл «${fileName}» не підходить. Завантажте PDF-файл.`
+    : "Завантажте PDF-файл. Інші формати тут не підтримуються.";
 }
 
 export function getPdfSizeErrorMessage(fileName?: string) {
   return fileName
-    ? `Файл «${fileName}» слишком большой. Максимальный размер PDF — ${MAX_PDF_FILE_SIZE_LABEL}.`
-    : `Файл слишком большой. Максимальный размер PDF — ${MAX_PDF_FILE_SIZE_LABEL}.`;
+    ? `Файл «${fileName}» занадто великий. Максимальний розмір PDF — ${MAX_PDF_FILE_SIZE_LABEL}.`
+    : `Файл занадто великий. Максимальний розмір PDF — ${MAX_PDF_FILE_SIZE_LABEL}.`;
 }
 
 export function getSinglePdfHintMessage() {
-  return `Можно загрузить один PDF до ${MAX_PDF_FILE_SIZE_LABEL}.`;
+  return `Можна завантажити один PDF до ${MAX_PDF_FILE_SIZE_LABEL}.`;
 }
 
 export function getMultiplePdfHintMessage(maxCount: number) {
-  return `Можно прикрепить до ${maxCount} PDF, каждый — до ${MAX_PDF_FILE_SIZE_LABEL}.`;
+  return `Можна прикріпити до ${maxCount} PDF, кожен — до ${MAX_PDF_FILE_SIZE_LABEL}.`;
 }
 
 export function validateSinglePdfFile(
@@ -51,7 +51,7 @@ export function validateSinglePdfFile(
         isValid: false,
         error:
           options.requiredMessage ??
-          "Добавьте PDF-файл, чтобы продолжить.",
+          "Додайте PDF-файл, щоб продовжити.",
       };
     }
 
@@ -92,7 +92,7 @@ export function validateMultiplePdfFiles(
       isValid: false,
       error:
         options.maxCountMessage ??
-        `Можно прикрепить не более ${maxCount} PDF-файлов.`,
+        `Можна прикріпити не більше ${maxCount} PDF-файлів.`,
     };
   }
 

@@ -53,7 +53,7 @@ export default async function AdminEmployeesPage({
 
       {employees.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/50 p-6 text-slate-400">
-          По текущим фильтрам сотрудники не найдены.
+          За поточними фільтрами співробітників не знайдено.
         </div>
       ) : (
         <div className="space-y-4">

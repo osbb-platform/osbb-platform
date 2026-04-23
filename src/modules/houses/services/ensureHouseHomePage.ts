@@ -31,7 +31,7 @@ export async function ensureHouseHomePage({
     .insert({
       house_id: houseId,
       slug: "home",
-      title: "Главная дома",
+      title: "Головна будинку",
       status: "published",
     })
     .select("id, slug, title, status")

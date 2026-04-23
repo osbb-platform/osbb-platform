@@ -71,11 +71,11 @@ function CreateEmployeeActionForm({
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-            Сотрудники
+            Співробітники
           </div>
 
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
-            Реестр сотрудников
+            Реєстр співробітників
           </h2>
         </div>
 
@@ -85,7 +85,7 @@ function CreateEmployeeActionForm({
             onClick={() => setIsOpen((prev) => !prev)}
             className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
-            {shouldShowForm ? "Скрыть форму" : "Создать сотрудника"}
+            {shouldShowForm ? "Сховати форму" : "Створити співробітника"}
           </button>
         ) : null}
       </div>
@@ -110,27 +110,27 @@ function CreateEmployeeActionForm({
           className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
         >
           <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-            Новый сотрудник
+            Новий співробітник
           </div>
 
           <h3 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-            Создать профиль сотрудника
+            Створити профіль співробітника
           </h3>
 
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-            Новый сотрудник всегда создается в статусе Invited. Активным он станет
-            только после завершения регистрации по инвайту.
+            Новий співробітник завжди створюється у статусі «Запрошення надіслано». Активним він стане
+            лише після завершення реєстрації за запрошенням.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Имя сотрудника
+                Ім’я співробітника
               </label>
               <input
                 type="text"
                 name="fullName"
-                placeholder="Например, Анна Коваль"
+                placeholder="Наприклад, Анна Коваль"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
               />
             </div>
@@ -149,12 +149,12 @@ function CreateEmployeeActionForm({
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Должность
+                Посада
               </label>
               <input
                 type="text"
                 name="jobTitle"
-                placeholder="Например, Контент-менеджер"
+                placeholder="Наприклад, Контент-менеджер"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
               />
             </div>
@@ -182,7 +182,7 @@ function CreateEmployeeActionForm({
               disabled={isPending}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
             >
-              {isPending ? "Создаем..." : "Создать сотрудника"}
+              {isPending ? "Створюємо..." : "Створити співробітника"}
             </button>
 
             <button
@@ -190,7 +190,7 @@ function CreateEmployeeActionForm({
               onClick={() => setIsOpen(false)}
               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
             >
-              Отмена
+              Скасувати
             </button>
           </div>
         </form>

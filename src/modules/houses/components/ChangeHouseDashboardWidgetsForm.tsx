@@ -68,7 +68,7 @@ export function ChangeHouseDashboardWidgetsForm({
       } catch (e) {
         console.error("Failed to load home indicators section", e);
         if (!cancelled) {
-          setError("Не удалось загрузить показатели дома.");
+          setError("Не вдалося завантажити показники будинку.");
         }
       } finally {
         if (!cancelled) {
@@ -125,12 +125,12 @@ export function ChangeHouseDashboardWidgetsForm({
 
   async function handleSubmit() {
     if (!realSectionId) {
-      setError("Не удалось подготовить форму для сохранения.");
+      setError("Не вдалося підготувати форму для збереження.");
       return;
     }
 
     if (cleaned.length < 2) {
-      setError("Заполните минимум 2 показателя, чтобы сохранить блок.");
+      setError("Заповніть щонайменше 2 показники, щоб зберегти блок.");
       setSuccessMessage(null);
       return;
     }
@@ -163,7 +163,7 @@ export function ChangeHouseDashboardWidgetsForm({
     }
 
     setError(null);
-    setSuccessMessage("Тарифи головної сторінки збережено.");
+    setSuccessMessage("Показники головної сторінки збережено.");
     setIsSaving(false);
   }
 
@@ -177,7 +177,7 @@ export function ChangeHouseDashboardWidgetsForm({
           >
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium text-slate-200">
-                Тариф {index + 1}
+                Показник {index + 1}
               </div>
 
               <button
@@ -186,7 +186,7 @@ export function ChangeHouseDashboardWidgetsForm({
                 disabled={widgets.length <= 2}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Удалить
+                Видалити
               </button>
             </div>
 
@@ -202,7 +202,7 @@ export function ChangeHouseDashboardWidgetsForm({
 
               <input
                 type="text"
-                placeholder="Например: Тариф"
+                placeholder="Наприклад: Тариф"
                 maxLength={30}
                 value={widget.label}
                 onChange={(event) => updateWidget(index, "label", event.target.value)}
@@ -212,11 +212,11 @@ export function ChangeHouseDashboardWidgetsForm({
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Значение
+                Значення
               </label>
               <input
                 type="text"
-                placeholder="Например: 12 ₴/м²"
+                placeholder="Наприклад: 12 ₴/м²"
                 value={widget.value}
                 onChange={(event) => updateWidget(index, "value", event.target.value)}
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none"
@@ -234,7 +234,7 @@ export function ChangeHouseDashboardWidgetsForm({
             disabled={widgets.length >= 6}
             className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Додати тариф
+            Додати показник
           </button>
 
           <button
@@ -243,7 +243,7 @@ export function ChangeHouseDashboardWidgetsForm({
             disabled={!canSave}
             className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSaving ? "Сохраняем..." : "Сохранить"}
+            {isSaving ? "Зберігаємо..." : "Зберегти"}
           </button>
         </div>
 

@@ -17,7 +17,7 @@ export async function updateCurrentAdminProfile(
 
   if (!currentUser) {
     return {
-      error: "Не удалось определить текущего пользователя.",
+      error: "Не вдалося визначити поточного користувача.",
       success: null,
     };
   }
@@ -28,7 +28,7 @@ export async function updateCurrentAdminProfile(
 
   if (!fullName) {
     return {
-      error: "Укажите имя.",
+      error: "Вкажіть ім’я.",
       success: null,
     };
   }
@@ -44,7 +44,7 @@ export async function updateCurrentAdminProfile(
 
   if (profileError) {
     return {
-      error: `Не удалось обновить профиль: ${profileError.message}`,
+      error: `Не вдалося оновити профіль: ${profileError.message}`,
       success: null,
     };
   }
@@ -61,7 +61,7 @@ export async function updateCurrentAdminProfile(
 
   if (membershipError) {
     return {
-      error: `Профиль обновлен не полностью: ${membershipError.message}`,
+      error: `Профіль оновлено не повністю: ${membershipError.message}`,
       success: null,
     };
   }
@@ -72,6 +72,6 @@ export async function updateCurrentAdminProfile(
 
   return {
     error: null,
-    success: "Профиль обновлен.",
+    success: "Профіль оновлено.",
   };
 }

@@ -90,7 +90,7 @@ function formatArea(value: number | null) {
 }
 
 function getSourceLabel(sourceType: "import" | "manual") {
-  return sourceType === "import" ? "Импорт" : "Вручную";
+  return sourceType === "import" ? "Імпорт" : "Вручну";
 }
 
 function compareText(a: string, b: string) {
@@ -386,10 +386,10 @@ export function ApartmentsRegistryWorkspace({
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-white">
-                Реестр квартир
+                Реєстр квартир
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
-                Управление квартирами, помещениями и другими объектами недвижимости внутри выбранного дома.
+                Керування квартирами, приміщеннями та іншими об’єктами нерухомості всередині обраного будинку.
               </p>
             </div>
 
@@ -400,7 +400,7 @@ export function ApartmentsRegistryWorkspace({
                   onClick={() => setIsImportOpen(true)}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
                 >
-                  Загрузить
+                  Завантажити
                 </button>
 
                 <button
@@ -408,7 +408,7 @@ export function ApartmentsRegistryWorkspace({
                   onClick={handleExportRegistry}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
                 >
-                  Выгрузить
+                  Вивантажити
                 </button>
 
                 <button
@@ -416,7 +416,7 @@ export function ApartmentsRegistryWorkspace({
                   onClick={handleDownloadTemplate}
                   className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
                 >
-                  Скачать шаблон
+                  Завантажити шаблон
                 </button>
 
                 <button
@@ -424,7 +424,7 @@ export function ApartmentsRegistryWorkspace({
                   onClick={() => setIsMiniBulkOpen(true)}
                   className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
                 >
-                  Добавить
+                  Додати
                 </button>
 
                 {!archived ? (
@@ -433,7 +433,7 @@ export function ApartmentsRegistryWorkspace({
                     onClick={handleArchiveAll}
                     className="inline-flex items-center justify-center rounded-2xl border border-rose-800 px-5 py-3 text-sm font-medium text-rose-300 transition hover:border-rose-600 hover:text-white"
                   >
-                    Очистить список
+                    Очистити список
                   </button>
                 ) : null}
               </div>
@@ -460,7 +460,7 @@ export function ApartmentsRegistryWorkspace({
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Дом
+                Будинок
               </label>
               <select
                 value={selectedHouseId}
@@ -482,21 +482,21 @@ export function ApartmentsRegistryWorkspace({
                 {selectedHouse.name}
               </h2>
               <p className="mt-2 text-sm leading-7 text-slate-400">
-                Сводка по текущему реестру квартир выбранного дома.
+                Зведення по поточному реєстру квартир обраного будинку.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Активных: {summary?.activeCount ?? 0}
+                  Активних: {summary?.activeCount ?? 0}
                 </span>
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  В архиве: {summary?.archivedCount ?? 0}
+                  В архіві: {summary?.archivedCount ?? 0}
                 </span>
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Последний импорт: {formatDate(summary?.lastImportAt ?? null)}
+                  Останній імпорт: {formatDate(summary?.lastImportAt ?? null)}
                 </span>
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Кто импортировал: {summary?.lastImportActorName ?? "—"}
+                  Хто імпортував: {summary?.lastImportActorName ?? "—"}
                 </span>
               </div>
             </div>
@@ -507,29 +507,29 @@ export function ApartmentsRegistryWorkspace({
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_240px_auto]">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Поиск
+              Пошук
             </label>
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Введите квартиру, лицевой счет или владельца"
+              placeholder="Введіть квартиру, особовий рахунок або власника"
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Источник
+              Джерело
             </label>
             <select
               value={sourceFilter}
               onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             >
-              <option value="all">Все</option>
-              <option value="import">Импорт</option>
-              <option value="manual">Вручную</option>
+              <option value="all">Усі</option>
+              <option value="import">Імпорт</option>
+              <option value="manual">Вручну</option>
             </select>
           </div>
 
@@ -539,7 +539,7 @@ export function ApartmentsRegistryWorkspace({
               onClick={resetFilters}
               className="w-full rounded-2xl border border-slate-700 px-4 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
             >
-              Сбросить
+              Скинути
             </button>
           </div>
         </div>
@@ -555,7 +555,7 @@ export function ApartmentsRegistryWorkspace({
                   : "rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300"
               }
             >
-              Активные
+              Активні
             </button>
 
             <button
@@ -567,16 +567,16 @@ export function ApartmentsRegistryWorkspace({
                   : "rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300"
               }
             >
-              Архив
+              Архів
             </button>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <div className="rounded-full bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200">
-              Найдено: {filteredItems.length}
+              Знайдено: {filteredItems.length}
             </div>
             <div className="rounded-full bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200">
-              Сортировка: {sortDirection === "asc" ? "↑" : "↓"}
+              Сортування: {sortDirection === "asc" ? "↑" : "↓"}
             </div>
           </div>
         </div>
@@ -584,23 +584,23 @@ export function ApartmentsRegistryWorkspace({
         {filteredItems.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-8 text-slate-400">
             {archived
-              ? "В архиве выбранного дома по текущим фильтрам нет квартир."
-              : "В активном реестре выбранного дома по текущим фильтрам нет квартир. Измените фильтры, используйте загрузку файла или ручное добавление."}
+              ? "В архіві обраного будинку за поточними фільтрами немає квартир."
+              : "В активному реєстрі обраного будинку за поточними фільтрами немає квартир. Змініть фільтри, використайте завантаження файлу або ручне додавання."}
           </div>
         ) : (
           <>
             <div className="mt-4 text-sm text-slate-400">
-              Сортировка:{" "}
+              Сортування:{" "}
               <span className="text-slate-200">
                 {sortKey === "id" && "ID"}
                 {sortKey === "apartment_label" && "Квартира"}
-                {sortKey === "account_number" && "Лицевой счет"}
-                {sortKey === "owner_name" && "Владелец"}
-                {sortKey === "area" && "Квадраты"}
-                {sortKey === "source_type" && "Источник"}
-                {sortKey === "created_at" && "Дата создания"}
+                {sortKey === "account_number" && "Особовий рахунок"}
+                {sortKey === "owner_name" && "Власник"}
+                {sortKey === "area" && "Площа"}
+                {sortKey === "source_type" && "Джерело"}
+                {sortKey === "created_at" && "Дата створення"}
               </span>{" "}
-              · {sortDirection === "asc" ? "по возрастанию" : "по убыванию"}
+              · {sortDirection === "asc" ? "за зростанням" : "за спаданням"}
             </div>
 
             <div className="mt-6 overflow-hidden rounded-3xl border border-slate-800">
@@ -628,7 +628,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Лицевой счет"
+                          label="Особовий рахунок"
                           sortKey="account_number"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -637,7 +637,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Владелец"
+                          label="Власник"
                           sortKey="owner_name"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -646,7 +646,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Квадраты"
+                          label="Площа"
                           sortKey="area"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -655,7 +655,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Источник"
+                          label="Джерело"
                           sortKey="source_type"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -664,7 +664,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Дата создания"
+                          label="Дата створення"
                           sortKey="created_at"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -672,11 +672,11 @@ export function ApartmentsRegistryWorkspace({
                         />
                       </th>
                       <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                        Комментарии
+                        Коментарі
                       </th>
                       {!archived ? (
                         <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                          Действие
+                          Дія
                         </th>
                       ) : null}
                     </tr>
@@ -710,7 +710,7 @@ export function ApartmentsRegistryWorkspace({
                           {formatDate(item.created_at)}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-500">
-                          Пока не используется
+                          Поки не використовується
                         </td>
 
                         {!archived ? (
@@ -723,7 +723,7 @@ export function ApartmentsRegistryWorkspace({
                               }}
                               className="inline-flex items-center justify-center rounded-2xl border border-rose-800 px-3 py-2 text-sm font-medium text-rose-300 transition hover:border-rose-600 hover:text-white"
                             >
-                              Архив
+                              Архів
                             </button>
                           </td>
                         ) : null}
@@ -757,15 +757,15 @@ export function ApartmentsRegistryWorkspace({
         tone="warning"
         title={
           confirmAction?.type === "bulk"
-            ? "Отправить весь список в архив?"
-            : "Отправить квартиру в архив?"
+            ? "Перемістити весь список в архів?"
+            : "Перемістити квартиру в архів?"
         }
         description={
           confirmAction?.type === "bulk"
-            ? "После подтверждения весь активный список квартир выбранного дома будет перемещен в архив CMS."
-            : "После подтверждения квартира будет перемещена в архив CMS и исчезнет из активного реестра."
+            ? "Після підтвердження весь активний список квартир обраного будинку буде переміщено в архів CMS."
+            : "Після підтвердження квартира буде переміщена в архів CMS та зникне з активного реєстру."
         }
-        confirmLabel="Переместить в архив"
+        confirmLabel="Перемістити в архів"
         onCancel={() => setConfirmAction(null)}
         onConfirm={handleConfirmArchive}
       />

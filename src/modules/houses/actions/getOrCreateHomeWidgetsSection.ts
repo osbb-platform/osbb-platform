@@ -24,7 +24,7 @@ export async function getOrCreateHomeWidgetsSection(houseId: string) {
       .insert({
         house_id: houseId,
         slug: "home",
-        title: "Главная дома",
+        title: "Головна будинку",
         status: "published",
       })
       .select("id")

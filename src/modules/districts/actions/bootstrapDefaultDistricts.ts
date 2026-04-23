@@ -12,37 +12,37 @@ type BootstrapDefaultDistrictsState = {
 
 const DEFAULT_DISTRICTS = [
   {
-    name: "Космический",
+    name: "Космічний",
     slug: "kosmicheskiy",
     theme_color: "#FCD5B4",
   },
   {
-    name: "Днепровский",
+    name: "Дніпровський",
     slug: "dneprovskiy",
     theme_color: "#B2A6A4",
   },
   {
-    name: "Шевченковский",
+    name: "Шевченківський",
     slug: "shevchenkovskiy",
     theme_color: "#C9A4E4",
   },
   {
-    name: "Вознесеновский",
+    name: "Вознесенівський",
     slug: "voznesenovskiy",
     theme_color: "#CCC0DA",
   },
   {
-    name: "Александровский",
+    name: "Олександрівський",
     slug: "aleksandrovskiy",
     theme_color: "#DCE6F1",
   },
   {
-    name: "Хортицкий",
+    name: "Хортицький",
     slug: "khortytskyi",
     theme_color: "#B7DEE8",
   },
   {
-    name: "Заводской",
+    name: "Заводський",
     slug: "zavodskoy",
     theme_color: "#DF81A0",
   },
@@ -52,7 +52,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function bootstrapDefaultDistricts(
@@ -71,7 +71,7 @@ export async function bootstrapDefaultDistricts(
 
   if (existingDistrictsError) {
     return {
-      error: `Не удалось проверить существующие районы: ${existingDistrictsError.message}`,
+      error: `Не вдалося перевірити існуючі райони: ${existingDistrictsError.message}`,
       success: null,
     };
   }
@@ -87,7 +87,7 @@ export async function bootstrapDefaultDistricts(
   if (districtsToCreate.length === 0) {
     return {
       error: null,
-      success: "Все базовые районы уже созданы.",
+      success: "Усі базові райони вже створені.",
     };
   }
 
@@ -98,7 +98,7 @@ export async function bootstrapDefaultDistricts(
 
   if (createError) {
     return {
-      error: `Ошибка создания районов: ${createError.message}`,
+      error: `Помилка створення районів: ${createError.message}`,
       success: null,
     };
   }
@@ -119,7 +119,7 @@ export async function bootstrapDefaultDistricts(
       entityId: district.id,
       entityLabel: district.name,
       actionType: "create_district",
-      description: `Создан район «${district.name}».`,
+      description: `Створено район «${district.name}».`,
       metadata: {
         sourceType: "cms",
         sourceModule: "districts",
@@ -141,6 +141,6 @@ export async function bootstrapDefaultDistricts(
 
   return {
     error: null,
-    success: `Готово: создано районов — ${createdDistricts?.length ?? 0}.`,
+    success: `Готово: створено районів — ${createdDistricts?.length ?? 0}.`,
   };
 }

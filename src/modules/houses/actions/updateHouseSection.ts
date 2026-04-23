@@ -41,19 +41,19 @@ type SpecialistLogItem = {
 };
 
 const INFORMATION_CATEGORIES = [
-  "О доме",
-  "Правила проживания",
-  "Полезная информация",
-  "Контакты служб",
-  "Инструкции для жильцов",
+  "Про будинок",
+  "Правила проживання",
+  "Корисна інформація",
+  "Контакти служб",
+  "Інструкції для мешканців",
 ];
 
 const SPECIALIST_CATEGORIES = [
-  "Сантехник",
-  "Электрик",
-  "Аварийная служба",
-  "Уборка / обслуживание",
-  "Управляющая компания",
+  "Сантехнік",
+  "Електрик",
+  "Аварійна служба",
+  "Прибирання / обслуговування",
+  "Керуюча компанія",
 ] as const;
 
 const REPORTS_BUCKET = "house-reports";
@@ -221,7 +221,7 @@ function normalizeSpecialistsForDiff(value: unknown): SpecialistLogItem[] {
 
       return {
         id,
-        title: title || "Без названия",
+        title: title || "Без назви",
         status,
       };
     })
@@ -239,42 +239,42 @@ function buildSpecialistsDiffLog(params: {
     const prevItem = prevMap.get(nextItem.id);
 
     if (!prevItem) {
-      return `Создан специалист «${nextItem.title}».`;
+      return `Створено спеціаліста «${nextItem.title}».`;
     }
 
     if (prevItem.status !== nextItem.status) {
       if (prevItem.status === "draft" && nextItem.status === "active") {
-        return `Подтвержден специалист «${nextItem.title}».`;
+        return `Підтверджено спеціаліста «${nextItem.title}».`;
       }
 
       if (nextItem.status === "archived") {
-        return `Специалист «${nextItem.title}» перемещен в архив.`;
+        return `Спеціаліста «${nextItem.title}» переміщено в архів.`;
       }
 
       if (prevItem.status === "archived" && nextItem.status === "active") {
-        return `Специалист «${nextItem.title}» восстановлен из архива.`;
+        return `Спеціаліста «${nextItem.title}» відновлено з архіву.`;
       }
     }
 
     if (prevItem.title !== nextItem.title) {
-      return `Обновлена карточка специалиста «${nextItem.title}».`;
+      return `Оновлено картку спеціаліста «${nextItem.title}».`;
     }
   }
 
   for (const prevItem of params.previous) {
     if (!nextMap.has(prevItem.id)) {
-      return `Специалист «${prevItem.title}» удален из архива.`;
+      return `Спеціаліста «${prevItem.title}» видалено з архіву.`;
     }
   }
 
-  return "Обновлен список специалистов.";
+  return "Оновлено список спеціалістів.";
 }
 
 function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function updateHouseSection(
@@ -410,7 +410,7 @@ export async function updateHouseSection(
       updatedAt: new Date().toISOString(),
     };
 
-    historyDescription = `Обновлено объявление «${title || "без названия"}».`;
+    historyDescription = `Оновлено оголошення «${title || "без назви"}».`;
     historySubSection = "announcements";
   }
 
@@ -681,13 +681,13 @@ export async function updateHouseSection(
 
     historyDescription =
       reportAction === "delete"
-        ? "Удален отчет."
+        ? "Видалено звіт."
         : reportAction === "delete_archive"
           ? "Архив отчетов очищен."
           : reportAction === "publish"
             ? "Отчет опубликован."
             : reportAction === "archive"
-              ? "Отчет перемещен в архив."
+              ? "Звіт переміщено в архів."
               : "Обновлен раздел отчетов.";
     historySubSection = "reports";
   }
@@ -1006,12 +1006,12 @@ export async function updateHouseSection(
       ).trim(),
       paymentUrl: String(parsedPayload.paymentUrl ?? "").trim(),
       paymentButtonLabel: String(
-        parsedPayload.paymentButtonLabel ?? "Перейти к оплате",
+        parsedPayload.paymentButtonLabel ?? "Перейти до оплати",
       ).trim(),
       updatedAt: new Date().toISOString(),
     };
 
-    historyDescription = "Обновлены реквизиты для оплаты.";
+    historyDescription = "Оновлено реквізити для оплати.";
     historySubSection = "requisites";
   }
 
@@ -1067,11 +1067,11 @@ export async function updateHouseSection(
     const nextPayment = {
       url: String(parsedPayment.url ?? "").trim(),
       title:
-        String(parsedPayment.title ?? "Оплата задолженности").trim() ||
-        "Оплата задолженности",
+        String(parsedPayment.title ?? "Оплата заборгованості").trim() ||
+        "Оплата заборгованості",
       note: String(parsedPayment.note ?? "").trim(),
       buttonLabel:
-        String(parsedPayment.buttonLabel ?? "Оплатить").trim() || "Оплатить",
+        String(parsedPayment.buttonLabel ?? "Сплатити").trim() || "Сплатити",
     };
 
     const existingActiveItems = Array.isArray(existingContent.activeItems)
@@ -1100,7 +1100,7 @@ export async function updateHouseSection(
         draftItems: [],
       };
 
-      historyDescription = "Удален черновик раздела должников.";
+      historyDescription = "Видалено чернетку розділу боржників.";
       historySubSection = "debtors";
     } else if (mode === "publish_draft") {
       const nextActiveItems = normalizeDebtItems(existingDraftItems);

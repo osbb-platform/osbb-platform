@@ -10,15 +10,15 @@ type HouseBlockSelectorProps = {
 };
 
 const houseNavigationBlocks = [
-  { value: "announcements", label: "Объявления" },
-  { value: "reports", label: "Отчеты" },
-  { value: "plan", label: "План работ" },
-  { value: "meetings", label: "Собрания" },
-  { value: "board", label: "Правление" },
-  { value: "information", label: "Информация" },
-  { value: "requisites", label: "Реквизиты" },
-  { value: "specialists", label: "Специалисты" },
-  { value: "debtors", label: "Должники" },
+  { value: "announcements", label: "Оголошення" },
+  { value: "reports", label: "Звіти" },
+  { value: "plan", label: "План робіт" },
+  { value: "meetings", label: "Збори" },
+  { value: "board", label: "Правління" },
+  { value: "information", label: "Інформація" },
+  { value: "requisites", label: "Реквізити" },
+  { value: "specialists", label: "Спеціалісти" },
+  { value: "debtors", label: "Боржники" },
 ] as const;
 
 export function HouseBlockSelector({
@@ -36,7 +36,7 @@ export function HouseBlockSelector({
   const activeLabel = useMemo(() => {
     return (
       houseNavigationBlocks.find((block) => block.value === selectedBlock)
-        ?.label ?? "раздел"
+        ?.label ?? "розділ"
     );
   }, [selectedBlock]);
 
@@ -65,7 +65,7 @@ export function HouseBlockSelector({
       <PlatformSectionLoader
         active={isPending}
         delayMs={280}
-        label={`Открываем раздел «${activeLabel}»...`}
+        label={`Відкриваємо розділ «${activeLabel}»...`}
         className="rounded-2xl"
       />
     </div>

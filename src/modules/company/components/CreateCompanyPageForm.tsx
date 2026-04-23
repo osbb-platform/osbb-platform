@@ -12,7 +12,7 @@ function SubmitButton() {
       disabled={pending}
       className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
     >
-      {pending ? "Создаем..." : "Создать страницу компании"}
+      {pending ? "Створюємо..." : "Створити сторінку компанії"}
     </button>
   );
 }
@@ -22,7 +22,7 @@ export function CreateCompanyPageForm() {
     <form action={createCompanyPage} className="grid gap-4 md:grid-cols-2">
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Название страницы
+          Назва сторінки
         </label>
         <input
           name="title"

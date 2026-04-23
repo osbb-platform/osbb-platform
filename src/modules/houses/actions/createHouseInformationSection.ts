@@ -19,11 +19,11 @@ const ALLOWED_COVER_IMAGE_TYPES = new Set([
 ]);
 
 const ALLOWED_CATEGORIES = [
-  "О доме",
-  "Правила проживания",
-  "Полезная информация",
-  "Контакты служб",
-  "Инструкции для жильцов",
+  "Про будинок",
+  "Правила проживання",
+  "Корисна інформація",
+  "Контакти служб",
+  "Інструкції для мешканців",
 ];
 
 function normalizeCategory(value: string) {
@@ -38,7 +38,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function createHouseInformationSection(
@@ -59,31 +59,31 @@ export async function createHouseInformationSection(
   const isPinned = String(formData.get("isPinned") ?? "").trim() === "true";
 
   if (!houseId || !houseSlug || !housePageId) {
-    return { error: "Не переданы идентификаторы дома или страницы." };
+    return { error: "Не передано ідентифікатори будинку або сторінки." };
   }
 
   if (!headline) {
-    return { error: "Введите заголовок сообщения." };
+    return { error: "Введіть заголовок повідомлення." };
   }
 
   if (!body) {
-    return { error: "Введите текст сообщения." };
+    return { error: "Введіть текст повідомлення." };
   }
 
   if (body.length > 256) {
-    return { error: "Текст сообщения не должен превышать 256 символов." };
+    return { error: "Текст повідомлення не повинен перевищувати 256 символів." };
   }
 
   if (coverImage) {
     if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
       return {
-        error: "Для обложки допускаются только JPG, PNG или WebP.",
+        error: "Для обкладинки дозволені лише JPG, PNG або WebP.",
       };
     }
 
     if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
       return {
-        error: "Обложка сообщения должна быть не больше 5 МБ.",
+        error: "Обкладинка повідомлення має бути не більшою за 5 МБ.",
       };
     }
   }
@@ -100,7 +100,7 @@ export async function createHouseInformationSection(
 
   if (orderError) {
     return {
-      error: `Ошибка определения позиции сообщения: ${orderError.message}`,
+      error: `Помилка визначення позиції повідомлення: ${orderError.message}`,
     };
   }
 
@@ -137,7 +137,7 @@ export async function createHouseInformationSection(
 
   if (createError || !section) {
     return {
-      error: `Ошибка создания сообщения: ${createError?.message ?? "Unknown error"}`,
+      error: `Помилка створення повідомлення: ${createError?.message ?? "Unknown error"}`,
     };
   }
 
@@ -156,7 +156,7 @@ export async function createHouseInformationSection(
       await supabase.from("house_sections").delete().eq("id", section.id);
 
       return {
-        error: `Не удалось загрузить обложку сообщения: ${uploadError.message}`,
+        error: `Не вдалося завантажити обкладинку повідомлення: ${uploadError.message}`,
       };
     }
 
@@ -180,7 +180,7 @@ export async function createHouseInformationSection(
       await supabase.from("house_sections").delete().eq("id", section.id);
 
       return {
-        error: `Не удалось сохранить обложку сообщения: ${updateSectionError.message}`,
+        error: `Не вдалося зберегти обкладинку повідомлення: ${updateSectionError.message}`,
       };
     }
   }
@@ -211,7 +211,7 @@ export async function createHouseInformationSection(
     entityId: section.id,
     entityLabel: headline,
     actionType: "create_house_information_post",
-    description: `Создан информационный блок «${headline}».`,
+    description: `Створено інформаційний блок «${headline}».`,
     houseId,
     metadata: {
       sourceType: "cms",

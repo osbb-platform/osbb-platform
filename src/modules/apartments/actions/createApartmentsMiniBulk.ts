@@ -43,7 +43,7 @@ export async function createApartmentsMiniBulk(
 
   if (!houseId) {
     return {
-      error: "Сначала выберите дом.",
+      error: "Спочатку оберіть будинок.",
       successMessage: null,
     };
   }
@@ -54,7 +54,7 @@ export async function createApartmentsMiniBulk(
     rows = JSON.parse(rawRows);
   } catch {
     return {
-      error: "Не удалось обработать строки для добавления.",
+      error: "Не вдалося обробити рядки для додавання.",
       successMessage: null,
     };
   }
@@ -76,7 +76,7 @@ export async function createApartmentsMiniBulk(
 
   if (preparedRows.length === 0) {
     return {
-      error: "Добавьте хотя бы одну валидную строку.",
+      error: "Додайте хоча б один валідний рядок.",
       successMessage: null,
     };
   }
@@ -88,7 +88,7 @@ export async function createApartmentsMiniBulk(
 
     if (duplicatePayloadKeys.has(key)) {
       return {
-        error: `Дубликат в форме: ${row.apartment_label}`,
+        error: `Дублікат у формі: ${row.apartment_label}`,
         successMessage: null,
       };
     }
@@ -112,14 +112,14 @@ export async function createApartmentsMiniBulk(
 
   if (existingError) {
     return {
-      error: `Ошибка проверки дубликатов: ${existingError.message}`,
+      error: `Помилка перевірки дублікатів: ${existingError.message}`,
       successMessage: null,
     };
   }
 
   if ((existingRows ?? []).length > 0) {
     return {
-      error: "Некоторые квартиры или лицевые счета уже существуют в активном реестре.",
+      error: "Деякі квартири або особові рахунки вже існують в активному реєстрі.",
       successMessage: null,
     };
   }
@@ -138,7 +138,7 @@ export async function createApartmentsMiniBulk(
 
   if (insertError) {
     return {
-      error: `Ошибка добавления квартир: ${insertError.message}`,
+      error: `Помилка додавання квартир: ${insertError.message}`,
       successMessage: null,
     };
   }
@@ -153,7 +153,7 @@ export async function createApartmentsMiniBulk(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "mini_bulk_create_apartments",
-      description: `Добавлено ${preparedRows.length} квартир вручную.`,
+      description: `Додано ${preparedRows.length} квартир вручну.`,
       metadata: {
         insertedCount: preparedRows.length,
         houseId,
@@ -166,6 +166,6 @@ export async function createApartmentsMiniBulk(
 
   return {
     error: null,
-    successMessage: `Добавлено ${preparedRows.length} квартир.`,
+    successMessage: `Додано ${preparedRows.length} квартир.`,
   };
 }

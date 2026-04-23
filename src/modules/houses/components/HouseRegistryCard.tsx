@@ -53,7 +53,7 @@ function formatCreatedAt(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleDateString("ru-RU", {
@@ -142,7 +142,7 @@ function formatMessageDate(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleString("ru-RU", {
@@ -155,9 +155,9 @@ function formatMessageDate(value: string) {
 }
 
 function getMessageTypeLabel(category: string) {
-  if (category === "Управляющая компания") return "Обращение в УК";
-  if (category === "Предложение улучшения") return "Предложение улучшения";
-  return category || "Обращение";
+  if (category === "Керуюча компанія") return "Звернення до КК";
+  if (category === "Предложение улучшения") return "Пропозиція покращення";
+  return category || "Звернення";
 }
 
 function getMessagePreview(item: HouseRegistryCardProps["house"]["message_items"][number]) {
@@ -165,7 +165,7 @@ function getMessagePreview(item: HouseRegistryCardProps["house"]["message_items"
   if (subject) return subject;
 
   const comment = item.comment?.trim();
-  if (!comment) return "Без темы";
+  if (!comment) return "Без теми";
 
   return comment.length > 140 ? `${comment.slice(0, 140).trim()}…` : comment;
 }
@@ -223,7 +223,7 @@ export function HouseRegistryCard({
                 </span>
 
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Активен
+                  Активний
                 </span>
 
                 {house.district ? (
@@ -243,7 +243,7 @@ export function HouseRegistryCard({
             </div>
 
             <div className="mt-1 text-sm text-slate-500">
-              ОСББ: {house.osbb_name ?? "не указано"}
+              ОСББ: {house.osbb_name ?? "не вказано"}
             </div>
           </div>
 
@@ -253,8 +253,8 @@ export function HouseRegistryCard({
       type="button"
       onClick={() => setIsPasswordOpen(true)}
       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-      aria-label={`Изменить код доступа дома ${house.name}`}
-      title="Изменить код доступа"
+      aria-label={`Змінити код доступу дома ${house.name}`}
+      title="Змінити код доступу"
     >
       <KeyIcon />
     </button>
@@ -265,8 +265,8 @@ export function HouseRegistryCard({
       type="button"
       onClick={() => setIsTariffOpen(true)}
       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-      aria-label={`Настроить виджеты дома ${house.name}`}
-      title="Настроить виджеты"
+      aria-label={`Налаштувати віджети дома ${house.name}`}
+      title="Налаштувати віджети"
     >
       💰
     </button>
@@ -276,8 +276,8 @@ export function HouseRegistryCard({
     type="button"
     onClick={openMessagesPanel}
     className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-    aria-label={`Открыть центр обращений дома ${house.name}`}
-    title="Центр обращений"
+    aria-label={`Відкрити центр звернень дома ${house.name}`}
+    title="Центр звернень"
   >
     <MessageIcon />
     {localUnreadCount > 0 ? (
@@ -292,8 +292,8 @@ export function HouseRegistryCard({
       type="button"
       onClick={() => onOpenSettings(house)}
       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-      aria-label={`Настройки дома ${house.name}`}
-      title="Настройки"
+      aria-label={`Налаштування дома ${house.name}`}
+      title="Налаштування"
     >
       <SettingsIcon />
     </button>
@@ -304,8 +304,8 @@ export function HouseRegistryCard({
     target="_blank"
     rel="noreferrer"
     className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-    aria-label={`Открыть сайт дома ${house.name}`}
-    title="Открыть сайт дома"
+    aria-label={`Відкрити сайт будинку ${house.name}`}
+    title="Відкрити сайт будинку"
   >
     <EyeIcon />
   </Link>
@@ -318,12 +318,12 @@ export function HouseRegistryCard({
               href={`/admin/houses/${house.id}`}
               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Управление домом
+              Керування будинком
             </Link>
           </div>
 
           <div className="text-sm text-slate-500">
-            Создан: {formatCreatedAt(house.created_at)}
+            Створено: {formatCreatedAt(house.created_at)}
           </div>
         </div>
       </div>
@@ -334,22 +334,22 @@ export function HouseRegistryCard({
             type="button"
             className="absolute inset-0 cursor-default"
             onClick={() => setIsMessagesOpen(false)}
-            aria-label="Закрыть центр обращений"
+            aria-label="Закрити центр звернень"
           />
 
           <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
               <div>
                 <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Центр обращений
+                  Центр звернень
                 </div>
 
                 <h2 className="mt-4 text-2xl font-semibold text-white">
-                  Сообщения по дому
+                  Повідомлення по будинку
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-400">
-                  Дом: {house.name}
+                  Будинок: {house.name}
                 </p>
               </div>
 
@@ -357,7 +357,7 @@ export function HouseRegistryCard({
                 type="button"
                 onClick={() => setIsMessagesOpen(false)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                aria-label="Закрыть панель"
+                aria-label="Закрити панель"
               >
                 ×
               </button>
@@ -366,10 +366,10 @@ export function HouseRegistryCard({
             <div className="flex-1 px-6 py-6">
               <div className="mb-5 flex flex-wrap items-center gap-3">
                 <div className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Всего записей: {localMessageItems.length}
+                  Усього записів: {localMessageItems.length}
                 </div>
                 <div className="rounded-full bg-rose-950/70 px-3 py-1 text-xs font-medium text-rose-200">
-                  Новых: {isMarkingSeen ? "..." : localUnreadCount}
+                  Нових: {isMarkingSeen ? "..." : localUnreadCount}
                 </div>
               </div>
 
@@ -393,24 +393,24 @@ export function HouseRegistryCard({
 
     {item.status === "new" ? (
       <span className="rounded-full bg-rose-950/70 px-3 py-1 text-[11px] font-medium text-rose-200">
-        Новое
+        Нове
       </span>
     ) : null}
   </div>
 
   <div className="mt-4">
     <div className="text-base font-semibold text-white">
-      {item.requester_name || "Без имени"}
+      {item.requester_name || "Без імені"}
     </div>
     <div className="mt-1 text-sm text-slate-400">
-      {item.requester_email || "Email не указан"}
+      {item.requester_email || "Email не вказано"}
       {item.requester_phone ? ` · ${item.requester_phone}` : ""}
     </div>
   </div>
 
   {item.specialist_label ? (
     <div className="mt-3 text-sm text-slate-400">
-      Специалист: {item.specialist_label}
+      Спеціаліст: {item.specialist_label}
     </div>
   ) : null}
 
@@ -428,7 +428,7 @@ export function HouseRegistryCard({
                 </div>
               ) : (
                 <div className="rounded-3xl border border-dashed border-slate-800 bg-slate-900/70 px-5 py-6 text-sm leading-7 text-slate-400">
-                  Для этого дома пока нет обращений. Когда житель оставит сообщение или заявку на специалиста, оно появится здесь.
+                  Для цього будинку поки немає звернень. Коли мешканець залишить повідомлення або заявку на спеціаліста, воно з’явиться тут.
                 </div>
               )}
             </div>
@@ -442,22 +442,22 @@ export function HouseRegistryCard({
             type="button"
             className="absolute inset-0 cursor-default"
             onClick={() => setIsPasswordOpen(false)}
-            aria-label="Закрыть смену пароля"
+            aria-label="Закрити зміну пароля"
           />
 
           <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
               <div>
                 <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Код доступа дома
+                  Код доступу будинку
                 </div>
 
                 <h2 className="mt-4 text-2xl font-semibold text-white">
-                  Изменить код доступа
+                  Змінити код доступу
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-400">
-                  Дом: {house.name}
+                  Будинок: {house.name}
                 </p>
               </div>
 
@@ -465,7 +465,7 @@ export function HouseRegistryCard({
                 type="button"
                 onClick={() => setIsPasswordOpen(false)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                aria-label="Закрыть панель"
+                aria-label="Закрити панель"
               >
                 ×
               </button>
@@ -487,22 +487,22 @@ export function HouseRegistryCard({
             type="button"
             className="absolute inset-0 cursor-default"
             onClick={() => setIsTariffOpen(false)}
-            aria-label="Закрыть изменение тарифа"
+            aria-label="Закрити зміну тарифу"
           />
 
           <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
               <div>
                 <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Виджеты главной
+                  Віджети головної
                 </div>
 
                 <h2 className="mt-4 text-2xl font-semibold text-white">
-                  Настроить виджеты
+                  Налаштувати віджети
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-400">
-                  Дом: {house.name}
+                  Будинок: {house.name}
                 </p>
               </div>
 

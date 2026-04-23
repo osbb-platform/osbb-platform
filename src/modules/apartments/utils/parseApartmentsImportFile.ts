@@ -1,10 +1,10 @@
 import * as XLSX from "xlsx";
 
 export const APARTMENTS_IMPORT_HEADERS = [
-  "Лицевой счет",
+  "Особовий рахунок",
   "Квартира",
-  "Владелец",
-  "Квадраты",
+  "Власник",
+  "Площа",
 ] as const;
 
 export type ApartmentsImportRow = {
@@ -41,7 +41,7 @@ export async function parseApartmentsImportFile(
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
 
   if (!["csv", "xls", "xlsx"].includes(extension)) {
-    throw new Error("Поддерживаются только файлы CSV, XLS и XLSX.");
+    throw new Error("Підтримуються лише файли CSV, XLS та XLSX.");
   }
 
   const buffer = await file.arrayBuffer();
@@ -53,7 +53,7 @@ export async function parseApartmentsImportFile(
   const firstSheetName = workbook.SheetNames[0];
 
   if (!firstSheetName) {
-    throw new Error("Файл не содержит листов для импорта.");
+    throw new Error("Файл не містить аркушів для імпорту.");
   }
 
   const worksheet = workbook.Sheets[firstSheetName];
@@ -65,7 +65,7 @@ export async function parseApartmentsImportFile(
   });
 
   if (!rows.length) {
-    throw new Error("Файл пустой.");
+    throw new Error("Файл порожній.");
   }
 
   const headerRow = (rows[0] ?? []).map((cell) => normalizeCellValue(cell));
@@ -76,15 +76,15 @@ export async function parseApartmentsImportFile(
 
   if (missingHeaders.length > 0) {
     throw new Error(
-      `В файле отсутствуют обязательные колонки: ${missingHeaders.join(", ")}.`,
+      `У файлі відсутні обов’язкові колонки: ${missingHeaders.join(", ")}.`,
     );
   }
 
   const headerIndexes = {
-    accountNumber: headerRow.indexOf("Лицевой счет"),
+    accountNumber: headerRow.indexOf("Особовий рахунок"),
     apartmentLabel: headerRow.indexOf("Квартира"),
-    ownerName: headerRow.indexOf("Владелец"),
-    area: headerRow.indexOf("Квадраты"),
+    ownerName: headerRow.indexOf("Власник"),
+    area: headerRow.indexOf("Площа"),
   };
 
   const parsedRows: ApartmentsImportRow[] = [];
@@ -114,20 +114,20 @@ export async function parseApartmentsImportFile(
     const rowNumber = index + 1;
 
     if (!row.accountNumber) {
-      throw new Error(`Строка ${rowNumber}: поле «Лицевой счет» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Особовий рахунок» є обов’язковим.`);
     }
 
     if (!row.apartmentLabel) {
-      throw new Error(`Строка ${rowNumber}: поле «Квартира» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Квартира» є обов’язковим.`);
     }
 
     if (!row.ownerName) {
-      throw new Error(`Строка ${rowNumber}: поле «Владелец» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Власник» є обов’язковим.`);
     }
 
     if (!isAreaValid(row.area)) {
       throw new Error(
-        `Строка ${rowNumber}: поле «Квадраты» должно быть числом, например 45, 45.5 или 45,5.`,
+        `Рядок ${rowNumber}: поле «Площа» має бути числом, наприклад 45, 45.5 або 45,5.`,
       );
     }
 
@@ -136,13 +136,13 @@ export async function parseApartmentsImportFile(
 
     if (duplicateApartmentSet.has(apartmentKey)) {
       throw new Error(
-        `Строка ${rowNumber}: дубликат значения «Квартира» внутри файла (${row.apartmentLabel}).`,
+        `Рядок ${rowNumber}: дублікат значення «Квартира» всередині файлу (${row.apartmentLabel}).`,
       );
     }
 
     if (duplicateAccountSet.has(accountKey)) {
       throw new Error(
-        `Строка ${rowNumber}: дубликат значения «Лицевой счет» внутри файла (${row.accountNumber}).`,
+        `Рядок ${rowNumber}: дублікат значення «Особовий рахунок» всередині файлу (${row.accountNumber}).`,
       );
     }
 
@@ -152,7 +152,7 @@ export async function parseApartmentsImportFile(
   }
 
   if (parsedRows.length === 0) {
-    throw new Error("Файл не содержит валидных строк для импорта.");
+    throw new Error("Файл не містить валідних рядків для імпорту.");
   }
 
   return {

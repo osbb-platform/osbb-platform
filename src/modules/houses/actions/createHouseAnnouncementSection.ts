@@ -22,11 +22,11 @@ export async function createHouseAnnouncementSection(formData: FormData) {
   const level = normalizeLevel(String(formData.get("level") ?? "info").trim());
 
   if (!houseId || !houseSlug || !housePageId) {
-    throw new Error("Не переданы данные дома для создания объявления.");
+    throw new Error("Не передано дані будинку для створення оголошення.");
   }
 
   if (!title) {
-    throw new Error("Заполните заголовок объявления.");
+    throw new Error("Заповніть заголовок оголошення.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -74,7 +74,7 @@ export async function createHouseAnnouncementSection(formData: FormData) {
     .single();
 
   if (insertError || !insertedSection) {
-    throw new Error(insertError?.message ?? "Не удалось создать announcement.");
+    throw new Error(insertError?.message ?? "Не вдалося створити оголошення.");
   }
 
   const { error: versionError } = await supabase
@@ -92,7 +92,7 @@ export async function createHouseAnnouncementSection(formData: FormData) {
 
   if (versionError) {
     throw new Error(
-      `Объявление создано, но версия не сохранена: ${versionError.message}`,
+      `Оголошення створено, але версію не збережено: ${versionError.message}`,
     );
   }
 

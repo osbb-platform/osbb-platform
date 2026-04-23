@@ -133,15 +133,15 @@ export async function getAdminHouseApartments({
   ]);
 
   if (activeError) {
-    throw new Error(`Failed to load active apartments summary: ${activeError.message}`);
+    throw new Error(`Не вдалося завантажити зведення активних квартир: ${activeError.message}`);
   }
 
   if (archivedError) {
-    throw new Error(`Failed to load archived apartments summary: ${archivedError.message}`);
+    throw new Error(`Не вдалося завантажити зведення архівних квартир: ${archivedError.message}`);
   }
 
   if (listError) {
-    throw new Error(`Failed to load apartments list: ${listError.message}`);
+    throw new Error(`Не вдалося завантажити список квартир: ${listError.message}`);
   }
 
   const activeItems = (activeRows ?? []) as unknown as ApartmentRow[];

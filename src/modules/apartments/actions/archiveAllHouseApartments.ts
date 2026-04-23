@@ -23,7 +23,7 @@ export async function archiveAllHouseApartments(
 
   if (!houseId) {
     return {
-      error: "Не выбран дом.",
+      error: "Будинок не обрано.",
       success: null,
     };
   }
@@ -38,7 +38,7 @@ export async function archiveAllHouseApartments(
 
   if (activeRowsError) {
     return {
-      error: `Не удалось получить список квартир: ${activeRowsError.message}`,
+      error: `Не вдалося отримати список квартир: ${activeRowsError.message}`,
       success: null,
     };
   }
@@ -46,7 +46,7 @@ export async function archiveAllHouseApartments(
   if (!activeRows || activeRows.length === 0) {
     return {
       error: null,
-      success: "Активный список уже пуст.",
+      success: "Активний список уже порожній.",
     };
   }
 
@@ -60,7 +60,7 @@ export async function archiveAllHouseApartments(
 
   if (archiveError) {
     return {
-      error: `Не удалось очистить список: ${archiveError.message}`,
+      error: `Не вдалося очистити список: ${archiveError.message}`,
       success: null,
     };
   }
@@ -76,7 +76,7 @@ export async function archiveAllHouseApartments(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "archive_all_apartments",
-      description: `Весь активный список квартир дома отправлен в архив.`,
+      description: `Увесь активний список квартир будинку переміщено в архів.`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -91,6 +91,6 @@ export async function archiveAllHouseApartments(
 
   return {
     error: null,
-    success: `В архив отправлено ${activeRows.length} квартир.`,
+    success: `В архів переміщено ${activeRows.length} квартир.`,
   };
 }

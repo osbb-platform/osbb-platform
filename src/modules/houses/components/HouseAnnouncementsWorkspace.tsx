@@ -56,23 +56,23 @@ function getSortTimestamp(content: Record<string, unknown>) {
 
 function formatDateTime(value: unknown) {
   if (typeof value !== "string" || !value) {
-    return "Не опубликовано";
+    return "Не опубліковано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Не опубликовано";
+    return "Не опубліковано";
   }
 
   return date.toLocaleString("ru-RU");
 }
 
 function getStatusLabel(status: AnnouncementItem["status"]) {
-  if (status === "published") return "Опубликовано";
-  if (status === "in_review") return "Черновик";
-  if (status === "archived") return "Архив";
-  return "Черновик";
+  if (status === "published") return "Опубліковано";
+  if (status === "in_review") return "Чернетка";
+  if (status === "archived") return "Архів";
+  return "Чернетка";
 }
 
 function getStatusTone(
@@ -85,9 +85,9 @@ function getStatusTone(
 }
 
 function getLevelLabel(level: string) {
-  if (level === "danger") return "Важное";
-  if (level === "warning") return "Обратить внимание";
-  return "Обычное";
+  if (level === "danger") return "Важливе";
+  if (level === "warning") return "Звернути увагу";
+  return "Звичайне";
 }
 
 function getLevelDotClasses(level: string) {
@@ -98,7 +98,7 @@ function getLevelDotClasses(level: string) {
 
 function getPreviewText(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
-    return "Объявление без текста.";
+    return "Оголошення без тексту.";
   }
 
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -235,7 +235,7 @@ export function HouseAnnouncementsWorkspace({
         setWorkspaceError(
           error instanceof Error
             ? error.message
-            : "Не удалось удалить архивные объявления.",
+            : "Не вдалося видалити архівні оголошення.",
         );
       }
     });
@@ -246,10 +246,10 @@ export function HouseAnnouncementsWorkspace({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[var(--cms-text)]">
-            Объявления дома
+            Оголошення будинку
           </h2>
           <p className={["mt-2", adminBodyClass].join(" ")}>
-            Операционный экран уведомлений для жильцов.
+            Операційний екран сповіщень для мешканців.
           </p>
         </div>
 
@@ -259,7 +259,7 @@ export function HouseAnnouncementsWorkspace({
             onClick={openCreateMode}
             className={[adminPrimaryButtonClass, "min-h-12 px-6"].join(" ")}
           >
-            Новое объявление
+            Нове оголошення
           </button>
         ) : null}
       </div>
@@ -271,17 +271,17 @@ export function HouseAnnouncementsWorkspace({
           items={[
             {
               key: "active",
-              label: "Активные объявления",
+              label: "Активні оголошення",
               count: activeAnnouncements.length,
             },
             {
               key: "moderation",
-              label: "Черновики",
+              label: "Чернетки",
               count: moderationAnnouncements.length,
             },
             {
               key: "archive",
-              label: "Архив",
+              label: "Архів",
               count: archivedAnnouncements.length,
             },
           ]}
@@ -296,7 +296,7 @@ export function HouseAnnouncementsWorkspace({
             onClick={() => setIsDeleteArchiveConfirmOpen(true)}
             className={[adminDangerButtonClass, "disabled:opacity-60"].join(" ")}
           >
-            {isDeletingArchive ? "Удаляем архив..." : "Удалить все"}
+            {isDeletingArchive ? "Видаляємо архів..." : "Видалити все"}
           </button>
         ) : null}
       </div>
@@ -332,10 +332,10 @@ export function HouseAnnouncementsWorkspace({
 
       <PlatformConfirmModal
         open={isDeleteArchiveConfirmOpen}
-        title="Удалить все архивные объявления?"
-        description="Все объявления из архива будут безвозвратно удалены из системы. После этого восстановить их не получится."
-        confirmLabel="Удалить архив"
-        pendingLabel="Удаляем архив..."
+        title="Видалити всі архівні оголошення?"
+        description="Усі оголошення з архіву будуть безповоротно видалені із системи. Після цього відновити їх не вийде."
+        confirmLabel="Видалити архів"
+        pendingLabel="Видаляємо архів..."
         tone="destructive"
         isPending={isDeletingArchive}
         onCancel={() => {
@@ -383,7 +383,7 @@ export function HouseAnnouncementsWorkspace({
                         )}`}
                       />
                       <span className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-soft)]">
-                        Объявление #{index + 1}
+                        Оголошення #{index + 1}
                       </span>
                       <AdminStatusBadge tone={getStatusTone(section.status)}>
                         {getStatusLabel(section.status)}
@@ -391,7 +391,7 @@ export function HouseAnnouncementsWorkspace({
                     </div>
 
                     <div className="truncate text-base font-semibold text-[var(--cms-text)]">
-                      {section.title ?? "Объявление без заголовка"}
+                      {section.title ?? "Оголошення без заголовка"}
                     </div>
 
                     <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
@@ -405,8 +405,8 @@ export function HouseAnnouncementsWorkspace({
                 </div>
 
                 <div className="mt-4 grid gap-2 text-xs text-[var(--cms-text-soft)] sm:grid-cols-2">
-                  <div>Опубликовано: {publishedAt}</div>
-                  <div>Обновлено: {updatedAt}</div>
+                  <div>Опубліковано: {publishedAt}</div>
+                  <div>Оновлено: {updatedAt}</div>
                 </div>
               </button>
             );
@@ -414,10 +414,10 @@ export function HouseAnnouncementsWorkspace({
         ) : (
           <div className={adminEmptyStateClass}>
             {activeTab === "active"
-              ? "Сейчас нет активных объявлений для жильцов. После подтверждения они будут отображаться здесь."
+              ? "Зараз немає активних оголошень для мешканців. Після підтвердження вони відображатимуться тут."
               : activeTab === "moderation"
-                ? "Черновиков пока нет. Создай новое объявление, чтобы начать работу."
-                : "Архив объявлений пока пуст."}
+                ? "Чернеток поки немає. Створи нове оголошення, щоб почати роботу."
+                : "Архів оголошень поки порожній."}
           </div>
         )}
       </div>

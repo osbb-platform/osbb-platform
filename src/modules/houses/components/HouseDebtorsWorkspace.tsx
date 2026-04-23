@@ -43,9 +43,9 @@ const initialState = {
 
 const DEFAULT_PAYMENT: DebtorsPayment = {
   url: "",
-  title: "Оплата задолженности",
+  title: "Оплата заборгованості",
   note: "",
-  buttonLabel: "Оплатить",
+  buttonLabel: "Оплатити",
 };
 
 function normalizeSnapshotItems(value: unknown): DebtSnapshotItem[] {
@@ -285,7 +285,7 @@ export function HouseDebtorsWorkspace({
     formData.set("sectionId", section.id);
     formData.set("houseId", houseId);
     formData.set("houseSlug", houseSlug);
-    formData.set("title", section.title ?? "Должники");
+    formData.set("title", section.title ?? "Боржники");
     formData.set("status", "published");
     formData.set("kind", "debtors");
     formData.set("debtorsMode", mode);
@@ -421,7 +421,7 @@ export function HouseDebtorsWorkspace({
       setImportError(
         error instanceof Error
           ? error.message
-          : "Не удалось импортировать файл должников.",
+          : "Не вдалося імпортувати файл боржників.",
       );
     } finally {
       setIsImporting(false);
@@ -461,17 +461,17 @@ export function HouseDebtorsWorkspace({
       <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="flex flex-col gap-5">
           <div>
-            <h2 className="text-xl font-semibold text-white">Должники</h2>
+            <h2 className="text-xl font-semibold text-white">Боржники</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Управление реестром задолженностей по квартирам, черновиком публикации и опубликованным списком для жильцов.
+              Керування реєстром заборгованостей по квартирах, чернеткою публікації та опублікованим списком для мешканців.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             {[
-              { key: "all", label: "Все квартиры", count: totalApartmentsCount },
-              { key: "published", label: "Опубликовано", count: publishedDebtorsCount },
-              { key: "draft", label: "Черновик", count: draftDebtorsCount },
+              { key: "all", label: "Усі квартири", count: totalApartmentsCount },
+              { key: "published", label: "Опубліковано", count: publishedDebtorsCount },
+              { key: "draft", label: "Чернетка", count: draftDebtorsCount },
             ].map((tab) => {
               const isActive = activeTab === tab.key;
 
@@ -529,7 +529,7 @@ export function HouseDebtorsWorkspace({
           type="text"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="Поиск: квартира / лицевой счет / владелец"
+          placeholder="Пошук: квартира / особовий рахунок / власник"
           className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
         />
 
@@ -541,7 +541,7 @@ export function HouseDebtorsWorkspace({
               disabled={isImporting}
               className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-50"
             >
-              {isImporting ? "Импорт..." : "Import"}
+              {isImporting ? "Імпорт..." : "Імпорт"}
             </button>
 
             <button
@@ -557,7 +557,7 @@ export function HouseDebtorsWorkspace({
               onClick={clearAllDebtFields}
               className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300"
             >
-              Очистить
+              Очистити
             </button>
 
             <button
@@ -566,7 +566,7 @@ export function HouseDebtorsWorkspace({
               onClick={openPreview}
               className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Сохранить
+              Зберегти
             </button>
           </>
         ) : null}
@@ -574,17 +574,17 @@ export function HouseDebtorsWorkspace({
 
       {activeTab === "draft" && isDraftEmpty ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
-          Черновик пока пуст. После подготовки списка должников и сохранения preview он появится здесь.
+          Чернетка поки порожня. Після підготовки списку боржників і збереження попереднього перегляду вона з’явиться тут.
         </div>
       ) : null}
       {activeTab === "draft" && !isDraftEmpty ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-amber-900/40 bg-amber-950/20 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium text-amber-200">
-              Черновик готов к публикации
+              Чернетка готова до публікації
             </p>
             <p className="mt-1 text-xs text-amber-300/80">
-              После публикации текущий опубликованный список будет полностью заменен.
+              Після публікації поточний опублікований список буде повністю замінено.
             </p>
           </div>
 
@@ -595,7 +595,7 @@ export function HouseDebtorsWorkspace({
               disabled={isPending}
               className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-50"
             >
-              Удалить черновик
+              Видалити чернетку
             </button>
 
             <button
@@ -604,7 +604,7 @@ export function HouseDebtorsWorkspace({
               disabled={isPending}
               className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:opacity-50"
             >
-              Подтвердить публикацию
+              Підтвердити публікацію
             </button>
           </div>
         </div>
@@ -613,7 +613,7 @@ export function HouseDebtorsWorkspace({
 
       {activeTab === "published" && isPublishedEmpty ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
-          Опубликованный список пока пуст. После подтверждения черновика здесь появятся квартиры с задолженностью.
+          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться квартири із заборгованістю.
         </div>
       ) : null}
       {activeTab === "all" ? (
@@ -634,10 +634,10 @@ export function HouseDebtorsWorkspace({
           >
             <div>
               <p className="text-sm font-medium text-white">
-                Блок оплаты задолженности
+                Блок оплати заборгованості
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                Заполните ссылку, заголовок и текст для публичного блока оплаты, который увидят жильцы на сайте дома.
+                Заповніть посилання, заголовок і текст для публічного блоку оплати, який побачать мешканці на сайті будинку.
               </p>
             </div>
 
@@ -650,17 +650,17 @@ export function HouseDebtorsWorkspace({
                     : "bg-red-500/20 text-red-300"
               }`}>
                 {paymentBlockReady
-                  ? "Блок оплаты заполнен"
+                  ? "Блок оплати заповнено"
                   : hasPaymentUrl && !isPaymentUrlValid
-                    ? "Проверьте формат ссылки"
-                    : "Заполните блок оплаты"}
+                    ? "Перевірте формат посилання"
+                    : "Заповніть блок оплати"}
               </div>
             </div>
           </div>
 
           {paymentSaveSuccess ? (
             <div className="mt-4 rounded-2xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300">
-              Настройки блока оплаты сохранены.
+              Налаштування блоку оплати збережено.
             </div>
           ) : null}
 
@@ -671,7 +671,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setIsPaymentSettingsOpen(false)}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
-                  aria-label="Закрыть настройки оплаты"
+                  aria-label="Закрити налаштування оплати"
                 >
                   ×
                 </button>
@@ -679,7 +679,7 @@ export function HouseDebtorsWorkspace({
 
               <div className="md:col-span-2">
                 <div className="mb-2 text-sm font-medium text-slate-300">
-                  Ссылка общей оплаты
+                  Посилання загальної оплати
                 </div>
                 <input
                   value={payment.url}
@@ -694,11 +694,11 @@ export function HouseDebtorsWorkspace({
                   }`}
                 />
                 <div className="mt-2 text-xs text-slate-400">
-                  Эта ссылка будет использоваться в публичном блоке оплаты для перехода жильца к оплате задолженности.
+                  Це посилання буде використовуватися в публічному блоці оплати для переходу мешканця до оплати заборгованості.
                 </div>
                 {hasPaymentUrl && !isPaymentUrlValid ? (
                   <div className="mt-2 text-xs text-amber-400">
-                    Ссылка должна начинаться с http:// или https://
+                    Посилання має починатися з http:// або https://
                   </div>
                 ) : null}
               </div>
@@ -715,35 +715,35 @@ export function HouseDebtorsWorkspace({
                       buttonLabel: event.target.value,
                     }))
                   }
-                  placeholder="Оплатить"
+                  placeholder="Оплатити"
                   className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
                 />
               </div>
 
               <div>
                 <div className="mb-2 text-sm font-medium text-slate-300">
-                  Заголовок блока
+                  Заголовок блоку
                 </div>
                 <input
                   value={payment.title}
                   onChange={(event) =>
                     setPayment((prev) => ({ ...prev, title: event.target.value }))
                   }
-                  placeholder="Оплата задолженности"
+                  placeholder="Оплата заборгованості"
                   className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
                 />
               </div>
 
               <div className="md:col-span-2">
                 <div className="mb-2 text-sm font-medium text-slate-300">
-                  Описание для жителя
+                  Опис для мешканця
                 </div>
                 <textarea
                   value={payment.note}
                   onChange={(event) =>
                     setPayment((prev) => ({ ...prev, note: event.target.value }))
                   }
-                  placeholder="Например: введите лицевой счет, проверьте сумму долга и перейдите к оплате."
+                  placeholder="Наприклад: введіть особовий рахунок, перевірте суму боргу та перейдіть до оплати."
                   rows={3}
                   className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
                 />
@@ -751,16 +751,16 @@ export function HouseDebtorsWorkspace({
 
               <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-950 p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Preview public блока
+                  Попередній перегляд публічного блоку
                 </div>
                 <div className="mt-3 text-lg font-semibold text-white">
-                  {payment.title || "Оплата задолженности"}
+                  {payment.title || "Оплата заборгованості"}
                 </div>
                 <div className="mt-2 text-sm text-slate-400">
-                  {payment.note || "Описание блока оплаты появится здесь."}
+                  {payment.note || "Опис блоку оплати з’явиться тут."}
                 </div>
                 <div className="mt-4 inline-flex rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950">
-                  {payment.buttonLabel || "Оплатить"}
+                  {payment.buttonLabel || "Оплатити"}
                 </div>
               </div>
 
@@ -772,8 +772,8 @@ export function HouseDebtorsWorkspace({
                   className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isPending && submittedMode === "save_payment"
-                    ? "Сохраняем..."
-                    : "Сохранить"}
+                    ? "Зберігаємо..."
+                    : "Зберегти"}
                 </button>
 
                 <button
@@ -782,7 +782,7 @@ export function HouseDebtorsWorkspace({
                   disabled={!paymentDirty || isPending}
                   className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Сбросить
+                  Скинути
                 </button>
               </div>
             </div>
@@ -792,7 +792,7 @@ export function HouseDebtorsWorkspace({
 
       {activeTab === "all" && filteredRows.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
-          В этом доме пока нет квартир для работы с задолженностями. Сначала добавьте квартиры в разделе «Квартиры», после этого здесь появится реестр.
+          У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
         </div>
       ) : filteredRows.length > 0 ? (
         <div className="overflow-hidden rounded-3xl border border-slate-800">
@@ -802,10 +802,10 @@ export function HouseDebtorsWorkspace({
                 <tr className="border-b border-slate-800 text-left">
                   <th className="px-4 py-3 text-xs text-slate-400">Кв.</th>
                   <th className="px-4 py-3 text-xs text-slate-400">Л/С</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Владелец</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Площадь</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Долг</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Дни</th>
+                  <th className="px-4 py-3 text-xs text-slate-400">Власник</th>
+                  <th className="px-4 py-3 text-xs text-slate-400">Площа</th>
+                  <th className="px-4 py-3 text-xs text-slate-400">Борг</th>
+                  <th className="px-4 py-3 text-xs text-slate-400">Дні</th>
                 </tr>
               </thead>
 
@@ -877,29 +877,29 @@ export function HouseDebtorsWorkspace({
             type="button"
             onClick={closePreview}
             className="absolute inset-0"
-            aria-label="Закрыть preview"
+            aria-label="Закрити попередній перегляд"
           />
 
           <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
             <div className="border-b border-slate-800 px-6 py-5">
               <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Preview перед сохранением
+                Попередній перегляд перед збереженням
               </div>
 
               <h2 className="mt-3 text-2xl font-semibold text-white">
-                Проверьте список должников
+                Перевірте список боржників
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                В черновик будут сохранены только квартиры, где заполнена сумма долга.
+                У чернетку будуть збережені лише квартири, де заповнена сума боргу.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Должников: {previewItems.length}
+                  Боржників: {previewItems.length}
                 </span>
                 <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Общая сумма: {formatSummaryAmount(previewItems)}
+                  Загальна сума: {formatSummaryAmount(previewItems)}
                 </span>
               </div>
             </div>
@@ -907,7 +907,7 @@ export function HouseDebtorsWorkspace({
             <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
               {isPreviewEmpty ? (
                 <div className="rounded-2xl border border-dashed border-slate-700 p-5 text-sm text-slate-400">
-                  В preview нет строк для сохранения. Укажите сумму долга хотя бы для одной квартиры.
+                  У попередньому перегляді немає рядків для збереження. Вкажіть суму боргу хоча б для однієї квартири.
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-3xl border border-slate-800">
@@ -916,10 +916,10 @@ export function HouseDebtorsWorkspace({
                       <tr className="border-b border-slate-800 text-left">
                         <th className="px-4 py-3 text-xs text-slate-400">Кв.</th>
                         <th className="px-4 py-3 text-xs text-slate-400">Л/С</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Владелец</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Площадь</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Долг</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Дни</th>
+                        <th className="px-4 py-3 text-xs text-slate-400">Власник</th>
+                        <th className="px-4 py-3 text-xs text-slate-400">Площа</th>
+                        <th className="px-4 py-3 text-xs text-slate-400">Борг</th>
+                        <th className="px-4 py-3 text-xs text-slate-400">Дні</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -955,7 +955,7 @@ export function HouseDebtorsWorkspace({
                   onClick={submitDraftSave}
                   className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isPending ? "Сохраняем..." : "Сохранить в черновик"}
+                  {isPending ? "Зберігаємо..." : "Зберегти в чернетку"}
                 </button>
               </div>
             </div>

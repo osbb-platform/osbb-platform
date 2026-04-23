@@ -13,7 +13,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function updateCompanySection(
@@ -30,12 +30,12 @@ export async function updateCompanySection(
   const ctaLabel = String(formData.get("ctaLabel") ?? "").trim();
 
   if (!sectionId || !companyPageId) {
-    return { error: "Не переданы идентификаторы секции или страницы." };
+    return { error: "Не передано ідентифікатори секції або сторінки." };
   }
 
   const allowedStatuses = ["draft", "in_review", "published", "archived"];
   if (!allowedStatuses.includes(status)) {
-    return { error: "Передан недопустимый статус секции." };
+    return { error: "Передано недопустимий статус секції." };
   }
 
   const content = {
@@ -56,7 +56,7 @@ export async function updateCompanySection(
 
   if (versionsError) {
     return {
-      error: `Ошибка чтения версии контента: ${versionsError.message}`,
+      error: `Помилка читання версії контенту: ${versionsError.message}`,
     };
   }
 
@@ -76,7 +76,7 @@ export async function updateCompanySection(
 
   if (updateError) {
     return {
-      error: `Ошибка обновления секции компании: ${updateError.message}`,
+      error: `Помилка оновлення секції компанії: ${updateError.message}`,
     };
   }
 
@@ -95,7 +95,7 @@ export async function updateCompanySection(
 
   if (versionInsertError) {
     return {
-      error: `Секция обновлена, но версия не сохранена: ${versionInsertError.message}`,
+      error: `Секцію оновлено, але версію не збережено: ${versionInsertError.message}`,
     };
   }
 
@@ -112,9 +112,9 @@ export async function updateCompanySection(
     actorRole: currentAdmin?.role ?? null,
     entityType: "company_section",
     entityId: sectionId,
-    entityLabel: title || "Без названия",
+    entityLabel: title || "Без назви",
     actionType: "update_company_section",
-    description: `Обновлена секция страницы компании.`,
+    description: `Оновлено секцію сторінки компанії.`,
     metadata: {
       sourceType: "cms",
       sourceModule: "company",

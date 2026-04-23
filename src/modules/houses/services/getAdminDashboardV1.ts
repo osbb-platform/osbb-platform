@@ -166,7 +166,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
               houseId: house.id,
               houseName: house.name,
               section: section.kind,
-              title: section.title ?? "Без названия",
+              title: section.title ?? "Без назви",
               href: getHouseBlockHref(
                 house.id,
                 inferBlockFromSection(section.kind),
@@ -228,14 +228,14 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
       houseName:
         item.house_name ??
         houseNameById.get(item.house_id ?? "") ??
-        "Дом",
+        "Будинок",
       section: item.sub_section_label,
       actionLabel: item.action_type.includes("confirm")
-        ? "Подтверждено"
+        ? "Підтверджено"
         : item.action_type.includes("update")
-          ? "Обновлено"
-          : "Опубликовано",
-      summary: `В разделе ${item.sub_section_label} опубликованы изменения`,
+          ? "Оновлено"
+          : "Опубліковано",
+      summary: `У розділі ${item.sub_section_label} опубліковано зміни`,
       title: item.entity_label ?? item.description,
       createdAt: item.created_at,
     }));
@@ -314,8 +314,8 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
         houseName: row.houseName,
         section: row.hasDrafts ? "draft" : "apartments",
         title: row.hasDrafts
-          ? "Есть черновики"
-          : "Нужно настроить квартиры",
+          ? "Є чернетки"
+          : "Потрібно налаштувати квартири",
         href: row.href,
         updatedAt: null,
       })),

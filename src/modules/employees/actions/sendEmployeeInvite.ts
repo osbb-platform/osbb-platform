@@ -160,7 +160,7 @@ export async function sendEmployeeInvite(
     entityId: membership.id,
     entityLabel: membership.full_name_snapshot ?? inviteEmail,
     actionType: "invite_employee",
-    description: `Отправлено приглашение сотруднику «${membership.full_name_snapshot ?? inviteEmail}».`,
+    description: `Надіслано запрошення співробітнику «${membership.full_name_snapshot ?? inviteEmail}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "employees",

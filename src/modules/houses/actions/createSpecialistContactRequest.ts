@@ -29,7 +29,7 @@ export async function createSpecialistContactRequest(
   const rawSubject = String(formData.get("subject") ?? "").trim();
   const subject =
     rawSubject ||
-    `Заявка на связь со специалистом: ${specialistLabel || category || "Специалист"}`;
+    `Заявка на зв’язок зі спеціалістом: ${specialistLabel || category || "Спеціаліст"}`;
   const comment = String(formData.get("comment") ?? "").trim();
 
   if (
@@ -42,7 +42,7 @@ export async function createSpecialistContactRequest(
     !apartment
   ) {
     return {
-      error: "Заполните имя, email и квартиру.",
+      error: "Заповніть ім’я, email та квартиру.",
       successMessage: null,
     };
   }
@@ -60,7 +60,7 @@ export async function createSpecialistContactRequest(
 
   if (!hasAccess) {
     return {
-      error: "Сессия доступа к дому не подтверждена.",
+      error: "Сесію доступу до будинку не підтверджено.",
       successMessage: null,
     };
   }
@@ -84,7 +84,7 @@ export async function createSpecialistContactRequest(
 
   if (error) {
     return {
-      error: `Не удалось сохранить заявку: ${error.message}`,
+      error: `Не вдалося зберегти заявку: ${error.message}`,
       successMessage: null,
     };
   }
@@ -98,7 +98,7 @@ export async function createSpecialistContactRequest(
     entityId: specialistId || null,
     entityLabel: specialistLabel,
     actionType: "create_specialist_contact_request",
-    description: `Создана заявка на специалиста: ${specialistLabel}.`,
+    description: `Створено заявку до спеціаліста: ${specialistLabel}.`,
     metadata: {
       sourceType: "house_portal",
       houseId,
@@ -118,6 +118,6 @@ export async function createSpecialistContactRequest(
   return {
     error: null,
     successMessage:
-      "Заявка отправлена. Управляющая компания получит ее в CMS и свяжется с вами.",
+      "Заявку надіслано. Керуюча компанія отримає її в CMS та зв’яжеться з вами.",
   };
 }

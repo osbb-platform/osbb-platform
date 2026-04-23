@@ -97,14 +97,14 @@ function getDateSticker(task: PlanTask) {
     if (task.startDate && task.endDate) {
       return `${formatDate(task.startDate)} — ${formatDate(task.endDate)}`;
     }
-    if (task.startDate) return `С ${formatDate(task.startDate)}`;
+    if (task.startDate) return `Від ${formatDate(task.startDate)}`;
     if (task.endDate) return `До ${formatDate(task.endDate)}`;
     return "Період не вказано";
   }
 
   return task.deadlineAt
-    ? `Дедлайн: ${formatDate(task.deadlineAt)}`
-    : "Дедлайн не вказано";
+    ? `Кінцевий термін: ${formatDate(task.deadlineAt)}`
+    : "Кінцевий термін не вказано";
 }
 
 export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
@@ -219,7 +219,7 @@ export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
                   Опис
                 </div>
                 <div className="mt-2 rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                  {task.description || "Опис не добавлено."}
+                  {task.description || "Опис не додано."}
                 </div>
               </div>
 

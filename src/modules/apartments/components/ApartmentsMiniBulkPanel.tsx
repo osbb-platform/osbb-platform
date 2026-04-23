@@ -162,22 +162,22 @@ export function ApartmentsMiniBulkPanel({
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Закрыть панель ручного добавления квартир"
+        aria-label="Закрити панель ручного додавання квартир"
       />
 
       <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-slate-800 bg-slate-950 shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
           <div>
             <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-              Ручное добавление
+              Ручне додавання
             </div>
 
             <h2 className="mt-4 text-2xl font-semibold text-white">
-              Квартиры для дома {houseName}
+              Квартири для будинку {houseName}
             </h2>
 
             <p className="mt-2 text-sm leading-7 text-slate-400">
-              Заполните до 20 строк. Сохраняются только строки, где указаны лицевой счет, квартира и владелец.
+              Заповніть до 20 рядків. Зберігаються лише рядки, де вказані особовий рахунок, квартира та власник.
             </p>
           </div>
 
@@ -185,7 +185,7 @@ export function ApartmentsMiniBulkPanel({
             type="button"
             onClick={onClose}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
-            aria-label="Закрыть"
+            aria-label="Закрити"
           >
             ×
           </button>
@@ -194,13 +194,13 @@ export function ApartmentsMiniBulkPanel({
         <div className="border-b border-slate-800 px-6 py-4">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-              Дом: {houseName}
+              Будинок: {houseName}
             </span>
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-              Строк заполнено: {filledRowsCount}
+              Заповнено рядків: {filledRowsCount}
             </span>
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-              Лимит: 20
+              Ліміт: 20
             </span>
           </div>
         </div>
@@ -223,19 +223,19 @@ export function ApartmentsMiniBulkPanel({
                         #
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Лицевой счет *
+                        Особовий рахунок *
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
                         Квартира *
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Владелец *
+                        Власник *
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Квадраты
+                        Площа
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Действие
+                        Дія
                       </th>
                     </tr>
                   </thead>
@@ -260,7 +260,7 @@ export function ApartmentsMiniBulkPanel({
                               onChange={(event) =>
                                 updateRow(index, "accountNumber", event.target.value)
                               }
-                              placeholder="Например, 100245"
+                              placeholder="Наприклад, 100245"
                               className="w-full min-w-[150px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
                             />
                           </td>
@@ -272,7 +272,7 @@ export function ApartmentsMiniBulkPanel({
                               onChange={(event) =>
                                 updateRow(index, "apartmentLabel", event.target.value)
                               }
-                              placeholder="Например, 24"
+                              placeholder="Наприклад, 24"
                               className="w-full min-w-[140px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
                             />
                           </td>
@@ -284,7 +284,7 @@ export function ApartmentsMiniBulkPanel({
                               onChange={(event) =>
                                 updateRow(index, "ownerName", event.target.value)
                               }
-                              placeholder="ФИО владельца"
+                              placeholder="ПІБ власника"
                               className="w-full min-w-[220px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
                             />
                           </td>
@@ -306,7 +306,7 @@ export function ApartmentsMiniBulkPanel({
 
                             {areaInvalid ? (
                               <div className="mt-2 text-xs text-red-300">
-                                Допустимы только числа, например 45, 45.5 или 45,5
+                                Допустимі лише числа, наприклад 45, 45.5 або 45,5
                               </div>
                             ) : null}
                           </td>
@@ -317,7 +317,7 @@ export function ApartmentsMiniBulkPanel({
                               onClick={() => removeRow(index)}
                               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
                             >
-                              Очистить
+                              Очистити
                             </button>
                           </td>
                         </tr>
@@ -335,20 +335,20 @@ export function ApartmentsMiniBulkPanel({
                   onClick={addMoreRows}
                   className="rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
                 >
-                  + еще 5
+                  + ще 5
                 </button>
               </div>
             ) : null}
 
             {hasInvalidAreas ? (
               <div className="mt-6 rounded-2xl border border-amber-900 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
-                Исправьте формат поля «Квадраты» в подсвеченных строках перед сохранением.
+                Виправте формат поля «Площа» у підсвічених рядках перед збереженням.
               </div>
             ) : null}
 
             {hasMissingRequiredRows ? (
               <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-                Есть строки с незаполненными обязательными полями. Заполните лицевой счет, квартиру и владельца либо удалите такую строку.
+                Є рядки з незаповненими обов’язковими полями. Заповніть особовий рахунок, квартиру та власника або видаліть такий рядок.
               </div>
             ) : null}
 
@@ -372,7 +372,7 @@ export function ApartmentsMiniBulkPanel({
                 onClick={onClose}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
               >
-                Отмена
+                Скасувати
               </button>
 
               <button
@@ -380,7 +380,7 @@ export function ApartmentsMiniBulkPanel({
                 disabled={isSubmitDisabled}
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isPending ? "Сохраняем..." : "Добавить квартиры"}
+                {isPending ? "Зберігаємо..." : "Додати квартири"}
               </button>
             </div>
           </div>

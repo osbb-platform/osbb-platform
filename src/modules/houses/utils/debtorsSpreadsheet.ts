@@ -1,12 +1,21 @@
 import * as XLSX from "xlsx";
 
+const HEADER_ALIASES = {
+  apartmentLabel: ["Квартира"],
+  accountNumber: ["Особовий рахунок", "Лицевой счет"],
+  ownerName: ["Власник", "Владелец"],
+  area: ["Площа", "Квадраты"],
+  amount: ["Сума боргу", "Сумма долга"],
+  days: ["Термін боргу", "Срок долга"],
+} as const;
+
 export const DEBTORS_IMPORT_HEADERS = [
   "Квартира",
-  "Лицевой счет",
-  "Владелец",
-  "Квадраты",
-  "Сумма долга",
-  "Срок долга",
+  "Особовий рахунок",
+  "Власник",
+  "Площа",
+  "Сума боргу",
+  "Термін боргу",
 ] as const;
 
 export type DebtorsSpreadsheetRow = {
@@ -62,26 +71,17 @@ function formatAreaForSheet(value: number | null) {
 }
 
 function isAreaValid(value: string) {
-  if (!value) {
-    return true;
-  }
-
+  if (!value) return true;
   return /^-?\d+(?:[.,]\d+)?$/.test(value);
 }
 
 function isAmountValid(value: string) {
-  if (!value) {
-    return true;
-  }
-
+  if (!value) return true;
   return /^\d+(?:[.,]\d+)?$/.test(value);
 }
 
 function isDaysValid(value: string) {
-  if (!value) {
-    return true;
-  }
-
+  if (!value) return true;
   return /^\d+$/.test(value);
 }
 
@@ -99,6 +99,13 @@ function buildReferenceKey(row: {
   ].join("||");
 }
 
+function findHeaderIndex(
+  headerRow: string[],
+  aliases: readonly string[],
+) {
+  return aliases.find((alias) => headerRow.includes(alias)) ?? null;
+}
+
 export function exportDebtorsRegistry(params: {
   houseName: string;
   rows: DebtorsExportItem[];
@@ -107,17 +114,17 @@ export function exportDebtorsRegistry(params: {
 
   const sheetRows = rows.map((row) => ({
     "Квартира": row.apartmentLabel,
-    "Лицевой счет": row.accountNumber,
-    "Владелец": row.ownerName,
-    "Квадраты": formatAreaForSheet(row.area),
-    "Сумма долга": row.amount,
-    "Срок долга": row.days,
+    "Особовий рахунок": row.accountNumber,
+    "Власник": row.ownerName,
+    "Площа": formatAreaForSheet(row.area),
+    "Сума боргу": row.amount,
+    "Термін боргу": row.days,
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(sheetRows);
   const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Должники");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Боржники");
 
   const safeHouseName = houseName
     .trim()
@@ -138,7 +145,7 @@ export async function parseDebtorsImportFile({
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
 
   if (!["csv", "xls", "xlsx"].includes(extension)) {
-    throw new Error("Поддерживаются только файлы CSV, XLS и XLSX.");
+    throw new Error("Підтримуються лише файли CSV, XLS та XLSX.");
   }
 
   const buffer = await file.arrayBuffer();
@@ -150,7 +157,7 @@ export async function parseDebtorsImportFile({
   const firstSheetName = workbook.SheetNames[0];
 
   if (!firstSheetName) {
-    throw new Error("Файл не содержит листов для импорта.");
+    throw new Error("Файл не містить аркушів для імпорту.");
   }
 
   const worksheet = workbook.Sheets[firstSheetName];
@@ -162,28 +169,32 @@ export async function parseDebtorsImportFile({
   });
 
   if (!rows.length) {
-    throw new Error("Файл пустой.");
+    throw new Error("Файл порожній.");
   }
 
   const headerRow = (rows[0] ?? []).map((cell) => normalizeCellValue(cell));
 
-  const missingHeaders = DEBTORS_IMPORT_HEADERS.filter(
-    (header) => !headerRow.includes(header),
-  );
+  const requiredFields = Object.entries(HEADER_ALIASES);
+
+  const missingHeaders = requiredFields
+    .filter(([, aliases]) => !aliases.some((alias) => headerRow.includes(alias)))
+    .map(([key]) => DEBTORS_IMPORT_HEADERS[
+      ["apartmentLabel", "accountNumber", "ownerName", "area", "amount", "days"].indexOf(key)
+    ]);
 
   if (missingHeaders.length > 0) {
     throw new Error(
-      `В файле отсутствуют обязательные колонки: ${missingHeaders.join(", ")}.`,
+      `У файлі відсутні обов’язкові колонки: ${missingHeaders.join(", ")}.`,
     );
   }
 
   const headerIndexes = {
-    apartmentLabel: headerRow.indexOf("Квартира"),
-    accountNumber: headerRow.indexOf("Лицевой счет"),
-    ownerName: headerRow.indexOf("Владелец"),
-    area: headerRow.indexOf("Квадраты"),
-    amount: headerRow.indexOf("Сумма долга"),
-    days: headerRow.indexOf("Срок долга"),
+    apartmentLabel: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.apartmentLabel)!),
+    accountNumber: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.accountNumber)!),
+    ownerName: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.ownerName)!),
+    area: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.area)!),
+    amount: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.amount)!),
+    days: headerRow.indexOf(findHeaderIndex(headerRow, HEADER_ALIASES.days)!),
   };
 
   const parsedRows: DebtorsSpreadsheetRow[] = [];
@@ -208,52 +219,44 @@ export async function parseDebtorsImportFile({
       !row.amount &&
       !row.days;
 
-    if (isCompletelyEmpty) {
-      continue;
-    }
+    if (isCompletelyEmpty) continue;
 
     const rowNumber = index + 1;
 
     if (!row.accountNumber) {
-      throw new Error(`Строка ${rowNumber}: поле «Лицевой счет» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Особовий рахунок» є обов’язковим.`);
     }
 
     if (!row.apartmentLabel) {
-      throw new Error(`Строка ${rowNumber}: поле «Квартира» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Квартира» є обов’язковим.`);
     }
 
     if (!row.ownerName) {
-      throw new Error(`Строка ${rowNumber}: поле «Владелец» обязательно.`);
+      throw new Error(`Рядок ${rowNumber}: поле «Власник» є обов’язковим.`);
     }
 
     if (!isAreaValid(row.area)) {
-      throw new Error(
-        `Строка ${rowNumber}: поле «Квадраты» должно быть числом, например 45, 45.5 или 45,5.`,
-      );
+      throw new Error(`Рядок ${rowNumber}: поле «Площа» має бути числом.`);
     }
 
     if (!isAmountValid(row.amount)) {
-      throw new Error(
-        `Строка ${rowNumber}: поле «Сумма долга» должно быть числом, например 1250, 1250.50 или 1250,50.`,
-      );
+      throw new Error(`Рядок ${rowNumber}: поле «Сума боргу» має бути числом.`);
     }
 
     if (!isDaysValid(row.days)) {
-      throw new Error(
-        `Строка ${rowNumber}: поле «Срок долга» должно быть целым числом или пустым.`,
-      );
+      throw new Error(`Рядок ${rowNumber}: поле «Термін боргу» має бути цілим числом або порожнім.`);
     }
 
     parsedRows.push(row);
   }
 
   if (parsedRows.length === 0) {
-    throw new Error("Файл не содержит валидных строк для импорта.");
+    throw new Error("Файл не містить валідних рядків для імпорту.");
   }
 
   if (parsedRows.length !== referenceRows.length) {
     throw new Error(
-      "Импорт отклонен: количество строк не совпадает с текущим списком квартир.",
+      "Імпорт відхилено: кількість рядків не збігається з поточним списком квартир.",
     );
   }
 
@@ -267,7 +270,7 @@ export async function parseDebtorsImportFile({
 
     if (!referenceMap.has(key)) {
       throw new Error(
-        `Строка ${index + 2}: readonly-данные квартиры не совпадают с текущим реестром. Импорт отклонен.`,
+        `Рядок ${index + 2}: readonly-дані квартири не збігаються з поточним реєстром. Імпорт відхилено.`,
       );
     }
   }

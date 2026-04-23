@@ -35,11 +35,11 @@ type AdminProfileEditorProps = {
 };
 
 function getStatusLabel(status: string | null) {
-  if (status === "invited") return "Invited";
-  if (status === "active") return "Active";
-  if (status === "inactive") return "Inactive";
-  if (status === "archived") return "Archived";
-  return "Без статуса";
+  if (status === "invited") return "Запрошення надіслано";
+  if (status === "active") return "Активний";
+  if (status === "inactive") return "Неактивний";
+  if (status === "archived") return "Архівний";
+  return "Без статусу";
 }
 
 function CopyIcon() {
@@ -133,14 +133,14 @@ export function AdminProfileEditor({
 
   const access = getResolvedAccess(currentRole as typeof ROLES[keyof typeof ROLES] | null);
   const allowedSections = [
-    access.topLevel.dashboard && "Dashboard",
-    access.topLevel.districts && "Районы",
-    access.topLevel.houses && "Дома",
-    access.topLevel.apartments && "Квартиры",
-    access.topLevel.history && "История",
-    access.topLevel.employees && "Сотрудники",
-    access.topLevel.companyPages && "Сайт компании",
-    access.topLevel.profile && "Профиль",
+    access.topLevel.dashboard && "Панель керування",
+    access.topLevel.districts && "Райони",
+    access.topLevel.houses && "Будинки",
+    access.topLevel.apartments && "Квартири",
+    access.topLevel.history && "Історія",
+    access.topLevel.employees && "Співробітники",
+    access.topLevel.companyPages && "Сайт компанії",
+    access.topLevel.profile && "Профіль",
   ].filter(Boolean) as string[];
   const canSeeHouseAccessCodes =
     access.security.viewHouseAccessCodes;
@@ -157,7 +157,7 @@ export function AdminProfileEditor({
             },
           ]),
         ).values(),
-      ).sort((left, right) => left.name.localeCompare(right.name, "ru")),
+      ).sort((left, right) => left.name.localeCompare(right.name, "uk")),
     [houses],
   );
 
@@ -178,21 +178,21 @@ export function AdminProfileEditor({
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-4xl">
             <h1 className="text-3xl font-semibold tracking-tight text-white">
-              Мой профиль
+              Мій профіль
             </h1>
 
             <p className="mt-3 text-base leading-7 text-slate-400">
-              Здесь собраны ваши данные для работы в CMS, уровень доступа и
-              доступные рабочие разделы.
+              Тут зібрані ваші дані для роботи в CMS, рівень доступу та
+              доступні робочі розділи.
             </p>
 
             <p className="mt-3 text-sm text-slate-500">
-              Рабочий аккаунт сотрудника управляющей компании
+              Робочий акаунт співробітника керуючої компанії
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <div className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Уровень: {getRoleLabel(currentRole)}
+                Рівень: {getRoleLabel(currentRole)}
               </div>
             </div>
           </div>
@@ -206,7 +206,7 @@ export function AdminProfileEditor({
                 onClick={() => setIsEditing(true)}
                 className="inline-flex min-w-[180px] items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
               >
-                Редактировать
+                Редагувати
               </button>
             ) : null}
 
@@ -215,7 +215,7 @@ export function AdminProfileEditor({
               onClick={() => setIsLogoutConfirmOpen(true)}
               className="inline-flex w-full min-w-[180px] items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Выйти
+              Вийти
             </button>
           </div>
         </div>
@@ -224,7 +224,7 @@ export function AdminProfileEditor({
       <form ref={formRef} action={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
-            <label className="mb-3 block text-sm text-slate-400">Имя</label>
+            <label className="mb-3 block text-sm text-slate-400">Ім'я</label>
             <input
               type="text"
               name="fullName"
@@ -238,7 +238,7 @@ export function AdminProfileEditor({
             <label className="mb-3 block text-sm text-slate-400">Email</label>
             <input
               type="text"
-              value={currentEmail || "Не указан"}
+              value={currentEmail || "Не вказано"}
               readOnly
               className={readonlyInputClass}
             />
@@ -246,7 +246,7 @@ export function AdminProfileEditor({
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
             <label className="mb-3 block text-sm text-slate-400">
-              Уровень доступа
+              Рівень доступу
             </label>
             <input
               type="text"
@@ -268,7 +268,7 @@ export function AdminProfileEditor({
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 md:col-span-2">
             <label className="mb-3 block text-sm text-slate-400">
-              Доступные разделы CMS
+              Доступні розділи CMS
             </label>
 
             <div className="flex flex-wrap gap-2">
@@ -285,13 +285,13 @@ export function AdminProfileEditor({
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 md:col-span-2">
             <label className="mb-3 block text-sm text-slate-400">
-              Должность
+              Посада
             </label>
             <input
               type="text"
               name="jobTitle"
               defaultValue={currentJobTitle}
-              placeholder="Например: Менеджер контента"
+              placeholder="Наприклад: Менеджер контенту"
               readOnly={!isEditing}
               className={editableInputClass}
             />
@@ -317,7 +317,7 @@ export function AdminProfileEditor({
               disabled={isPending}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
             >
-              {isPending ? "Сохраняем..." : "Сохранить"}
+              {isPending ? "Зберігаємо..." : "Зберегти"}
             </button>
 
             <button
@@ -325,7 +325,7 @@ export function AdminProfileEditor({
               onClick={handleCancel}
               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
             >
-              Отмена
+              Скасувати
             </button>
           </div>
         ) : null}
@@ -336,16 +336,16 @@ export function AdminProfileEditor({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Доступы домов
+                Доступи будинків
               </div>
 
               <h2 className="mt-4 text-2xl font-semibold text-white">
-                Текущие коды доступа
+                Поточні коди доступу
               </h2>
 
               <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">
-                Актуальный список домов платформы и их текущих кодов доступа для
-                resident-facing входа.
+                Актуальний список будинків платформи та їхніх поточних кодів доступу для
+                входу мешканців.
               </p>
             </div>
 
@@ -355,7 +355,7 @@ export function AdminProfileEditor({
                 onChange={(event) => setSelectedDistrictId(event.target.value)}
                 className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white outline-none transition focus:border-slate-500"
               >
-                <option value="">Все районы</option>
+                <option value="">Усі райони</option>
                 {districtOptions.map((district) => (
                   <option key={district.id} value={district.id}>
                     {district.name}
@@ -364,7 +364,7 @@ export function AdminProfileEditor({
               </select>
 
               <div className="text-sm text-slate-500">
-                Всего домов: {visibleHouses.length}
+                Усього будинків: {visibleHouses.length}
               </div>
             </div>
           </div>
@@ -387,7 +387,7 @@ export function AdminProfileEditor({
 
                   <div className="flex items-center gap-3">
                     <div className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium tracking-[0.2em] text-white">
-                      {house.currentAccessCode ?? "Не задан"}
+                      {house.currentAccessCode ?? "Не задано"}
                     </div>
 
                     <button
@@ -397,11 +397,11 @@ export function AdminProfileEditor({
                       }
                       disabled={!house.currentAccessCode}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label={`Скопировать код доступа дома ${house.name}`}
+                      aria-label={`Скопіювати код доступу будинку ${house.name}`}
                       title={
                         copiedHouseId === house.id
-                          ? "Скопировано"
-                          : "Скопировать код"
+                          ? "Скопійовано"
+                          : "Скопіювати код"
                       }
                     >
                       <CopyIcon />
@@ -411,7 +411,7 @@ export function AdminProfileEditor({
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-400">
-                Дома пока не найдены.
+                Будинки поки не знайдені.
               </div>
             )}
           </div>
@@ -421,7 +421,7 @@ export function AdminProfileEditor({
       <PlatformConfirmModal
         open={isLogoutConfirmOpen}
         title="Ви впевнені, що хочете вийти?"
-        description="Ви вийдете з кабінету і потрібно буде увійти знову."
+        description="Ви вийдете з кабінету й потрібно буде увійти знову."
         confirmLabel="Вийти"
         cancelLabel="Скасувати"
         tone="warning"

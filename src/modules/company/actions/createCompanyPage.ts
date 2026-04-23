@@ -19,7 +19,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function createCompanyPage(formData: FormData): Promise<void> {
@@ -29,13 +29,13 @@ export async function createCompanyPage(formData: FormData): Promise<void> {
   const seoDescription = String(formData.get("seoDescription") ?? "").trim();
 
   if (!title) {
-    throw new Error("Название страницы не заполнено.");
+    throw new Error("Назва сторінки не заповнена.");
   }
 
   const slug = normalizeSlug(slugInput || title);
 
   if (!slug) {
-    throw new Error("Не удалось сформировать slug страницы.");
+    throw new Error("Не вдалося сформувати slug сторінки.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -47,7 +47,7 @@ export async function createCompanyPage(formData: FormData): Promise<void> {
 
   if (primaryCountError) {
     throw new Error(
-      `Ошибка проверки primary page strategy: ${primaryCountError.message}`,
+      `Помилка перевірки primary page strategy: ${primaryCountError.message}`,
     );
   }
 
@@ -70,7 +70,7 @@ export async function createCompanyPage(formData: FormData): Promise<void> {
     .single();
 
   if (insertError) {
-    throw new Error(`Ошибка создания страницы: ${insertError.message}`);
+    throw new Error(`Помилка створення сторінки: ${insertError.message}`);
   }
 
   await bootstrapCompanyPageContent({
@@ -95,7 +95,7 @@ export async function createCompanyPage(formData: FormData): Promise<void> {
     entityId: createdPage.id,
     entityLabel: createdPage.title,
     actionType: "create_company_page",
-    description: `Создана страница компании «${createdPage.title}».`,
+    description: `Створено сторінку компанії «${createdPage.title}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "company",

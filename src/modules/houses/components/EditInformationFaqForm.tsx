@@ -110,7 +110,7 @@ export function EditInformationFaqForm({
             FAQ
           </div>
           <div className="text-sm text-[var(--cms-text-muted)]">
-            Добавляйте вопросы и ответы
+            Додавайте запитання та відповіді
           </div>
         </div>
 
@@ -127,7 +127,7 @@ export function EditInformationFaqForm({
               <input
                 value={item.question}
                 onChange={(e) => updateItem(index, "question", e.target.value)}
-                placeholder="Вопрос"
+                placeholder="Запитання"
                 className={adminInputClass}
               />
 
@@ -135,7 +135,7 @@ export function EditInformationFaqForm({
                 value={item.answer}
                 onChange={(e) => updateItem(index, "answer", e.target.value)}
                 rows={4}
-                placeholder="Ответ"
+                placeholder="Відповідь"
                 className={adminInputClass}
               />
             </div>
@@ -146,7 +146,7 @@ export function EditInformationFaqForm({
       {/* ADD */}
       <div className="mt-4">
         <button type="button" onClick={addItem} className={adminPrimaryButtonClass}>
-          + Добавить
+          + Додати
         </button>
       </div>
 
@@ -168,7 +168,7 @@ export function EditInformationFaqForm({
             }}
             className={adminPrimaryButtonClass}
           >
-            Сохранить
+            Зберегти
           </button>
 
           {section && (
@@ -178,7 +178,7 @@ export function EditInformationFaqForm({
               disabled={isDeletePending}
               className={adminDangerButtonClass}
             >
-              Удалить
+              Видалити
             </button>
           )}
         </div>
@@ -193,7 +193,7 @@ export function EditInformationFaqForm({
             }}
             className={adminSuccessButtonClass}
           >
-            Подтвердить
+            Підтвердити
           </button>
         )}
       </div>

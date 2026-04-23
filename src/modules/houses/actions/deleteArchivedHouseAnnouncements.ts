@@ -28,7 +28,7 @@ export async function deleteArchivedHouseAnnouncements(
   const housePageId = String(formData.get("housePageId") ?? "").trim();
 
   if (!houseId || !houseSlug || !housePageId) {
-    return { error: "Не переданы данные дома для удаления архивных объявлений." };
+    return { error: "Не передано дані будинку для видалення архівних оголошень." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -42,7 +42,7 @@ export async function deleteArchivedHouseAnnouncements(
 
   if (archivedSectionsError) {
     return {
-      error: `Не удалось получить архивные объявления: ${archivedSectionsError.message}`,
+      error: `Не вдалося отримати архівні оголошення: ${archivedSectionsError.message}`,
     };
   }
 
@@ -66,7 +66,7 @@ export async function deleteArchivedHouseAnnouncements(
 
   if (sectionsDeleteError) {
     return {
-      error: `Не удалось удалить архивные объявления: ${sectionsDeleteError.message}`,
+      error: `Не вдалося видалити архівні оголошення: ${sectionsDeleteError.message}`,
     };
   }
 
@@ -74,7 +74,7 @@ export async function deleteArchivedHouseAnnouncements(
 
   if (deletedIds.length !== sectionIds.length) {
     return {
-      error: `Удалены не все архивные объявления: ожидалось ${sectionIds.length}, удалено ${deletedIds.length}.`,
+      error: `Видалено не всі архівні оголошення: очікувалося ${sectionIds.length}, видалено ${deletedIds.length}.`,
     };
   }
 
@@ -86,7 +86,7 @@ export async function deleteArchivedHouseAnnouncements(
 
   if (versionsDeleteError) {
     return {
-      error: `Архивные объявления удалены, но не удалось удалить их версии: ${versionsDeleteError.message}`,
+      error: `Архівні оголошення видалено, але не вдалося видалити їхні версії: ${versionsDeleteError.message}`,
     };
   }
 

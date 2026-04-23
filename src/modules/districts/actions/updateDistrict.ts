@@ -22,7 +22,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 async function resolveUniqueDistrictSlug(params: {
@@ -68,7 +68,7 @@ export async function updateDistrict(
 
   if (!currentAdmin || (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")) {
     return {
-      error: "Недостаточно прав для редактирования района.",
+      error: "Недостатньо прав для редагування району.",
       success: null,
     };
   }
@@ -79,7 +79,7 @@ export async function updateDistrict(
 
   if (!id || !name || !themeColor) {
     return {
-      error: "Заполните название и выберите цвет района.",
+      error: "Заповніть назву та виберіть колір району.",
       success: null,
     };
   }
@@ -94,21 +94,21 @@ export async function updateDistrict(
 
   if (existingDistrictError) {
     return {
-      error: `Ошибка загрузки района: ${existingDistrictError.message}`,
+      error: `Помилка завантаження району: ${existingDistrictError.message}`,
       success: null,
     };
   }
 
   if (!existingDistrict) {
     return {
-      error: "Район не найден.",
+      error: "Район не знайдено.",
       success: null,
     };
   }
 
   if (existingDistrict.slug === DEFAULT_DISTRICT_SLUG) {
     return {
-      error: 'Системный район "Без района" нельзя редактировать.',
+      error: 'Системний район "Без району" не можна редагувати.',
       success: null,
     };
   }
@@ -117,7 +117,7 @@ export async function updateDistrict(
 
   if (!baseSlug) {
     return {
-      error: "Не удалось сформировать slug района.",
+      error: "Не вдалося сформувати slug району.",
       success: null,
     };
   }
@@ -134,7 +134,7 @@ export async function updateDistrict(
       error:
         error instanceof Error
           ? error.message
-          : "Не удалось сформировать уникальный slug района.",
+          : "Не вдалося сформувати унікальний slug району.",
       success: null,
     };
   }
@@ -152,7 +152,7 @@ export async function updateDistrict(
 
   if (updateError) {
     return {
-      error: `Ошибка обновления района: ${updateError.message}`,
+      error: `Помилка оновлення району: ${updateError.message}`,
       success: null,
     };
   }
@@ -160,7 +160,7 @@ export async function updateDistrict(
   if (!updatedDistrict) {
     return {
       error:
-        "Район не был обновлен. Скорее всего, у текущего пользователя нет прав на update для таблицы districts.",
+        "Район не було оновлено. Ймовірно, у поточного користувача немає прав на update для таблиці districts.",
       success: null,
     };
   }
@@ -179,7 +179,7 @@ export async function updateDistrict(
     entityId: updatedDistrict.id,
     entityLabel: updatedDistrict.name,
     actionType: "update_district",
-    description: `Обновлен район «${updatedDistrict.name}».`,
+    description: `Оновлено район «${updatedDistrict.name}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "districts",
@@ -204,6 +204,6 @@ export async function updateDistrict(
 
   return {
     error: null,
-    success: `Район «${updatedDistrict.name}» сохранен.`,
+    success: `Район «${updatedDistrict.name}» збережено.`,
   };
 }

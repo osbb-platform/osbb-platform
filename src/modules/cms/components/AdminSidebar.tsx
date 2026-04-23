@@ -32,37 +32,37 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
   const navigation: NavigationItem[] = [
     {
       href: ROUTES.admin.dashboard,
-      label: "Dashboard",
+      label: "Панель керування",
       visible: access.topLevel.dashboard,
     },
     {
       href: ROUTES.admin.districts,
-      label: "Районы",
+      label: "Райони",
       visible: access.topLevel.districts,
     },
     {
       href: ROUTES.admin.houses,
-      label: "Дома",
+      label: "Будинки",
       visible: access.topLevel.houses,
     },
     {
       href: ROUTES.admin.apartments,
-      label: "Квартиры",
+      label: "Квартири",
       visible: access.topLevel.apartments,
     },
     {
       href: ROUTES.admin.history,
-      label: "История",
+      label: "Історія",
       visible: access.topLevel.history,
     },
     {
       href: ROUTES.admin.employees,
-      label: "Сотрудники",
+      label: "Співробітники",
       visible: access.topLevel.employees,
     },
     {
       href: ROUTES.admin.companyPages,
-      label: "Сайт компании",
+      label: "Сайт компанії",
       visible: access.topLevel.companyPages,
     },
   ];
@@ -80,7 +80,7 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Панель управления управляющей компании
+            Панель керування керуючої компанії
           </p>
         </div>
 
@@ -120,11 +120,11 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
             }`}
           >
             <div className="mt-3 text-sm font-medium text-white">
-              {currentUser.fullName ?? currentUser.email ?? "Не указан"}
+              {currentUser.fullName ?? currentUser.email ?? "Не вказано"}
             </div>
 
             <div className="mt-1 text-sm text-slate-400">
-              {currentUser.email ?? "Email не указан"}
+              {currentUser.email ?? "Електронну пошту не вказано"}
             </div>
 
             <div className="mt-3 inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">

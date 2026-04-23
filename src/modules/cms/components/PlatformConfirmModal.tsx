@@ -69,10 +69,10 @@ export function PlatformConfirmModal({
   title,
   description = null,
   confirmLabel,
-  cancelLabel = "Отмена",
+  cancelLabel = "Скасувати",
   tone = "neutral",
   isPending = false,
-  pendingLabel = "Выполняем...",
+  pendingLabel = "Виконуємо...",
   onConfirm,
   onCancel,
 }: PlatformConfirmModalProps) {

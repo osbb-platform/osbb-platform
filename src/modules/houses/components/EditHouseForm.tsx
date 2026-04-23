@@ -109,7 +109,7 @@ export function EditHouseForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Название дома
+          Назва будинку
         </label>
         <input
           name="name"
@@ -121,7 +121,7 @@ export function EditHouseForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Системный slug
+          Системний slug
         </label>
         <input
           type="text"
@@ -130,13 +130,13 @@ export function EditHouseForm({
           className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-slate-400 outline-none"
         />
         <div className="mt-2 text-xs text-slate-500">
-          Slug дома уже используется для сайта дома и пока не редактируется.
+          Slug будинку вже використовується для сайту будинку та поки не редагується.
         </div>
       </div>
 
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Адрес
+          Адреса
         </label>
         <input
           name="address"
@@ -169,7 +169,7 @@ export function EditHouseForm({
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         >
           <option value="" disabled>
-            Выберите район
+            Оберіть район
           </option>
           {orderedDistricts.map((district) => (
             <option key={district.id} value={district.id}>
@@ -181,7 +181,7 @@ export function EditHouseForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Короткое описание
+          Короткий опис
         </label>
         <input
           name="shortDescription"
@@ -193,7 +193,7 @@ export function EditHouseForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Публичное описание
+          Публічний опис
         </label>
         <input
           name="publicDescription"
@@ -214,7 +214,7 @@ export function EditHouseForm({
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center px-4 text-center text-xs leading-5 text-slate-500">
-                  Сейчас используется изображение по умолчанию
+                  Зараз використовується зображення за замовчуванням
                 </div>
               )}
             </div>
@@ -223,9 +223,9 @@ export function EditHouseForm({
           <div className="min-w-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-200">Фото дома</div>
+                <div className="text-sm font-medium text-slate-200">Фото будинку</div>
                 <div className="mt-1 text-xs leading-5 text-slate-400">
-                  Используется на странице входа в кабинет дома.
+                  Використовується на сторінці входу до кабінету будинку.
                 </div>
               </div>
 
@@ -259,22 +259,22 @@ export function EditHouseForm({
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
-                  {previewUrl ? "Заменить фото" : "Выбрать файл"}
+                  {previewUrl ? "Замінити фото" : "Обрати файл"}
                 </button>
               </div>
             </div>
 
             <div className="mt-3 grid gap-1 text-xs leading-5 text-slate-500">
-              <div>Рекомендуется: 1600×900 px</div>
-              <div>Минимум: 1280×720 px</div>
-              <div>Формат: JPG, PNG или WebP</div>
-              <div>Размер файла: до 5 МБ</div>
-              <div>Лучше загружать горизонтальную фотографию, где дом находится по центру кадра</div>
+              <div>Рекомендовано: 1600×900 px</div>
+              <div>Мінімум: 1280×720 px</div>
+              <div>Формат: JPG, PNG або WebP</div>
+              <div>Розмір файлу: до 5 МБ</div>
+              <div>Краще завантажувати горизонтальну фотографію, де будинок знаходиться по центру кадру</div>
             </div>
 
             {selectedImage ? (
               <div className="mt-3 text-xs text-slate-400">
-                Выбран новый файл
+                Обрано новий файл
               </div>
             ) : null}
 
@@ -299,7 +299,7 @@ export function EditHouseForm({
                 }}
                 className="mt-0.5 h-4 w-4"
               />
-              <span>Удалить текущее фото и использовать изображение по умолчанию</span>
+              <span>Видалити поточне фото та використовувати зображення за замовчуванням</span>
             </label>
           </div>
         </div>

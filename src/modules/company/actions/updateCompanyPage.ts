@@ -21,7 +21,7 @@ function getActorDisplayName(params: {
   fullName: string | null;
   email: string | null;
 }) {
-  return params.fullName ?? params.email ?? "Администратор";
+  return params.fullName ?? params.email ?? "Адміністратор";
 }
 
 export async function updateCompanyPage(
@@ -40,18 +40,18 @@ export async function updateCompanyPage(
   const showInFooter = formData.get("showInFooter") === "true";
 
   if (!id || !title) {
-    return { error: "Заполните обязательные поля страницы." };
+    return { error: "Заповніть обов’язкові поля сторінки." };
   }
 
   const slug = normalizeSlug(slugInput || title);
 
   if (!slug) {
-    return { error: "Не удалось сформировать slug страницы." };
+    return { error: "Не вдалося сформувати slug сторінки." };
   }
 
   const allowedStatuses = ["draft", "in_review", "published", "archived"];
   if (!allowedStatuses.includes(statusInput)) {
-    return { error: "Передан недопустимый статус страницы." };
+    return { error: "Передано недопустимий статус сторінки." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -66,7 +66,7 @@ export async function updateCompanyPage(
 
     if (resetPrimaryError) {
       return {
-        error: `Ошибка сброса предыдущей основной страницы: ${resetPrimaryError.message}`,
+        error: `Помилка скидання попередньої основної сторінки: ${resetPrimaryError.message}`,
       };
     }
   }
@@ -91,7 +91,7 @@ export async function updateCompanyPage(
     .eq("id", id);
 
   if (error) {
-    return { error: `Ошибка обновления страницы компании: ${error.message}` };
+    return { error: `Помилка оновлення сторінки компанії: ${error.message}` };
   }
 
   const currentAdmin = await getCurrentAdminUser();
@@ -109,7 +109,7 @@ export async function updateCompanyPage(
     entityId: id,
     entityLabel: title,
     actionType: "update_company_page",
-    description: `Обновлена страница компании «${title}».`,
+    description: `Оновлено сторінку компанії «${title}».`,
     metadata: {
       sourceType: "cms",
       sourceModule: "company",

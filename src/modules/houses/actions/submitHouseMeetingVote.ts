@@ -32,7 +32,7 @@ export async function submitHouseMeetingVote(
 
   if (!houseSlug || !houseId || !sectionId || !meetingId || !apartmentId || !rawVotes) {
     return {
-      error: "Не удалось отправить голос. Проверьте квартиру и ответы.",
+      error: "Не вдалося надіслати голос. Перевірте квартиру та відповіді.",
       successMessage: null,
     };
   }
@@ -50,7 +50,7 @@ export async function submitHouseMeetingVote(
 
   if (!hasAccess) {
     return {
-      error: "Сессия доступа к дому не подтверждена.",
+      error: "Сесію доступу до будинку не підтверджено.",
       successMessage: null,
     };
   }
@@ -65,7 +65,7 @@ export async function submitHouseMeetingVote(
 
   if (sectionError || !section) {
     return {
-      error: "Не удалось загрузить собрание.",
+      error: "Не вдалося завантажити збори.",
       successMessage: null,
     };
   }
@@ -87,7 +87,7 @@ export async function submitHouseMeetingVote(
     votesMap = JSON.parse(rawVotes) as Record<string, VoteChoice>;
   } catch {
     return {
-      error: "Не удалось обработать результаты голосования.",
+      error: "Не вдалося обробити результати голосування.",
       successMessage: null,
     };
   }
@@ -160,7 +160,7 @@ export async function submitHouseMeetingVote(
 
   if (!submitted) {
     return {
-      error: "Эта квартира уже голосовала по данному собранию или не были выбраны ответы по всем вопросам.",
+      error: "Ця квартира вже голосувала за цими зборами або не було обрано відповіді на всі питання.",
       successMessage: null,
     };
   }
@@ -178,7 +178,7 @@ export async function submitHouseMeetingVote(
 
   if (updateError) {
     return {
-      error: `Не удалось сохранить голос: ${updateError.message}`,
+      error: `Не вдалося зберегти голос: ${updateError.message}`,
       successMessage: null,
     };
   }
@@ -188,6 +188,6 @@ export async function submitHouseMeetingVote(
 
   return {
     error: null,
-    successMessage: "Ваш голос учтен.",
+    successMessage: "Ваш голос враховано.",
   };
 }

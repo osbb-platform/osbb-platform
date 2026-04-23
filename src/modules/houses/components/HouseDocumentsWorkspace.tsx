@@ -25,21 +25,21 @@ type HouseDocumentsWorkspaceProps = {
 };
 
 const categoryOptions: Array<{ value: HouseDocumentCategory; label: string }> = [
-  { value: "regulations", label: "Регламент и уставные документы" },
-  { value: "tariffs", label: "Тарифы и финансовые документы" },
-  { value: "meetings", label: "Протоколы собраний" },
-  { value: "technical", label: "Техническая документация" },
-  { value: "contracts", label: "Договоры и подрядчики" },
-  { value: "resident_info", label: "Объявления и памятки для жильцов" },
+  { value: "regulations", label: "Регламент і статутні документи" },
+  { value: "tariffs", label: "Тарифи та фінансові документи" },
+  { value: "meetings", label: "Протоколи зборів" },
+  { value: "technical", label: "Технічна документація" },
+  { value: "contracts", label: "Договори та підрядники" },
+  { value: "resident_info", label: "Оголошення та пам’ятки для мешканців" },
 ];
 
 const visibilityOptions: Array<{
   value: HouseDocumentVisibility;
   label: string;
 }> = [
-  { value: "draft", label: "Черновик" },
-  { value: "private", label: "Только для администрации" },
-  { value: "published", label: "Опубликован для жильцов" },
+  { value: "draft", label: "Чернетка" },
+  { value: "private", label: "Тільки для адміністрації" },
+  { value: "published", label: "Опубліковано для мешканців" },
 ];
 
 function getCategoryLabel(category: HouseDocumentCategory) {
@@ -69,13 +69,13 @@ function getVisibilityClasses(visibility: HouseDocumentVisibility) {
 
 function formatDate(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleDateString("ru-RU", {
@@ -87,13 +87,13 @@ function formatDate(value: string | null) {
 
 function formatDateTime(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleString("ru-RU", {
@@ -107,7 +107,7 @@ function formatDateTime(value: string | null) {
 
 function formatFileSize(value: number | null) {
   if (!value || value <= 0) {
-    return "Размер не указан";
+    return "Розмір не вказано";
   }
 
   if (value < 1024) {
@@ -138,7 +138,7 @@ export function HouseDocumentsWorkspace({
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [actionLabel, setActionLabel] = useState("Обрабатываем документ...");
+  const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
 
   const [title, setTitle] = useState("");
   const [category, setCategory] =
@@ -179,7 +179,7 @@ const [fileError, setFileError] = useState<string | null>(null);
     setIsFormOpen(false);
     setSelectedDocumentId(null);
     setActionError(null);
-    setActionLabel("Обрабатываем документ...");
+    setActionLabel("Обробляємо документ...");
     resetForm();
   }, []);
 
@@ -204,10 +204,10 @@ const [fileError, setFileError] = useState<string | null>(null);
     setActionError(null);
     setActionLabel(
       selectedFile
-        ? "Загружаем и сохраняем документ..."
+        ? "Завантажуємо та зберігаємо документ..."
         : formMode === "edit"
-          ? "Обновляем документ..."
-          : "Создаем документ...",
+          ? "Оновлюємо документ..."
+          : "Створюємо документ...",
     );
 
     startTransition(async () => {
@@ -283,8 +283,8 @@ const [fileError, setFileError] = useState<string | null>(null);
           error instanceof Error
             ? error.message
             : formMode === "edit"
-              ? "Не удалось обновить документ."
-              : "Не удалось создать документ.",
+              ? "Не вдалося оновити документ."
+              : "Не вдалося створити документ.",
         );
       }
     });
@@ -326,7 +326,7 @@ const [fileError, setFileError] = useState<string | null>(null);
         setActionError(
           error instanceof Error
             ? error.message
-            : "Не удалось удалить документ.",
+            : "Не вдалося видалити документ.",
         );
       }
     });
@@ -353,20 +353,20 @@ const [fileError, setFileError] = useState<string | null>(null);
             <div>
               <h3 className="text-lg font-semibold text-white">
                 {formMode === "edit"
-                  ? "Редактирование документа"
-                  : "Новый документ"}
+                  ? "Редагування документа"
+                  : "Новий документ"}
               </h3>
               <p className="mt-2 text-sm text-slate-400">
                 {formMode === "edit"
-                  ? "Карточка открыта в верхней форме. Здесь можно изменить данные, заменить файл или удалить документ."
-                  : "Новый документ автоматически создается как черновик. Загрузи один PDF файл перед сохранением."}
+                  ? "Картку відкрито у верхній формі. Тут можна змінити дані, замінити файл або видалити документ."
+                  : "Новий документ автоматично створюється як чернетка. Завантаж один PDF файл перед збереженням."}
               </p>
             </div>
 
             <button
   type="button"
   onClick={closeForm}
-  aria-label="Закрыть форму"
+  aria-label="Закрити форму"
   className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-xl font-medium text-white transition hover:bg-slate-800"
 >
   ×
@@ -376,20 +376,20 @@ const [fileError, setFileError] = useState<string | null>(null);
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Название документа
+                Назва документа
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Например: Протокол собрания от 10.04.2026"
+                placeholder="Наприклад: Протокол зборів від 10.04.2026"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
               />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Категория
+                Категорія
               </label>
               <select
                 value={category}
@@ -463,7 +463,7 @@ const [fileError, setFileError] = useState<string | null>(null);
 
                 {selectedFile ? (
                   <div className="mt-2 text-xs text-slate-400">
-                    Будет загружен файл: {selectedFile.name} (
+                    Буде завантажено файл: {selectedFile.name} (
                     {formatFileSize(selectedFile.size)})
                   </div>
                 ) : null}
@@ -472,13 +472,13 @@ const [fileError, setFileError] = useState<string | null>(null);
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Описание
+                Опис
               </label>
               <textarea
                 rows={5}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Краткое описание документа, состава, периода или назначения"
+                placeholder="Короткий опис документа, складу, періоду або призначення"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
               />
             </div>
@@ -491,7 +491,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                       Файл документа
                     </div>
                     <p className="mt-1 text-sm text-slate-400">
-                      Можно загрузить новый файл, чтобы заменить текущий.
+                      Можна завантажити новий файл, щоб замінити поточний.
                     </p>
                   </div>
 
@@ -499,19 +499,19 @@ const [fileError, setFileError] = useState<string | null>(null);
                     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
                       <div className="flex flex-col gap-2">
                         <div className="text-sm font-medium text-white">
-                          Текущий файл:{" "}
-                          {selectedDocument.original_file_name ?? "Без имени"}
+                          Поточний файл:{" "}
+                          {selectedDocument.original_file_name ?? "Без назви"}
                         </div>
 
                         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
                           <span>
-                            Размер: {formatFileSize(selectedDocument.file_size_bytes)}
+                            Розмір: {formatFileSize(selectedDocument.file_size_bytes)}
                           </span>
                           <span>
-                            Загружен: {formatDateTime(selectedDocument.uploaded_at)}
+                            Завантажено: {formatDateTime(selectedDocument.uploaded_at)}
                           </span>
                           <span>
-                            Тип: {selectedDocument.mime_type || "Не указан"}
+                            Тип: {selectedDocument.mime_type || "Не вказано"}
                           </span>
                         </div>
 
@@ -523,11 +523,11 @@ const [fileError, setFileError] = useState<string | null>(null);
                               rel="noreferrer"
                               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
                             >
-                              Открыть текущий файл
+                              Відкрити поточний файл
                             </a>
                           ) : (
                             <span className="text-xs text-slate-500">
-                              Signed URL сейчас недоступен.
+                              Тимчасове посилання зараз недоступне.
                             </span>
                           )}
 
@@ -546,20 +546,20 @@ const [fileError, setFileError] = useState<string | null>(null);
                               }}
                               className="h-4 w-4 rounded border-slate-700 bg-slate-950"
                             />
-                            Удалить текущий файл
+                            Видалити поточний файл
                           </label>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">
-                      У этого документа пока нет загруженного файла.
+                      У цього документа поки немає завантаженого файла.
                     </div>
                   )}
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-200">
-                      Загрузить новый файл
+                      Завантажити новий файл
                     </label>
                     <input
                       ref={fileInputRef}
@@ -597,7 +597,7 @@ const [fileError, setFileError] = useState<string | null>(null);
 
                 {selectedFile ? (
                       <div className="mt-2 text-xs text-slate-400">
-                        Будет загружен файл: {selectedFile.name} (
+                        Буде завантажено файл: {selectedFile.name} (
                         {formatFileSize(selectedFile.size)})
                       </div>
                     ) : null}
@@ -619,7 +619,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                   disabled={isPending || Boolean(fileError)}
                   className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
                 >
-                  {isPending ? "Сохраняем..." : "Сохранить"}
+                  {isPending ? "Зберігаємо..." : "Зберегти"}
                 </button>
 
                 {formMode === "edit" &&
@@ -630,7 +630,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                     disabled={isPending || Boolean(fileError)}
                     className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/30 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
                   >
-                    Удалить
+                    Видалити
                   </button>
                 ) : null}
               </div>
@@ -652,7 +652,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                     }}
                     className="inline-flex items-center justify-center rounded-2xl border border-emerald-700 bg-emerald-950/40 px-5 py-3 text-sm font-medium text-emerald-200 transition hover:bg-emerald-950/70 disabled:opacity-60"
                   >
-                    Подтвердить
+                    Підтвердити
                   </button>
                 ) : null}
 
@@ -664,7 +664,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                     disabled={isPending || Boolean(fileError)}
                     className="inline-flex items-center justify-center rounded-2xl border border-amber-700 bg-amber-950/40 px-5 py-3 text-sm font-medium text-amber-200 transition hover:bg-amber-950/70 disabled:opacity-60"
                   >
-                    Архивировать
+                    Архівувати
                   </button>
                 ) : null}
               </div>
@@ -675,15 +675,15 @@ const [fileError, setFileError] = useState<string | null>(null);
 
       <div className="space-y-4">
         <div className="text-sm text-slate-400">
-          Найдено: {filteredDocuments.length}
+          Знайдено: {filteredDocuments.length}
         </div>
 
 
 
       {filteredDocuments.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900 p-6 text-slate-400">
-          Документы пока не найдены. Создай первый документ через кнопку
-          «Новый документ».
+          Документи поки не знайдено. Створи перший документ через кнопку
+          «Новий документ».
         </div>
       ) : (
         <div className="grid gap-4">
@@ -712,13 +712,13 @@ const [fileError, setFileError] = useState<string | null>(null);
 
                       {isSelected ? (
                         <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white">
-                          Открыт в форме
+                          Відкрито у формі
                         </span>
                       ) : null}
 
                       {hasAttachment ? (
                         <span className="rounded-full border border-sky-500/20 bg-sky-500/15 px-3 py-1 text-xs font-medium text-sky-300">
-                          Файл прикреплен
+                          Файл прикріплено
                         </span>
                       ) : null}
                     </div>
@@ -728,26 +728,26 @@ const [fileError, setFileError] = useState<string | null>(null);
                     </div>
 
                     <div className="mt-3 line-clamp-2 text-sm leading-6 text-slate-300">
-                      {document.description || "Описание документа пока не добавлено."}
+                      {document.description || "Опис документа поки не додано."}
                     </div>
 
                     {hasAttachment ? (
                       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
                         <span>
-                          Файл: {document.original_file_name || "Без имени"}
+                          Файл: {document.original_file_name || "Без назви"}
                         </span>
                         <span>
-                          Размер: {formatFileSize(document.file_size_bytes)}
+                          Розмір: {formatFileSize(document.file_size_bytes)}
                         </span>
                         <span>
-                          Загружен: {formatDateTime(document.uploaded_at)}
+                          Завантажено: {formatDateTime(document.uploaded_at)}
                         </span>
                       </div>
                     ) : null}
 
                     <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500">
-                      <span>Создан: {formatDate(document.created_at)}</span>
-                      <span>Обновлен: {formatDateTime(document.updated_at)}</span>
+                      <span>Створено: {formatDate(document.created_at)}</span>
+                      <span>Оновлено: {formatDateTime(document.updated_at)}</span>
                     </div>
                   </div>
 
@@ -759,7 +759,7 @@ const [fileError, setFileError] = useState<string | null>(null);
                     </span>
 
                     <span className="text-xs text-slate-500">
-                      Нажми для редактирования
+                      Натисни для редагування
                     </span>
                   </div>
                 </div>
@@ -773,14 +773,14 @@ const [fileError, setFileError] = useState<string | null>(null);
       <PlatformConfirmModal
         open={isDeleteConfirmOpen}
         tone="warning"
-        title="Перенести в архив?"
+        title="Перенести в архів?"
         description={
           selectedDocument
-            ? `После подтверждения документ «${selectedDocument.title}» будет перенесен в архив и скрыт с сайта.`
-            : "После подтверждения документ будет перенесен в архив и скрыт с сайта."
+            ? `Після підтвердження документ «${selectedDocument.title}» буде перенесено в архів і приховано з сайту.`
+            : "Після підтвердження документ буде перенесено в архів і приховано з сайту."
         }
-        confirmLabel="Архивировать"
-        pendingLabel="Архивируем..."
+        confirmLabel="Архівувати"
+        pendingLabel="Архівуємо..."
         isPending={isPending}
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDeleteDocument}

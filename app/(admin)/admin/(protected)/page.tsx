@@ -5,16 +5,16 @@ import { getAdminDashboardV1 } from "@/src/modules/houses/services/getAdminDashb
 
 function formatDate(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString("uk-UA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -23,16 +23,16 @@ function formatDate(value: string | null) {
 
 function formatDateTime(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дата не вказана";
   }
 
-  return date.toLocaleString("ru-RU", {
+  return date.toLocaleString("uk-UA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -113,54 +113,54 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-          Центр управления
+          Центр керування
         </div>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-          Панель управления
+          Панель керування
         </h1>
 
         <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-400">
-          Единая обзорная панель по всем домам: что требует подтверждения, какие изменения недавно опубликованы, где есть незавершенные настройки и куда нужно быстро перейти для действия.
+          Єдина оглядова панель по всіх будинках: що потребує підтвердження, які зміни нещодавно опубліковані, де є незавершені налаштування та куди потрібно швидко перейти для дії.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <KpiTile
-            label="Всего домов"
+            label="Усього будинків"
             value={dashboard.kpi.totalHouses}
-            hint="Активные дома платформы"
+            hint="Активні будинки платформи"
             accent="slate"
           />
           <KpiTile
-            label="Домов с черновиками"
+            label="Будинків із чернетками"
             value={dashboard.kpi.housesWithDrafts}
-            hint="Требуют проверки"
+            hint="Потребують перевірки"
             accent="amber"
           />
           <KpiTile
-            label="Домов без квартир"
+            label="Будинків без квартир"
             value={dashboard.kpi.housesWithoutApartments}
-            hint="Нужна настройка"
+            hint="Потрібне налаштування"
             accent="rose"
           />
           <KpiTile
-            label="Материалов на подтверждении"
+            label="Матеріалів на підтвердженні"
             value={dashboard.kpi.draftsForReview}
-            hint="Очередь администратора"
+            hint="Черга адміністратора"
             accent="amber"
           />
           <KpiTile
-            label="Публикаций за 7 дней"
+            label="Публікацій за 7 днів"
             value={dashboard.kpi.recentPublications7d}
-            hint="Активность сайта дома"
+            hint="Активність сайту будинку"
             accent="emerald"
           />
         </div>
       </section>
 
       <AdminDashboardWidgetCard
-        title="Требует внимания"
-        subtitle="Самые свежие материалы, ожидающие подтверждения администратора"
+        title="Потребує уваги"
+        subtitle="Найсвіжіші матеріали, що очікують підтвердження адміністратора"
       >
         <AdminDashboardAttentionCarousel items={dashboard.reviewQueue} />
       </AdminDashboardWidgetCard>
@@ -168,8 +168,8 @@ export default async function AdminDashboardPage() {
       <div className="grid auto-rows-fr gap-6 xl:grid-cols-2">
 
         <AdminDashboardWidgetCard
-          title="Быстрые переходы"
-          subtitle="Релевантные дома и проблемные точки входа"
+          title="Швидкі переходи"
+          subtitle="Релевантні будинки та проблемні точки входу"
           scroll
           maxRows={10}
         >
@@ -202,13 +202,13 @@ export default async function AdminDashboardPage() {
               ))}
             </div>
           ) : (
-            <EmptyState text="Нет быстрых переходов для отображения." />
+            <EmptyState text="Немає швидких переходів для відображення." />
           )}
         </AdminDashboardWidgetCard>
 
         <AdminDashboardWidgetCard
-          title="Последние публикации"
-          subtitle="Последние опубликованные изменения в публичных разделах за 7 дней"
+          title="Останні публікації"
+          subtitle="Останні опубліковані зміни в публічних розділах за 7 днів"
           scroll
           maxRows={10}
         >
@@ -250,12 +250,12 @@ export default async function AdminDashboardPage() {
               ))}
             </div>
           ) : (
-            <EmptyState text="За последние 7 дней опубликованных изменений не было." />
+            <EmptyState text="За останні 7 днів опублікованих змін не було." />
           )}
         </AdminDashboardWidgetCard>
         <AdminDashboardWidgetCard
-          title="Черновики на подтверждение"
-          subtitle="Материалы, ожидающие подтверждения. Сначала самые свежие."
+          title="Чернетки на підтвердження"
+          subtitle="Матеріали, що очікують підтвердження. Спочатку найсвіжіші."
           scroll
           maxRows={10}
         >
@@ -282,19 +282,19 @@ export default async function AdminDashboardPage() {
                     href={item.href}
                     className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
                   >
-                    Открыть
+                    Відкрити
                   </Link>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState text="Сейчас нет черновиков на подтверждение." />
+            <EmptyState text="Зараз немає чернеток на підтвердження." />
           )}
         </AdminDashboardWidgetCard>
 
         <AdminDashboardWidgetCard
-          title="Проблемные дома"
-          subtitle="Дома, где есть незавершенные материалы или не настроены квартиры"
+          title="Проблемні будинки"
+          subtitle="Будинки, де є незавершені матеріали або не налаштовані квартири"
           scroll
           maxRows={10}
         >
@@ -312,13 +312,13 @@ export default async function AdminDashboardPage() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       {item.hasDrafts ? (
                         <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-100">
-                          Есть черновики
+                          Є чернетки
                         </span>
                       ) : null}
 
                       {!item.hasApartments ? (
                         <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-100">
-                          Нет квартир
+                          Немає квартир
                         </span>
                       ) : null}
                     </div>
@@ -334,13 +334,13 @@ export default async function AdminDashboardPage() {
               ))}
             </div>
           ) : (
-            <EmptyState text="Сейчас нет домов, требующих внимания." />
+            <EmptyState text="Зараз немає будинків, що потребують уваги." />
           )}
         </AdminDashboardWidgetCard>
 
         <AdminDashboardWidgetCard
-          title="Нужно настроить квартиры"
-          subtitle="Дома без квартир"
+          title="Потрібно налаштувати квартири"
+          subtitle="Будинки без квартир"
           scroll
           maxRows={10}
         >
@@ -359,40 +359,40 @@ export default async function AdminDashboardPage() {
                     href={item.href}
                     className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
                   >
-                    К квартирам
+                    До квартир
                   </Link>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState text="Все дома уже имеют квартиры." />
+            <EmptyState text="Усі будинки вже мають квартири." />
           )}
         </AdminDashboardWidgetCard>
 
         <AdminDashboardWidgetCard
-          title="Наполнение домов"
-          subtitle="Сводка по материалам в работе и опубликованным разделам"
+          title="Наповнення будинків"
+          subtitle="Зведення по матеріалах у роботі та опублікованих розділах"
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <KpiTile
-              label="Материалов в работе"
+              label="Матеріалів у роботі"
               value={dashboard.contentPipeline.totalDraftSections}
-              hint="Черновики и секции, которые ещё не доведены до публикации."
+              hint="Чернетки та секції, які ще не доведені до публікації."
             />
             <KpiTile
-              label="Опубликованных разделов"
+              label="Опублікованих розділів"
               value={dashboard.contentPipeline.totalPublishedSections}
-              hint="Активные разделы, которые уже опубликованы и доступны на сайтах домов."
+              hint="Активні розділи, які вже опубліковані та доступні на сайтах будинків."
             />
             <KpiTile
-              label="Домов с материалами в работе"
+              label="Будинків із матеріалами в роботі"
               value={dashboard.contentPipeline.housesWithDrafts}
-              hint="Количество домов, в которых есть хотя бы один черновик или незавершённый материал."
+              hint="Кількість будинків, у яких є хоча б одна чернетка або незавершений матеріал."
             />
             <KpiTile
-              label="Домов с опубликованным наполнением"
+              label="Будинків з опублікованим наповненням"
               value={dashboard.contentPipeline.housesWithPublishedContent}
-              hint="Количество домов, где уже есть опубликованные разделы для жителей."
+              hint="Кількість будинків, де вже є опубліковані розділи для мешканців."
             />
           </div>
 
@@ -401,7 +401,7 @@ export default async function AdminDashboardPage() {
               href="/admin/houses"
               className="inline-flex items-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
             >
-              Открыть список домов
+              Відкрити список будинків
             </Link>
           </div>
         </AdminDashboardWidgetCard>

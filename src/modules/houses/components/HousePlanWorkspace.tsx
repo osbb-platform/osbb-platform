@@ -148,7 +148,7 @@ function normalizePlanTasks(content: Record<string, unknown>): PlanTask[] {
 
 function getDatePreview(task: PlanTask) {
   if (task.dateMode === "deadline") {
-    return task.deadlineAt || "Без дедлайна";
+    return task.deadlineAt || "Без дедлайну";
   }
 
   return `${task.startDate || "?"} → ${task.endDate || "?"}`;
@@ -156,9 +156,9 @@ function getDatePreview(task: PlanTask) {
 
 function getStatusOptions() {
   return [
-    { value: "planned", label: "Запланировано" },
-    { value: "in_progress", label: "В работе" },
-    { value: "completed", label: "Выполнено" },
+    { value: "planned", label: "Заплановано" },
+    { value: "in_progress", label: "В роботі" },
+    { value: "completed", label: "Виконано" },
   ] as const;
 }
 
@@ -193,7 +193,7 @@ export function HousePlanWorkspace({
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [confirmAction, setConfirmAction] = useState<"publish" | "delete" | "archive" | null>(null);
   const [draftPublishStatus, setDraftPublishStatus] = useState<PublishablePlanTaskStatus>("planned");
-  const [actionLabel, setActionLabel] = useState("Обрабатываем задачу...");
+  const [actionLabel, setActionLabel] = useState("Обробляємо завдання...");
 
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedPdfFiles, setSelectedPdfFiles] = useState<File[]>([]);
@@ -389,16 +389,16 @@ const [pdfError, setPdfError] = useState<string | null>(null);
   async function handleSubmit(formData: FormData) {
     setActionLabel(
       submitIntent === "delete"
-        ? "Удаляем задачу..."
+        ? "Видаляємо завдання..."
         : submitIntent === "publish"
-          ? "Публикуем задачу..."
+          ? "Публікуємо завдання..."
           : submitIntent === "archive"
-            ? "Архивируем задачу..."
+            ? "Архівуємо завдання..."
             : selectedPdfFiles.length > 0 || selectedImageFiles.length > 0
-              ? "Загружаем и сохраняем вложения..."
+              ? "Завантажуємо та зберігаємо вкладення..."
               : workspaceMode === "edit"
-                ? "Обновляем задачу..."
-                : "Создаем задачу...",
+                ? "Оновлюємо завдання..."
+                : "Створюємо завдання...",
     );
 
     await formAction(formData);
@@ -423,7 +423,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       }
 
       resetWorkspace();
-      setActionLabel("Обрабатываем задачу...");
+      setActionLabel("Обробляємо завдання...");
     });
   }
 
@@ -441,9 +441,9 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">План работ дома</h2>
+            <h2 className="text-xl font-semibold text-white">План робіт будинку</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Управление задачами дома по срокам, приоритетам и этапам выполнения с публикацией для жильцов.
+              Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
             </p>
           </div>
 
@@ -452,16 +452,16 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             onClick={openCreateMode}
             className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
           >
-            Новая задача
+            Нове завдання
           </button>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3">
             {[
-              ["active", "Активные", counters.active],
-              ["draft", "Черновики", counters.draft],
-              ["archive", "Архив", counters.archive],
+              ["active", "Активні", counters.active],
+              ["draft", "Чернетки", counters.draft],
+              ["archive", "Архів", counters.archive],
             ].map(([key, label, count]) => (
               <button
                 key={key}
@@ -498,7 +498,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           <input type="hidden" name="sectionId" value={section.id} />
           <input type="hidden" name="houseId" value={houseId} />
           <input type="hidden" name="houseSlug" value={houseSlug} />
-          <input type="hidden" name="title" value="План работ" />
+          <input type="hidden" name="title" value="План робіт" />
           <input type="hidden" name="status" value="published" />
           <input type="hidden" name="kind" value="plan" />
           <input type="hidden" name="planIntent" value={submitIntent} />
@@ -527,18 +527,18 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             <div>
               <h3 className="text-lg font-semibold text-white">
                 {workspaceMode === "edit"
-                  ? "Редактирование задачи"
-                  : "Новая задача"}
+                  ? "Редагування завдання"
+                  : "Нове завдання"}
               </h3>
               <p className="mt-2 text-sm text-slate-400">
-                Новая задача сначала сохраняется как черновик. После сохранения карточку можно открыть повторно и изменить ее статус.
+                Нове завдання спочатку зберігається як чернетка. Після збереження картку можна повторно відкрити та змінити її статус.
               </p>
             </div>
 
             <button
               type="button"
               onClick={resetWorkspace}
-              aria-label="Закрыть форму"
+              aria-label="Закрити форму"
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-xl font-medium text-white transition hover:bg-slate-800"
             >
               ×
@@ -551,7 +551,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               onChange={(e) =>
                 setDraft((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Название задачи"
+              placeholder="Назва завдання"
               className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
 
@@ -564,7 +564,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   description: e.target.value,
                 }))
               }
-              placeholder="Описание"
+              placeholder="Опис"
               className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
 
@@ -579,13 +579,13 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 }
                 className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
               >
-                <option value="high">Красный — срочный приоритет</option>
-                <option value="medium">Оранжевый — важная задача</option>
-                <option value="low">Серый — обычная задача</option>
+                <option value="high">Червоний — терміновий пріоритет</option>
+                <option value="medium">Помаранчевий — важливе завдання</option>
+                <option value="low">Сірий — звичайне завдання</option>
               </select>
 
               <div className="mt-2 text-xs text-slate-400">
-                Этот приоритет будет виден на карточке и поможет быстро ориентироваться в списке задач.
+                Цей пріоритет буде видно на картці та допоможе швидко орієнтуватися у списку завдань.
               </div>
             </div>
 
@@ -599,8 +599,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               }
               className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             >
-              <option value="deadline">Дедлайн</option>
-              <option value="range">Период</option>
+              <option value="deadline">Кінцевий термін</option>
+              <option value="range">Період</option>
             </select>
 
             {draft.dateMode === "deadline" ? (
@@ -650,7 +650,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   contractor: e.target.value,
                 }))
               }
-              placeholder="Подрядчик"
+              placeholder="Підрядник"
               className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
             />
 
@@ -658,10 +658,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               <div className="flex flex-col gap-4">
                 <div>
                   <div className="text-sm font-medium text-white">
-                    Фото задачи
+                    Фото завдання
                   </div>
                   <p className="mt-1 text-sm text-slate-400">
-                    До 5 изображений.
+                    До 5 зображень.
                   </p>
                 </div>
 
@@ -680,7 +680,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                           onClick={() => removeExistingImage(item.id)}
                           className="rounded-2xl border border-red-900 px-3 py-2 text-xs font-medium text-red-300 transition hover:bg-red-950/40"
                         >
-                          Удалить
+                          Видалити
                         </button>
                       </div>
                     ))}
@@ -707,7 +707,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                         : "border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
                     }`}
                   >
-                    Выбрать
+                    Обрати
                   </label>
 
                   {selectedImageFiles.length > 0 ? (
@@ -716,7 +716,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       onClick={clearSelectedImages}
                       className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
                     >
-                      Очистить выбор
+                      Очистити вибір
                     </button>
                   ) : null}
                 </div>
@@ -728,7 +728,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                         key={`${file.name}-${index}`}
                         className="rounded-2xl border border-slate-800 bg-slate-900 p-3 text-sm text-slate-300"
                       >
-                        🖼 Новый файл: {file.name}
+                        🖼 Новий файл: {file.name}
                       </div>
                     ))}
                   </div>
@@ -740,10 +740,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               <div className="flex flex-col gap-4">
                 <div>
                   <div className="text-sm font-medium text-white">
-                    PDF документы
+                    PDF документи
                   </div>
                   <p className="mt-1 text-sm text-slate-400">
-                    До 2 PDF файлов.
+                    До 2 PDF файлів.
                   </p>
                 </div>
 
@@ -762,7 +762,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                           onClick={() => removeExistingDocument(item.id)}
                           className="rounded-2xl border border-red-900 px-3 py-2 text-xs font-medium text-red-300 transition hover:bg-red-950/40"
                         >
-                          Удалить
+                          Видалити
                         </button>
                       </div>
                     ))}
@@ -789,7 +789,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                         : "border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
                     }`}
                   >
-                    Выбрать
+                    Обрати
                   </label>
 
                   {pdfError ? (
@@ -804,7 +804,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       onClick={clearSelectedPdfs}
                       className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
                     >
-                      Очистить выбор
+                      Очистити вибір
                     </button>
                   ) : null}
                 </div>
@@ -816,7 +816,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                         key={`${file.name}-${index}`}
                         className="rounded-2xl border border-slate-800 bg-slate-900 p-3 text-sm text-slate-300"
                       >
-                        📄 Новый файл: {file.name}
+                        📄 Новий файл: {file.name}
                       </div>
                     ))}
                   </div>
@@ -842,7 +842,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   ))}
                 </select>
                 <div className="mt-2 text-xs text-slate-400">
-                  Этот статус будет применен после подтверждения и публикации задачи.
+                  Цей статус буде застосовано після підтвердження та публікації завдання.
                 </div>
               </div>
             ) : workspaceMode === "edit" && draft.status !== "draft" ? (
@@ -870,7 +870,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     onClick={() => setSubmitIntent("save")}
                     className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-white px-10 py-5 text-2xl font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "save" ? "Сохраняем..." : "Сохранить"}
+                    {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
 
                   {workspaceMode === "edit" &&
@@ -881,7 +881,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       onClick={() => setConfirmAction("delete")}
                       className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-red-900 px-10 py-5 text-2xl font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
                     >
-                      {isPending && submitIntent === "delete" ? "Удаляем..." : "Удалить"}
+                      {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
                   ) : null}
                 </div>
@@ -894,7 +894,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       onClick={() => setConfirmAction("publish")}
                       className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-emerald-500 px-10 py-5 text-2xl font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
                     >
-                      {isPending && submitIntent === "publish" ? "Подтверждаем..." : "Подтвердить"}
+                      {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                     </button>
                   </div>
                 ) : workspaceMode === "edit" &&
@@ -907,7 +907,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       onClick={() => setConfirmAction("archive")}
                       className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-amber-700 px-10 py-5 text-2xl font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
                     >
-                      {isPending && submitIntent === "archive" ? "Архивируем..." : "Архивировать"}
+                      {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                     </button>
                   </div>
                 ) : null}
@@ -927,10 +927,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         {visibleTasks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm leading-6 text-slate-400">
             {activeTab === "active"
-              ? "Сейчас нет активных задач. После подтверждения и запуска работ карточки появятся здесь."
+              ? "Зараз немає активних завдань. Після підтвердження та запуску робіт картки з’являться тут."
               : activeTab === "draft"
-                ? "Черновиков пока нет. Новая задача появится здесь сразу после сохранения."
-                : "Архив задач пока пуст. Перенесенные карточки будут отображаться здесь."}
+                ? "Чернеток поки немає. Нове завдання з’явиться тут одразу після збереження."
+                : "Архів завдань поки порожній. Перенесені картки відображатимуться тут."}
           </div>
         ) : (
           visibleTasks.map((task) => {
@@ -939,10 +939,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
             const priorityLabel =
               task.priority === "high"
-                ? "Срочный"
+                ? "Терміновий"
                 : task.priority === "medium"
-                  ? "Важный"
-                  : "Обычный";
+                  ? "Важливий"
+                  : "Звичайний";
 
             const priorityClasses =
               task.priority === "high"
@@ -953,14 +953,14 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
             const statusLabel =
               task.status === "planned"
-                ? "Запланировано"
+                ? "Заплановано"
                 : task.status === "in_progress"
-                  ? "В работе"
+                  ? "В роботі"
                   : task.status === "completed"
-                    ? "Выполнено"
+                    ? "Виконано"
                     : task.status === "archived"
-                      ? "Архив"
-                      : "Черновик";
+                      ? "Архів"
+                      : "Чернетка";
 
             const statusClasses =
               task.status === "planned"
@@ -999,11 +999,11 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 </div>
 
                 <div className="mt-3 text-lg font-semibold text-white">
-                  {task.title || "Задача без названия"}
+                  {task.title || "Завдання без назви"}
                 </div>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {task.description || "Описание задачи пока не заполнено."}
+                  {task.description || "Опис завдання поки не заповнено."}
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-slate-500">
@@ -1020,10 +1020,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       </div>
       <PlatformConfirmModal
         open={confirmAction === "delete"}
-        title="Удалить черновик задачи?"
-        description="Черновик будет удален без возможности восстановления."
-        confirmLabel="Удалить задачу"
-        pendingLabel="Удаляем..."
+        title="Видалити чернетку завдання?"
+        description="Чернетку буде видалено без можливості відновлення."
+        confirmLabel="Видалити завдання"
+        pendingLabel="Видаляємо..."
         tone="destructive"
         isPending={isPending && submitIntent === "delete"}
         onCancel={() => setConfirmAction(null)}
@@ -1038,10 +1038,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}
-        title="Подтвердить публикацию задачи?"
-        description="После подтверждения задача станет видимой на публичной странице дома."
-        confirmLabel="Подтвердить задачу"
-        pendingLabel="Подтверждаем..."
+        title="Підтвердити публікацію завдання?"
+        description="Після підтвердження завдання стане видимим на публічній сторінці будинку."
+        confirmLabel="Підтвердити завдання"
+        pendingLabel="Підтверджуємо..."
         tone="publish"
         isPending={isPending && submitIntent === "publish"}
         onCancel={() => setConfirmAction(null)}
@@ -1056,10 +1056,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
       <PlatformConfirmModal
         open={confirmAction === "archive"}
-        title="Перенести задачу в архив?"
-        description="После архивации задача исчезнет из активного списка и публичной страницы дома, но останется доступной в архиве."
-        confirmLabel="Архивировать задачу"
-        pendingLabel="Архивируем..."
+        title="Перенести завдання до архіву?"
+        description="Після архівації завдання зникне з активного списку та публічної сторінки будинку, але залишиться доступним в архіві."
+        confirmLabel="Архівувати завдання"
+        pendingLabel="Архівуємо..."
         tone="warning"
         isPending={isPending && submitIntent === "archive"}
         onCancel={() => setConfirmAction(null)}

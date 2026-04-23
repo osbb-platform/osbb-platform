@@ -13,15 +13,15 @@ function getRoleLabel(role: string | null) {
   if (role === "superadmin") return "Superadmin";
   if (role === "admin") return "Admin";
   if (role === "manager") return "Manager";
-  return "Без роли";
+  return "Без ролі";
 }
 
 function getStatusLabel(status: string | null) {
-  if (status === "invited") return "Invited";
-  if (status === "active") return "Active";
-  if (status === "inactive") return "Inactive";
-  if (status === "archived") return "Archived";
-  return "Без статуса";
+  if (status === "invited") return "Запрошено";
+  if (status === "active") return "Активний";
+  if (status === "inactive") return "Неактивний";
+  if (status === "archived") return "Архівний";
+  return "Без статусу";
 }
 
 function formatDate(value: string | null) {
@@ -60,7 +60,7 @@ export function EmployeeCard({ currentUserId,
       : access.delete) &&
     (access.deleteSuperadmin || isMyEmployee);
 
-  const employeeLabel = employee.fullName ?? employee.email ?? "Сотрудник";
+  const employeeLabel = employee.fullName ?? employee.email ?? "Співробітник";
 
   return (
     <article className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
@@ -71,11 +71,11 @@ export function EmployeeCard({ currentUserId,
           </h3>
 
           <p className="mt-1 text-sm text-slate-400">
-            {employee.email ?? "Email появится после активации профиля"}
+            {employee.email ?? "Email з’явиться після активації профілю"}
           </p>
 
           <p className="mt-1 text-sm text-slate-500">
-            {employee.jobTitle ?? "Должность пока не указана"}
+            {employee.jobTitle ?? "Посада поки не вказана"}
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export function EmployeeCard({ currentUserId,
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            Создан
+            Створено
           </div>
           <div className="mt-2 text-sm font-medium text-white">
             {formatDate(employee.createdAt)}
@@ -102,7 +102,7 @@ export function EmployeeCard({ currentUserId,
 
         <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            Инвайт
+            Запрошення
           </div>
           <div className="mt-2 text-sm font-medium text-white">
             {formatDate(employee.lastInviteSentAt ?? employee.invitedAt)}
@@ -111,7 +111,7 @@ export function EmployeeCard({ currentUserId,
 
         <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            Активация
+            Активація
           </div>
           <div className="mt-2 text-sm font-medium text-white">
             {formatDate(employee.activatedAt)}
@@ -120,10 +120,10 @@ export function EmployeeCard({ currentUserId,
 
         <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            Состояние
+            Стан
           </div>
           <div className="mt-2 text-sm font-medium text-white">
-            {employee.isActive ? "В рабочем списке" : "Отключен"}
+            {employee.isActive ? "У робочому списку" : "Вимкнено"}
           </div>
         </div>
       </div>

@@ -76,13 +76,13 @@ const initialDeleteArchivedHouseState: DeleteArchivedHouseState = {
 
 function formatArchivedAt(value: string | null) {
   if (!value) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleDateString("ru-RU", {
@@ -96,7 +96,7 @@ function formatCreatedAt(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Дата не указана";
+    return "Дату не вказано";
   }
 
   return date.toLocaleDateString("ru-RU", {
@@ -207,13 +207,13 @@ function HouseEditorCard({
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-            Настройки дома
+            Налаштування будинку
           </div>
           <h2 className="mt-4 text-2xl font-semibold text-white">
             {house.name}
           </h2>
           <p className="mt-2 text-sm leading-7 text-slate-400">
-            Изменение параметров дома и привязки к району.
+            Зміна параметрів будинку та прив’язки до району.
           </p>
         </div>
 
@@ -222,7 +222,7 @@ function HouseEditorCard({
             type="button"
             onClick={() => setIsAnnouncementOpen(true)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
-            title="Объявление для жителей"
+            title="Оголошення для мешканців"
           >
             🧾
           </button>
@@ -231,7 +231,7 @@ function HouseEditorCard({
             type="button"
             onClick={onClose}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
-            aria-label="Закрыть настройки дома"
+            aria-label="Закрити налаштування будинку"
           >
           ×
         </button>
@@ -253,7 +253,7 @@ function HouseEditorCard({
           disabled={isSavePending}
           className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
         >
-          {isSavePending ? "Сохраняем..." : "Сохранить данные дома"}
+          {isSavePending ? "Зберігаємо..." : "Зберегти дані будинку"}
         </button>
 
         <form ref={archiveFormRef} action={archiveAction} onSubmit={handleArchiveSubmit}>
@@ -263,17 +263,17 @@ function HouseEditorCard({
             disabled={isArchivePending}
             className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
           >
-            {isArchivePending ? "Архивируем..." : "Архивировать дом"}
+            {isArchivePending ? "Архівуємо..." : "Архівувати будинок"}
           </button>
         </form>
       </div>
       <PlatformConfirmModal
         open={isArchiveConfirmOpen}
         tone="warning"
-        title="Архивировать дом?"
-        description={`После подтверждения дом «${house.name}» исчезнет из активного списка CMS, а публичный сайт дома перестанет работать. Все данные, разделы и история сохранятся и смогут быть восстановлены позже.`}
-        confirmLabel="Переместить в архив"
-        pendingLabel="Архивируем..."
+        title="Архівувати будинок?"
+        description={`Після підтвердження будинок «${house.name}» зникне з активного списку CMS, а публічний сайт будинку перестане працювати. Усі дані, розділи та історія збережуться і зможуть бути відновлені пізніше.`}
+        confirmLabel="Перемістити в архів"
+        pendingLabel="Архівуємо..."
         isPending={isArchivePending}
         onCancel={() => setIsArchiveConfirmOpen(false)}
         onConfirm={handleConfirmArchive}
@@ -284,7 +284,7 @@ function HouseEditorCard({
           <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div className="text-sm font-medium text-slate-900">
-                Объявление для жителей
+                Оголошення для мешканців
               </div>
 
               <div className="flex items-center gap-2">
@@ -293,7 +293,7 @@ function HouseEditorCard({
                   download={`${house.slug}.pdf`}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
                 >
-                  Скачать PDF
+                  Завантажити PDF
                 </a>
 
                 <button
@@ -397,7 +397,7 @@ function ArchivedHouseRestoreCard({
               </span>
 
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Архив
+                Архів
               </span>
 
               {house.district ? (
@@ -413,7 +413,7 @@ function ArchivedHouseRestoreCard({
 
           <div className="mt-2 text-sm text-slate-400">{house.address}</div>
           <div className="mt-1 text-sm text-slate-500">
-            ОСББ: {house.osbb_name ?? "не указано"}
+            ОСББ: {house.osbb_name ?? "не вказано"}
           </div>
         </div>
 
@@ -422,7 +422,7 @@ function ArchivedHouseRestoreCard({
             type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-800 text-slate-500"
             aria-label="Настройки недоступны для архивного дома"
-            title="Архивный дом"
+            title="Архівний будинок"
             disabled
           >
             <SettingsIcon />
@@ -433,8 +433,8 @@ function ArchivedHouseRestoreCard({
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
-            aria-label={`Открыть сайт дома ${house.name}`}
-            title="Открыть сайт дома"
+            aria-label={`Відкрити сайт будинку ${house.name}`}
+            title="Відкрити сайт будинку"
           >
             <EyeIcon />
           </Link>
@@ -450,7 +450,7 @@ function ArchivedHouseRestoreCard({
               disabled={isPending || isDeletePending}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
             >
-              {isPending ? "Восстанавливаем..." : "Восстановить"}
+              {isPending ? "Відновлюємо..." : "Відновити"}
             </button>
           </form> : null}
 
@@ -461,14 +461,14 @@ function ArchivedHouseRestoreCard({
               disabled={isPending || isDeletePending}
               className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
             >
-              {isDeletePending ? "Удаляем..." : "Удалить"}
+              {isDeletePending ? "Видаляємо..." : "Видалити"}
             </button>
           </form> : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
-          <span>Создан: {formatCreatedAt(house.created_at)}</span>
-          <span>Архивирован: {formatArchivedAt(house.archived_at)}</span>
+          <span>Створено: {formatCreatedAt(house.created_at)}</span>
+          <span>Архівовано: {formatArchivedAt(house.archived_at)}</span>
         </div>
       </div>
 
@@ -499,10 +499,10 @@ function ArchivedHouseRestoreCard({
       <PlatformConfirmModal
         open={isRestoreConfirmOpen}
         tone="neutral"
-        title="Восстановить дом?"
-        description={`После подтверждения дом «${house.name}» вернется в активный список CMS со всеми сохраненными разделами и настройками.`}
-        confirmLabel="Восстановить дом"
-        pendingLabel="Восстанавливаем..."
+        title="Відновити будинок?"
+        description={`Після підтвердження будинок «${house.name}» повернеться до активного списку CMS з усіма збереженими розділами та налаштуваннями.`}
+        confirmLabel="Відновити будинок"
+        pendingLabel="Відновлюємо..."
         isPending={isPending}
         onCancel={() => setIsRestoreConfirmOpen(false)}
         onConfirm={handleConfirmRestore}
@@ -511,10 +511,10 @@ function ArchivedHouseRestoreCard({
       <PlatformConfirmModal
         open={isDeleteConfirmOpen}
         tone="destructive"
-        title="Удалить дом навсегда?"
-        description={`После подтверждения дом «${house.name}», его разделы, материалы и связанные записи будут окончательно удалены из системы без возможности восстановления. Это действие нельзя отменить.`}
-        confirmLabel="Удалить дом"
-        pendingLabel="Удаляем..."
+        title="Видалити будинок назавжди?"
+        description={`Після підтвердження будинок «${house.name}», його розділи, матеріали та пов’язані записи будуть остаточно видалені із системи без можливості відновлення. Цю дію неможливо скасувати.`}
+        confirmLabel="Видалити будинок"
+        pendingLabel="Видаляємо..."
         isPending={isDeletePending}
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
@@ -598,23 +598,23 @@ export function HousesRegistryWorkspace({
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-white">
-              Управление домами
+              Керування будинками
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
-              Рабочий реестр всех домов платформы: быстрый переход к разделам дома,
-              настройкам, публичному сайту и управлению архивом.
+              Робочий реєстр усіх будинків платформи: швидкий перехід до розділів будинку,
+              налаштувань, публічного сайту та керування архівом.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Активных: {activeHouses.length}
+                Активних: {activeHouses.length}
               </span>
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                В архиве: {archivedHouses.length}
+                В архіві: {archivedHouses.length}
               </span>
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                Всего: {houses.length}
+                Усього: {houses.length}
               </span>
             </div>
           </div>
@@ -634,7 +634,7 @@ export function HousesRegistryWorkspace({
                 }}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
             >
-              Создать дом
+              Створити будинок
             </button>
 
             <button
@@ -642,7 +642,7 @@ export function HousesRegistryWorkspace({
               onClick={() => setIsArchiveOpen(true)}
               className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
             >
-              Архив домов
+              Архів будинків
             </button>
           </div>
         </div>
@@ -652,9 +652,9 @@ export function HousesRegistryWorkspace({
         <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-white">Новый дом</h2>
+              <h2 className="text-xl font-semibold text-white">Новий будинок</h2>
               <p className="mt-2 text-sm text-slate-400">
-                Создание нового объекта для operational workflow.
+                Створення нового об’єкта для operational workflow.
               </p>
             </div>
 
@@ -683,28 +683,28 @@ export function HousesRegistryWorkspace({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              Поиск по реестру
+              Пошук по реєстру
             </h2>
             <p className="mt-2 text-sm text-slate-400">
-              Быстрый поиск дома по названию, адресу, slug или ОСББ.
+              Швидкий пошук будинку за назвою, адресою, slug або ОСББ.
             </p>
           </div>
 
           <div className="rounded-full bg-slate-800 px-3 py-1 text-sm font-medium text-slate-200">
-            Найдено: {filteredHouses.length}
+            Знайдено: {filteredHouses.length}
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Поиск
+              Пошук
             </label>
             <input
               type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Введите дом, улицу, slug или название ОСББ"
+              placeholder="Введіть будинок, вулицю, slug або назву ОСББ"
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             />
           </div>
@@ -718,7 +718,7 @@ export function HousesRegistryWorkspace({
               onChange={(event) => setDistrictFilter(event.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
             >
-              <option value="">Все районы</option>
+              <option value="">Усі райони</option>
               {districts.map((district) => (
                 <option key={district.id} value={district.id}>
                   {district.name}
@@ -732,7 +732,7 @@ export function HousesRegistryWorkspace({
       <div className="grid gap-4">
         {filteredHouses.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-6 text-slate-400">
-            По текущим фильтрам дома не найдены.
+            За поточними фільтрами будинки не знайдено.
           </div>
         ) : (
           filteredHouses.map((house) => (
@@ -752,20 +752,20 @@ export function HousesRegistryWorkspace({
             type="button"
             className="absolute inset-0"
             onClick={() => setIsArchiveOpen(false)}
-            aria-label="Закрыть архив домов"
+            aria-label="Закрити архів будинків"
           />
 
           <div className="relative z-10 flex max-h-[85dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
               <div>
                 <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
-                  Архив домов
+                  Архів будинків
                 </div>
                 <h2 className="mt-4 text-2xl font-semibold text-white">
-                  Архивированные дома
+                  Архівовані будинки
                 </h2>
                 <p className="mt-2 text-sm leading-7 text-slate-400">
-                  Здесь находятся дома, которые скрыты из активного реестра. Их можно восстановить в полном объеме.
+                  Тут знаходяться будинки, які приховані з активного реєстру. Їх можна повністю відновити.
                 </p>
               </div>
 
@@ -781,7 +781,7 @@ export function HousesRegistryWorkspace({
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {archivedHouses.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-6 text-slate-400">
-                  В архиве пока нет домов.
+                  В архіві поки немає будинків.
                 </div>
               ) : (
                 <div className="space-y-4">

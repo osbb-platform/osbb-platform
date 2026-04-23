@@ -18,11 +18,11 @@ export function BootstrapDistrictsButton() {
     <form action={formAction} className="space-y-4">
       <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
         <div className="text-sm font-medium text-white">
-          Быстрое создание базовых районов
+          Швидке створення базових районів
         </div>
         <div className="mt-2 text-sm leading-6 text-slate-400">
-          Система создаст 7 районов заказчика с готовыми slug и цветами. Уже
-          существующие районы будут пропущены без дублей.
+          Система створить 7 районів замовника з готовими slug і кольорами. Уже
+          існуючі райони будуть пропущені без дублів.
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export function BootstrapDistrictsButton() {
         disabled={isPending}
         className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-60"
       >
-        {isPending ? "Создаем районы..." : "Создать 7 районов заказчика"}
+        {isPending ? "Створюємо райони..." : "Створити 7 районів замовника"}
       </button>
     </form>
   );

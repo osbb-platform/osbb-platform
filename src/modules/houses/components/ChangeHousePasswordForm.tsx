@@ -39,7 +39,7 @@ export function ChangeHousePasswordForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Текущий код доступа
+          Поточний код доступу
         </label>
         <input
           name="oldAccessCode"
@@ -47,14 +47,14 @@ export function ChangeHousePasswordForm({
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
-          placeholder="Введите текущий код"
+          placeholder="Введіть поточний код"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
       </div>
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-200">
-          Новый код доступа
+          Новий код доступу
         </label>
         <input
           name="newAccessCode"
@@ -66,7 +66,7 @@ export function ChangeHousePasswordForm({
           onChange={(event) =>
             setNewAccessCode(event.target.value.replace(/\D/g, "").slice(0, 6))
           }
-          placeholder="Введите новый 6-значный код"
+          placeholder="Введіть новий 6-значний код"
           className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
         />
 
@@ -75,7 +75,7 @@ export function ChangeHousePasswordForm({
           onClick={() => setNewAccessCode(generateAccessCode())}
           className="mt-3 text-sm font-medium text-slate-400 transition hover:text-white"
         >
-          Сгенерировать автоматически
+          Згенерувати автоматично
         </button>
       </div>
 
@@ -96,7 +96,7 @@ export function ChangeHousePasswordForm({
         disabled={isPending}
         className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
       >
-        {isPending ? "Сохраняем..." : "Обновить код доступа"}
+        {isPending ? "Зберігаємо..." : "Оновити код доступу"}
       </button>
     </form>
   );

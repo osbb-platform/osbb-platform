@@ -87,11 +87,11 @@ export async function createHouse(
     isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
 
   if (!name || !address) {
-    return { error: "Заполните название дома и адрес." };
+    return { error: "Заповніть назву будинку та адресу." };
   }
 
   if (!districtId) {
-    return { error: "Выберите район для дома." };
+    return { error: "Оберіть район для будинку." };
   }
 
   let uploadedCoverImagePath: string | null = null;
@@ -99,13 +99,13 @@ export async function createHouse(
   if (coverImage) {
     if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
       return {
-        error: "Для фото дома допускаются только JPG, PNG или WebP.",
+        error: "Для фото будинку дозволені лише JPG, PNG або WebP.",
       };
     }
 
     if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
       return {
-        error: "Фото дома должно быть не больше 5 МБ.",
+        error: "Фото будинку має бути не більше 5 МБ.",
       };
     }
   }
@@ -113,7 +113,7 @@ export async function createHouse(
   const baseSlug = slugify(name);
 
   if (!baseSlug) {
-    return { error: "Не удалось сформировать slug дома." };
+    return { error: "Не вдалося сформувати slug будинку." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -127,7 +127,7 @@ export async function createHouse(
       error:
         error instanceof Error
           ? error.message
-          : "Не удалось сформировать уникальный slug дома.",
+          : "Не вдалося сформувати унікальний slug будинку.",
     };
   }
 
@@ -150,7 +150,7 @@ export async function createHouse(
     .single();
 
   if (insertError) {
-    return { error: `Ошибка создания дома: ${insertError.message}` };
+    return { error: `Помилка створення будинку: ${insertError.message}` };
   }
 
   if (coverImage) {
@@ -168,7 +168,7 @@ export async function createHouse(
       await supabase.from("houses").delete().eq("id", createdHouse.id);
 
       return {
-        error: `Дом не создан: не удалось загрузить фото дома (${uploadError.message}).`,
+        error: `Будинок не створено: не вдалося завантажити фото будинку (${uploadError.message}).`,
       };
     }
 
@@ -186,7 +186,7 @@ export async function createHouse(
       await supabase.from("houses").delete().eq("id", createdHouse.id);
 
       return {
-        error: `Дом не создан: не удалось сохранить фото дома (${coverUpdateError.message}).`,
+        error: `Будинок не створено: не вдалося зберегти фото будинку (${coverUpdateError.message}).`,
       };
     }
   }
@@ -205,7 +205,7 @@ export async function createHouse(
 
   if (accessUpsertError) {
     return {
-      error: `Дом создан, но не удалось инициализировать доступ: ${accessUpsertError.message}`,
+      error: `Будинок створено, але не вдалося ініціалізувати доступ: ${accessUpsertError.message}`,
     };
   }
 
@@ -219,7 +219,7 @@ export async function createHouse(
       entityId: createdHouse.id,
       entityLabel: createdHouse.slug,
       actionType: "create_house",
-      description: `Создан дом ${createdHouse.name}.`,
+      description: `Створено будинок ${createdHouse.name}.`,
       metadata: {
         slug: createdHouse.slug,
         address,

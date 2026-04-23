@@ -22,7 +22,7 @@ export async function publishHouseInformationSection(formData: FormData) {
   const houseSlug = String(formData.get("houseSlug") ?? "").trim();
 
   if (!sectionId || !houseId || !houseSlug) {
-    throw new Error("Не переданы идентификаторы для публикации сообщения.");
+    throw new Error("Не передано ідентифікатори для публікації повідомлення.");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -35,7 +35,7 @@ export async function publishHouseInformationSection(formData: FormData) {
 
   if (sectionError || !section) {
     throw new Error(
-      `Ошибка чтения сообщения перед публикацией: ${sectionError?.message ?? "Not found"}`,
+      `Помилка читання повідомлення перед публікацією: ${sectionError?.message ?? "Not found"}`,
     );
   }
 
@@ -71,7 +71,7 @@ export async function publishHouseInformationSection(formData: FormData) {
     .eq("id", sectionId);
 
   if (updateError) {
-    throw new Error(`Ошибка публикации сообщения: ${updateError.message}`);
+    throw new Error(`Помилка публікації повідомлення: ${updateError.message}`);
   }
 
   const { data: versions } = await supabase

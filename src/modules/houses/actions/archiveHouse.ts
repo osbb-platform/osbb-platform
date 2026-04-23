@@ -23,7 +23,7 @@ export async function archiveHouse(
 
   if (!id) {
     return {
-      error: "Не удалось определить дом для архивации.",
+      error: "Не вдалося визначити будинок для архівації.",
       successMessage: null,
     };
   }
@@ -38,21 +38,21 @@ export async function archiveHouse(
 
   if (existingHouseError) {
     return {
-      error: `Ошибка загрузки дома: ${existingHouseError.message}`,
+      error: `Помилка завантаження будинку: ${existingHouseError.message}`,
       successMessage: null,
     };
   }
 
   if (!existingHouse) {
     return {
-      error: "Дом не найден.",
+      error: "Будинок не знайдено.",
       successMessage: null,
     };
   }
 
   if (existingHouse.archived_at) {
     return {
-      error: "Этот дом уже находится в архиве.",
+      error: "Цей будинок уже знаходиться в архіві.",
       successMessage: null,
     };
   }
@@ -69,7 +69,7 @@ export async function archiveHouse(
 
   if (archiveError) {
     return {
-      error: `Ошибка архивации дома: ${archiveError.message}`,
+      error: `Помилка архівації будинку: ${archiveError.message}`,
       successMessage: null,
     };
   }
@@ -84,7 +84,7 @@ export async function archiveHouse(
 
   if (archiveApartmentsError) {
     return {
-      error: `Дом архивирован, но квартиры не удалось перенести в архив: ${archiveApartmentsError.message}`,
+      error: `Будинок архівовано, але квартири не вдалося перенести в архів: ${archiveApartmentsError.message}`,
       successMessage: null,
     };
   }
@@ -99,7 +99,7 @@ export async function archiveHouse(
       entityId: existingHouse.id,
       entityLabel: existingHouse.slug,
       actionType: "archive_house",
-      description: `Дом ${existingHouse.name} архивирован.`,
+      description: `Будинок ${existingHouse.name} архівовано.`,
       metadata: {
         houseSlug: existingHouse.slug,
         archivedAt,
@@ -114,6 +114,6 @@ export async function archiveHouse(
 
   return {
     error: null,
-    successMessage: `Дом «${existingHouse.name}» архивирован.`,
+    successMessage: `Будинок «${existingHouse.name}» архівовано.`,
   };
 }

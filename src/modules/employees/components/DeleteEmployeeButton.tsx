@@ -79,7 +79,7 @@ function DeleteEmployeeActionButton({
           disabled={isPending}
           className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
         >
-          {isPending ? "Удаляем..." : "Удалить сотрудника"}
+          {isPending ? "Видаляємо..." : "Видалити співробітника"}
         </button>
 
         {flash ? (
@@ -98,10 +98,10 @@ function DeleteEmployeeActionButton({
       <PlatformConfirmModal
         open={isConfirmOpen}
         tone="destructive"
-        title="Удалить сотрудника?"
-        description={`После подтверждения сотрудник «${employeeLabel}» будет удален из CMS. Если сотрудник уже подключился, доступ в систему будет закрыт.`}
-        confirmLabel="Удалить сотрудника"
-        pendingLabel="Удаляем..."
+        title="Видалити співробітника?"
+        description={`Після підтвердження співробітник «${employeeLabel}» буде видалений із CMS. Якщо співробітник уже підключився, доступ до системи буде закрито.`}
+        confirmLabel="Видалити співробітника"
+        pendingLabel="Видаляємо..."
         isPending={isPending}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirmDelete}

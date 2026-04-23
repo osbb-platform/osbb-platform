@@ -67,7 +67,7 @@ function normalizeSectionForWorkspace<T extends {
 }>(section: T) {
   return {
     id: section.id,
-    title: section.title ?? "Без названия",
+    title: section.title ?? "Без назви",
     status: section.status ?? "draft",
     content: section.content ?? {},
   };
@@ -154,7 +154,7 @@ function HouseTechnicalPlaceholder({
   return (
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <div className="inline-flex rounded-full border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-        CMS placeholder
+        CMS заповнювач
       </div>
 
       <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
@@ -167,13 +167,13 @@ function HouseTechnicalPlaceholder({
 
       <div className="mt-6 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
         <div className="text-sm font-medium text-[var(--cms-text)]">
-          Техническая заглушка
+          Технічна заглушка
         </div>
 
         <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-          Публичная страница для этого раздела уже предусмотрена в структуре
-          сайта дома. Здесь зафиксировано безопасное место под будущий CMS
-          editor без изменения existing public rendering path.
+          Публічна сторінка для цього розділу вже передбачена у структурі
+          сайту будинку. Тут зафіксовано безпечне місце під майбутній CMS
+          редактор без зміни наявного public rendering path.
         </p>
       </div>
     </div>
@@ -494,7 +494,7 @@ export default async function AdminHouseDetailPage({
                 href="/admin/houses"
                 className="transition hover:text-[var(--cms-text)]"
               >
-                Дома
+                Будинки
               </Link>
               <span>/</span>
               <span className="text-[var(--cms-text)]">{house.name}</span>
@@ -505,7 +505,7 @@ export default async function AdminHouseDetailPage({
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              Рабочая панель управления разделами и контентом сайта дома.
+              Робоча панель керування розділами та контентом сайту будинку.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -513,7 +513,7 @@ export default async function AdminHouseDetailPage({
                 slug: {house.slug}
               </span>
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                {house.is_active ? "Активен" : "Архив"}
+                {house.is_active ? "Активний" : "Архів"}
               </span>
               {house.district ? (
                 <span
@@ -524,17 +524,17 @@ export default async function AdminHouseDetailPage({
                 </span>
               ) : null}
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                Раздел: {
+                Розділ: {
                   {
-                    announcements: "Объявления",
-                    board: "Правление",
-                    information: "Информация",
-                    reports: "Отчеты",
-                    debtors: "Должники",
-                    plan: "План работ",
-                    meetings: "Собрания",
-                    requisites: "Реквизиты",
-                    specialists: "Специалисты",
+                    announcements: "Оголошення",
+                    board: "Правління",
+                    information: "Інформація",
+                    reports: "Звіти",
+                    debtors: "Боржники",
+                    plan: "План робіт",
+                    meetings: "Збори",
+                    requisites: "Реквізити",
+                    specialists: "Спеціалісти",
                   }[activeBlock]
                 }
               </span>
@@ -549,7 +549,7 @@ export default async function AdminHouseDetailPage({
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
             <div className="w-full xl:w-[320px]">
               <div className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                Раздел дома
+                Розділ будинку
               </div>
               <HouseBlockSelector
                 houseId={house.id}
@@ -563,8 +563,8 @@ export default async function AdminHouseDetailPage({
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
-                aria-label={`Открыть сайт дома ${house.name}`}
-                title="Открыть сайт дома"
+                aria-label={`Відкрити сайт будинку ${house.name}`}
+                title="Відкрити сайт будинку"
               >
                 <svg
                   aria-hidden="true"
@@ -585,7 +585,7 @@ export default async function AdminHouseDetailPage({
                 href="/admin/houses"
                 className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
               >
-                Назад к реестру
+                Назад до реєстру
               </Link>
             </div>
           </div>
@@ -616,8 +616,8 @@ export default async function AdminHouseDetailPage({
           />
         ) : (
           <HouseTechnicalPlaceholder
-            title="Правление"
-            description="Не удалось подготовить секцию правления для этого дома. Нужно проверить наличие страницы home и корректность house bootstrap."
+            title="Правління"
+            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити наявність сторінки home і коректність ініціалізації будинку."
           />
         )
       ) : null}
@@ -640,8 +640,8 @@ export default async function AdminHouseDetailPage({
           />
         ) : (
           <HouseTechnicalPlaceholder
-            title="Отчеты дома"
-            description="Секция reports пока не создана для этого дома. Следующим шагом добавим safe bootstrap секции, если ее нет."
+            title="Звіти будинку"
+            description="Секцію звітів поки не створено для цього будинку. Наступним кроком додамо безпечну ініціалізацію секції, якщо її немає."
           />
         )
       ) : null}
@@ -689,8 +689,8 @@ export default async function AdminHouseDetailPage({
           />
         ) : (
           <HouseTechnicalPlaceholder
-            title="План работ"
-            description="Не удалось подготовить секцию плана работ для этого дома. Нужно проверить home page bootstrap."
+            title="План робіт"
+            description="Не вдалося підготувати секцію плану робіт для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
           />
         )
       ) : null}
@@ -716,8 +716,8 @@ export default async function AdminHouseDetailPage({
           />
         ) : (
           <HouseTechnicalPlaceholder
-            title="Собрания"
-            description="Не удалось подготовить meetings section для этого дома. Нужно проверить bootstrap home page."
+            title="Збори"
+            description="Не вдалося підготувати секцію зборів для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
           />
         )
       ) : null}
@@ -754,8 +754,8 @@ export default async function AdminHouseDetailPage({
           />
         ) : (
           <HouseTechnicalPlaceholder
-            title="Специалисты"
-            description="Не удалось подготовить секцию специалистов для этого дома. Нужно проверить наличие страницы home и корректность house bootstrap."
+            title="Спеціалісти"
+            description="Не вдалося підготувати секцію спеціалістів для цього будинку. Потрібно перевірити наявність сторінки home та коректність ініціалізації будинку."
           />
         )
       ) : null}
