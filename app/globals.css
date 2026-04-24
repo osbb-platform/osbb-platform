@@ -50,8 +50,14 @@ select {
   --cms-surface-muted: rgba(2, 6, 23, 0.7);
   --cms-surface-elevated: #020617;
 
+  --cms-bg-primary: var(--cms-surface);
+  --cms-bg-secondary: var(--cms-surface-muted);
+  --cms-bg-tertiary: var(--cms-pill-bg);
+
   --cms-border: #1e293b;
   --cms-border-strong: #334155;
+  --cms-border-primary: var(--cms-border);
+  --cms-border-secondary: var(--cms-border-strong);
 
   --cms-text: #ffffff;
   --cms-text-muted: #94a3b8;
@@ -63,7 +69,19 @@ select {
   --cms-primary: #ffffff;
   --cms-primary-contrast: #020617;
 
+  --cms-tab-active-bg: #020617;
+  --cms-tab-active-text: #ffffff;
+  --cms-tab-active-count-bg: rgba(255,255,255,0.08);
+  --cms-tab-active-border: #475569;
+  --cms-tab-inactive-bg: rgba(15, 23, 42, 0.72);
+
   --cms-overlay: rgba(2, 6, 23, 0.8);
+
+  --cms-sidebar-bg: #0b1220;
+  --cms-sidebar-hover: rgba(217, 119, 6, 0.08);
+  --cms-sidebar-active: #111827;
+  --cms-sidebar-card: #0f172a;
+
 
   --cms-success-bg: rgba(6, 78, 59, 0.28);
   --cms-success-border: rgba(16, 185, 129, 0.42);
@@ -84,8 +102,14 @@ html[data-admin-theme="light"] .cms-theme-root {
   --cms-surface-muted: #f7f9fc;
   --cms-surface-elevated: #f8fafc;
 
+  --cms-bg-primary: var(--cms-surface);
+  --cms-bg-secondary: var(--cms-surface-muted);
+  --cms-bg-tertiary: var(--cms-surface-elevated);
+
   --cms-border: rgba(203, 213, 225, 0.9);
   --cms-border-strong: rgba(148, 163, 184, 0.95);
+  --cms-border-primary: var(--cms-border);
+  --cms-border-secondary: var(--cms-border-strong);
 
   --cms-text: #0f172a;
   --cms-text-muted: #475569;
@@ -97,7 +121,17 @@ html[data-admin-theme="light"] .cms-theme-root {
   --cms-primary: #0f172a;
   --cms-primary-contrast: #f8fafc;
 
+  --cms-tab-active-bg: #0f172a;
+  --cms-tab-active-text: #f8fafc;
+  --cms-tab-active-count-bg: rgba(255,255,255,0.08);
+
   --cms-overlay: rgba(15, 23, 42, 0.22);
+
+  --cms-sidebar-bg: #eef2f7;
+  --cms-sidebar-hover: #dde5ef;
+  --cms-sidebar-active: #ffffff;
+  --cms-sidebar-card: #f8fafc;
+
 
   --cms-success-bg: rgba(16, 185, 129, 0.1);
   --cms-success-border: rgba(5, 150, 105, 0.35);

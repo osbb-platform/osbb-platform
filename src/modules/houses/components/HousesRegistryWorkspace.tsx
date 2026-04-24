@@ -12,6 +12,12 @@ import { deleteArchivedHouse, type DeleteArchivedHouseState } from "@/src/module
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+import {
+  adminPrimaryButtonClass,
+  adminWarningButtonClass,
+  adminDangerButtonClass,
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type HouseItem = {
   id: string;
@@ -219,17 +225,17 @@ function HouseEditorCard({
   return (
     <div
       ref={cardRef}
-      className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+      className={`${adminSurfaceClass} p-6`}
     >
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+          <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
             Налаштування будинку
           </div>
-          <h2 className="mt-4 text-2xl font-semibold text-white">
+          <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
             {house.name}
           </h2>
-          <p className="mt-2 text-sm leading-7 text-slate-400">
+          <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
             Зміна параметрів будинку та прив’язки до району.
           </p>
         </div>
@@ -238,7 +244,7 @@ function HouseEditorCard({
           <button
             type="button"
             onClick={() => setIsAnnouncementOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             title="Оголошення для мешканців"
           >
             🧾
@@ -247,7 +253,7 @@ function HouseEditorCard({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити налаштування будинку"
           >
           ×
@@ -265,7 +271,7 @@ function HouseEditorCard({
       />
 
       {archiveState.error ? (
-        <div className="mt-6 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {archiveState.error}
         </div>
       ) : null}
@@ -275,7 +281,7 @@ function HouseEditorCard({
           type="submit"
           form={`edit-house-${house.id}`}
           disabled={isSavePending}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+          className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isSavePending ? "Зберігаємо..." : "Зберегти дані будинку"}
         </button>
@@ -285,7 +291,7 @@ function HouseEditorCard({
           <button
             type="submit"
             disabled={isArchivePending}
-            className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
+            className={`${adminWarningButtonClass} disabled:opacity-60`}
           >
             {isArchivePending ? "Архівуємо..." : "Архівувати будинок"}
           </button>
@@ -407,20 +413,20 @@ function ArchivedHouseRestoreCard({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]">
+    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start gap-3">
-            <h3 className="min-w-0 text-xl font-semibold text-white">
+            <h3 className="min-w-0 text-xl font-semibold text-[var(--cms-text)]">
               {house.name}
             </h3>
 
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 slug: {house.slug}
               </span>
 
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Архів
               </span>
 
@@ -435,8 +441,8 @@ function ArchivedHouseRestoreCard({
             </div>
           </div>
 
-          <div className="mt-2 text-sm text-slate-400">{house.address}</div>
-          <div className="mt-1 text-sm text-slate-500">
+          <div className="mt-2 text-sm text-[var(--cms-text-muted)]">{house.address}</div>
+          <div className="mt-1 text-sm text-[var(--cms-text-soft)]">
             ОСББ: {house.osbb_name ?? "не вказано"}
           </div>
         </div>
@@ -444,7 +450,7 @@ function ArchivedHouseRestoreCard({
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-800 text-slate-500"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text-soft)]"
             aria-label="Настройки недоступны для архивного дома"
             title="Архівний будинок"
             disabled
@@ -456,7 +462,7 @@ function ArchivedHouseRestoreCard({
             href={`https://${house.slug}.osbb-platform.com.ua`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label={`Відкрити сайт будинку ${house.name}`}
             title="Відкрити сайт будинку"
           >
@@ -472,7 +478,7 @@ function ArchivedHouseRestoreCard({
             <button
               type="submit"
               disabled={isPending || isDeletePending}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
             >
               {isPending ? "Відновлюємо..." : "Відновити"}
             </button>
@@ -483,39 +489,39 @@ function ArchivedHouseRestoreCard({
             <button
               type="submit"
               disabled={isPending || isDeletePending}
-              className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
+              className={`${adminDangerButtonClass} disabled:opacity-60`}
             >
               {isDeletePending ? "Видаляємо..." : "Видалити"}
             </button>
           </form> : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--cms-text-soft)]">
           <span>Створено: {formatCreatedAt(house.created_at)}</span>
           <span>Архівовано: {formatArchivedAt(house.archived_at)}</span>
         </div>
       </div>
 
       {state.error ? (
-        <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
       {deleteState.error ? (
-        <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {deleteState.error}
         </div>
       ) : null}
 
       {state.successMessage ? (
-        <div className="mt-4 rounded-2xl border border-emerald-900 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-300">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {state.successMessage}
         </div>
       ) : null}
 
       {deleteState.successMessage ? (
-        <div className="mt-4 rounded-2xl border border-emerald-900 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-300">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {deleteState.successMessage}
         </div>
       ) : null}
@@ -619,26 +625,26 @@ export function HousesRegistryWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               Керування будинками
             </h1>
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
               Робочий реєстр усіх будинків платформи: швидкий перехід до розділів будинку,
               налаштувань, публічного сайту та керування архівом.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Активних: {activeHouses.length}
               </span>
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 В архіві: {archivedHouses.length}
               </span>
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Усього: {houses.length}
               </span>
             </div>
@@ -657,7 +663,7 @@ export function HousesRegistryWorkspace({
                   setCreateOpenBaseline(activeHouses.length);
                   setIsCreateOpen(true);
                 }}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+              className={adminPrimaryButtonClass}
             >
               Створити будинок
             </button>
@@ -665,7 +671,7 @@ export function HousesRegistryWorkspace({
             <button
               type="button"
               onClick={() => setIsArchiveOpen(true)}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
             >
               Архів будинків
             </button>
@@ -674,11 +680,11 @@ export function HousesRegistryWorkspace({
       </div>
 
       {shouldRenderCreate ? (
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`${adminSurfaceClass} p-6`}>
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-white">Новий будинок</h2>
-              <p className="mt-2 text-sm text-slate-400">
+              <h2 className="text-xl font-semibold text-[var(--cms-text)]">Новий будинок</h2>
+              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 Створення нового об’єкта для operational workflow.
               </p>
             </div>
@@ -686,7 +692,7 @@ export function HousesRegistryWorkspace({
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             >
               ×
             </button>
@@ -705,25 +711,25 @@ export function HousesRegistryWorkspace({
         />
       ) : null}
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Пошук по реєстру
             </h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Швидкий пошук будинку за назвою, адресою, slug або ОСББ.
             </p>
           </div>
 
-          <div className="rounded-full bg-slate-800 px-3 py-1 text-sm font-medium text-slate-200">
+          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
             Знайдено: {filteredHouses.length}
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
               Пошук
             </label>
             <input
@@ -731,18 +737,18 @@ export function HousesRegistryWorkspace({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Введіть будинок, вулицю, slug або назву ОСББ"
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
               Район
             </label>
             <select
               value={districtFilter}
               onChange={(event) => setDistrictFilter(event.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
             >
               <option value="">Усі райони</option>
               {districts.map((district) => (
@@ -757,7 +763,7 @@ export function HousesRegistryWorkspace({
 
       <div className="grid gap-4">
         {filteredHouses.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-6 text-slate-400">
+          <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
             За поточними фільтрами будинки не знайдено.
           </div>
         ) : (
@@ -773,7 +779,7 @@ export function HousesRegistryWorkspace({
       </div>
 
       {isArchiveOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.72)] px-4 py-8 backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0"
@@ -781,16 +787,16 @@ export function HousesRegistryWorkspace({
             aria-label="Закрити архів будинків"
           />
 
-          <div className="relative z-10 flex max-h-[85dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+          <div className="relative z-10 flex max-h-[85dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Архів будинків
                 </div>
-                <h2 className="mt-4 text-2xl font-semibold text-white">
+                <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
                   Архівовані будинки
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-slate-400">
+                <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
                   Тут знаходяться будинки, які приховані з активного реєстру. Їх можна повністю відновити.
                 </p>
               </div>
@@ -798,7 +804,7 @@ export function HousesRegistryWorkspace({
               <button
                 type="button"
                 onClick={() => setIsArchiveOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
               >
                 ×
               </button>
@@ -806,7 +812,7 @@ export function HousesRegistryWorkspace({
 
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {archivedHouses.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-6 text-slate-400">
+                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
                   В архіві поки немає будинків.
                 </div>
               ) : (

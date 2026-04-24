@@ -2,6 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { changeHouseTariff } from "@/src/modules/houses/actions/changeHouseTariff";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type Props = {
   houseId: string;
@@ -40,7 +45,7 @@ export function ChangeHouseTariffForm({
       <input type="hidden" name="houseSlug" value={houseSlug} />
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Тариф (₴)
         </label>
         <input
@@ -49,7 +54,7 @@ export function ChangeHouseTariffForm({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Введіть суму"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+          className={adminInputClass}
         />
       </div>
 
@@ -64,7 +69,7 @@ export function ChangeHouseTariffForm({
       <button
         type="submit"
         disabled={isPending}
-        className="bg-white text-black px-5 py-3 rounded-2xl"
+        className={adminPrimaryButtonClass}
       >
         {isPending ? "Зберігаємо..." : "Зберегти"}
       </button>

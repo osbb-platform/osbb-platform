@@ -72,14 +72,14 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
     pathname.startsWith(`${ROUTES.admin.profile}/`);
 
   return (
-    <aside className="w-full border-b border-slate-800 bg-slate-950 lg:flex lg:h-screen lg:w-72 lg:flex-col lg:border-b-0 lg:border-r">
+    <aside className="w-full border-b border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-bg)] lg:flex lg:h-screen lg:w-72 lg:flex-col lg:border-b-0 lg:border-r">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="shrink-0 border-b border-slate-800 px-6 py-6">
-          <h2 className="mt-4 text-xl font-semibold text-white">
+        <div className="shrink-0 border-b border-[var(--cms-border-primary)] px-6 py-6">
+          <h2 className="mt-4 text-xl font-semibold text-[var(--cms-text-primary)]">
             OSBB Platform
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+          <p className="mt-2 text-sm leading-6 text-[var(--cms-text-secondary)]">
             Панель керування керуючої компанії
           </p>
         </div>
@@ -96,10 +96,10 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
                     key={item.href}
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
-                    className={`flex rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    className={`flex rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "border border-slate-700 bg-slate-900 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
-                        : "text-slate-200 hover:bg-slate-900"
+                        ? "border border-amber-500/40 bg-[rgba(217,119,6,0.12)] text-white shadow-[inset_0_1px_0_rgba(251,191,36,0.18)]"
+                        : "text-[var(--cms-text-secondary)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text-primary)]"
                     }`}
                   >
                     {item.label}
@@ -109,25 +109,25 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
           </div>
         </nav>
 
-        <div className="shrink-0 border-t border-slate-800 px-4 py-4">
+        <div className="shrink-0 border-t border-[var(--cms-border-primary)] px-4 py-4">
           <Link
             href={ROUTES.admin.profile}
             aria-current={isProfileActive ? "page" : undefined}
-            className={`block rounded-2xl border p-4 transition ${
+            className={`block rounded-3xl border p-5 transition-all duration-200 ${
               isProfileActive
-                ? "border-slate-700 bg-slate-900"
-                : "border-slate-800 bg-slate-900/70 hover:bg-slate-900"
+                ? "border-[var(--cms-border-secondary)] bg-[var(--cms-sidebar-card)] shadow-[0_1px_0_rgba(255,255,255,0.55)]"
+                : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] hover:bg-[var(--cms-sidebar-hover)]"
             }`}
           >
-            <div className="mt-3 text-sm font-medium text-white">
+            <div className="mt-3 text-sm font-medium text-[var(--cms-text-primary)]">
               {currentUser.fullName ?? currentUser.email ?? "Не вказано"}
             </div>
 
-            <div className="mt-1 text-sm text-slate-400">
+            <div className="mt-1 text-sm text-[var(--cms-text-secondary)]">
               {currentUser.email ?? "Електронну пошту не вказано"}
             </div>
 
-            <div className="mt-3 inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <div className="mt-3 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
               {getRoleLabel(currentUser.role)}
             </div>
           </Link>

@@ -11,6 +11,11 @@ import {
   parseApartmentsImportFile,
   type ApartmentsImportRow,
 } from "@/src/modules/apartments/utils/parseApartmentsImportFile";
+import {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type ApartmentsImportPanelProps = {
   houseId: string;
@@ -102,7 +107,7 @@ export function ApartmentsImportPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.72)] backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0"
@@ -110,18 +115,18 @@ export function ApartmentsImportPanel({
         aria-label="Закрити панель імпорту квартир"
       />
 
-      <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-slate-800 bg-slate-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+      <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-5 py-4">
           <div>
-            <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Імпорт квартир
             </div>
 
-            <h2 className="mt-3 text-xl font-semibold text-white">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--cms-text)]">
               Завантаження для будинку {houseName}
             </h2>
 
-            <p className="mt-1 text-sm leading-6 text-slate-400">
+            <p className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
               Завантажте CSV, XLS або XLSX. Активний список квартир буде повністю замінено даними з файлу.
             </p>
           </div>
@@ -129,7 +134,7 @@ export function ApartmentsImportPanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити"
           >
             ×
@@ -141,10 +146,10 @@ export function ApartmentsImportPanel({
           <input type="hidden" name="rows" value={rowsPayload} />
 
           <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
+            <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
                     Файл імпорту
                   </label>
 
@@ -153,26 +158,26 @@ export function ApartmentsImportPanel({
                     type="file"
                     accept=".csv,.xls,.xlsx"
                     onChange={handleFileChange}
-                    className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                   />
 
-                  <div className="mt-2 text-xs text-slate-400">
+                  <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                     Обов’язкові колонки: {APARTMENTS_IMPORT_HEADERS.join(" / ")}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                  <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                     Усього рядків: {previewSummary.rows}
                   </span>
-                  <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                  <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                     З площею: {previewSummary.withArea}
                   </span>
                 </div>
               </div>
 
               {isParsing ? (
-                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-sm text-slate-300">
+                <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                   Читаємо файл і перевіряємо структуру...
                 </div>
               ) : null}
@@ -195,24 +200,24 @@ export function ApartmentsImportPanel({
                     Після підтвердження активний список квартир обраного будинку буде повністю замінено новим файлом.
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-3xl border border-slate-800">
+                  <div className="mt-4 overflow-hidden rounded-3xl border border-[var(--cms-border)]">
                     <div className="max-h-[58vh] overflow-auto">
                       <table className="min-w-full border-collapse">
-                        <thead className="sticky top-0 z-10 bg-slate-950/95">
-                          <tr className="border-b border-slate-800 text-left">
-                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        <thead className="sticky top-0 z-10 bg-[var(--cms-surface-elevated)]">
+                          <tr className="border-b border-[var(--cms-border)] text-left">
+                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               #
                             </th>
-                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               Особовий рахунок
                             </th>
-                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               Квартира
                             </th>
-                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               Власник
                             </th>
-                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               Площа
                             </th>
                           </tr>
@@ -222,21 +227,21 @@ export function ApartmentsImportPanel({
                           {previewRows.map((row, index) => (
                             <tr
                               key={`${row.accountNumber}-${row.apartmentLabel}-${index}`}
-                              className="border-b border-slate-800 bg-slate-900/70"
+                              className="border-b border-[var(--cms-border)] bg-[var(--cms-surface)]"
                             >
-                              <td className="px-4 py-2.5 text-sm text-slate-500">
+                              <td className="px-4 py-2.5 text-sm text-[var(--cms-text-soft)]">
                                 {index + 1}
                               </td>
-                              <td className="px-4 py-2.5 text-sm text-slate-300">
+                              <td className="px-4 py-2.5 text-sm text-[var(--cms-text-muted)]">
                                 {row.accountNumber}
                               </td>
-                              <td className="px-4 py-2.5 text-sm font-medium text-white">
+                              <td className="px-4 py-2.5 text-sm font-medium text-[var(--cms-text)]">
                                 {row.apartmentLabel}
                               </td>
-                              <td className="px-4 py-2.5 text-sm text-slate-300">
+                              <td className="px-4 py-2.5 text-sm text-[var(--cms-text-muted)]">
                                 {row.ownerName}
                               </td>
-                              <td className="px-4 py-2.5 text-sm text-slate-300">
+                              <td className="px-4 py-2.5 text-sm text-[var(--cms-text-muted)]">
                                 {row.area || "—"}
                               </td>
                             </tr>
@@ -250,14 +255,14 @@ export function ApartmentsImportPanel({
             </div>
           </div>
 
-          <div className="border-t border-slate-800 px-5 py-4">
+          <div className="border-t border-[var(--cms-border)] px-5 py-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 lg:max-w-[720px]">
+              <label className="flex items-start gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] lg:max-w-[720px]">
                 <input
                   type="checkbox"
                   checked={confirmReplace}
                   onChange={(event) => setConfirmReplace(event.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-950"
+                  className="mt-0.5 h-4 w-4 rounded border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)]"
                   disabled={previewRows.length === 0}
                 />
                 <span className="leading-6">
@@ -269,7 +274,7 @@ export function ApartmentsImportPanel({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                  className={adminSecondaryButtonClass}
                 >
                   Скасувати
                 </button>
@@ -277,7 +282,7 @@ export function ApartmentsImportPanel({
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isPending ? "Імпортуємо..." : "Підтвердити імпорт"}
                 </button>

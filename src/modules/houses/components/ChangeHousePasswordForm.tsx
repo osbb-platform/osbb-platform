@@ -2,6 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { changeHousePassword } from "@/src/modules/houses/actions/changeHousePassword";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type ChangeHousePasswordFormProps = {
   houseId: string;
@@ -38,7 +43,7 @@ export function ChangeHousePasswordForm({
       <input type="hidden" name="houseSlug" value={houseSlug} />
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Поточний код доступу
         </label>
         <input
@@ -48,12 +53,12 @@ export function ChangeHousePasswordForm({
           autoComplete="one-time-code"
           maxLength={6}
           placeholder="Введіть поточний код"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Новий код доступу
         </label>
         <input
@@ -67,26 +72,26 @@ export function ChangeHousePasswordForm({
             setNewAccessCode(event.target.value.replace(/\D/g, "").slice(0, 6))
           }
           placeholder="Введіть новий 6-значний код"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
 
         <button
           type="button"
           onClick={() => setNewAccessCode(generateAccessCode())}
-          className="mt-3 text-sm font-medium text-slate-400 transition hover:text-white"
+          className="mt-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:text-[var(--cms-text)]"
         >
           Згенерувати автоматично
         </button>
       </div>
 
       {state.error ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
       {state.successMessage ? (
-        <div className="rounded-2xl border border-emerald-900 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {state.successMessage}
         </div>
       ) : null}
@@ -94,7 +99,7 @@ export function ChangeHousePasswordForm({
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+        className={`${adminPrimaryButtonClass} disabled:opacity-60`}
       >
         {isPending ? "Зберігаємо..." : "Оновити код доступу"}
       </button>

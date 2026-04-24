@@ -2,6 +2,12 @@
 
 import { startTransition, useActionState, useMemo, useState } from "react";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
 type SectionStatus = "draft" | "in_review" | "published" | "archived";
 type MeetingLifecycleStatus =
@@ -271,12 +277,12 @@ function getMeetingStatusLabel(status: MeetingLifecycleStatus) {
 }
 
 function getMeetingStatusBadgeClasses(status: MeetingLifecycleStatus) {
-  if (status === "draft") return "border border-slate-700 bg-slate-900 text-slate-300";
-  if (status === "scheduled") return "border border-blue-900 bg-blue-950/40 text-blue-300";
-  if (status === "active") return "border border-emerald-900 bg-emerald-950/40 text-emerald-300";
-  if (status === "review") return "border border-violet-900 bg-violet-950/40 text-violet-300";
-  if (status === "completed") return "border border-amber-900 bg-amber-950/40 text-amber-300";
-  return "border border-slate-700 bg-slate-950 text-slate-400";
+  if (status === "draft") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
+  if (status === "scheduled") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
+  if (status === "active") return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
+  if (status === "review") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
+  if (status === "completed") return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
+  return "border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
 }
 
 function combineMeetingDateTime(date: string, time: string) {
@@ -493,13 +499,13 @@ export function HouseMeetingsWorkspace({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+    <div className={`${adminSurfaceClass} p-6`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             Збори
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
             Керуйте зборами будинку, порядком денним, етапами голосування та підсумковими рішеннями в єдиному робочому просторі.
           </p>
         </div>
@@ -508,7 +514,7 @@ export function HouseMeetingsWorkspace({
           <button
             type="button"
             onClick={openCreateMode}
-            className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950"
+            className={adminPrimaryButtonClass}
           >
             Нові збори
           </button>
@@ -516,48 +522,29 @@ export function HouseMeetingsWorkspace({
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count = counters[tab.key];
-
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
-                isActive
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "border border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500"
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs ${
-                  isActive
-                    ? "bg-slate-950/10 text-slate-700"
-                    : "bg-slate-900 text-slate-400"
-                }`}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
+      <div className="mt-6">
+        <AdminSegmentedTabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as WorkspaceTab)}
+          items={tabs.map((tab) => ({
+            key: tab.key,
+            label: tab.label,
+            count: counters[tab.key],
+          }))}
+        />
       </div>
 
       {mode !== "idle" ? (
-        <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950 p-5">
+        <div className="mt-6 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
           <div className="flex items-start justify-between gap-4">
-            <div className="text-lg font-semibold text-white">
+            <div className="text-lg font-semibold text-[var(--cms-text)]">
               {mode === "create" ? "Нові збори" : "Редагування"}
             </div>
 
             <button
               type="button"
               onClick={closeWorkspace}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
               aria-label="Закрити форму"
             >
               ×
@@ -579,7 +566,7 @@ export function HouseMeetingsWorkspace({
                     status: e.target.value as MeetingLifecycleStatus,
                   }))
                 }
-                className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white"
+                className={adminInputClass}
               >
                 {scheduledStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -598,7 +585,7 @@ export function HouseMeetingsWorkspace({
                 setDraft((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="Назва зборів"
-              className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+              className={adminInputClass}
             />
 
             <textarea
@@ -612,7 +599,7 @@ export function HouseMeetingsWorkspace({
               }
               placeholder="Короткий опис"
               rows={4}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+              className={adminInputClass}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -625,7 +612,7 @@ export function HouseMeetingsWorkspace({
                   disabled={isContentLocked || isPending}
                   value={meetingDateInput}
                   onChange={(e) => setMeetingDateInput(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white"
+                  className={adminInputClass}
                 />
               </label>
 
@@ -638,7 +625,7 @@ export function HouseMeetingsWorkspace({
                   disabled={isContentLocked || isPending}
                   value={meetingTimeInput}
                   onChange={(e) => setMeetingTimeInput(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white"
+                  className={adminInputClass}
                 />
               </label>
             </div>
@@ -653,15 +640,15 @@ export function HouseMeetingsWorkspace({
                 }))
               }
               placeholder="Місце проведення"
-              className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+              className={adminInputClass}
             />
 
             {mode === "edit" && draft.status === "review" ? (
-              <div className="rounded-2xl border border-violet-900/40 bg-violet-950/10 p-4">
-                <div className="text-sm font-semibold text-white">
+              <div className="rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-4">
+                <div className="text-sm font-semibold text-[var(--cms-text)]">
                   Ручне внесення голосів
                 </div>
-                <p className="mt-1 text-xs leading-5 text-slate-400">
+                <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
                   Внесіть повний голос квартири за всіма питаннями. Після збереження запис з’явиться у списку нижче.
                 </p>
 
@@ -671,7 +658,7 @@ export function HouseMeetingsWorkspace({
                     onChange={(e) =>
                       setSelectedApartmentVote(e.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white"
+                    className={adminInputClass}
                   >
                     <option value="">Оберіть квартиру</option>
                     {availableVotingApartments.map((apartment) => (
@@ -686,9 +673,9 @@ export function HouseMeetingsWorkspace({
                   {draft.questions.map((question, index) => (
                     <div
                       key={`manual-${question.id}`}
-                      className="rounded-2xl border border-slate-800 p-4"
+                      className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                     >
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-[var(--cms-text)]">
                         {question.title || `Питання ${index + 1}`}
                       </div>
 
@@ -709,8 +696,8 @@ export function HouseMeetingsWorkspace({
                             }
                             className={`rounded-xl border px-3 py-2 text-xs transition ${
                               manualVoteAnswers[question.id] === value
-                                ? "border-white bg-white text-slate-950"
-                                : "border-slate-700 text-slate-300"
+                                ? "border-[var(--cms-border-strong)] bg-white text-slate-950"
+                                : "border-[var(--cms-border)] text-[var(--cms-text-muted)]"
                             }`}
                           >
                             {label}
@@ -761,27 +748,27 @@ export function HouseMeetingsWorkspace({
                       setSelectedApartmentVote("");
                       setManualVoteAnswers({});
                     }}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-emerald-300"
+                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)]"
                   >
                     Зберегти голос квартири
                   </button>
 
                   {(draft.manualVotes ?? []).length > 0 ? (
-                    <div className="space-y-3 border-t border-slate-800 pt-4">
-                      <div className="text-sm font-semibold text-white">
+                    <div className="space-y-3 border-t border-[var(--cms-border)] pt-4">
+                      <div className="text-sm font-semibold text-[var(--cms-text)]">
                         Уже внесені голоси
                       </div>
 
                       {(draft.manualVotes ?? []).map((vote) => (
                         <div
                           key={vote.apartmentId}
-                          className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-2xl border border-slate-800 p-4"
+                          className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                         >
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-[var(--cms-text)]">
                             {vote.apartmentLabel}
                           </div>
 
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-[var(--cms-text-muted)]">
                             {vote.answers
                               .map((answer) =>
                                 answer.choice === "for"
@@ -817,7 +804,7 @@ export function HouseMeetingsWorkspace({
             ) : null}
 
             {draft.status !== "review" && draft.status !== "completed" ? (
-              <div className="border-t border-slate-800 pt-4">
+              <div className="border-t border-[var(--cms-border)] pt-4">
               <div className="mb-3 text-sm font-semibold text-white">
                 Порядок денний / питання
               </div>
@@ -826,7 +813,7 @@ export function HouseMeetingsWorkspace({
                 {draft.questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="rounded-2xl border border-slate-800 p-4"
+                    className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                   >
                     <input
                       value={question.title}
@@ -842,7 +829,7 @@ export function HouseMeetingsWorkspace({
                       }
                       disabled={isContentLocked || isPending}
                       placeholder={`Питання ${index + 1}`}
-                      className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 disabled:opacity-60"
+                      className="w-full rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
                     />
 
                     <textarea
@@ -860,7 +847,7 @@ export function HouseMeetingsWorkspace({
                       rows={3}
                       disabled={isContentLocked || isPending}
                       placeholder="Опис питання"
-                      className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 disabled:opacity-60"
+                      className="mt-3 w-full rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
                     />
 
                     {mode === "edit" &&
@@ -919,21 +906,21 @@ export function HouseMeetingsWorkspace({
                       return (
                         <div className="mt-3 space-y-3">
                           <div className="grid gap-2 sm:grid-cols-4">
-                            <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               За: {votesFor} ({forPercent}%)
                             </div>
-                            <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Проти: {votesAgainst} ({againstPercent}%)
                             </div>
-                            <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Утрималися: {votesAbstained} ({abstainedPercent}%)
                             </div>
-                            <div className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Квартир: {totalVotes}
                             </div>
                           </div>
 
-                          <div className="rounded-xl border border-violet-900/40 bg-violet-950/20 px-3 py-2 text-xs font-medium text-violet-200">
+                          <div className="rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-2 text-xs font-medium text-[var(--cms-text)]">
                             Підсумок: {outcome}
                           </div>
                         </div>
@@ -960,7 +947,7 @@ export function HouseMeetingsWorkspace({
                 type="button"
                 onClick={addQuestion}
                 disabled={isPending}
-                className="mt-4 rounded-2xl border border-slate-700 px-4 py-2 text-sm text-white"
+                className="mt-4 rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
               >
                 Додати питання
               </button>
@@ -980,7 +967,7 @@ export function HouseMeetingsWorkspace({
                         deleteMeetingFromRegistry(selectedMeetingId);
                       }
                     }}
-                    className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-rose-300"
+                    className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)]"
                   >
                     Видалити
                   </button>
@@ -990,7 +977,7 @@ export function HouseMeetingsWorkspace({
                   type="button"
                   onClick={() => saveDraftToRegistry()}
                   disabled={isPending}
-                  className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:opacity-60"
+                  className={`${adminPrimaryButtonClass} disabled:opacity-60`}
                 >
                   Зберегти
                 </button>
@@ -1007,7 +994,7 @@ export function HouseMeetingsWorkspace({
                       }
                     }}
                     disabled={isPending}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-emerald-300 disabled:opacity-60"
+                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] disabled:opacity-60"
                   >
                     Підтвердити
                   </button>
@@ -1020,7 +1007,7 @@ export function HouseMeetingsWorkspace({
                     type="button"
                     onClick={() => saveDraftToRegistry("archived")}
                     disabled={isPending}
-                    className="rounded-2xl border border-amber-500/30 px-4 py-3 text-sm font-medium text-amber-300 disabled:opacity-60"
+                    className="rounded-2xl border border-amber-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] disabled:opacity-60"
                   >
                     Архівувати
                   </button>
@@ -1033,15 +1020,15 @@ export function HouseMeetingsWorkspace({
 
       <div className="mt-6 space-y-4">
         {visibleMeetings.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/60 p-6">
-            <div className="text-base font-semibold text-white">
+          <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-6">
+            <div className="text-base font-semibold text-[var(--cms-text)]">
               {activeTab === "draft"
                 ? "Чернеток поки немає"
                 : activeTab === "archived"
                   ? "Архів зборів поки порожній"
                   : "Активних зборів поки немає"}
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
               {activeTab === "draft"
                 ? "Створіть нові збори — вони з’являться тут як чернетка, доки ви не підтвердите публікацію."
                 : activeTab === "archived"
@@ -1054,10 +1041,10 @@ export function HouseMeetingsWorkspace({
             <article
               key={meeting.id}
               onClick={() => openEditMode(meeting)}
-              className="cursor-pointer rounded-3xl border border-slate-800 bg-slate-950 p-5 transition hover:border-slate-600"
+              className="cursor-pointer rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 transition hover:border-[var(--cms-border-strong)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="text-lg font-semibold text-white">
+                <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {meeting.title || "Без назви"}
                 </div>
                 <span
@@ -1068,10 +1055,10 @@ export function HouseMeetingsWorkspace({
                   {getMeetingStatusLabel(meeting.status)}
                 </span>
               </div>
-              <div className="mt-2 text-sm text-slate-400">
+              <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 {formatDate(meeting.meetingDateTime)}
               </div>
-              <div className="mt-3 text-sm text-slate-500">
+              <div className="mt-3 text-sm text-[var(--cms-text-soft)]">
                 {meeting.questions.length} питань
               </div>
             </article>

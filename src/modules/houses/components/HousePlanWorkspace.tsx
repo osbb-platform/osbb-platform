@@ -11,6 +11,11 @@ import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSect
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type PlanWorkspaceState = {
   error: string | null;
@@ -438,11 +443,11 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         label={actionLabel}
         className="rounded-3xl"
       />
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">План робіт будинку</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
             </p>
           </div>
@@ -450,7 +455,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           <button
             type="button"
             onClick={openCreateMode}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+            className={adminPrimaryButtonClass}
           >
             Нове завдання
           </button>
@@ -469,16 +474,16 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 onClick={() => setActiveTab(key as WorkspaceTab)}
                 className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   activeTab === key
-                    ? "bg-white text-slate-950"
-                    : "border border-slate-700 bg-slate-950/40 text-white"
+                    ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                    : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
                 }`}
               >
                 <span>{label}</span>
                 <span
                   className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                     activeTab === key
-                      ? "bg-slate-200 text-slate-950"
-                      : "bg-slate-800 text-slate-200"
+                      ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
+                      : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
                   }`}
                 >
                   {count}
@@ -493,7 +498,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         <form
           ref={formRef}
           action={handleSubmit}
-          className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+          className={`${adminSurfaceClass} p-6`}
         >
           <input type="hidden" name="sectionId" value={section.id} />
           <input type="hidden" name="houseId" value={houseId} />
@@ -525,12 +530,12 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
                 {workspaceMode === "edit"
                   ? "Редагування завдання"
                   : "Нове завдання"}
               </h3>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 Нове завдання спочатку зберігається як чернетка. Після збереження картку можна повторно відкрити та змінити її статус.
               </p>
             </div>
@@ -539,7 +544,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               type="button"
               onClick={resetWorkspace}
               aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-xl font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             >
               ×
             </button>
@@ -552,7 +557,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 setDraft((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="Назва завдання"
-              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              className={adminInputClass}
             />
 
             <textarea
@@ -565,7 +570,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 }))
               }
               placeholder="Опис"
-              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              className={adminInputClass}
             />
 
             <div>
@@ -577,14 +582,14 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     priority: e.target.value as PlanTaskPriority,
                   }))
                 }
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               >
                 <option value="high">Червоний — терміновий пріоритет</option>
                 <option value="medium">Помаранчевий — важливе завдання</option>
                 <option value="low">Сірий — звичайне завдання</option>
               </select>
 
-              <div className="mt-2 text-xs text-slate-400">
+              <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                 Цей пріоритет буде видно на картці та допоможе швидко орієнтуватися у списку завдань.
               </div>
             </div>
@@ -597,7 +602,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   dateMode: e.target.value as PlanTaskDateMode,
                 }))
               }
-              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              className={adminInputClass}
             >
               <option value="deadline">Кінцевий термін</option>
               <option value="range">Період</option>
@@ -613,7 +618,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     deadlineAt: e.target.value,
                   }))
                 }
-                className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                className={adminInputClass}
               />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -626,7 +631,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       startDate: e.target.value,
                     }))
                   }
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                  className={adminInputClass}
                 />
                 <input
                   type="date"
@@ -637,7 +642,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       endDate: e.target.value,
                     }))
                   }
-                  className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                  className={adminInputClass}
                 />
               </div>
             )}
@@ -651,16 +656,16 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 }))
               }
               placeholder="Підрядник"
-              className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              className={adminInputClass}
             />
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="flex flex-col gap-4">
                 <div>
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-[var(--cms-text)]">
                     Фото завдання
                   </div>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
                     До 5 зображень.
                   </p>
                 </div>
@@ -670,15 +675,15 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     {draft.images.map((item, index) => (
                       <div
                         key={item.id}
-                        className="flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div className="text-sm text-slate-300">
+                        <div className="text-sm text-[var(--cms-text)]">
                           🖼 Фото {index + 1}: {getFileLabel(item.fileName, item.path)}
                         </div>
                         <button
                           type="button"
                           onClick={() => removeExistingImage(item.id)}
-                          className="rounded-2xl border border-red-900 px-3 py-2 text-xs font-medium text-red-300 transition hover:bg-red-950/40"
+                          className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                         >
                           Видалити
                         </button>
@@ -703,8 +708,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     htmlFor="plan-image-files-input"
                     className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                       uploadImageDisabled
-                        ? "cursor-not-allowed border-slate-800 bg-slate-900 text-slate-500"
-                        : "border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
+                        ? "cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
+                        : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
                     }`}
                   >
                     Обрати
@@ -714,7 +719,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     <button
                       type="button"
                       onClick={clearSelectedImages}
-                      className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                      className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                     >
                       Очистити вибір
                     </button>
@@ -726,7 +731,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     {selectedImageFiles.map((file, index) => (
                       <div
                         key={`${file.name}-${index}`}
-                        className="rounded-2xl border border-slate-800 bg-slate-900 p-3 text-sm text-slate-300"
+                        className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]"
                       >
                         🖼 Новий файл: {file.name}
                       </div>
@@ -736,13 +741,13 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="flex flex-col gap-4">
                 <div>
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-[var(--cms-text)]">
                     PDF документи
                   </div>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
                     До 2 PDF файлів.
                   </p>
                 </div>
@@ -752,15 +757,15 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     {draft.documents.map((item, index) => (
                       <div
                         key={item.id}
-                        className="flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div className="text-sm text-slate-300">
+                        <div className="text-sm text-[var(--cms-text)]">
                           📄 PDF {index + 1}: {getFileLabel(item.fileName, item.path)}
                         </div>
                         <button
                           type="button"
                           onClick={() => removeExistingDocument(item.id)}
-                          className="rounded-2xl border border-red-900 px-3 py-2 text-xs font-medium text-red-300 transition hover:bg-red-950/40"
+                          className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                         >
                           Видалити
                         </button>
@@ -785,8 +790,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     htmlFor="plan-pdf-files-input"
                     className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                       uploadPdfDisabled
-                        ? "cursor-not-allowed border-slate-800 bg-slate-900 text-slate-500"
-                        : "border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
+                        ? "cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
+                        : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
                     }`}
                   >
                     Обрати
@@ -802,7 +807,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     <button
                       type="button"
                       onClick={clearSelectedPdfs}
-                      className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                      className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                     >
                       Очистити вибір
                     </button>
@@ -814,7 +819,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     {selectedPdfFiles.map((file, index) => (
                       <div
                         key={`${file.name}-${index}`}
-                        className="rounded-2xl border border-slate-800 bg-slate-900 p-3 text-sm text-slate-300"
+                        className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]"
                       >
                         📄 Новий файл: {file.name}
                       </div>
@@ -833,7 +838,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       e.target.value as PublishablePlanTaskStatus,
                     )
                   }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   {getStatusOptions().map((option) => (
                     <option key={option.value} value={option.value}>
@@ -841,7 +846,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     </option>
                   ))}
                 </select>
-                <div className="mt-2 text-xs text-slate-400">
+                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                   Цей статус буде застосовано після підтвердження та публікації завдання.
                 </div>
               </div>
@@ -851,7 +856,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 onChange={(e) =>
                   updateStatus(e.target.value as PlanTaskStatus)
                 }
-                className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                className={adminInputClass}
               >
                 {getStatusOptions().map((option) => (
                   <option key={option.value} value={option.value}>
@@ -868,7 +873,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                     type="submit"
                     disabled={isPending}
                     onClick={() => setSubmitIntent("save")}
-                    className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-white px-10 py-5 text-2xl font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+                    className={`${adminPrimaryButtonClass} min-h-16 px-10 py-5 text-2xl disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
@@ -879,7 +884,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-red-900 px-10 py-5 text-2xl font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-[var(--cms-danger-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -892,7 +897,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("publish")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-emerald-500 px-10 py-5 text-2xl font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-white transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                     </button>
@@ -905,7 +910,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("archive")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-amber-700 px-10 py-5 text-2xl font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-[var(--cms-warning-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                     </button>
@@ -915,7 +920,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             </div>
 
             {state.error ? (
-              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+              <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
                 {state.error}
               </div>
             ) : null}
@@ -925,7 +930,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
       <div className="space-y-4">
         {visibleTasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm leading-6 text-slate-400">
+          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
             {activeTab === "active"
               ? "Зараз немає активних завдань. Після підтвердження та запуску робіт картки з’являться тут."
               : activeTab === "draft"
@@ -946,10 +951,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
             const priorityClasses =
               task.priority === "high"
-                ? "border-red-500/20 bg-red-500/15 text-red-300"
+                ? "border-red-500/20 bg-red-500/15 text-[var(--cms-danger-text)]"
                 : task.priority === "medium"
-                  ? "border-amber-500/20 bg-amber-500/15 text-amber-300"
-                  : "border-slate-700 bg-slate-900 text-slate-300";
+                  ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                  : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
 
             const statusLabel =
               task.status === "planned"
@@ -964,14 +969,14 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
             const statusClasses =
               task.status === "planned"
-                ? "border-sky-500/20 bg-sky-500/15 text-sky-300"
+                ? "border border-sky-300 bg-sky-100 text-sky-700"
                 : task.status === "in_progress"
-                  ? "border-amber-500/20 bg-amber-500/15 text-amber-300"
+                  ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                   : task.status === "completed"
-                    ? "border-emerald-500/20 bg-emerald-500/15 text-emerald-300"
+                    ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                     : task.status === "archived"
-                      ? "border-slate-700 bg-slate-800 text-slate-300"
-                      : "border-violet-500/20 bg-violet-500/15 text-violet-300";
+                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]"
+                      : "border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
 
             return (
               <button
@@ -980,8 +985,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 onClick={() => openEditMode(task)}
                 className={`block w-full rounded-2xl border p-4 text-left transition ${
                   isSelected
-                    ? "border-white bg-slate-800"
-                    : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-950"
+                    ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
+                    : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -998,15 +1003,15 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   </span>
                 </div>
 
-                <div className="mt-3 text-lg font-semibold text-white">
+                <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
                   {task.title || "Завдання без назви"}
                 </div>
 
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                   {task.description || "Опис завдання поки не заповнено."}
                 </p>
 
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-slate-500">
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
                   <span>{getDatePreview(task)}</span>
                   {task.contractor ? <span>{task.contractor}</span> : null}
                   <span>

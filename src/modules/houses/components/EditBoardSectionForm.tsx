@@ -9,6 +9,7 @@ import {
   adminInputClass,
   adminIconButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
 const initialState = {
   error: null,
@@ -535,50 +536,26 @@ export function EditBoardSectionForm({
               </button>
             </div>
 
-            <div className="min-w-0 overflow-x-auto">
-              <div className="flex min-w-max flex-nowrap gap-3">
-                {TAB_CONFIG.map((tab) => {
-                  const count =
-                    tab.status === "chairman"
-                      ? chairman
+            <AdminSegmentedTabs
+              activeKey={activeTab}
+              onChange={(key) => setActiveTab(key as BoardTabKey)}
+              items={TAB_CONFIG.map((tab) => ({
+                key: tab.key,
+                label: tab.label,
+                count:
+                  tab.status === "chairman"
+                    ? chairman
+                      ? 1
+                      : 0
+                    : tab.status === "vice_chairman"
+                      ? viceChairman
                         ? 1
                         : 0
-                      : tab.status === "vice_chairman"
-                        ? viceChairman
-                          ? 1
-                          : 0
-                        : tab.status === "member"
-                          ? members.length
-                          : revisionCommission.length;
-
-                  const isActive = activeTab === tab.key;
-
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-medium whitespace-nowrap transition ${
-                        isActive
-                          ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
-                          : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 text-[var(--cms-text)]"
-                      }`}
-                    >
-                      <span>{tab.label}</span>
-                      <span
-                        className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          isActive
-                            ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                            : "bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                      : tab.status === "member"
+                        ? members.length
+                        : revisionCommission.length,
+              }))}
+            />
           </div>
         </div>
 
@@ -815,7 +792,7 @@ export function EditBoardSectionForm({
                 >
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-full border border-[var(--cms-border)] bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+                      <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
                         {role.role || getRoleLabel(role.status)}
                       </span>
                     </div>
@@ -847,7 +824,7 @@ export function EditBoardSectionForm({
         </div>
 
         {state.error ? (
-          <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {state.error}
           </div>
         ) : null}

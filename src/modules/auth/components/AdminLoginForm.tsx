@@ -20,7 +20,7 @@ export function AdminLoginForm() {
       <div className="text-left">
         <label
           htmlFor="email"
-          className="mb-2 block text-base font-medium text-slate-200"
+          className="mb-2 block text-base font-medium text-[var(--cms-text-primary)]"
         >
           Електронна пошта
         </label>
@@ -30,7 +30,7 @@ export function AdminLoginForm() {
           name="email"
           type="email"
           placeholder="admin@company.ua"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-5 py-4 text-lg text-white outline-none transition focus:border-slate-400"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           autoComplete="off"
         />
       </div>
@@ -38,7 +38,7 @@ export function AdminLoginForm() {
       <div className="text-left">
         <label
           htmlFor="password"
-          className="mb-2 block text-base font-medium text-slate-200"
+          className="mb-2 block text-base font-medium text-[var(--cms-text-primary)]"
         >
           Пароль
         </label>
@@ -48,7 +48,7 @@ export function AdminLoginForm() {
           name="password"
           type="password"
           placeholder="Введіть пароль"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-5 py-4 text-lg text-white outline-none transition focus:border-slate-400"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           autoComplete="new-password"
         />
       </div>
@@ -70,7 +70,7 @@ export function AdminLoginForm() {
 
         <Link
           href={ROUTES.admin.forgotPassword}
-          className="mt-3 text-base font-medium text-slate-400 transition hover:text-white"
+          className="mt-3 text-base font-medium text-[var(--cms-text-secondary)] transition hover:text-[var(--cms-text-primary)]"
         >
           Забули пароль?
         </Link>

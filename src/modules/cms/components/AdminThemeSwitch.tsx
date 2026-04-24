@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type AdminTheme = "dark" | "light";
 
@@ -24,74 +28,61 @@ function getStoredTheme(): AdminTheme {
 }
 
 export function AdminThemeSwitch() {
-  const [theme, setTheme] = useState<AdminTheme>(() => getStoredTheme());
-  const [isSwitching, setIsSwitching] = useState(false);
-  const switchTimeoutRef = useRef<number | null>(null);
+  const [theme, setTheme] = useState<AdminTheme>("dark");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    applyTheme(theme);
+    const storedTheme = getStoredTheme();
+    setTheme(storedTheme);
+    applyTheme(storedTheme);
+    setIsMounted(true);
+  }, []);
 
-    return () => {
-      if (switchTimeoutRef.current) {
-        window.clearTimeout(switchTimeoutRef.current);
-      }
-    };
-  }, [theme]);
-
-  function handleToggle() {
-    const nextTheme: AdminTheme = theme === "dark" ? "light" : "dark";
-
-    setIsSwitching(true);
+  function handleThemeChange(nextTheme: AdminTheme) {
     setTheme(nextTheme);
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
-
-    if (switchTimeoutRef.current) {
-      window.clearTimeout(switchTimeoutRef.current);
-    }
-
-    switchTimeoutRef.current = window.setTimeout(() => {
-      setIsSwitching(false);
-    }, 350);
   }
 
-  const isLight = theme === "light";
+  const lightButtonClass =
+    isMounted && theme === "light"
+      ? adminPrimaryButtonClass
+      : adminSecondaryButtonClass;
+
+  const darkButtonClass =
+    isMounted && theme === "dark"
+      ? adminPrimaryButtonClass
+      : adminSecondaryButtonClass;
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="text-sm text-[var(--cms-text-muted)]">
-        Тема
+    <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 md:col-span-2">
+      <div className="mb-3">
+        <h3 className="text-lg font-semibold text-[var(--cms-text-primary)]">
+          Налаштування теми
+        </h3>
+
+        <p className="mt-2 text-sm text-[var(--cms-text-secondary)]">
+          Оберіть режим відображення робочої зони платформи.
+        </p>
       </div>
 
-      <button
-        type="button"
-        onClick={handleToggle}
-        className="relative inline-flex h-9 w-[72px] items-center rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] transition"
-      >
-        <span
-          className={`absolute text-xs font-medium transition ${
-            isLight
-              ? "left-3 text-[var(--cms-text-muted)]"
-              : "right-3 text-[var(--cms-text-muted)]"
-          }`}
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => handleThemeChange("light")}
+          className={lightButtonClass}
         >
-          {isLight ? "Світла" : "Темна"}
-        </span>
+          Світла
+        </button>
 
-        <span
-          className={`absolute h-7 w-7 rounded-full transition ${
-            isLight
-              ? "left-[38px] bg-[var(--cms-primary)]"
-              : "left-[4px] bg-[var(--cms-text)]"
-          }`}
-        />
-
-        {isSwitching && (
-          <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-[var(--cms-text-muted)]">
-            Меняем тему...
-          </span>
-        )}
-      </button>
+        <button
+          type="button"
+          onClick={() => handleThemeChange("dark")}
+          className={darkButtonClass}
+        >
+          Темна
+        </button>
+      </div>
     </div>
   );
 }

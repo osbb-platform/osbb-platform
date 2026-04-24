@@ -26,22 +26,22 @@ export function AdminOnboardingModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
-      <div className="relative w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-6">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(15,23,42,0.72)] px-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
         
         {/* Skip */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-sm text-slate-400 hover:text-white"
+          className="absolute right-4 top-4 text-sm text-[var(--cms-text-secondary)] hover:text-[var(--cms-text-primary)]"
         >
           Пропустити
         </button>
 
-        <h2 className="text-xl font-semibold text-white">
+        <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
           {current.title}
         </h2>
 
-        <p className="mt-4 text-sm leading-6 text-slate-300 whitespace-pre-line">
+        <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[var(--cms-text-secondary)]">
           {current.description}
         </p>
 
@@ -51,7 +51,7 @@ export function AdminOnboardingModal({ onClose }: Props) {
             <div
               key={i}
               className={`h-2 w-2 rounded-full ${
-                i === step ? "bg-white" : "bg-slate-600"
+                i === step ? "bg-white" : "bg-[var(--cms-bg-tertiary)]"
               }`}
             />
           ))}
@@ -62,7 +62,7 @@ export function AdminOnboardingModal({ onClose }: Props) {
           <button
             onClick={prev}
             disabled={step === 0}
-            className="text-sm text-slate-400 disabled:opacity-30"
+            className="text-sm text-[var(--cms-text-secondary)] disabled:opacity-30"
           >
             ← Назад
           </button>

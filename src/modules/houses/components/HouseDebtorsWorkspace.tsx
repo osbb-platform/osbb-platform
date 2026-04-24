@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type WorkspaceTab = "all" | "published" | "draft";
 
@@ -432,7 +438,6 @@ export function HouseDebtorsWorkspace({
     }
   }
 
-  const initialPayment = normalizePayment(content.payment);
   const paymentDirty =
     JSON.stringify(payment) !== JSON.stringify(DEFAULT_PAYMENT);
   const paymentSaveSuccess =
@@ -458,11 +463,11 @@ export function HouseDebtorsWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-5">
           <div>
-            <h2 className="text-xl font-semibold text-white">Боржники</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">Боржники</h2>
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Керування реєстром заборгованостей по квартирах, чернеткою публікації та опублікованим списком для мешканців.
             </p>
           </div>
@@ -482,16 +487,16 @@ export function HouseDebtorsWorkspace({
                   onClick={() => setActiveTab(tab.key as WorkspaceTab)}
                   className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "bg-white text-slate-950"
-                      : "border border-slate-700 bg-slate-950/40 text-white"
+                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   }`}
                 >
                   <span>{tab.label}</span>
                   <span
                     className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       isActive
-                        ? "bg-slate-200 text-slate-950"
-                        : "bg-slate-800 text-slate-200"
+                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
+                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
                     }`}
                   >
                     {tab.count}
@@ -503,15 +508,15 @@ export function HouseDebtorsWorkspace({
         </div>
       </div>
 
-      <div className="space-y-5 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
         {state.error ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
       {importError ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {importError}
         </div>
       ) : null}
@@ -530,7 +535,7 @@ export function HouseDebtorsWorkspace({
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Пошук: квартира / особовий рахунок / власник"
-          className="rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
+          className={adminInputClass}
         />
 
         {activeTab === "all" ? (
@@ -539,7 +544,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={openImportPicker}
               disabled={isImporting}
-              className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-50"
+              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
             >
               {isImporting ? "Імпорт..." : "Імпорт"}
             </button>
@@ -547,7 +552,7 @@ export function HouseDebtorsWorkspace({
             <button
               type="button"
               onClick={handleExport}
-              className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300"
+              className={adminSecondaryButtonClass}
             >
               Export
             </button>
@@ -555,7 +560,7 @@ export function HouseDebtorsWorkspace({
             <button
               type="button"
               onClick={clearAllDebtFields}
-              className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300"
+              className={adminSecondaryButtonClass}
             >
               Очистити
             </button>
@@ -564,7 +569,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               disabled={!hasAnyEditableValue}
               onClick={openPreview}
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
             >
               Зберегти
             </button>
@@ -573,17 +578,17 @@ export function HouseDebtorsWorkspace({
       </div>
 
       {activeTab === "draft" && isDraftEmpty ? (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
+        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           Чернетка поки порожня. Після підготовки списку боржників і збереження попереднього перегляду вона з’явиться тут.
         </div>
       ) : null}
       {activeTab === "draft" && !isDraftEmpty ? (
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-900/40 bg-amber-950/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-amber-200">
+            <p className="text-sm font-medium text-[var(--cms-warning-text)]">
               Чернетка готова до публікації
             </p>
-            <p className="mt-1 text-xs text-amber-300/80">
+            <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
               Після публікації поточний опублікований список буде повністю замінено.
             </p>
           </div>
@@ -593,7 +598,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={deleteDraft}
               disabled={isPending}
-              className="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-50"
+              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
             >
               Видалити чернетку
             </button>
@@ -602,7 +607,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={publishDraft}
               disabled={isPending}
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-950 disabled:opacity-50"
+              className={`${adminPrimaryButtonClass} disabled:opacity-50`}
             >
               Підтвердити публікацію
             </button>
@@ -612,13 +617,13 @@ export function HouseDebtorsWorkspace({
 
 
       {activeTab === "published" && isPublishedEmpty ? (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
+        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           Опублікований список поки порожній. Після підтвердження чернетки тут з’являться квартири із заборгованістю.
         </div>
       ) : null}
       {activeTab === "all" ? (
         <div
-          className="rounded-3xl border border-slate-800 p-5 transition hover:border-slate-700"
+          className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
         >
           <div
             role="button"
@@ -633,10 +638,10 @@ export function HouseDebtorsWorkspace({
             className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
           >
             <div>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-medium text-[var(--cms-text)]">
                 Блок оплати заборгованості
               </p>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
                 Заповніть посилання, заголовок і текст для публічного блоку оплати, який побачать мешканці на сайті будинку.
               </p>
             </div>
@@ -644,10 +649,10 @@ export function HouseDebtorsWorkspace({
             <div className="flex flex-wrap items-center gap-2">
               <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                 paymentBlockReady
-                  ? "bg-emerald-500/20 text-emerald-300"
+                  ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : hasPaymentUrl && !isPaymentUrlValid
-                    ? "bg-amber-500/20 text-amber-300"
-                    : "bg-red-500/20 text-red-300"
+                    ? "bg-amber-500/20 text-[var(--cms-warning-text)]"
+                    : "bg-red-500/20 text-[var(--cms-danger-text)]"
               }`}>
                 {paymentBlockReady
                   ? "Блок оплати заповнено"
@@ -659,7 +664,7 @@ export function HouseDebtorsWorkspace({
           </div>
 
           {paymentSaveSuccess ? (
-            <div className="mt-4 rounded-2xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300">
+            <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
               Налаштування блоку оплати збережено.
             </div>
           ) : null}
@@ -670,7 +675,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={() => setIsPaymentSettingsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   aria-label="Закрити налаштування оплати"
                 >
                   ×
@@ -678,7 +683,7 @@ export function HouseDebtorsWorkspace({
               </div>
 
               <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-slate-300">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
                   Посилання загальної оплати
                 </div>
                 <input
@@ -687,24 +692,24 @@ export function HouseDebtorsWorkspace({
                     setPayment((prev) => ({ ...prev, url: event.target.value }))
                   }
                   placeholder="https://pay.example.com/debtors"
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm text-white ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm text-[var(--cms-text)] ${
                     hasPaymentUrl && !isPaymentUrlValid
-                      ? "border-amber-500 bg-amber-950/20"
-                      : "border-slate-700 bg-slate-950"
+                      ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)]"
+                      : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)]"
                   }`}
                 />
-                <div className="mt-2 text-xs text-slate-400">
+                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                   Це посилання буде використовуватися в публічному блоці оплати для переходу мешканця до оплати заборгованості.
                 </div>
                 {hasPaymentUrl && !isPaymentUrlValid ? (
-                  <div className="mt-2 text-xs text-amber-400">
+                  <div className="mt-2 text-xs text-[var(--cms-warning-text)]">
                     Посилання має починатися з http:// або https://
                   </div>
                 ) : null}
               </div>
 
               <div>
-                <div className="mb-2 text-sm font-medium text-slate-300">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
                   Текст кнопки
                 </div>
                 <input
@@ -716,12 +721,12 @@ export function HouseDebtorsWorkspace({
                     }))
                   }
                   placeholder="Оплатити"
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
+                  className={adminInputClass}
                 />
               </div>
 
               <div>
-                <div className="mb-2 text-sm font-medium text-slate-300">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
                   Заголовок блоку
                 </div>
                 <input
@@ -730,12 +735,12 @@ export function HouseDebtorsWorkspace({
                     setPayment((prev) => ({ ...prev, title: event.target.value }))
                   }
                   placeholder="Оплата заборгованості"
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
+                  className={adminInputClass}
                 />
               </div>
 
               <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-slate-300">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
                   Опис для мешканця
                 </div>
                 <textarea
@@ -745,18 +750,18 @@ export function HouseDebtorsWorkspace({
                   }
                   placeholder="Наприклад: введіть особовий рахунок, перевірте суму боргу та перейдіть до оплати."
                   rows={3}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white"
+                  className={adminInputClass}
                 />
               </div>
 
-              <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+              <div className="md:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
                   Попередній перегляд публічного блоку
                 </div>
-                <div className="mt-3 text-lg font-semibold text-white">
+                <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
                   {payment.title || "Оплата заборгованості"}
                 </div>
-                <div className="mt-2 text-sm text-slate-400">
+                <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   {payment.note || "Опис блоку оплати з’явиться тут."}
                 </div>
                 <div className="mt-4 inline-flex rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950">
@@ -769,7 +774,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={savePaymentSettings}
                   disabled={!section || !paymentDirty || !isPaymentUrlValid || isPending}
-                  className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_payment"
                     ? "Зберігаємо..."
@@ -780,7 +785,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setPayment(DEFAULT_PAYMENT)}
                   disabled={!paymentDirty || isPending}
-                  className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
                 </button>
@@ -791,21 +796,21 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {activeTab === "all" && filteredRows.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
+        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
         </div>
       ) : filteredRows.length > 0 ? (
-        <div className="overflow-hidden rounded-3xl border border-slate-800">
+        <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
           <div className="max-h-[70vh] overflow-auto">
             <table className="min-w-full border-collapse">
-              <thead className="sticky top-0 bg-slate-950">
-                <tr className="border-b border-slate-800 text-left">
-                  <th className="px-4 py-3 text-xs text-slate-400">Кв.</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Л/С</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Власник</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Площа</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Борг</th>
-                  <th className="px-4 py-3 text-xs text-slate-400">Дні</th>
+              <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
+                <tr className="border-b border-[var(--cms-border)] text-left">
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Кв.</th>
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Л/С</th>
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Власник</th>
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Площа</th>
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Борг</th>
+                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Дні</th>
                 </tr>
               </thead>
 
@@ -813,18 +818,18 @@ export function HouseDebtorsWorkspace({
                 {filteredRows.map((row) => (
                   <tr
                     key={row.apartmentId}
-                    className="border-b border-slate-800"
+                    className="border-b border-[var(--cms-border)]"
                   >
-                    <td className="px-4 py-3 text-sm text-white">
+                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
                       {row.apartmentLabel}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">
+                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
                       {row.accountNumber}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">
+                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
                       {row.ownerName}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-300">
+                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
                       {formatArea(row.area)}
                     </td>
 
@@ -837,10 +842,10 @@ export function HouseDebtorsWorkspace({
                           }
                           inputMode="decimal"
                           placeholder="0.00"
-                          className="w-[140px] rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                          className="w-[140px] rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
                         />
                       ) : (
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-[var(--cms-text)]">
                           {row.amount || "—"}
                         </span>
                       )}
@@ -855,10 +860,10 @@ export function HouseDebtorsWorkspace({
                           }
                           inputMode="numeric"
                           placeholder="—"
-                          className="w-[100px] rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                          className="w-[100px] rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
                         />
                       ) : (
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-[var(--cms-text)]">
                           {row.days || "—"}
                         </span>
                       )}
@@ -872,7 +877,7 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {isPreviewOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.8)] px-4 py-6 backdrop-blur-sm">
           <button
             type="button"
             onClick={closePreview}
@@ -880,25 +885,25 @@ export function HouseDebtorsWorkspace({
             aria-label="Закрити попередній перегляд"
           />
 
-          <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="border-b border-slate-800 px-6 py-5">
-              <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+            <div className="border-b border-[var(--cms-border)] px-6 py-5">
+              <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Попередній перегляд перед збереженням
               </div>
 
-              <h2 className="mt-3 text-2xl font-semibold text-white">
+              <h2 className="mt-3 text-2xl font-semibold text-[var(--cms-text)]">
                 Перевірте список боржників
               </h2>
 
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                 У чернетку будуть збережені лише квартири, де заповнена сума боргу.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Боржників: {previewItems.length}
                 </span>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}
                 </span>
               </div>
@@ -906,31 +911,31 @@ export function HouseDebtorsWorkspace({
 
             <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
               {isPreviewEmpty ? (
-                <div className="rounded-2xl border border-dashed border-slate-700 p-5 text-sm text-slate-400">
+                <div className="rounded-2xl border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
                   У попередньому перегляді немає рядків для збереження. Вкажіть суму боргу хоча б для однієї квартири.
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-3xl border border-slate-800">
+                <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
                   <table className="min-w-full border-collapse">
-                    <thead className="sticky top-0 bg-slate-950">
-                      <tr className="border-b border-slate-800 text-left">
-                        <th className="px-4 py-3 text-xs text-slate-400">Кв.</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Л/С</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Власник</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Площа</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Борг</th>
-                        <th className="px-4 py-3 text-xs text-slate-400">Дні</th>
+                    <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
+                      <tr className="border-b border-[var(--cms-border)] text-left">
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Кв.</th>
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Л/С</th>
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Власник</th>
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Площа</th>
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Борг</th>
+                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Дні</th>
                       </tr>
                     </thead>
                     <tbody>
                       {previewItems.map((row) => (
-                        <tr key={row.apartmentId} className="border-b border-slate-800">
-                          <td className="px-4 py-3 text-sm text-white">{row.apartmentLabel}</td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{row.accountNumber}</td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{row.ownerName}</td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{formatArea(row.area)}</td>
+                        <tr key={row.apartmentId} className="border-b border-[var(--cms-border)]">
+                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.apartmentLabel}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.accountNumber}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.ownerName}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{formatArea(row.area)}</td>
                           <td className="px-4 py-3 text-sm font-medium text-white">{row.amount}</td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{row.days || "—"}</td>
+                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.days || "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -939,12 +944,12 @@ export function HouseDebtorsWorkspace({
               )}
             </div>
 
-            <div className="border-t border-slate-800 px-6 py-5">
+            <div className="border-t border-[var(--cms-border)] px-6 py-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={closePreview}
-                  className="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300"
+                  className={adminSecondaryButtonClass}
                 >
                   Назад
                 </button>
@@ -953,7 +958,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   disabled={isPreviewEmpty || !section || isPending}
                   onClick={submitDraftSave}
-                  className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending ? "Зберігаємо..." : "Зберегти в чернетку"}
                 </button>

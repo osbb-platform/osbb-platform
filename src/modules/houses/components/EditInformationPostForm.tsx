@@ -175,7 +175,7 @@ export function EditInformationPostForm({
         </div>
 
         {state.error && (
-          <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {state.error}
           </div>
         )}

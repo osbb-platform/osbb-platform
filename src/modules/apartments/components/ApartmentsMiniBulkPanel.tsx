@@ -6,6 +6,11 @@ import {
   createApartmentsMiniBulk,
   type CreateApartmentsMiniBulkState,
 } from "@/src/modules/apartments/actions/createApartmentsMiniBulk";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type MiniBulkRow = {
   accountNumber: string;
@@ -157,7 +162,7 @@ export function ApartmentsMiniBulkPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.72)] backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0"
@@ -165,18 +170,18 @@ export function ApartmentsMiniBulkPanel({
         aria-label="Закрити панель ручного додавання квартир"
       />
 
-      <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-slate-800 bg-slate-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+      <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
           <div>
-            <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Ручне додавання
             </div>
 
-            <h2 className="mt-4 text-2xl font-semibold text-white">
+            <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
               Квартири для будинку {houseName}
             </h2>
 
-            <p className="mt-2 text-sm leading-7 text-slate-400">
+            <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
               Заповніть до 20 рядків. Зберігаються лише рядки, де вказані особовий рахунок, квартира та власник.
             </p>
           </div>
@@ -184,22 +189,22 @@ export function ApartmentsMiniBulkPanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-white transition hover:bg-slate-800"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити"
           >
             ×
           </button>
         </div>
 
-        <div className="border-b border-slate-800 px-6 py-4">
+        <div className="border-b border-[var(--cms-border)] px-6 py-4">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Будинок: {houseName}
             </span>
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Заповнено рядків: {filledRowsCount}
             </span>
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Ліміт: 20
             </span>
           </div>
@@ -214,27 +219,27 @@ export function ApartmentsMiniBulkPanel({
           <input type="hidden" name="rows" value={rowsPayload} />
 
           <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
-            <div className="overflow-hidden rounded-3xl border border-slate-800">
+            <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse">
-                  <thead className="bg-slate-950/90">
-                    <tr className="border-b border-slate-800 text-left">
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <thead className="bg-[var(--cms-surface-elevated)]">
+                    <tr className="border-b border-[var(--cms-border)] text-left">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         #
                       </th>
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Особовий рахунок *
                       </th>
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Квартира *
                       </th>
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Власник *
                       </th>
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Площа
                       </th>
-                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Дія
                       </th>
                     </tr>
@@ -247,9 +252,9 @@ export function ApartmentsMiniBulkPanel({
                       return (
                         <tr
                           key={index}
-                          className="border-b border-slate-800 bg-slate-900/70 align-top"
+                          className="border-b border-[var(--cms-border)] bg-[var(--cms-surface)] align-top"
                         >
-                          <td className="px-4 py-4 text-sm text-slate-500">
+                          <td className="px-4 py-4 text-sm text-[var(--cms-text-soft)]">
                             {index + 1}
                           </td>
 
@@ -261,7 +266,7 @@ export function ApartmentsMiniBulkPanel({
                                 updateRow(index, "accountNumber", event.target.value)
                               }
                               placeholder="Наприклад, 100245"
-                              className="w-full min-w-[150px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
+                              className={`w-full min-w-[150px] ${adminInputClass}`}
                             />
                           </td>
 
@@ -273,7 +278,7 @@ export function ApartmentsMiniBulkPanel({
                                 updateRow(index, "apartmentLabel", event.target.value)
                               }
                               placeholder="Наприклад, 24"
-                              className="w-full min-w-[140px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
+                              className={`w-full min-w-[140px] ${adminInputClass}`}
                             />
                           </td>
 
@@ -285,7 +290,7 @@ export function ApartmentsMiniBulkPanel({
                                 updateRow(index, "ownerName", event.target.value)
                               }
                               placeholder="ПІБ власника"
-                              className="w-full min-w-[220px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
+                              className={`w-full min-w-[220px] ${adminInputClass}`}
                             />
                           </td>
 
@@ -300,7 +305,7 @@ export function ApartmentsMiniBulkPanel({
                               className={
                                 areaInvalid
                                   ? "w-full min-w-[120px] rounded-2xl border border-red-800 bg-red-950/20 px-3 py-2 text-sm text-white outline-none transition focus:border-red-600"
-                                  : "w-full min-w-[120px] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-slate-500"
+                                  : `w-full min-w-[120px] ${adminInputClass}`
                               }
                             />
 
@@ -315,7 +320,7 @@ export function ApartmentsMiniBulkPanel({
                             <button
                               type="button"
                               onClick={() => removeRow(index)}
-                              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                              className={adminSecondaryButtonClass}
                             >
                               Очистити
                             </button>
@@ -333,7 +338,7 @@ export function ApartmentsMiniBulkPanel({
                 <button
                   type="button"
                   onClick={addMoreRows}
-                  className="rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+                  className={adminSecondaryButtonClass}
                 >
                   + ще 5
                 </button>
@@ -365,12 +370,12 @@ export function ApartmentsMiniBulkPanel({
             ) : null}
           </div>
 
-          <div className="border-t border-slate-800 px-6 py-5">
+          <div className="border-t border-[var(--cms-border)] px-6 py-5">
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                className={adminSecondaryButtonClass}
               >
                 Скасувати
               </button>
@@ -378,7 +383,7 @@ export function ApartmentsMiniBulkPanel({
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 {isPending ? "Зберігаємо..." : "Додати квартири"}
               </button>

@@ -32,7 +32,7 @@ export function EditCompanyPageForm({ page }: EditCompanyPageFormProps) {
     <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <input type="hidden" name="id" value={page.id} />
       {/* оставляем все существующие поля как есть */}
-      <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-4">
+      <div className="md:col-span-2 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-4">
         <label className="flex items-start gap-3">
           <input
             name="showInFooter"
@@ -42,7 +42,7 @@ export function EditCompanyPageForm({ page }: EditCompanyPageFormProps) {
             className="mt-1 h-4 w-4"
           />
           <div>
-            <div className="text-sm font-medium text-white">
+            <div className="text-sm font-medium text-[var(--cms-text-primary)]">
               Показывать страницу в footer navigation
             </div>
           </div>

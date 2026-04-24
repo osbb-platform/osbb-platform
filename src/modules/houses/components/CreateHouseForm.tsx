@@ -3,6 +3,12 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createHouse } from "@/src/modules/houses/actions/createHouse";
 import { slugify } from "@/src/shared/utils/slug/slugify";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type CreateHouseFormProps = {
   districts: Array<{
@@ -81,7 +87,7 @@ export function CreateHouseForm({
   return (
     <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Назва будинку
         </label>
         <input
@@ -90,57 +96,57 @@ export function CreateHouseForm({
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Назва будинку"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Системний slug
         </label>
         <input
           type="text"
           value={slugPreview}
           readOnly
-          className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-slate-400 outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
         />
-        <div className="mt-2 text-xs text-slate-500">
+        <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
           Slug формується автоматично за назвою будинку та далі не редагується.
         </div>
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Адреса
         </label>
         <input
           name="address"
           type="text"
           placeholder="м. Запоріжжя, ..."
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           ОСББ
         </label>
         <input
           name="osbbName"
           type="text"
           placeholder="ОСББ ..."
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Район
         </label>
         <select
           name="districtId"
           required
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
           defaultValue=""
         >
           <option value="" disabled>
@@ -156,14 +162,14 @@ export function CreateHouseForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Керуюча компанія
         </label>
         <select
           name="managementCompanyId"
           required
           defaultValue={defaultCompanyId}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         >
           <option value="" disabled>
             Оберіть керуючу компанію
@@ -178,32 +184,32 @@ export function CreateHouseForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Короткий опис
         </label>
         <input
           name="shortDescription"
           type="text"
           placeholder="Короткий опис"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Публічний опис
         </label>
         <input
           name="publicDescription"
           type="text"
           placeholder="Публічний опис"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+          className={adminInputClass}
         />
       </div>
 
-      <div className="md:col-span-2 rounded-[24px] border border-slate-800 bg-slate-950/60 p-4">
+      <div className={`md:col-span-2 ${adminSurfaceClass} p-4`}>
         <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
-          <div className="overflow-hidden rounded-[20px] border border-slate-800 bg-slate-900">
+          <div className="overflow-hidden rounded-[20px] border border-[var(--cms-border)] bg-[var(--cms-surface)]">
             <div className="aspect-[16/9] w-full">
               {previewUrl ? (
                 <div
@@ -211,7 +217,7 @@ export function CreateHouseForm({
                   style={{ backgroundImage: `url("${previewUrl}")` }}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center px-4 text-center text-xs leading-5 text-slate-500">
+                <div className="flex h-full w-full items-center justify-center px-4 text-center text-xs leading-5 text-[var(--cms-text-soft)]">
                   Попередній перегляд з’явиться після вибору фотографії
                 </div>
               )}
@@ -221,10 +227,10 @@ export function CreateHouseForm({
           <div className="min-w-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-200">
+                <div className="text-sm font-medium text-[var(--cms-text)]">
                   Фото будинку
                 </div>
-                <div className="mt-1 text-xs leading-5 text-slate-400">
+                <div className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
                   Використовується на сторінці входу до кабінету будинку.
                 </div>
               </div>
@@ -251,14 +257,14 @@ export function CreateHouseForm({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                  className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                 >
                   Обрати файл
                 </button>
               </div>
             </div>
 
-            <div className="mt-3 grid gap-1 text-xs leading-5 text-slate-500">
+            <div className="mt-3 grid gap-1 text-xs leading-5 text-[var(--cms-text-soft)]">
               <div>Рекомендовано: 1600×900 px</div>
               <div>Мінімум: 1280×720 px</div>
               <div>Формат: JPG, PNG або WebP</div>
@@ -270,7 +276,7 @@ export function CreateHouseForm({
             </div>
 
             {selectedImage ? (
-              <div className="mt-3 text-xs text-slate-400">
+              <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
                 {selectedImage.name} · {formatFileSize(selectedImage.size)}
               </div>
             ) : null}
@@ -279,7 +285,7 @@ export function CreateHouseForm({
       </div>
 
       {state.error ? (
-        <div className="md:col-span-2 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
@@ -288,7 +294,7 @@ export function CreateHouseForm({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+          className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Створюємо..." : "Створити будинок"}
         </button>

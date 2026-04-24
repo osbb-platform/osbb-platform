@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { updateCompanySection } from "@/src/modules/company/actions/updateCompanySection";
+import { adminPrimaryButtonClass } from "@/src/shared/ui/admin/adminStyles";
 
 type EditCompanyHeroSectionFormProps = {
   companyPageId: string;
@@ -41,25 +42,25 @@ export function EditCompanyHeroSectionForm({
       <input type="hidden" name="companyPageId" value={companyPageId} />
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
           Назва секції
         </label>
         <input
           name="title"
           type="text"
           defaultValue={section.title ?? ""}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
           Статус
         </label>
         <select
           name="status"
           defaultValue={section.status}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
         >
           <option value="draft">Чернетка</option>
           <option value="in_review">На модерації</option>
@@ -69,43 +70,43 @@ export function EditCompanyHeroSectionForm({
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
           Заголовок
         </label>
         <input
           name="headline"
           type="text"
           defaultValue={headline}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
           Підзаголовок
         </label>
         <textarea
           name="subheadline"
           defaultValue={subheadline}
           rows={4}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
           Текст CTA
         </label>
         <input
           name="ctaLabel"
           type="text"
           defaultValue={ctaLabel}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
         />
       </div>
 
       {state.error ? (
-        <div className="md:col-span-2 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="md:col-span-2 rounded-2xl border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
@@ -114,7 +115,7 @@ export function EditCompanyHeroSectionForm({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+          className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Зберігаємо..." : "Зберегти hero секцію компанії"}
         </button>

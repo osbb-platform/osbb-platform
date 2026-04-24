@@ -50,10 +50,10 @@ function getToneClasses(tone: PlatformConfirmTone) {
   }
 
   return {
-    icon: "border-slate-700 bg-slate-800 text-slate-200",
+    icon: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]",
     confirmButton:
       "border border-slate-600 bg-white text-slate-950 hover:bg-slate-200 disabled:opacity-60",
-    accent: "text-slate-200",
+    accent: "text-[var(--cms-text-secondary)]",
   };
 }
 
@@ -105,7 +105,7 @@ export function PlatformConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(15,23,42,0.72)] px-4 py-6 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="platform-confirm-title"
@@ -116,7 +116,7 @@ export function PlatformConfirmModal({
       }}
     >
       <div
-        className="w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)]"
+        className="w-full max-w-xl rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)]"
         onMouseDown={(event) => {
           event.stopPropagation();
         }}
@@ -132,13 +132,13 @@ export function PlatformConfirmModal({
           <div className="min-w-0 flex-1">
             <h3
               id="platform-confirm-title"
-              className="text-lg font-semibold text-white"
+              className="text-lg font-semibold text-[var(--cms-text-primary)]"
             >
               {title}
             </h3>
 
             {description ? (
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-secondary)]">
                 {description}
               </p>
             ) : null}
@@ -150,7 +150,7 @@ export function PlatformConfirmModal({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-700 disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)] disabled:opacity-60"
           >
             {cancelLabel}
           </button>

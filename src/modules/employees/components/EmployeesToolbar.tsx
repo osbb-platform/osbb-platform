@@ -79,10 +79,10 @@ export function EmployeesToolbar({
   }
 
   return (
-    <div className="sticky top-0 z-10 rounded-3xl border border-slate-800 bg-slate-900/95 p-4 backdrop-blur">
+    <div className="sticky top-0 z-10 rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]/95 p-4 backdrop-blur">
       <div className="grid gap-3 md:grid-cols-3">
         <div>
-          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
+          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
             Пошук
           </label>
           <input
@@ -90,18 +90,18 @@ export function EmployeesToolbar({
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder="Ім’я, email, посада"
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
+          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
             Роль
           </label>
           <select
             value={roleValue}
             onChange={(event) => setRoleValue(event.target.value)}
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           >
             <option value="">Усі ролі</option>
             <option value="admin">Admin</option>
@@ -110,13 +110,13 @@ export function EmployeesToolbar({
         </div>
 
         <div>
-          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500">
+          <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
             Статус
           </label>
           <select
             value={statusValue}
             onChange={(event) => setStatusValue(event.target.value)}
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-400"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           >
             <option value="">Усі статуси</option>
             <option value="invited">Запрошено</option>
@@ -132,13 +132,13 @@ export function EmployeesToolbar({
           type="button"
           onClick={handleReset}
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text-primary)] disabled:opacity-60"
         >
           Скинути
         </button>
 
         {isPending ? (
-          <div className="text-xs text-slate-500">Оновлюємо список...</div>
+          <div className="text-xs text-[var(--cms-text-muted)]">Оновлюємо список...</div>
         ) : null}
       </div>
     </div>

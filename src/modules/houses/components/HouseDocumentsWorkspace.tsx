@@ -13,6 +13,14 @@ import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
 } from "@/src/shared/utils/validators/pdfUpload";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+
 import type {
   HouseDocumentCategory,
   HouseDocumentListItem,
@@ -33,6 +41,7 @@ type HouseDocumentsWorkspaceProps = {
   canConfirm?: boolean;
   canArchive?: boolean;
   canDelete?: boolean;
+  embedded?: boolean;
 };
 
 type WorkspaceTab = "active" | "draft" | "archive";
@@ -88,14 +97,14 @@ function getVisibilityLabel(visibility: HouseDocumentVisibility) {
 
 function getVisibilityClasses(visibility: HouseDocumentVisibility) {
   if (visibility === "published") {
-    return "border border-emerald-500/20 bg-emerald-500/15 text-emerald-300";
+    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
   if (visibility === "private") {
-    return "border border-slate-700 bg-slate-800 text-slate-300";
+    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
   }
 
-  return "border border-violet-500/20 bg-violet-500/15 text-violet-300";
+  return "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)]";
 }
 
 function formatDate(value: string | null) {
@@ -160,6 +169,7 @@ export function HouseDocumentsWorkspace({
   canConfirm = true,
   canArchive = true,
   canDelete = true,
+  embedded = false,
 }: HouseDocumentsWorkspaceProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -456,11 +466,12 @@ export function HouseDocumentsWorkspace({
         className="rounded-3xl"
       />
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      {!embedded ? (
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">{headingTitle}</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">{headingTitle}</h2>
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Документи створюються як чернетки. Після підтвердження вони стають активними та доступними на публічній сторінці.
             </p>
           </div>
@@ -470,7 +481,7 @@ export function HouseDocumentsWorkspace({
               type="button"
               disabled={isPending}
               onClick={() => setConfirmAction("delete_archive")}
-              className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
             >
               {isPending && confirmAction === "delete_archive"
                 ? "Видаляємо архів..."
@@ -481,59 +492,50 @@ export function HouseDocumentsWorkspace({
               type="button"
               onClick={openCreateMode}
               disabled={isPending}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
             >
               Новий документ
             </button>
           )}
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          {[
-            ["active", "Активні", activeDocuments.length],
-            ["draft", "Чернетки", draftDocuments.length],
-            ["archive", "Архів", archivedDocuments.length],
-          ].map(([key, label, count]) => {
-            const isActive = activeTab === key;
-
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleTabChange(key as WorkspaceTab)}
-                className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-white text-slate-950"
-                    : "border border-slate-700 bg-slate-950/40 text-white hover:bg-slate-950"
-                }`}
-              >
-                <span>{label}</span>
-                <span
-                  className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    isActive
-                      ? "bg-slate-200 text-slate-950"
-                      : "bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-6">
+          <AdminSegmentedTabs
+            activeKey={activeTab}
+            onChange={(key) => handleTabChange(key as WorkspaceTab)}
+            items={[
+              {
+                key: "active",
+                label: "Активні",
+                count: activeDocuments.length,
+              },
+              {
+                key: "draft",
+                label: "Чернетки",
+                count: draftDocuments.length,
+              },
+              {
+                key: "archive",
+                label: "Архів",
+                count: archivedDocuments.length,
+              },
+            ]}
+          />
         </div>
       </div>
+      ) : null}
 
       {shouldRenderForm ? (
         <form
           onSubmit={handleFormSubmit}
-          className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+          className={`${adminSurfaceClass} p-6`}
         >
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
                 {formMode === "edit" ? editTitle : createTitle}
               </h3>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 {formMode === "edit"
                   ? "Картку відкрито у верхній формі. Тут можна змінити дані, замінити файл або виконати доступну дію."
                   : "Новий документ автоматично створюється як чернетка. Завантаж один PDF файл перед збереженням."}
@@ -544,7 +546,7 @@ export function HouseDocumentsWorkspace({
               type="button"
               onClick={closeForm}
               aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-xl font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             >
               ×
             </button>
@@ -552,7 +554,7 @@ export function HouseDocumentsWorkspace({
 
           <div className="grid gap-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Назва документа
               </label>
               <input
@@ -560,12 +562,12 @@ export function HouseDocumentsWorkspace({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Наприклад: Статут ОСББ"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 {isFoundingScope ? "Тип документа" : "Категорія"}
               </label>
               {isFoundingScope ? (
@@ -574,7 +576,7 @@ export function HouseDocumentsWorkspace({
                   onChange={(event) =>
                     setDocumentType(event.target.value as HouseDocumentType)
                   }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   {foundingDocumentTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -588,7 +590,7 @@ export function HouseDocumentsWorkspace({
                   onChange={(event) =>
                     setCategory(event.target.value as HouseDocumentCategory)
                   }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   {categoryOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -601,13 +603,13 @@ export function HouseDocumentsWorkspace({
 
             {!isFoundingScope ? (
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
                   Рік
                 </label>
                 <select
                   value={documentYear}
                   onChange={(event) => setDocumentYear(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   {YEAR_OPTIONS.map((year) => (
                     <option key={year} value={year}>
@@ -620,7 +622,7 @@ export function HouseDocumentsWorkspace({
 
             {formMode === "create" ? (
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
                   PDF файл
                 </label>
                 <input
@@ -648,10 +650,10 @@ export function HouseDocumentsWorkspace({
                     setFileError(null);
                     setSelectedFile(file);
                   }}
-                  className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                 />
 
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--cms-text-soft)]">
                   {getSinglePdfHintMessage()}
                 </p>
 
@@ -660,7 +662,7 @@ export function HouseDocumentsWorkspace({
                 ) : null}
 
                 {selectedFile ? (
-                  <div className="mt-2 text-xs text-slate-400">
+                  <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                     Буде завантажено файл: {selectedFile.name} (
                     {formatFileSize(selectedFile.size)})
                   </div>
@@ -669,7 +671,7 @@ export function HouseDocumentsWorkspace({
             ) : null}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Опис
               </label>
               <textarea
@@ -677,31 +679,31 @@ export function HouseDocumentsWorkspace({
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Короткий опис документа, складу або призначення"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               />
             </div>
 
             {formMode === "edit" ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+              <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
                 <div className="flex flex-col gap-4">
                   <div>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-[var(--cms-text)]">
                       Файл документа
                     </div>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
                       Можна завантажити новий файл, щоб замінити поточний.
                     </p>
                   </div>
 
                   {hasExistingAttachment && selectedDocument ? (
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                    <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
                       <div className="flex flex-col gap-2">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-[var(--cms-text)]">
                           Поточний файл:{" "}
                           {selectedDocument.original_file_name ?? "Без назви"}
                         </div>
 
-                        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
+                        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-[var(--cms-text-muted)]">
                           <span>
                             Розмір: {formatFileSize(selectedDocument.file_size_bytes)}
                           </span>
@@ -719,17 +721,17 @@ export function HouseDocumentsWorkspace({
                               href={selectedDocument.signed_file_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                             >
                               Відкрити поточний файл
                             </a>
                           ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-[var(--cms-text-soft)]">
                               Тимчасове посилання зараз недоступне.
                             </span>
                           )}
 
-                          <label className="inline-flex items-center gap-2 text-sm text-red-300">
+                          <label className="inline-flex items-center gap-2 text-sm text-[var(--cms-danger-text)]">
                             <input
                               type="checkbox"
                               checked={removeAttachment}
@@ -742,7 +744,7 @@ export function HouseDocumentsWorkspace({
                                   }
                                 }
                               }}
-                              className="h-4 w-4 rounded border-slate-700 bg-slate-950"
+                              className="h-4 w-4 rounded border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)]"
                             />
                             Видалити поточний файл
                           </label>
@@ -750,13 +752,13 @@ export function HouseDocumentsWorkspace({
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 text-sm text-[var(--cms-text-muted)]">
                       У цього документа поки немає завантаженого файла.
                     </div>
                   )}
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                    <label className={`mb-2 block ${adminTextLabelClass}`}>
                       Завантажити новий файл
                     </label>
                     <input
@@ -785,7 +787,7 @@ export function HouseDocumentsWorkspace({
                         setSelectedFile(file);
                         setRemoveAttachment(false);
                       }}
-                      className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                      className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                     />
 
                     {fileError ? (
@@ -793,7 +795,7 @@ export function HouseDocumentsWorkspace({
                     ) : null}
 
                     {selectedFile ? (
-                      <div className="mt-2 text-xs text-slate-400">
+                      <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                         Буде завантажено файл: {selectedFile.name} (
                         {formatFileSize(selectedFile.size)})
                       </div>
@@ -804,7 +806,7 @@ export function HouseDocumentsWorkspace({
             ) : null}
 
             {actionError ? (
-              <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+              <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                 {actionError}
               </div>
             ) : null}
@@ -815,7 +817,7 @@ export function HouseDocumentsWorkspace({
                   <button
                     type="submit"
                     disabled={isPending || Boolean(fileError)}
-                    className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+                    className={`${adminPrimaryButtonClass} disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
@@ -827,7 +829,7 @@ export function HouseDocumentsWorkspace({
                       type="button"
                       disabled={isPending || Boolean(fileError)}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -839,7 +841,7 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -850,7 +852,7 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-amber-700 px-5 py-3 text-sm font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                   </button>
@@ -861,9 +863,9 @@ export function HouseDocumentsWorkspace({
         </form>
       ) : null}
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         {visibleDocuments.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm leading-6 text-slate-400">
+          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
             {getEmptyText(activeTab, emptyTitle)}
           </div>
         ) : (
@@ -878,16 +880,16 @@ export function HouseDocumentsWorkspace({
                   type="button"
                   onClick={() => switchToEditMode(document)}
                   className={[
-                    "w-full rounded-3xl border bg-slate-950/40 p-5 text-left transition",
+                    "w-full rounded-3xl border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
                     isSelected
-                      ? "border-white bg-slate-800"
-                      : "border-slate-800 hover:border-slate-700 hover:bg-slate-950",
+                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
+                      : "border-[var(--cms-border)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]",
                   ].join(" ")}
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-3">
-                        <div className="text-base font-semibold text-white">
+                        <div className="text-base font-semibold text-[var(--cms-text)]">
                           {document.title || "Документ без назви"}
                         </div>
 
@@ -898,13 +900,13 @@ export function HouseDocumentsWorkspace({
                         ) : null}
 
                         {hasAttachment ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/15 px-3 py-1 text-xs font-medium text-sky-300">
+                          <span className="rounded-full border border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
                             Файл прикріплено
                           </span>
                         ) : null}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[var(--cms-text-muted)]">
                         <span>
                           {isFoundingScope
                             ? getDocumentTypeLabel(document.document_type)
@@ -912,24 +914,24 @@ export function HouseDocumentsWorkspace({
                         </span>
 
                         {!isFoundingScope ? (
-                          <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {document.document_year
                               ? `Рік: ${document.document_year}`
                               : "Рік не вказано"}
                           </span>
                         ) : (
-                          <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {getDocumentTypeLabel(document.document_type)}
                           </span>
                         )}
                       </div>
 
-                      <div className="mt-3 line-clamp-2 text-sm leading-6 text-slate-300">
+                      <div className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--cms-text)]">
                         {document.description || "Опис документа поки не додано."}
                       </div>
 
                       {hasAttachment ? (
-                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[var(--cms-text-muted)]">
                           <span>
                             Файл: {document.original_file_name || "Без назви"}
                           </span>
@@ -942,7 +944,7 @@ export function HouseDocumentsWorkspace({
                         </div>
                       ) : null}
 
-                      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500">
+                      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[var(--cms-text-soft)]">
                         <span>Створено: {formatDate(document.created_at)}</span>
                         <span>Оновлено: {formatDateTime(document.updated_at)}</span>
                       </div>
@@ -955,7 +957,7 @@ export function HouseDocumentsWorkspace({
                         {getVisibilityLabel(document.visibility_status)}
                       </span>
 
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-[var(--cms-text-soft)]">
                         Натисни для редагування
                       </span>
                     </div>

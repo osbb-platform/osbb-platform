@@ -54,31 +54,31 @@ function KpiTile({
 }) {
   const accentMap = {
     slate: {
-      valueClass: "text-white",
-      hintClass: "text-slate-500",
-      badgeClass: "border-slate-700 bg-slate-800/80 text-slate-300",
+      valueClass: "text-[var(--cms-text-primary)]",
+      hintClass: "text-[var(--cms-text-secondary)]",
+      badgeClass: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]",
     },
     amber: {
-      valueClass: "text-amber-200",
-      hintClass: "text-amber-200/70",
-      badgeClass: "border-amber-500/20 bg-amber-500/10 text-amber-200",
+      valueClass: "text-amber-500",
+      hintClass: "text-amber-600",
+      badgeClass: "border-amber-300 bg-amber-50 text-amber-700",
     },
     rose: {
-      valueClass: "text-rose-200",
-      hintClass: "text-rose-200/70",
-      badgeClass: "border-rose-500/20 bg-rose-500/10 text-rose-200",
+      valueClass: "text-rose-500",
+      hintClass: "text-rose-600",
+      badgeClass: "border-rose-300 bg-rose-50 text-rose-700",
     },
     emerald: {
-      valueClass: "text-emerald-200",
-      hintClass: "text-emerald-200/70",
-      badgeClass: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
+      valueClass: "text-emerald-500",
+      hintClass: "text-emerald-600",
+      badgeClass: "border-emerald-300 bg-emerald-50 text-emerald-700",
     },
   } as const;
 
   const styles = accentMap[accent];
 
   return (
-    <div className="flex min-h-[200px] flex-col rounded-2xl border border-slate-800 bg-slate-950/70 p-5 text-center">
+    <div className="flex min-h-[200px] flex-col rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-5 text-center">
       <div className="flex justify-center">
         <div className={`inline-flex min-h-[30px] max-w-[160px] items-center justify-center rounded-full border px-2 py-0.5 text-[10px] font-medium leading-4 ${styles.badgeClass}`}>
           {label}
@@ -100,7 +100,7 @@ function KpiTile({
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-400">
+    <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-secondary)]">
       {text}
     </div>
   );
@@ -111,16 +111,16 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-        <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+      <section className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
           Центр керування
         </div>
 
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
           Панель керування
         </h1>
 
-        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-400">
+        <p className="mt-3 max-w-4xl text-sm leading-7 text-[var(--cms-text-secondary)]">
           Єдина оглядова панель по всіх будинках: що потребує підтвердження, які зміни нещодавно опубліковані, де є незавершені налаштування та куди потрібно швидко перейти для дії.
         </p>
 
@@ -178,23 +178,23 @@ export default async function AdminDashboardPage() {
               {dashboard.quickLinks.map((item, index) => (
                 <div
                   key={`${item.id}-${index}`}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-[var(--cms-text-primary)]">
                       {item.houseName}
                     </div>
-                    <div className="mt-1 text-sm text-slate-300">
+                    <div className="mt-1 text-sm text-[var(--cms-text-secondary)]">
                       {item.title}
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                       {item.section}
                     </div>
                   </div>
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
                   >
                     Перейти
                   </Link>
@@ -217,33 +217,33 @@ export default async function AdminDashboardPage() {
               {dashboard.publications.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                  className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-white">
+                      <div className="text-sm font-semibold text-[var(--cms-text-primary)]">
                         {item.houseName}
                       </div>
 
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
                         {item.section}
                       </div>
                     </div>
 
-                    <span className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200">
+                    <span className="shrink-0 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
                       {item.actionLabel}
                     </span>
                   </div>
 
-                  <div className="mt-3 text-sm text-slate-300">
+                  <div className="mt-3 text-sm text-[var(--cms-text-secondary)]">
                     {item.summary}
                   </div>
 
-                  <div className="mt-2 line-clamp-2 text-sm font-medium text-white">
+                  <div className="mt-2 line-clamp-2 text-sm font-medium text-[var(--cms-text-primary)]">
                     {item.title}
                   </div>
 
-                  <div className="mt-2 text-xs text-slate-500">
+                  <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                     {formatDate(item.createdAt)}
                   </div>
                 </div>
@@ -264,23 +264,23 @@ export default async function AdminDashboardPage() {
               {dashboard.reviewQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-[var(--cms-text-primary)]">
                       {item.houseName}
                     </div>
-                    <div className="mt-1 text-sm text-slate-300">
+                    <div className="mt-1 text-sm text-[var(--cms-text-secondary)]">
                       {item.title}
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                       {item.section} • {formatDateTime(item.updatedAt)}
                     </div>
                   </div>
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
                   >
                     Відкрити
                   </Link>
@@ -303,21 +303,21 @@ export default async function AdminDashboardPage() {
               {dashboard.problematicHouses.map((item) => (
                 <div
                   key={item.houseId}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                 >
                   <div>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-[var(--cms-text-primary)]">
                       {item.houseName}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {item.hasDrafts ? (
-                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-100">
+                        <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
                           Є чернетки
                         </span>
                       ) : null}
 
                       {!item.hasApartments ? (
-                        <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-100">
+                        <span className="rounded-full border border-rose-300 bg-rose-50 px-2.5 py-1 text-xs text-rose-700">
                           Немає квартир
                         </span>
                       ) : null}
@@ -326,7 +326,7 @@ export default async function AdminDashboardPage() {
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
                   >
                     Перейти
                   </Link>
@@ -349,15 +349,15 @@ export default async function AdminDashboardPage() {
               {dashboard.apartmentSetup.map((item) => (
                 <div
                   key={item.houseId}
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                 >
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-[var(--cms-text-primary)]">
                     {item.houseName}
                   </div>
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
                   >
                     До квартир
                   </Link>
@@ -399,7 +399,7 @@ export default async function AdminDashboardPage() {
           <div className="mt-4">
             <Link
               href="/admin/houses"
-              className="inline-flex items-center rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+              className="inline-flex items-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
             >
               Відкрити список будинків
             </Link>

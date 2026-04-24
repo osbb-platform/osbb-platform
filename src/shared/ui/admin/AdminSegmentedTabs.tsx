@@ -35,8 +35,8 @@ export function AdminSegmentedTabs({
             className={[
               adminTabBaseClass,
               isActive
-                ? "bg-[var(--cms-primary)] text-[var(--cms-primary-contrast)]"
-                : "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]",
+                ? "border border-[var(--cms-tab-active-border)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)] shadow-sm"
+                : "border border-[var(--cms-border-strong)] bg-[var(--cms-tab-inactive-bg)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]",
             ].join(" ")}
           >
             <span>{item.label}</span>
@@ -46,7 +46,7 @@ export function AdminSegmentedTabs({
                 className={[
                   adminTabCountBaseClass,
                   isActive
-                    ? "bg-black/10 text-[var(--cms-primary-contrast)]"
+                    ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                     : "bg-[var(--cms-pill-bg)] text-[var(--cms-pill-text)]",
                 ].join(" ")}
               >

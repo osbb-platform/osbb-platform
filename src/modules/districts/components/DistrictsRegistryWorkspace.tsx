@@ -24,6 +24,14 @@ import {
 import { slugify } from "@/src/shared/utils/slug/slugify";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminDangerButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type DistrictListItem = {
   id: string;
@@ -175,14 +183,14 @@ function DistrictFormCard({
   return (
     <div
       ref={formRef}
-      className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+      className={`${adminSurfaceClass} p-6`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             {mode === "create" ? "Створити новий район" : "Налаштування району"}
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
             {mode === "create"
               ? "Створіть район, щоб потім прив’язувати до нього будинки, сторінки та структуру CMS."
               : "Змініть назву та фірмовий колір району. Slug оновлюється автоматично."}
@@ -193,7 +201,7 @@ function DistrictFormCard({
           type="button"
           onClick={onCancel}
           disabled={!canManageDistricts}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-lg text-slate-300 transition hover:border-slate-500 hover:text-white"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
           aria-label="Закрити форму"
         >
           ×
@@ -206,7 +214,7 @@ function DistrictFormCard({
         ) : null}
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-200">
+          <label className={`mb-2 block ${adminTextLabelClass}`}>
             Назва району
           </label>
           <input
@@ -215,33 +223,33 @@ function DistrictFormCard({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Наприклад, Вознесенівський"
-            className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+            className={adminInputClass}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-200">
+          <label className={`mb-2 block ${adminTextLabelClass}`}>
             Системний slug
           </label>
           <input
             type="text"
             value={slugPreview}
             readOnly
-            className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-slate-400 outline-none"
+            className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
           />
         </div>
 
-        <div className="md:col-span-2 rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+        <div className={`md:col-span-2 ${adminSurfaceClass} p-4`}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="text-sm font-medium text-white">Фірмовий колір району</div>
-              <div className="mt-1 text-sm text-slate-400">
+              <div className="text-sm font-medium text-[var(--cms-text)]">Фірмовий колір району</div>
+              <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
                 Цей колір використовується в картках, фільтрах і пов’язаній навігації.
               </div>
             </div>
 
             <div
-              className="h-12 w-12 rounded-2xl border border-slate-700"
+              className="h-12 w-12 rounded-2xl border border-[var(--cms-border)]"
               style={{ backgroundColor: themeColor }}
             />
           </div>
@@ -254,7 +262,7 @@ function DistrictFormCard({
                 onChange={(event) =>
                   setThemeColor(event.target.value.toUpperCase())
                 }
-                className="h-12 w-full cursor-pointer rounded-2xl border border-slate-700 bg-slate-950 p-1"
+                className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-1"
                 aria-label="Вибір кольору району"
               />
             </div>
@@ -268,7 +276,7 @@ function DistrictFormCard({
                   setThemeColor(event.target.value.toUpperCase())
                 }
                 placeholder="#7C3AED"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               />
             </div>
           </div>
@@ -290,7 +298,7 @@ function DistrictFormCard({
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+            className={`${adminPrimaryButtonClass} disabled:opacity-60`}
           >
             {isPending
               ? mode === "create"
@@ -304,7 +312,7 @@ function DistrictFormCard({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+            className={adminSecondaryButtonClass}
           >
             Скасувати
           </button>
@@ -318,7 +326,7 @@ function DistrictFormCard({
             <button
               type="submit"
               disabled={isDeletePending}
-              className="inline-flex items-center justify-center rounded-2xl border border-red-800 bg-red-950/40 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/60 disabled:opacity-60"
+              className={`${adminDangerButtonClass} disabled:opacity-60`}
             >
               {isDeletePending ? "Видаляємо..." : "Видалити район"}
             </button>
@@ -409,23 +417,23 @@ export function DistrictsRegistryWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               Керування районами
             </h1>
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
               Райони — базова структура платформи. Спочатку створюється район, потім
               до нього прив’язуються будинки та вся CMS-логіка об’єкта.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Районів: {visibleDistricts.length}
               </span>
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Будинків у системі: {totalHousesCount}
               </span>
             </div>
@@ -437,30 +445,30 @@ export function DistrictsRegistryWorkspace({
               if (!canManageDistricts) return;
               openCreateForm();
             }}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+            className={adminPrimaryButtonClass}
           >
             Створити район
           </button>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">Пошук по районах</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">Пошук по районах</h2>
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Швидкий пошук району за назвою або slug.
             </p>
           </div>
 
-          <div className="rounded-full bg-slate-800 px-3 py-1 text-sm font-medium text-slate-200">
+          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
             Знайдено: {filteredDistricts.length}
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className={`mb-2 block ${adminTextLabelClass}`}>
               Пошук
             </label>
             <input
@@ -468,18 +476,18 @@ export function DistrictsRegistryWorkspace({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Наприклад: Вознесенівський або voznesenovskyi"
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className={adminInputClass}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className={`mb-2 block ${adminTextLabelClass}`}>
               Сортування
             </label>
             <select
               value={sortMode}
               onChange={(event) => setSortMode(event.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className={adminInputClass}
             >
               <option value="name_asc">За назвою А–Я</option>
               <option value="houses_desc">За кількістю будинків</option>
@@ -508,11 +516,11 @@ export function DistrictsRegistryWorkspace({
       ) : null}
 
       {filteredDistricts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-8 text-slate-300">
-          <div className="text-xl font-semibold text-white">
+        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
+          <div className="text-xl font-semibold text-[var(--cms-text)]">
             Поки немає жодного району
           </div>
-          <div className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+          <div className="mt-3 max-w-2xl text-sm leading-7 text-[var(--cms-text-muted)]">
             Почніть зі структури платформи: створіть перший район, а потім додавайте до нього будинки.
           </div>
           <button
@@ -521,7 +529,7 @@ export function DistrictsRegistryWorkspace({
               if (!canManageDistricts) return;
               openCreateForm();
             }}
-            className="mt-6 inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+            className={`mt-6 ${adminPrimaryButtonClass}`}
           >
             Створити перший район
           </button>
@@ -531,21 +539,21 @@ export function DistrictsRegistryWorkspace({
           {filteredDistricts.map((district) => (
             <article
               key={district.id}
-              className="rounded-3xl border border-slate-800 bg-slate-900 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]"
+              className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="truncate text-xl font-semibold text-white">
+                  <div className="truncate text-xl font-semibold text-[var(--cms-text)]">
                     {district.name}
                   </div>
-                  <div className="mt-2 truncate text-sm text-slate-400">
+                  <div className="mt-2 truncate text-sm text-[var(--cms-text-muted)]">
                     slug: {district.slug}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span
-                    className="h-5 w-5 rounded-full border border-slate-700"
+                    className="h-5 w-5 rounded-full border border-[var(--cms-border)]"
                     style={{ backgroundColor: district.theme_color }}
                     aria-label={`Колір району ${district.theme_color}`}
                     title={district.theme_color}
@@ -554,28 +562,28 @@ export function DistrictsRegistryWorkspace({
                     <button
                       type="button"
                       onClick={() => openEditForm(district)}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-200 transition hover:border-slate-500 hover:text-white"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-pill-bg)]"
                       aria-label={`Налаштувати район ${district.name}`}
                       title="Налаштувати район"
                     >
                       <SettingsIcon />
                     </button>
                   ) : (
-                    <span className="inline-flex items-center rounded-2xl border border-slate-700 px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                    <span className="inline-flex items-center rounded-2xl border border-[var(--cms-border)] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--cms-text-muted)]">
                       Системний
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950/70 p-5">
-                <div className="text-3xl font-semibold tracking-tight text-white">
+              <div className="mt-6 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
+                <div className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
                   {padHousesCount(district.houses_count)}
                 </div>
-                <div className="mt-2 text-sm text-slate-400">
+                <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   будинків у районі
                 </div>
-                <div className="mt-3 text-xs font-medium text-slate-500">
+                <div className="mt-3 text-xs font-medium text-[var(--cms-text-soft)]">
                   {district.houses_count > 0 ? "Заповнений будинками" : "Поки порожній"}
                 </div>
               </div>

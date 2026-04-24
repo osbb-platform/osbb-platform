@@ -37,7 +37,7 @@ function formatDate(value: string) {
     return "Дата не вказана";
   }
 
-  return date.toLocaleString("ru-RU", {
+  return date.toLocaleString("uk-UA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -124,18 +124,18 @@ function getRetentionMessage(tab: PlatformHistoryTab) {
 function getSourceBadgeClasses(sourceType: "cms" | "house_portal") {
   return sourceType === "house_portal"
     ? "border-emerald-800 bg-emerald-950/60 text-emerald-200"
-    : "border-slate-700 bg-slate-800 text-slate-200";
+    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]";
 }
 
 
 
 function getActionIconClasses(actionTone: ReturnType<typeof getActionTone>) {
   if (actionTone === "create") {
-    return "border-emerald-800 bg-emerald-950/50 text-emerald-200";
+    return "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
   if (actionTone === "edit") {
-    return "border-blue-800 bg-blue-950/50 text-blue-200";
+    return "border border-sky-300 bg-sky-50 text-sky-700";
   }
 
   if (actionTone === "confirm") {
@@ -143,7 +143,7 @@ function getActionIconClasses(actionTone: ReturnType<typeof getActionTone>) {
   }
 
   if (actionTone === "archive") {
-    return "border-amber-800 bg-amber-950/50 text-amber-200";
+    return "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
   }
 
   if (actionTone === "restore") {
@@ -151,18 +151,18 @@ function getActionIconClasses(actionTone: ReturnType<typeof getActionTone>) {
   }
 
   if (actionTone === "delete") {
-    return "border-rose-800 bg-rose-950/50 text-rose-200";
+    return "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]";
   }
 
   if (actionTone === "incoming") {
-    return "border-emerald-800 bg-emerald-950/50 text-emerald-200";
+    return "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
   if (actionTone === "access") {
-    return "border-orange-800 bg-orange-950/50 text-orange-200";
+    return "border border-orange-300 bg-orange-50 text-orange-700";
   }
 
-  return "border-slate-700 bg-slate-800 text-slate-200";
+  return "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]";
 }
 
 function getEmptyStateCopy(params: {
@@ -265,7 +265,7 @@ export default async function AdminHistoryPage({
         .map((item) => String(item ?? "").trim())
         .filter(Boolean),
     ),
-  ).sort((left, right) => left.localeCompare(right, "ru"));
+  ).sort((left, right) => left.localeCompare(right, "uk"));
 
   const result = await getPlatformChangeHistory({
     tab,
@@ -313,16 +313,16 @@ export default async function AdminHistoryPage({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-        <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
           Історія
         </div>
 
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
           Історія
         </h1>
 
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
+        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-secondary)]">
           Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
         </p>
       </div>
@@ -351,13 +351,13 @@ export default async function AdminHistoryPage({
         }))}
       />
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
-        <div className="mb-4 rounded-2xl border border-blue-900/60 bg-blue-950/40 px-4 py-3 text-sm leading-6 text-blue-200">
+      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
+        <div className="mb-4 rounded-2xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-700">
           {getRetentionMessage(tab)}
         </div>
 
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
             {tab === "all"
               ? "Усі події"
               : tab === "cms"
@@ -365,24 +365,24 @@ export default async function AdminHistoryPage({
                 : "Події будинків"}
           </h2>
 
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-[var(--cms-text-secondary)]">
             Записів: {result.totalCount}
           </div>
         </div>
 
         {result.items.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-8">
-            <div className="text-lg font-semibold text-white">
+          <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-6 py-8">
+            <div className="text-lg font-semibold text-[var(--cms-text-primary)]">
               {emptyState.title}
             </div>
-            <div className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            <div className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-secondary)]">
               {emptyState.description}
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-slate-800">
+          <div className="overflow-x-auto rounded-2xl border border-[var(--cms-border-primary)]">
             <div className="min-w-[1320px]">
-              <div className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-slate-800 bg-slate-950/80 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <div className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
                 <div>Дія</div>
                 <div>Дата</div>
                 <div>Потік</div>
@@ -415,7 +415,7 @@ export default async function AdminHistoryPage({
                 return (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-slate-800 bg-slate-950/40 px-4 py-3 text-sm transition hover:bg-slate-900/70"
+                    className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm transition hover:bg-[var(--cms-bg-secondary)]"
                   >
                     <div>
                       <span
@@ -427,7 +427,7 @@ export default async function AdminHistoryPage({
                       </span>
                     </div>
 
-                    <div className="text-slate-400">
+                    <div className="text-[var(--cms-text-secondary)]">
                       {formatDate(item.created_at)}
                     </div>
 
@@ -443,25 +443,25 @@ export default async function AdminHistoryPage({
                       </span>
                     </div>
 
-                    <div className="text-slate-300">
+                    <div className="text-[var(--cms-text-secondary)]">
                       <div>{item.entity_label ?? "Об’єкт не вказано"}</div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
                         {houseText}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
                         {String(item.description ?? "—")}
                       </div>
                     </div>
 
-                    <div className="text-slate-200">
+                    <div className="text-[var(--cms-text-primary)]">
                       {String(item.main_section_label ?? "—")}
                     </div>
 
-                    <div className="text-slate-300">
+                    <div className="text-[var(--cms-text-secondary)]">
                       {String(item.sub_section_label ?? "—")}
                     </div>
 
-                    <div className="text-slate-300">{actorText}</div>
+                    <div className="text-[var(--cms-text-secondary)]">{actorText}</div>
                   </div>
                 );
               })}
@@ -478,8 +478,8 @@ export default async function AdminHistoryPage({
               })}`}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
                 result.page > 1
-                  ? "border-slate-700 bg-slate-950 text-white hover:bg-slate-800"
-                  : "pointer-events-none border-slate-800 bg-slate-900 text-slate-600"
+                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
               }`}
             >
               ‹
@@ -493,7 +493,7 @@ export default async function AdminHistoryPage({
               return (
                 <span key={pageNumber} className="flex items-center gap-2">
                   {showGap ? (
-                    <span className="px-1 text-sm text-slate-500">…</span>
+                    <span className="px-1 text-sm text-[var(--cms-text-muted)]">…</span>
                   ) : null}
 
                   <a
@@ -502,8 +502,8 @@ export default async function AdminHistoryPage({
                     })}`}
                     className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm font-medium transition ${
                       isActive
-                        ? "bg-white text-slate-950"
-                        : "border border-slate-700 bg-slate-950 text-white hover:bg-slate-800"
+                        ? "bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
+                        : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
                     }`}
                   >
                     {pageNumber}
@@ -521,8 +521,8 @@ export default async function AdminHistoryPage({
               })}`}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
                 result.page < result.totalPages
-                  ? "border-slate-700 bg-slate-950 text-white hover:bg-slate-800"
-                  : "pointer-events-none border-slate-800 bg-slate-900 text-slate-600"
+                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
               }`}
             >
               ›

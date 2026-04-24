@@ -2,6 +2,11 @@
 
 import { useActionState } from "react";
 import { createDistrict } from "@/src/modules/districts/actions/createDistrict";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = {
   error: null,
@@ -17,38 +22,38 @@ export function CreateDistrictForm() {
   return (
     <form action={formAction} className="grid gap-4 md:grid-cols-2">
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Назва району
         </label>
         <input
           name="name"
           type="text"
           placeholder="Наприклад, Вознесенівський"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className={adminInputClass}
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Slug
         </label>
         <input
           name="slug"
           type="text"
           placeholder="voznesenivskyi"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className={adminInputClass}
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-slate-200">
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
           Колір теми
         </label>
         <input
           name="themeColor"
           type="text"
           placeholder="#7c3aed"
-          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none"
+          className={adminInputClass}
         />
       </div>
 
@@ -62,7 +67,7 @@ export function CreateDistrictForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+          className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Створюємо..." : "Створити район"}
         </button>

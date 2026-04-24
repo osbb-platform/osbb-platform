@@ -63,3 +63,6 @@ export const adminOverlayClass =
 
 export const adminModalSurfaceClass =
   "rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] shadow-[0_24px_80px_rgba(2,6,23,0.55)]";
+
+export const adminTextLabelClass =
+  "text-sm font-medium text-[var(--cms-text)]";

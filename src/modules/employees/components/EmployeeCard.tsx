@@ -63,66 +63,66 @@ export function EmployeeCard({ currentUserId,
   const employeeLabel = employee.fullName ?? employee.email ?? "Співробітник";
 
   return (
-    <article className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
+    <article className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-[var(--cms-text-primary)]">
             {employeeLabel}
           </h3>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[var(--cms-text-secondary)]">
             {employee.email ?? "Email з’явиться після активації профілю"}
           </p>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
             {employee.jobTitle ?? "Посада поки не вказана"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-start gap-2">
-          <span className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
             {getRoleLabel(employee.role)}
           </span>
 
-          <span className="inline-flex rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-300">
+          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
             {getStatusLabel(employee.status)}
           </span>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
+        <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3">
+          <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Створено
           </div>
-          <div className="mt-2 text-sm font-medium text-white">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
             {formatDate(employee.createdAt)}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
+        <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3">
+          <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Запрошення
           </div>
-          <div className="mt-2 text-sm font-medium text-white">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
             {formatDate(employee.lastInviteSentAt ?? employee.invitedAt)}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
+        <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3">
+          <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Активація
           </div>
-          <div className="mt-2 text-sm font-medium text-white">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
             {formatDate(employee.activatedAt)}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-950/70 px-4 py-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
+        <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3">
+          <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Стан
           </div>
-          <div className="mt-2 text-sm font-medium text-white">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
             {employee.isActive ? "У робочому списку" : "Вимкнено"}
           </div>
         </div>

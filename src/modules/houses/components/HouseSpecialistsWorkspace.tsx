@@ -3,6 +3,12 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 
@@ -538,12 +544,12 @@ export function HouseSpecialistsWorkspace({
         <input type="hidden" name="status" value={section.status} />
         <input type="hidden" name="specialistsPayload" value={serializedPayload} />
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`${adminSurfaceClass} p-6`}>
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Спеціалісти</h2>
-                <p className="mt-2 text-sm text-slate-400">
+                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Спеціалісти</h2>
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   Керування картками спеціалістів і публікацією карток на сайт будинку.
                 </p>
               </div>
@@ -551,7 +557,7 @@ export function HouseSpecialistsWorkspace({
               <button
                 type="button"
                 onClick={openCreateMode}
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+                className={adminPrimaryButtonClass}
               >
                 Створити спеціаліста
               </button>
@@ -575,16 +581,16 @@ export function HouseSpecialistsWorkspace({
                   }}
                   className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border border-slate-600 bg-slate-800/70 text-white"
-                      : "border border-slate-700 bg-slate-950/40 text-white"
+                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   }`}
                 >
                   <span>{label}</span>
                   <span
                     className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       isActive
-                        ? "bg-slate-950 text-white"
-                        : "bg-slate-800 text-slate-200"
+                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
+                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
                     }`}
                   >
                     {count}
@@ -597,15 +603,15 @@ export function HouseSpecialistsWorkspace({
         </div>
 
         {workspaceMode !== "idle" && draft ? (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+          <div className={`${adminSurfaceClass} p-6`}>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <div className="text-lg font-semibold text-white">
+                <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {workspaceMode === "create"
                     ? "Новий спеціаліст"
                     : "Редагування спеціаліста"}
                 </div>
-                <div className="mt-2 text-sm leading-6 text-slate-400">
+                <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                   Картка зберігається всередину секції та одразу потрапляє в чернетки.
                 </div>
               </div>
@@ -613,7 +619,7 @@ export function HouseSpecialistsWorkspace({
               <button
                 type="button"
                 onClick={closeWorkspace}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-lg font-medium text-white transition hover:bg-slate-800"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                 aria-label="Закрити форму"
               >
                 ×
@@ -623,7 +629,7 @@ export function HouseSpecialistsWorkspace({
             <div className="grid gap-6">
               <div className="grid gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
                     Ім’я та прізвище / Компанія
                   </label>
                   <input
@@ -631,13 +637,13 @@ export function HouseSpecialistsWorkspace({
                     onChange={(event) =>
                       handleDraftChange("title", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="Наприклад: Іван Петренко або Аварком сервіс"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
                     Категорії
                   </label>
 
@@ -652,8 +658,8 @@ export function HouseSpecialistsWorkspace({
                           onClick={() => handleCategoryToggle(category)}
                           className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                             isSelected
-                              ? "border border-slate-600 bg-slate-800/70 text-white"
-                              : "border border-slate-700 bg-slate-950/40 text-white"
+                              ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                              : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
                           }`}
                         >
                           {category}
@@ -664,7 +670,7 @@ export function HouseSpecialistsWorkspace({
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
                     Телефон
                   </label>
                   <input
@@ -672,17 +678,17 @@ export function HouseSpecialistsWorkspace({
                     onChange={(event) =>
                       handleDraftChange("phone", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="+380 67 123 45 67"
                   />
-                  <div className="mt-2 text-xs text-slate-500">
+                  <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
                     Якщо телефон заповнений, на сайті будинку буде кнопка «Подзвонити».
                     Якщо ні — кнопка «Залишити заявку».
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
                     Години прийому
                   </label>
                   <input
@@ -690,13 +696,13 @@ export function HouseSpecialistsWorkspace({
                     onChange={(event) =>
                       handleDraftChange("officeHours", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                     placeholder="Пн–Пт, 09:00–18:00"
                   />
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-white">
+                  <label className="flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
                     <input
                       type="checkbox"
                       checked={draft.isPinned}
@@ -709,13 +715,13 @@ export function HouseSpecialistsWorkspace({
                 </div>
               </div>
 
-              <div className="overflow-x-auto border-t border-slate-800 pt-5">
+              <div className="overflow-x-auto border-t border-[var(--cms-border)] pt-5">
                 <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
                   <div className="flex flex-nowrap items-center gap-3">
                     <button
                       type="button"
                       onClick={handleSaveDraft}
-                      className="inline-flex items-center justify-center rounded-3xl bg-white px-8 py-4 text-base font-medium text-slate-950 transition hover:bg-slate-200"
+                      className={adminPrimaryButtonClass}
                     >
                       Зберегти
                     </button>
@@ -725,7 +731,7 @@ export function HouseSpecialistsWorkspace({
                       <button
                         type="button"
                         onClick={() => setConfirmAction("delete")}
-                        className="inline-flex items-center justify-center rounded-3xl border border-red-900 px-8 py-4 text-base font-medium text-red-300 transition hover:bg-red-950/40"
+                        className="inline-flex items-center justify-center rounded-3xl border border-[var(--cms-danger-border)] px-8 py-4 text-base font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                       >
                         Видалити
                       </button>
@@ -737,7 +743,7 @@ export function HouseSpecialistsWorkspace({
                       <button
                         type="button"
                         onClick={() => setConfirmAction("publish")}
-                        className="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-8 py-4 text-base font-medium text-white transition hover:bg-emerald-400"
+                        className="inline-flex items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-8 py-4 text-base font-medium text-white transition hover:opacity-90"
                       >
                         Підтвердити
                       </button>
@@ -749,7 +755,7 @@ export function HouseSpecialistsWorkspace({
                       <button
                         type="button"
                         onClick={() => setConfirmAction("archive")}
-                        className="inline-flex items-center justify-center rounded-3xl border border-amber-700 px-8 py-4 text-base font-medium text-amber-300 transition hover:bg-amber-950/30"
+                        className="inline-flex items-center justify-center rounded-3xl border border-[var(--cms-warning-border)] px-8 py-4 text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90"
                       >
                         Архівувати
                       </button>
@@ -759,7 +765,7 @@ export function HouseSpecialistsWorkspace({
               </div>            </div>
           </div>
         ) : null}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`${adminSurfaceClass} p-6`}>
             <div className="grid gap-4 md:grid-cols-2">
               {visibleSpecialists.length > 0 ? (
                 visibleSpecialists.map((item) => (
@@ -767,17 +773,17 @@ export function HouseSpecialistsWorkspace({
                     key={item.id}
                     type="button"
                     onClick={() => openEditMode(item.id)}
-                    className="block w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-3.5 text-left transition hover:border-slate-700 hover:bg-slate-950/70"
+                    className="block w-full rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-3.5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="mb-3 flex flex-wrap items-center gap-2">
-                          <span className="inline-flex rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-300">
+                          <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                             {getStatusLabel(item.status)}
                           </span>
 
                           {item.isPinned ? (
-                            <span className="inline-flex rounded-full border border-blue-900 bg-blue-950/50 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-blue-300">
+                            <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
                               Закріплено зверху
                             </span>
                           ) : null}
@@ -785,26 +791,26 @@ export function HouseSpecialistsWorkspace({
                           {item.categories.map((category) => (
                             <span
                               key={`${item.id}-${category}`}
-                              className="inline-flex rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-300"
+                              className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]"
                             >
                               {category}
                             </span>
                           ))}
                         </div>
 
-                        <div className="text-lg font-semibold text-white">
+                        <div className="text-lg font-semibold text-[var(--cms-text)]">
                           {item.title || "Без назви"}
                         </div>
 
-                        <div className="mt-3 grid gap-1.5 text-sm leading-6 text-slate-300 sm:grid-cols-[140px_1fr]">
-                          <div className="text-slate-500">Телефон</div>
+                        <div className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--cms-text)] sm:grid-cols-[140px_1fr]">
+                          <div className="text-[var(--cms-text-soft)]">Телефон</div>
                           <div>
                             {item.phone
                               ? item.phone
                               : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
                           </div>
 
-                          <div className="text-slate-500">Години зв’язку</div>
+                          <div className="text-[var(--cms-text-soft)]">Години зв’язку</div>
                           <div>{item.officeHours || "Години прийому не вказані"}</div>
                         </div>
                       </div>
@@ -813,7 +819,7 @@ export function HouseSpecialistsWorkspace({
                   </button>
                 ))
               ) : (
-                <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/30 px-6 py-8 text-base leading-7 text-slate-300">
+                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
                   {activeTab === "active"
                     ? "Поки немає опублікованих спеціалістів. Створіть першу картку та підтвердьте публікацію."
                     : activeTab === "draft"
@@ -825,7 +831,7 @@ export function HouseSpecialistsWorkspace({
           </div>
 
         {state.error ? (
-          <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {state.error}
           </div>
         ) : null}

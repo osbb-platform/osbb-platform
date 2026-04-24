@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { deleteEmployee } from "@/src/modules/employees/actions/deleteEmployee";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { adminDangerButtonClass } from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = {
   error: null,
@@ -77,7 +78,7 @@ function DeleteEmployeeActionButton({
           type="button"
           onClick={handleOpenConfirm}
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+          className={`${adminDangerButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Видаляємо..." : "Видалити співробітника"}
         </button>

@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import { getOrCreateHomeWidgetsSection } from "@/src/modules/houses/actions/getOrCreateHomeWidgetsSection";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type Widget = {
   id: string;
@@ -173,10 +179,10 @@ export function ChangeHouseDashboardWidgetsForm({
         {widgets.map((widget, index) => (
           <div
             key={widget.id}
-            className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-4"
+            className="space-y-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-4"
           >
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-slate-200">
+              <div className={`text-sm font-medium ${adminTextLabelClass}`}>
                 Показник {index + 1}
               </div>
 
@@ -184,7 +190,7 @@ export function ChangeHouseDashboardWidgetsForm({
                 type="button"
                 onClick={() => removeWidget(index)}
                 disabled={widgets.length <= 2}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className={`${adminSecondaryButtonClass} px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 Видалити
               </button>
@@ -192,10 +198,10 @@ export function ChangeHouseDashboardWidgetsForm({
 
             <div>
               <div className="mb-1.5 flex items-center justify-between gap-3">
-                <label className="block text-sm font-medium text-slate-200">
+                <label className={adminTextLabelClass}>
                   Заголовок
                 </label>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-[var(--cms-text-muted)]">
                   {widget.label.length}/30
                 </span>
               </div>
@@ -206,12 +212,12 @@ export function ChangeHouseDashboardWidgetsForm({
                 maxLength={30}
                 value={widget.label}
                 onChange={(event) => updateWidget(index, "label", event.target.value)}
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none"
+                className={adminInputClass}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Значення
               </label>
               <input
@@ -219,20 +225,20 @@ export function ChangeHouseDashboardWidgetsForm({
                 placeholder="Наприклад: 12 ₴/м²"
                 value={widget.value}
                 onChange={(event) => updateWidget(index, "value", event.target.value)}
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none"
+                className={adminInputClass}
               />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="sticky bottom-0 mt-auto border-t border-slate-800 bg-slate-950 px-6 py-4">
+      <div className="sticky bottom-0 mt-auto border-t border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-4">
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={addWidget}
             disabled={widgets.length >= 6}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             Додати показник
           </button>
@@ -241,26 +247,26 @@ export function ChangeHouseDashboardWidgetsForm({
             type="button"
             onClick={handleSubmit}
             disabled={!canSave}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {isSaving ? "Зберігаємо..." : "Зберегти"}
           </button>
         </div>
 
         {cleaned.length < 2 ? (
-          <div className="mt-3 rounded-2xl border border-amber-900/70 bg-amber-950/30 px-4 py-2.5 text-sm text-amber-300">
+          <div className="mt-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
             Заповніть щонайменше 2 показники, щоб показати блок на головній сторінці.
           </div>
         ) : null}
 
         {error ? (
-          <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+          <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {error}
           </div>
         ) : null}
 
         {successMessage ? (
-          <div className="mt-4 rounded-2xl border border-emerald-900 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
+          <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
             {successMessage}
           </div>
         ) : null}

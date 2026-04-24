@@ -22,6 +22,14 @@ import type {
   AdminHouseApartmentsSummary,
 } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminDangerButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type DistrictOption = {
   id: string;
@@ -120,7 +128,7 @@ function SortableHeader({
       className={
         isActive
           ? "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white"
-          : "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 transition hover:text-white"
+          : "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)] transition hover:text-[var(--cms-text)]"
       }
     >
       <span>{label}</span>
@@ -381,14 +389,14 @@ export function ApartmentsRegistryWorkspace({
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="space-y-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-white">
+              <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
                 Реєстр квартир
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
+              <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
                 Керування квартирами, приміщеннями та іншими об’єктами нерухомості всередині обраного будинку.
               </p>
             </div>
@@ -398,7 +406,7 @@ export function ApartmentsRegistryWorkspace({
                 <button
                   type="button"
                   onClick={() => setIsImportOpen(true)}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+                  className={adminPrimaryButtonClass}
                 >
                   Завантажити
                 </button>
@@ -406,7 +414,7 @@ export function ApartmentsRegistryWorkspace({
                 <button
                   type="button"
                   onClick={handleExportRegistry}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+                  className={adminPrimaryButtonClass}
                 >
                   Вивантажити
                 </button>
@@ -414,7 +422,7 @@ export function ApartmentsRegistryWorkspace({
                 <button
                   type="button"
                   onClick={handleDownloadTemplate}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                  className={adminSecondaryButtonClass}
                 >
                   Завантажити шаблон
                 </button>
@@ -422,7 +430,7 @@ export function ApartmentsRegistryWorkspace({
                 <button
                   type="button"
                   onClick={() => setIsMiniBulkOpen(true)}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                  className={adminSecondaryButtonClass}
                 >
                   Додати
                 </button>
@@ -431,7 +439,7 @@ export function ApartmentsRegistryWorkspace({
                   <button
                     type="button"
                     onClick={handleArchiveAll}
-                    className="inline-flex items-center justify-center rounded-2xl border border-rose-800 px-5 py-3 text-sm font-medium text-rose-300 transition hover:border-rose-600 hover:text-white"
+                    className={adminDangerButtonClass}
                   >
                     Очистити список
                   </button>
@@ -442,13 +450,13 @@ export function ApartmentsRegistryWorkspace({
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Район
               </label>
               <select
                 value={selectedDistrictId}
                 onChange={(event) => handleDistrictChange(event.target.value)}
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               >
                 {districts.map((district) => (
                   <option key={district.id} value={district.id}>
@@ -459,13 +467,13 @@ export function ApartmentsRegistryWorkspace({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Будинок
               </label>
               <select
                 value={selectedHouseId}
                 onChange={(event) => handleHouseChange(event.target.value)}
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               >
                 {districtHouses.map((house) => (
                   <option key={house.id} value={house.id}>
@@ -478,24 +486,24 @@ export function ApartmentsRegistryWorkspace({
 
           {selectedHouse ? (
             <div>
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-[var(--cms-text)]">
                 {selectedHouse.name}
               </h2>
-              <p className="mt-2 text-sm leading-7 text-slate-400">
+              <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
                 Зведення по поточному реєстру квартир обраного будинку.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Активних: {summary?.activeCount ?? 0}
                 </span>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   В архіві: {summary?.archivedCount ?? 0}
                 </span>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Останній імпорт: {formatDate(summary?.lastImportAt ?? null)}
                 </span>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Хто імпортував: {summary?.lastImportActorName ?? "—"}
                 </span>
               </div>
@@ -503,10 +511,10 @@ export function ApartmentsRegistryWorkspace({
           ) : null}
         </div>
       </div>
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_240px_auto]">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className={`mb-2 block ${adminTextLabelClass}`}>
               Пошук
             </label>
             <input
@@ -514,18 +522,18 @@ export function ApartmentsRegistryWorkspace({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Введіть квартиру, особовий рахунок або власника"
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className={adminInputClass}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className={`mb-2 block ${adminTextLabelClass}`}>
               Джерело
             </label>
             <select
               value={sourceFilter}
               onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+              className={adminInputClass}
             >
               <option value="all">Усі</option>
               <option value="import">Імпорт</option>
@@ -537,7 +545,7 @@ export function ApartmentsRegistryWorkspace({
             <button
               type="button"
               onClick={resetFilters}
-              className="w-full rounded-2xl border border-slate-700 px-4 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+              className={`w-full ${adminSecondaryButtonClass}`}
             >
               Скинути
             </button>
@@ -552,7 +560,7 @@ export function ApartmentsRegistryWorkspace({
               className={
                 !archived
                   ? "rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950"
-                  : "rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300"
+                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
               }
             >
               Активні
@@ -564,7 +572,7 @@ export function ApartmentsRegistryWorkspace({
               className={
                 archived
                   ? "rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950"
-                  : "rounded-2xl border border-slate-700 px-4 py-2 text-sm text-slate-300"
+                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
               }
             >
               Архів
@@ -572,26 +580,26 @@ export function ApartmentsRegistryWorkspace({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <div className="rounded-full bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200">
+            <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
               Знайдено: {filteredItems.length}
             </div>
-            <div className="rounded-full bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200">
+            <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
               Сортування: {sortDirection === "asc" ? "↑" : "↓"}
             </div>
           </div>
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-700 bg-slate-900/60 p-8 text-slate-400">
+          <div className="mt-6 rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
             {archived
               ? "В архіві обраного будинку за поточними фільтрами немає квартир."
               : "В активному реєстрі обраного будинку за поточними фільтрами немає квартир. Змініть фільтри, використайте завантаження файлу або ручне додавання."}
           </div>
         ) : (
           <>
-            <div className="mt-4 text-sm text-slate-400">
+            <div className="mt-4 text-sm text-[var(--cms-text-muted)]">
               Сортування:{" "}
-              <span className="text-slate-200">
+              <span className="text-[var(--cms-text)]">
                 {sortKey === "id" && "ID"}
                 {sortKey === "apartment_label" && "Квартира"}
                 {sortKey === "account_number" && "Особовий рахунок"}
@@ -603,11 +611,11 @@ export function ApartmentsRegistryWorkspace({
               · {sortDirection === "asc" ? "за зростанням" : "за спаданням"}
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-3xl border border-slate-800">
+            <div className="mt-6 overflow-hidden rounded-3xl border border-[var(--cms-border)]">
               <div className="max-h-[72vh] overflow-auto">
                 <table className="min-w-full border-collapse">
-                  <thead className="sticky top-0 z-10 bg-slate-950/95">
-                    <tr className="border-b border-slate-800 text-left">
+                  <thead className="sticky top-0 z-10 bg-[var(--cms-surface-elevated)]">
+                    <tr className="border-b border-[var(--cms-border)] text-left">
                       <th className="px-4 py-3">
                         <SortableHeader
                           label="ID"
@@ -671,11 +679,11 @@ export function ApartmentsRegistryWorkspace({
                           onToggle={handleSortToggle}
                         />
                       </th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Коментарі
                       </th>
                       {!archived ? (
-                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                           Дія
                         </th>
                       ) : null}
@@ -686,30 +694,30 @@ export function ApartmentsRegistryWorkspace({
                     {sortedItems.map((item) => (
                       <tr
                         key={item.id}
-                        className="border-b border-slate-800 bg-slate-900/70"
+                        className="border-b border-[var(--cms-border)] bg-[var(--cms-surface)]"
                       >
-                        <td className="px-4 py-3 text-sm text-slate-500">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-soft)]">
                           {item.id.slice(0, 8)}
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-white">
+                        <td className="px-4 py-3 text-sm font-medium text-[var(--cms-text)]">
                           {item.apartment_label}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                           {item.account_number}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                           {item.owner_name}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                           {formatArea(item.area)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                           {getSourceLabel(item.source_type)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                           {formatDate(item.created_at)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-500">
+                        <td className="px-4 py-3 text-sm text-[var(--cms-text-soft)]">
                           Поки не використовується
                         </td>
 
@@ -721,7 +729,7 @@ export function ApartmentsRegistryWorkspace({
                                 if (!selectedHouse) return;
                                 handleArchiveApartment(item.id, selectedHouse.id);
                               }}
-                              className="inline-flex items-center justify-center rounded-2xl border border-rose-800 px-3 py-2 text-sm font-medium text-rose-300 transition hover:border-rose-600 hover:text-white"
+                              className={adminDangerButtonClass}
                             >
                               Архів
                             </button>

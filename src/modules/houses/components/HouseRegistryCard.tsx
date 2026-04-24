@@ -8,6 +8,11 @@ import { ChangeHouseDashboardWidgetsForm } from "@/src/modules/houses/components
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+import {
+  adminIconButtonClass,
+  adminSecondaryButtonClass,
+  adminSurfaceClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type HouseRegistryCardProps = {
   house: {
@@ -216,20 +221,20 @@ export function HouseRegistryCard({
 
   return (
     <>
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]">
+      <div className={`${adminSurfaceClass} p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]`}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start gap-3">
-              <h3 className="min-w-0 text-xl font-semibold text-white">
+              <h3 className="min-w-0 text-xl font-semibold text-[var(--cms-text)]">
                 {house.name}
               </h3>
 
               <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   slug: {house.slug}
                 </span>
 
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Активний
                 </span>
 
@@ -243,7 +248,7 @@ export function HouseRegistryCard({
                 ) : null}
 
                 {house.management_company ? (
-                  <span className="rounded-full border border-slate-600 bg-slate-800/90 px-3 py-1 text-xs font-medium text-slate-100">
+                  <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                     {house.management_company.name}
                   </span>
                 ) : null}
@@ -251,11 +256,11 @@ export function HouseRegistryCard({
               </div>
             </div>
 
-            <div className="mt-2 text-sm text-slate-400">
+            <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
               {house.address}
             </div>
 
-            <div className="mt-1 text-sm text-slate-500">
+            <div className="mt-1 text-sm text-[var(--cms-text-soft)]">
               ОСББ: {house.osbb_name ?? "не вказано"}
             </div>
           </div>
@@ -265,7 +270,7 @@ export function HouseRegistryCard({
     <button
       type="button"
       onClick={() => setIsPasswordOpen(true)}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      className={`${adminIconButtonClass} h-11 w-11`}
       aria-label={`Змінити код доступу дома ${house.name}`}
       title="Змінити код доступу"
     >
@@ -277,7 +282,7 @@ export function HouseRegistryCard({
     <button
       type="button"
       onClick={() => setIsTariffOpen(true)}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      className={`${adminIconButtonClass} h-11 w-11`}
       aria-label={`Налаштувати віджети дома ${house.name}`}
       title="Налаштувати віджети"
     >
@@ -288,7 +293,7 @@ export function HouseRegistryCard({
   <button
     type="button"
     onClick={openMessagesPanel}
-    className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+    className={`relative ${adminIconButtonClass} h-11 w-11`}
     aria-label={`Відкрити центр звернень дома ${house.name}`}
     title="Центр звернень"
   >
@@ -304,7 +309,7 @@ export function HouseRegistryCard({
     <button
       type="button"
       onClick={() => onOpenSettings(house)}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+      className={`${adminIconButtonClass} h-11 w-11`}
       aria-label={`Налаштування дома ${house.name}`}
       title="Налаштування"
     >
@@ -316,7 +321,7 @@ export function HouseRegistryCard({
     href={`https://${house.slug}.osbb-platform.com.ua`}
     target="_blank"
     rel="noreferrer"
-    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 text-white transition hover:bg-slate-800"
+    className={`${adminIconButtonClass} h-11 w-11`}
     aria-label={`Відкрити сайт будинку ${house.name}`}
     title="Відкрити сайт будинку"
   >
@@ -329,20 +334,20 @@ export function HouseRegistryCard({
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/admin/houses/${house.id}`}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+              className={adminSecondaryButtonClass}
             >
               Керування будинком
             </Link>
           </div>
 
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-[var(--cms-text-soft)]">
             Створено: {formatCreatedAt(house.created_at)}
           </div>
         </div>
       </div>
 
       {isMessagesOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -350,18 +355,18 @@ export function HouseRegistryCard({
             aria-label="Закрити центр звернень"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+          <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Центр звернень
                 </div>
 
-                <h2 className="mt-4 text-2xl font-semibold text-white">
+                <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
                   Повідомлення по будинку
                 </h2>
 
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   Будинок: {house.name}
                 </p>
               </div>
@@ -369,7 +374,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsMessagesOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель"
               >
                 ×
@@ -378,10 +383,10 @@ export function HouseRegistryCard({
 
             <div className="flex-1 px-6 py-6">
               <div className="mb-5 flex flex-wrap items-center gap-3">
-                <div className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Усього записів: {localMessageItems.length}
                 </div>
-                <div className="rounded-full bg-rose-950/70 px-3 py-1 text-xs font-medium text-rose-200">
+                <div className="rounded-full border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-danger-text)]">
                   Нових: {isMarkingSeen ? "..." : localUnreadCount}
                 </div>
               </div>
@@ -391,48 +396,48 @@ export function HouseRegistryCard({
                   {localMessageItems.map((item) => (
                     <article
   key={item.id}
-  className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5"
+  className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5"
 >
   <div className="flex flex-wrap items-center gap-2">
-    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-200">
+    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-pill-text)]">
       {getMessageTypeLabel(item.category)}
     </span>
-    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
+    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
       Квартира: {item.apartment || "—"}
     </span>
-    <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-medium text-slate-300">
+    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
       {formatMessageDate(item.created_at)}
     </span>
 
     {item.status === "new" ? (
-      <span className="rounded-full bg-rose-950/70 px-3 py-1 text-[11px] font-medium text-rose-200">
+      <span className="rounded-full border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-danger-text)]">
         Нове
       </span>
     ) : null}
   </div>
 
   <div className="mt-4">
-    <div className="text-base font-semibold text-white">
+    <div className="text-base font-semibold text-[var(--cms-text)]">
       {item.requester_name || "Без імені"}
     </div>
-    <div className="mt-1 text-sm text-slate-400">
+    <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
       {item.requester_email || "Email не вказано"}
       {item.requester_phone ? ` · ${item.requester_phone}` : ""}
     </div>
   </div>
 
   {item.specialist_label ? (
-    <div className="mt-3 text-sm text-slate-400">
+    <div className="mt-3 text-sm text-[var(--cms-text-muted)]">
       Спеціаліст: {item.specialist_label}
     </div>
   ) : null}
 
-  <div className="mt-4 text-sm leading-7 text-slate-300">
+  <div className="mt-4 text-sm leading-7 text-[var(--cms-text)]">
     {getMessagePreview(item)}
   </div>
 
   {item.comment ? (
-    <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm leading-7 text-slate-400">
+    <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm leading-7 text-[var(--cms-text-muted)]">
       {item.comment}
     </div>
   ) : null}
@@ -440,7 +445,7 @@ export function HouseRegistryCard({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-3xl border border-dashed border-slate-800 bg-slate-900/70 px-5 py-6 text-sm leading-7 text-slate-400">
+                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-5 py-6 text-sm leading-7 text-[var(--cms-text-muted)]">
                   Для цього будинку поки немає звернень. Коли мешканець залишить повідомлення або заявку на спеціаліста, воно з’явиться тут.
                 </div>
               )}
@@ -450,7 +455,7 @@ export function HouseRegistryCard({
       ) : null}
 
       {isPasswordOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -458,18 +463,18 @@ export function HouseRegistryCard({
             aria-label="Закрити зміну пароля"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Код доступу будинку
                 </div>
 
-                <h2 className="mt-4 text-2xl font-semibold text-white">
+                <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
                   Змінити код доступу
                 </h2>
 
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   Будинок: {house.name}
                 </p>
               </div>
@@ -477,7 +482,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsPasswordOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель"
               >
                 ×
@@ -495,7 +500,7 @@ export function HouseRegistryCard({
       ) : null}
 
       {isTariffOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -503,18 +508,18 @@ export function HouseRegistryCard({
             aria-label="Закрити зміну тарифу"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-slate-800 bg-slate-950 shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-6 py-6">
+          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Віджети головної
                 </div>
 
-                <h2 className="mt-4 text-2xl font-semibold text-white">
+                <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
                   Налаштувати віджети
                 </h2>
 
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   Будинок: {house.name}
                 </p>
               </div>
@@ -522,7 +527,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsTariffOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               >
                 ×
               </button>

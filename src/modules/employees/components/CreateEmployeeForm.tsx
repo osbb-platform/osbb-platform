@@ -3,6 +3,11 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createEmployee } from "@/src/modules/employees/actions/createEmployee";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
+import {
+  adminPrimaryButtonClass,
+  adminDangerButtonClass,
+  adminSuccessButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = {
   error: null,
@@ -70,11 +75,11 @@ function CreateEmployeeActionForm({
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
             Співробітники
           </div>
 
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
             Реєстр співробітників
           </h2>
         </div>
@@ -83,7 +88,7 @@ function CreateEmployeeActionForm({
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+            className={adminPrimaryButtonClass}
           >
             {shouldShowForm ? "Сховати форму" : "Створити співробітника"}
           </button>
@@ -95,8 +100,8 @@ function CreateEmployeeActionForm({
           id={flash.type === "success" ? "employee-create-success" : undefined}
           className={
             flash.type === "success"
-              ? "rounded-2xl border border-emerald-900/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300"
-              : "rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300"
+              ? "rounded-2xl border px-4 py-3 text-sm border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+              : "rounded-2xl border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
           }
         >
           {flash.message}
@@ -107,66 +112,66 @@ function CreateEmployeeActionForm({
         <form
           ref={formRef}
           action={handleSubmit}
-          className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+          className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6"
         >
-          <div className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200">
+          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
             Новий співробітник
           </div>
 
-          <h3 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+          <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
             Створити профіль співробітника
           </h3>
 
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cms-text-secondary)]">
             Новий співробітник завжди створюється у статусі «Запрошення надіслано». Активним він стане
             лише після завершення реєстрації за запрошенням.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
                 Ім’я співробітника
               </label>
               <input
                 type="text"
                 name="fullName"
                 placeholder="Наприклад, Анна Коваль"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
                 Email
               </label>
               <input
                 type="email"
                 name="email"
                 placeholder="employee@company.ua"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
                 Посада
               </label>
               <input
                 type="text"
                 name="jobTitle"
                 placeholder="Наприклад, Контент-менеджер"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
                 Роль
               </label>
               <select
                 name="role"
                 defaultValue={ROLES.MANAGER}
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 {canCreateAdmins ? (
                   <option value={ROLES.ADMIN}>Admin</option>
@@ -180,7 +185,7 @@ function CreateEmployeeActionForm({
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
             >
               {isPending ? "Створюємо..." : "Створити співробітника"}
             </button>
@@ -188,7 +193,7 @@ function CreateEmployeeActionForm({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text-primary)]"
             >
               Скасувати
             </button>

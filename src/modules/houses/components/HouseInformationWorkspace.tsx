@@ -7,6 +7,7 @@ import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInfo
 import { EditInformationPostForm } from "@/src/modules/houses/components/EditInformationPostForm";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
 import { adminPrimaryButtonClass } from "@/src/shared/ui/admin/adminStyles";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
 export const INFORMATION_CATEGORIES = [
   "Про будинок",
@@ -186,63 +187,28 @@ export function HouseInformationWorkspace({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => handleMainTabChange("posts")}
-              className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                mainTab === "posts"
-                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
-                  : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
-              }`}
-            >
-              <span>Інформація</span>
-              <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                mainTab === "posts"
-                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-              }`}>
-                {posts.length}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleMainTabChange("faq")}
-              className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                mainTab === "faq"
-                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
-                  : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
-              }`}
-            >
-              <span>FAQ</span>
-              <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                mainTab === "faq"
-                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-              }`}>
-                {faqSections.length}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleMainTabChange("materials")}
-              className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                mainTab === "materials"
-                  ? "border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
-                  : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]"
-              }`}
-            >
-              <span>Матеріали</span>
-              <span className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                mainTab === "materials"
-                  ? "bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-              }`}>
-                {documents.length}
-              </span>
-            </button>
+          <div className="mt-2">
+            <AdminSegmentedTabs
+              activeKey={mainTab}
+              onChange={(key) => handleMainTabChange(key as typeof mainTab)}
+              items={[
+                {
+                  key: "posts",
+                  label: "Інформація",
+                  count: posts.length,
+                },
+                {
+                  key: "faq",
+                  label: "FAQ",
+                  count: faqSections.length,
+                },
+                {
+                  key: "materials",
+                  label: "Матеріали",
+                  count: documents.length,
+                },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -290,7 +256,7 @@ export function HouseInformationWorkspace({
                       onClick={() => openEditPost(section.id)}
                       className={`block w-full overflow-hidden rounded-2xl border p-4 text-left transition ${
                         isPinned
-                          ? "border-emerald-800 bg-emerald-950/10"
+                          ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)]"
                           : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)]"
                       }`}
                     >
@@ -306,14 +272,14 @@ export function HouseInformationWorkspace({
                             <span
                               className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
                                 section.status === "published"
-                                  ? "border border-emerald-500/20 bg-emerald-500/15 text-emerald-300"
-                                  : "border border-amber-500/20 bg-amber-500/15 text-amber-300"
+                                  ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                                  : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                               }`}
                             >
                               {section.status === "published" ? "Активна" : "Чернетка"}
                             </span>
                             {Boolean(content.isPinned) ? (
-                              <span className="inline-flex rounded-full border border-emerald-800 bg-emerald-950/30 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                              <span className="inline-flex rounded-full border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-success-text)]">
                                 PIN
                               </span>
                             ) : null}
@@ -348,6 +314,7 @@ export function HouseInformationWorkspace({
           houseId={houseId}
           documents={documents}
           startInCreateMode={materialsCreateKey > 0}
+          embedded
         />
       ) : null}
 
@@ -371,8 +338,8 @@ export function HouseInformationWorkspace({
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
                             section.status === "published"
-                              ? "border border-emerald-500/20 bg-emerald-500/15 text-emerald-300"
-                              : "border border-amber-500/20 bg-amber-500/15 text-amber-300"
+                              ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                              : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                           }`}
                         >
                           {section.status === "published" ? "Активна" : "Чернетка"}

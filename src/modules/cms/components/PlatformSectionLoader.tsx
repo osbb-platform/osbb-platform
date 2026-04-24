@@ -30,8 +30,8 @@ function getToneClasses(tone: PlatformSectionLoaderTone) {
   }
 
   return {
-    badge: "border-slate-700/80 bg-slate-950/85 text-slate-100",
-    dot: "bg-white",
+    badge: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)]",
+    dot: "bg-[var(--cms-text-primary)]",
   };
 }
 
@@ -73,7 +73,7 @@ export function PlatformSectionLoader({
 
   return (
     <div
-      className={`absolute inset-0 z-20 flex items-start justify-center rounded-3xl bg-slate-950/65 p-4 backdrop-blur-[2px] ${className}`}
+      className={`absolute inset-0 z-20 flex items-start justify-center rounded-3xl bg-[rgba(15,23,42,0.42)] p-4 backdrop-blur-[2px] ${className}`}
       aria-live="polite"
       aria-busy={active}
     >
@@ -88,7 +88,7 @@ export function PlatformSectionLoader({
         <div className="min-w-0">
           <div>{label}</div>
           {message ? (
-            <div className="mt-1 text-xs font-normal text-slate-300">
+            <div className="mt-1 text-xs font-normal text-[var(--cms-text-secondary)]">
               {message}
             </div>
           ) : null}

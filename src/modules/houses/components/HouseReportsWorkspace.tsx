@@ -5,6 +5,12 @@ import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/
 import { startTransition, useActionState, useMemo, useRef, useState, useTransition } from "react";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSurfaceClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import {
   getSinglePdfHintMessage,
@@ -99,14 +105,14 @@ function getStatusLabel(status: ReportStatus) {
 
 function getStatusBadgeClasses(status: ReportStatus) {
   if (status === "active") {
-    return "border border-emerald-500/20 bg-emerald-500/15 text-emerald-300";
+    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
   if (status === "archived") {
-    return "border border-slate-600 bg-slate-700 text-slate-200";
+    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
   }
 
-  return "border border-amber-500/20 bg-amber-500/15 text-amber-300";
+  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
 }
 
 function getMonthLabel(value: string | undefined) {
@@ -496,11 +502,11 @@ export function HouseReportsWorkspace({
         className="rounded-3xl"
       />
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-white">Реєстр звітів</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">Реєстр звітів</h2>
+            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
               Керування фінансовими та операційними звітами будинку з публікацією для мешканців.
             </p>
           </div>
@@ -511,7 +517,7 @@ export function HouseReportsWorkspace({
                 type="button"
                 disabled={isDeletingArchive}
                 onClick={() => setConfirmAction("delete_archive")}
-                className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
               >
                 {isDeletingArchive
                   ? "Видаляємо архів..."
@@ -522,7 +528,7 @@ export function HouseReportsWorkspace({
             <button
               type="button"
               onClick={openCreateMode}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200"
+              className={adminPrimaryButtonClass}
             >
               Створити звіт
             </button>
@@ -545,16 +551,16 @@ export function HouseReportsWorkspace({
                   onClick={() => handleTabChange(key as TabKey)}
                   className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border border-slate-600 bg-slate-800/70 text-white"
-                      : "border border-slate-700 bg-slate-950/40 text-white"
+                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
                   }`}
                 >
                   <span>{label}</span>
                   <span
                     className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       isActive
-                        ? "bg-slate-950 text-white"
-                        : "bg-slate-800 text-slate-200"
+                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
+                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
                     }`}
                   >
                     {count}
@@ -571,7 +577,7 @@ export function HouseReportsWorkspace({
         <form
           ref={formRef}
           action={handleSubmit}
-          className="rounded-3xl border border-slate-800 bg-slate-900 p-6"
+          className={`${adminSurfaceClass} p-6`}
         >
           <input type="hidden" name="sectionId" value={sectionId} />
           <input type="hidden" name="houseId" value={houseId} />
@@ -605,7 +611,7 @@ export function HouseReportsWorkspace({
 
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-lg font-semibold text-white">
+              <div className="text-lg font-semibold text-[var(--cms-text)]">
                 {workspaceMode === "edit"
                   ? "Редагування звіту"
                   : isPastContext
@@ -613,7 +619,7 @@ export function HouseReportsWorkspace({
                     : "Новий звіт поточного року"}
               </div>
 
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                 Новий звіт створюється як чернетка. Після збереження картку можна повторно відкрити та опублікувати.
               </p>
             </div>
@@ -621,7 +627,7 @@ export function HouseReportsWorkspace({
             <button
               type="button"
               onClick={() => resetWorkspace()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 bg-slate-950/40 text-lg text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               aria-label="Закрити форму"
             >
               ×
@@ -629,14 +635,14 @@ export function HouseReportsWorkspace({
           </div>
 
           {state.error ? (
-            <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+            <div className="mt-5 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
               {state.error}
             </div>
           ) : null}
 
           <div className="mt-6 grid gap-4 xl:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className={`mb-2 block ${adminTextLabelClass}`}>
                 Заголовок
               </span>
               <input
@@ -645,12 +651,12 @@ export function HouseReportsWorkspace({
                   setDraft((prev) => ({ ...prev, title: event.target.value }))
                 }
                 placeholder="Наприклад: Звіт про виконані роботи за квітень"
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
+                className={adminInputClass}
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className={`mb-2 block ${adminTextLabelClass}`}>
                 Категорія
               </span>
               <select
@@ -658,7 +664,7 @@ export function HouseReportsWorkspace({
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, category: event.target.value }))
                 }
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               >
                 {categoryOptions.map((item) => (
                   <option key={item} value={item}>
@@ -669,7 +675,7 @@ export function HouseReportsWorkspace({
             </label>
 
             <label className="block xl:col-span-2">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className={`mb-2 block ${adminTextLabelClass}`}>
                 Короткий опис
               </span>
               <textarea
@@ -682,12 +688,12 @@ export function HouseReportsWorkspace({
                 }
                 rows={4}
                 placeholder="Короткий опис звіту для картки на public та в CMS."
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-slate-500"
+                className={adminInputClass}
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className={`mb-2 block ${adminTextLabelClass}`}>
                 Дата звіту
               </span>
               <input
@@ -696,13 +702,13 @@ export function HouseReportsWorkspace({
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, reportDate: event.target.value }))
                 }
-                className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
+                className={adminInputClass}
               />
             </label>
 
             {isPastContext ? (
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Рік
                 </span>
                 <select
@@ -713,7 +719,7 @@ export function HouseReportsWorkspace({
                       year: Number(event.target.value),
                     }))
                   }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   {Array.from({ length: 10 }, (_, index) => 2016 + index).map((item) => (
                     <option key={item} value={String(item)}>
@@ -724,7 +730,7 @@ export function HouseReportsWorkspace({
               </label>
             ) : (
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Місяць
                 </span>
                 <select
@@ -732,7 +738,7 @@ export function HouseReportsWorkspace({
                   onChange={(event) =>
                     setDraft((prev) => ({ ...prev, month: event.target.value }))
                   }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
+                  className={adminInputClass}
                 >
                   <option value="">Оберіть місяць</option>
                   {CURRENT_MONTH_OPTIONS.map((item) => (
@@ -744,17 +750,17 @@ export function HouseReportsWorkspace({
               </label>
             )}
 
-            <div className="xl:col-span-2 rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-              <div className="text-sm font-medium text-white">
+            <div className="xl:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+              <div className="text-sm font-medium text-[var(--cms-text)]">
                 PDF файл звіту
               </div>
 
-              <div className="mt-2 text-sm text-slate-400">
+              <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 {currentPdfLabel}
               </div>
 
               <label className="mt-4 block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Завантажити / замінити PDF
                 </span>
                 <input
@@ -764,16 +770,16 @@ export function HouseReportsWorkspace({
                   name="reportPdf"
                   accept="application/pdf,.pdf"
                   onChange={handleReportPdfChange}
-                  className="block w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
                 />
               </label>
 
-              <div className="mt-2 text-xs text-slate-500">
+              <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
                 {getSinglePdfHintMessage()}
               </div>
 
               {reportPdfError ? (
-                <div className="mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {reportPdfError}
                 </div>
               ) : null}
@@ -784,7 +790,7 @@ export function HouseReportsWorkspace({
           {!isPastContext && !isArchiveContext ? (
             <>
               <div className="mt-5 flex flex-wrap gap-3">
-                <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white">
+                <label className="inline-flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
                   <input
                     type="checkbox"
                     checked={Boolean(draft.isPinned)}
@@ -794,12 +800,12 @@ export function HouseReportsWorkspace({
                         isPinned: event.target.checked,
                       }))
                     }
-                    className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+                    className="h-4 w-4 rounded border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                   />
                   Закріпити як важливий звіт
                 </label>
 
-                <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white">
+                <label className="inline-flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
                   <input
                     type="checkbox"
                     checked={Boolean(draft.isNew)}
@@ -815,7 +821,7 @@ export function HouseReportsWorkspace({
                           : null,
                       }))
                     }
-                    className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+                    className="h-4 w-4 rounded border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                   />
                   Показувати як новий
                 </label>
@@ -823,7 +829,7 @@ export function HouseReportsWorkspace({
 
               {draft.isNew ? (
                 <label className="mt-4 block max-w-sm">
-                  <span className="mb-2 block text-sm font-medium text-white">
+                  <span className={`mb-2 block ${adminTextLabelClass}`}>
                     Новий до
                   </span>
                   <input
@@ -835,7 +841,7 @@ export function HouseReportsWorkspace({
                         newUntil: event.target.value || null,
                       }))
                     }
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-slate-500"
+                    className={adminInputClass}
                   />
                 </label>
               ) : null}
@@ -854,7 +860,7 @@ export function HouseReportsWorkspace({
                       formRef.current?.requestSubmit();
                     });
                   }}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                 </button>
@@ -864,7 +870,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/15 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-red-500/15 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -877,7 +883,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -890,7 +896,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-amber-700 px-5 py-3 text-sm font-medium text-amber-300 transition hover:bg-amber-950/30 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                   </button>
@@ -903,7 +909,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-red-900 px-5 py-3 text-sm font-medium text-red-300 transition hover:bg-red-950/40 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -999,10 +1005,10 @@ export function HouseReportsWorkspace({
         }}
       />
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="mt-0">
           {visibleReports.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm text-slate-400">
+            <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm text-[var(--cms-text-muted)]">
               {activeTab === "current"
                 ? "Тут відображатимуться звіти поточного року після створення."
                 : activeTab == "past"
@@ -1018,12 +1024,12 @@ export function HouseReportsWorkspace({
                   onClick={() => openEditMode(report)}
                   className={`rounded-2xl border p-4 text-left transition ${
                     selectedReportId === report.id && workspaceMode === "edit"
-                      ? "border-white bg-slate-800"
-                      : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-950"
+                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
+                      : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-300">
+                    <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                       {report.category}
                     </span>
 
@@ -1036,27 +1042,27 @@ export function HouseReportsWorkspace({
                     </span>
 
                     {report.isPinned ? (
-                      <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-red-300">
+                      <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-danger-text)]">
                         Важливий
                       </span>
                     ) : null}
 
                     {report.isNew ? (
-                      <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300">
+                      <span className="inline-flex rounded-full border border-emerald-500/20 bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)]/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-success-text)]">
                         Новий
                       </span>
                     ) : null}
                   </div>
 
-                  <div className="mt-3 text-lg font-semibold text-white">
+                  <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
                     {report.title}
                   </div>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                  <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                     {report.description}
                   </p>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-slate-500">
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
                     <span>{formatDate(report.reportDate)}</span>
                     {report.periodType === "current" ? (
                       <span>{getMonthLabel(report.month)}</span>

@@ -21,7 +21,7 @@ function formatDateTime(value: string | null) {
     return "Дата не вказана";
   }
 
-  return date.toLocaleString("ru-RU", {
+  return date.toLocaleString("uk-UA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -77,14 +77,14 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
 
   if (!activeItem) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-400">
+      <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-secondary)]">
         Зараз немає матеріалів, що очікують підтвердження.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-5">
       <div className="flex h-full flex-col gap-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -97,11 +97,11 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
               <span>{getSectionLabel(activeItem.section)}</span>
             </div>
 
-            <div className="mt-3 text-lg font-semibold text-white sm:text-xl">
+            <div className="mt-3 text-lg font-semibold text-[var(--cms-text-primary)] sm:text-xl">
               {activeItem.title}
             </div>
 
-            <div className="mt-2 text-sm text-slate-300">
+            <div className="mt-2 text-sm text-[var(--cms-text-secondary)]">
               Оновлено: {formatDateTime(activeItem.updatedAt)}
             </div>
           </div>
@@ -120,7 +120,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             onClick={handlePrev}
             disabled={!canGoPrev}
             aria-label="Попередній матеріал"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/40 disabled:text-slate-500"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
           >
             ←
           </button>
@@ -134,7 +134,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             onClick={handleNext}
             disabled={!canGoNext}
             aria-label="Наступний матеріал"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/40 disabled:text-slate-500"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-base font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
           >
             →
           </button>

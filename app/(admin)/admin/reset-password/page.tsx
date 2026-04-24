@@ -3,7 +3,7 @@ import { AdminPasswordSetupForm } from "@/src/modules/auth/components/AdminPassw
 
 export default function AdminResetPasswordPage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
+    <main className="min-h-screen bg-[var(--cms-bg-page)] px-6 py-16 text-[var(--cms-text-primary)]">
       <section className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-3xl items-center justify-center">
         <Suspense fallback={null}>
           <AdminPasswordSetupForm mode="reset" />
