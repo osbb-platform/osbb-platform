@@ -9,6 +9,16 @@ const DEFAULT_CONTENT = {
     note: "",
     buttonLabel: "Сплатити",
   },
+  calculator: {
+    enabled: false,
+    courtFee: "302.80",
+    legalAid: "1000",
+    inflationRate: "20",
+    enforcementRate: "10",
+    title: "Калькулятор судових витрат",
+    note: "Розрахуйте орієнтовну суму витрат, яку доведеться сплатити боржнику у разі примусового стягнення боргу через суд.",
+    disclaimer: "Розрахунок є орієнтовним. Остаточна сума визначається судом.",
+  },
 };
 
 export async function ensureHouseDebtorsSection(params: {

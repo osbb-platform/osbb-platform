@@ -1074,6 +1074,36 @@ export async function updateHouseSection(
         String(parsedPayment.buttonLabel ?? "Сплатити").trim() || "Сплатити",
     };
 
+    const parsedCalculator =
+      parsedPayload.calculator && typeof parsedPayload.calculator === "object"
+        ? (parsedPayload.calculator as Record<string, unknown>)
+        : existingContent.calculator && typeof existingContent.calculator === "object"
+          ? (existingContent.calculator as Record<string, unknown>)
+          : {};
+
+    const nextCalculator = {
+      enabled: Boolean(parsedCalculator.enabled),
+      courtFee: String(parsedCalculator.courtFee ?? "302.80").trim() || "302.80",
+      legalAid: String(parsedCalculator.legalAid ?? "1000").trim() || "1000",
+      inflationRate: String(parsedCalculator.inflationRate ?? "20").trim() || "20",
+      enforcementRate: String(parsedCalculator.enforcementRate ?? "10").trim() || "10",
+      title:
+        String(parsedCalculator.title ?? "Калькулятор судових витрат").trim() ||
+        "Калькулятор судових витрат",
+      note:
+        String(
+          parsedCalculator.note ??
+            "Розрахуйте орієнтовну суму витрат, яку доведеться сплатити боржнику у разі примусового стягнення боргу через суд.",
+        ).trim() ||
+        "Розрахуйте орієнтовну суму витрат, яку доведеться сплатити боржнику у разі примусового стягнення боргу через суд.",
+      disclaimer:
+        String(
+          parsedCalculator.disclaimer ??
+            "Розрахунок є орієнтовним. Остаточна сума визначається судом.",
+        ).trim() ||
+        "Розрахунок є орієнтовним. Остаточна сума визначається судом.",
+    };
+
     const existingActiveItems = Array.isArray(existingContent.activeItems)
       ? existingContent.activeItems
       : [];
@@ -1086,16 +1116,29 @@ export async function updateHouseSection(
       content = {
         updatedAt: nowIso,
         payment: nextPayment,
+        calculator: nextCalculator,
         activeItems: existingActiveItems,
         draftItems: existingDraftItems,
       };
 
       historyDescription = "Обновлены настройки блока оплаты в разделе должников.";
       historySubSection = "debtors";
+    } else if (mode === "save_calculator") {
+      content = {
+        updatedAt: nowIso,
+        payment: nextPayment,
+        calculator: nextCalculator,
+        activeItems: existingActiveItems,
+        draftItems: existingDraftItems,
+      };
+
+      historyDescription = "Оновлено калькулятор витрат у розділі боржників.";
+      historySubSection = "debtors";
     } else if (mode === "delete_draft") {
       content = {
         updatedAt: nowIso,
         payment: nextPayment,
+        calculator: nextCalculator,
         activeItems: existingActiveItems,
         draftItems: [],
       };
@@ -1108,6 +1151,7 @@ export async function updateHouseSection(
       content = {
         updatedAt: nowIso,
         payment: nextPayment,
+        calculator: nextCalculator,
         activeItems: nextActiveItems,
         draftItems: [],
       };
@@ -1124,6 +1168,7 @@ export async function updateHouseSection(
       content = {
         updatedAt: nowIso,
         payment: nextPayment,
+        calculator: nextCalculator,
         activeItems: existingActiveItems,
         draftItems: nextDraftItems,
       };

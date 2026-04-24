@@ -1,5 +1,6 @@
 import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
+import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -57,6 +58,36 @@ function normalizeItems(value: unknown): DebtorItem[] {
     })
     .filter((item): item is DebtorItem => Boolean(item?.apartmentId))
     .filter((item) => normalizeAmount(item.amount) > 0);
+}
+
+type CalculatorSettings = {
+  enabled: boolean;
+  courtFee: string;
+  legalAid: string;
+  inflationRate: string;
+  enforcementRate: string;
+  title: string;
+  note: string;
+  disclaimer: string;
+};
+
+function normalizeCalculator(value: unknown): CalculatorSettings | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const raw = value as Record<string, unknown>;
+
+  return {
+    enabled: Boolean(raw.enabled),
+    courtFee: String(raw.courtFee ?? "302.80").trim(),
+    legalAid: String(raw.legalAid ?? "1000").trim(),
+    inflationRate: String(raw.inflationRate ?? "20").trim(),
+    enforcementRate: String(raw.enforcementRate ?? "10").trim(),
+    title: String(raw.title ?? "Калькулятор судових витрат").trim(),
+    note: String(raw.note ?? "").trim(),
+    disclaimer: String(raw.disclaimer ?? "").trim(),
+  };
 }
 
 function normalizePayment(value: unknown): PaymentSettings {
@@ -145,6 +176,7 @@ export default async function DebtorsPage({
 
   const updatedAtLabel = formatUpdatedAt(content?.updatedAt);
   const payment = normalizePayment(content?.payment);
+  const calculator = normalizeCalculator(content?.calculator);
   const activeItems = normalizeItems(content?.activeItems);
 
   const visibleItems = searchQuery
@@ -300,6 +332,11 @@ export default async function DebtorsPage({
           accountNumber: item.accountNumber,
           amount: item.amount,
         }))}
+      />
+
+      <PublicDebtorsCalculatorBlock
+        calculator={calculator}
+        hasPublishedDebtors={!noPublishedState && activeItems.length > 0}
       />
     </section>
   );

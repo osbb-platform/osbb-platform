@@ -31,6 +31,17 @@ type DebtorsPayment = {
   buttonLabel: string;
 };
 
+type DebtorsCalculator = {
+  enabled: boolean;
+  courtFee: string;
+  legalAid: string;
+  inflationRate: string;
+  enforcementRate: string;
+  title: string;
+  note: string;
+  disclaimer: string;
+};
+
 type Props = {
   houseId: string;
   houseSlug: string;
@@ -52,6 +63,17 @@ const DEFAULT_PAYMENT: DebtorsPayment = {
   title: "Оплата заборгованості",
   note: "",
   buttonLabel: "Оплатити",
+};
+
+const DEFAULT_CALCULATOR: DebtorsCalculator = {
+  enabled: false,
+  courtFee: "302.80",
+  legalAid: "1000",
+  inflationRate: "20",
+  enforcementRate: "10",
+  title: "Калькулятор судових витрат",
+  note: "Розрахуйте орієнтовну суму витрат, яку доведеться сплатити боржнику у разі примусового стягнення боргу через суд.",
+  disclaimer: "Розрахунок є орієнтовним. Остаточна сума визначається судом.",
 };
 
 function normalizeSnapshotItems(value: unknown): DebtSnapshotItem[] {
@@ -96,6 +118,39 @@ function normalizePayment(value: unknown): DebtorsPayment {
     buttonLabel:
       String(raw.buttonLabel ?? DEFAULT_PAYMENT.buttonLabel).trim() ||
       DEFAULT_PAYMENT.buttonLabel,
+  };
+}
+
+function normalizeCalculator(value: unknown): DebtorsCalculator {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_CALCULATOR;
+  }
+
+  const raw = value as Record<string, unknown>;
+
+  return {
+    enabled: Boolean(raw.enabled),
+    courtFee:
+      String(raw.courtFee ?? DEFAULT_CALCULATOR.courtFee).trim() ||
+      DEFAULT_CALCULATOR.courtFee,
+    legalAid:
+      String(raw.legalAid ?? DEFAULT_CALCULATOR.legalAid).trim() ||
+      DEFAULT_CALCULATOR.legalAid,
+    inflationRate:
+      String(raw.inflationRate ?? DEFAULT_CALCULATOR.inflationRate).trim() ||
+      DEFAULT_CALCULATOR.inflationRate,
+    enforcementRate:
+      String(raw.enforcementRate ?? DEFAULT_CALCULATOR.enforcementRate).trim() ||
+      DEFAULT_CALCULATOR.enforcementRate,
+    title:
+      String(raw.title ?? DEFAULT_CALCULATOR.title).trim() ||
+      DEFAULT_CALCULATOR.title,
+    note:
+      String(raw.note ?? DEFAULT_CALCULATOR.note).trim() ||
+      DEFAULT_CALCULATOR.note,
+    disclaimer:
+      String(raw.disclaimer ?? DEFAULT_CALCULATOR.disclaimer).trim() ||
+      DEFAULT_CALCULATOR.disclaimer,
   };
 }
 
@@ -148,8 +203,9 @@ export function HouseDebtorsWorkspace({
   const [searchQuery, setSearchQuery] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
+  const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
   const [submittedMode, setSubmittedMode] = useState<
-    "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | null
+    "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | "save_calculator" | null
   >(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -164,6 +220,9 @@ export function HouseDebtorsWorkspace({
 
   const [payment, setPayment] = useState<DebtorsPayment>(
     normalizePayment(content.payment),
+  );
+  const [calculator, setCalculator] = useState<DebtorsCalculator>(
+    normalizeCalculator(content.calculator),
   );
   const activeItems = normalizeSnapshotItems(content.activeItems);
   const draftItems = normalizeSnapshotItems(content.draftItems);
@@ -200,10 +259,24 @@ export function HouseDebtorsWorkspace({
       });
     }
 
+    if (submittedMode === "save_payment") {
+      startTransition(() => {
+        setIsPaymentSettingsOpen(false);
+        router.refresh();
+      });
+    }
+
+    if (submittedMode === "save_calculator") {
+      startTransition(() => {
+        setCalculator((prev) => ({ ...prev, enabled: true }));
+        setIsCalculatorSettingsOpen(false);
+        router.refresh();
+      });
+    }
+
     if (
       submittedMode === "publish_draft" ||
-      submittedMode === "delete_draft" ||
-      submittedMode === "save_payment"
+      submittedMode === "delete_draft"
     ) {
       startTransition(() => {
         router.refresh();
@@ -282,7 +355,12 @@ export function HouseDebtorsWorkspace({
   }
 
   function submitDebtorsMode(
-    mode: "save_draft" | "publish_draft" | "delete_draft" | "save_payment",
+    mode:
+      | "save_draft"
+      | "publish_draft"
+      | "delete_draft"
+      | "save_payment"
+      | "save_calculator",
     payload?: string,
   ) {
     if (!section) return;
@@ -327,9 +405,22 @@ export function HouseDebtorsWorkspace({
   function savePaymentSettings() {
     const payload = JSON.stringify({
       payment,
+      calculator,
     });
 
     submitDebtorsMode("save_payment", payload);
+  }
+
+  function saveCalculatorSettings() {
+    const payload = JSON.stringify({
+      payment,
+      calculator: {
+        ...calculator,
+        enabled: true,
+      },
+    });
+
+    submitDebtorsMode("save_calculator", payload);
   }
 
   function publishDraft() {
@@ -460,6 +551,23 @@ export function HouseDebtorsWorkspace({
     /^https?:\/\//i.test(trimmedPaymentUrl);
 
   const paymentBlockReady = hasPaymentUrl && isPaymentUrlValid;
+
+  const calculatorDirty =
+    JSON.stringify(calculator) !== JSON.stringify(DEFAULT_CALCULATOR);
+  const calculatorSaveSuccess =
+    submittedMode === "save_calculator" && !isPending && !state.error;
+
+  const hasCalculatorValues =
+    Boolean(calculator.title.trim()) &&
+    Boolean(calculator.courtFee.trim()) &&
+    Boolean(calculator.legalAid.trim()) &&
+    Boolean(calculator.inflationRate.trim()) &&
+    Boolean(calculator.enforcementRate.trim());
+
+  const calculatorBlockReady =
+    calculator.enabled &&
+    hasCalculatorValues &&
+    publishedDebtorsCount > 0;
 
   return (
     <div className="space-y-6">
@@ -785,6 +893,214 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setPayment(DEFAULT_PAYMENT)}
                   disabled={!paymentDirty || isPending}
+                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  Скинути
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {activeTab === "all" ? (
+        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setIsCalculatorSettingsOpen(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setIsCalculatorSettingsOpen(true);
+              }
+            }}
+            className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+          >
+            <div>
+              <p className="text-sm font-medium text-[var(--cms-text)]">
+                Калькулятор судових витрат
+              </p>
+              <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                Налаштуйте дефолтні суми і відсотки для публічного калькулятора. На сайті він з’явиться тільки після збереження та за наявності опублікованого списку боржників.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                calculatorBlockReady
+                  ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                  : "bg-red-500/20 text-[var(--cms-danger-text)]"
+              }`}>
+                {calculatorBlockReady ? "Калькулятор збережено" : "Калькулятор не збережено"}
+              </div>
+            </div>
+          </div>
+
+          {calculatorSaveSuccess ? (
+            <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+              Налаштування калькулятора збережено.
+            </div>
+          ) : null}
+
+          {isCalculatorSettingsOpen ? (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsCalculatorSettingsOpen(false)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  aria-label="Закрити налаштування калькулятора"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Заголовок калькулятора
+                </div>
+                <input
+                  value={calculator.title}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({ ...prev, title: event.target.value }))
+                  }
+                  placeholder="Калькулятор судових витрат"
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Судовий збір, грн
+                </div>
+                <input
+                  value={calculator.courtFee}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({
+                      ...prev,
+                      courtFee: event.target.value.replace(/[^\d.,]/g, ""),
+                    }))
+                  }
+                  inputMode="decimal"
+                  placeholder="302.80"
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Правнича допомога, грн
+                </div>
+                <input
+                  value={calculator.legalAid}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({
+                      ...prev,
+                      legalAid: event.target.value.replace(/[^\d.,]/g, ""),
+                    }))
+                  }
+                  inputMode="decimal"
+                  placeholder="1000"
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Інфляційні / 3% річних, %
+                </div>
+                <input
+                  value={calculator.inflationRate}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({
+                      ...prev,
+                      inflationRate: event.target.value.replace(/[^\d.,]/g, ""),
+                    }))
+                  }
+                  inputMode="decimal"
+                  placeholder="20"
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Виконавчий збір, %
+                </div>
+                <input
+                  value={calculator.enforcementRate}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({
+                      ...prev,
+                      enforcementRate: event.target.value.replace(/[^\d.,]/g, ""),
+                    }))
+                  }
+                  inputMode="decimal"
+                  placeholder="10"
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Опис для мешканця
+                </div>
+                <textarea
+                  value={calculator.note}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({ ...prev, note: event.target.value }))
+                  }
+                  rows={3}
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                  Дисклеймер
+                </div>
+                <textarea
+                  value={calculator.disclaimer}
+                  onChange={(event) =>
+                    setCalculator((prev) => ({ ...prev, disclaimer: event.target.value }))
+                  }
+                  rows={2}
+                  className={adminInputClass}
+                />
+              </div>
+
+              <div className="md:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
+                  Попередній перегляд параметрів
+                </div>
+                <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
+                  {calculator.title || DEFAULT_CALCULATOR.title}
+                </div>
+                <div className="mt-3 grid gap-2 text-sm text-[var(--cms-text-muted)] sm:grid-cols-2">
+                  <div>Судовий збір: {calculator.courtFee || "0"} грн</div>
+                  <div>Правнича допомога: {calculator.legalAid || "0"} грн</div>
+                  <div>Інфляційні / 3%: {calculator.inflationRate || "0"}%</div>
+                  <div>Виконавчий збір: {calculator.enforcementRate || "0"}%</div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={saveCalculatorSettings}
+                  disabled={!section || (calculator.enabled && !calculatorDirty) || isPending}
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  {isPending && submittedMode === "save_calculator"
+                    ? "Зберігаємо..."
+                    : "Зберегти калькулятор"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCalculator(DEFAULT_CALCULATOR)}
+                  disabled={!calculatorDirty || isPending}
                   className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
