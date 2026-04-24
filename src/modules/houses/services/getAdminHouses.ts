@@ -31,6 +31,18 @@ export type AdminHouseListItem = {
   is_active: boolean;
   archived_at: string | null;
   created_at: string;
+  management_company_id: string;
+  management_company: {
+    id: string;
+    slug: string;
+    name: string;
+    slogan: string | null;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    work_schedule: string | null;
+    is_active: boolean;
+  } | null;
   district: {
     id: string;
     name: string;
@@ -65,6 +77,18 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
           is_active,
           archived_at,
           created_at,
+          management_company_id,
+          management_company:management_companies (
+            id,
+            slug,
+            name,
+            slogan,
+            phone,
+            email,
+            address,
+            work_schedule,
+            is_active
+          ),
           district:districts (
             id,
             name,

@@ -19,7 +19,8 @@ export type HouseWorkspaceKey =
   | "meetings"
   | "requisites"
   | "specialists"
-  | "debtors";
+  | "debtors"
+  | "foundingDocuments";
 
 export type WorkspaceActionKey =
   | "view"

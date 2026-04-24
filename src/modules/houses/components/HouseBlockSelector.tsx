@@ -19,6 +19,7 @@ const houseNavigationBlocks = [
   { value: "requisites", label: "Реквізити" },
   { value: "specialists", label: "Спеціалісти" },
   { value: "debtors", label: "Боржники" },
+  { value: "founding-documents", label: "Установчі документи" },
 ] as const;
 
 export function HouseBlockSelector({

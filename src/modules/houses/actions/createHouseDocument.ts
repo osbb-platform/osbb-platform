@@ -23,6 +23,23 @@ function normalizeCategory(value: string) {
   return allowed.has(value) ? value : "regulations";
 }
 
+function normalizeDocumentScope(value: string) {
+  return value === "founding" ? "founding" : "information";
+}
+
+function normalizeDocumentType(value: string) {
+  const allowed = new Set([
+    "statute",
+    "extract",
+    "protocol",
+    "registration",
+    "contracts",
+    "other",
+  ]);
+
+  return allowed.has(value) ? value : "other";
+}
+
 function normalizeDocumentYear(value: string) {
   const parsed = Number(value);
 
@@ -49,9 +66,17 @@ export async function createHouseDocument(
     String(formData.get("category") ?? "regulations").trim(),
   );
   const description = String(formData.get("description") ?? "").trim();
-  const documentYear = normalizeDocumentYear(
-    String(formData.get("documentYear") ?? "").trim(),
+  const documentScope = normalizeDocumentScope(
+    String(formData.get("documentScope") ?? "information").trim(),
   );
+  const documentType =
+    documentScope === "founding"
+      ? normalizeDocumentType(String(formData.get("documentType") ?? "other").trim())
+      : null;
+  const documentYear =
+    documentScope === "information"
+      ? normalizeDocumentYear(String(formData.get("documentYear") ?? "").trim())
+      : null;
 
   const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
   const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
@@ -72,6 +97,8 @@ export async function createHouseDocument(
       visibility_status: "draft",
       description: description || null,
       document_year: documentYear,
+      document_scope: documentScope,
+      document_type: documentType,
       storage_bucket: DOCUMENT_BUCKET,
       storage_path: uploadedPdfPath,
       original_file_name: uploadedPdfName,
@@ -115,6 +142,7 @@ export async function createHouseDocument(
   revalidatePath(`/admin/houses/${houseId}`);
   if (house?.slug) {
     revalidatePath(`/house/${house.slug}/information`);
+    revalidatePath(`/house/${house.slug}/founding-documents`);
   }
 
   return { error: null };

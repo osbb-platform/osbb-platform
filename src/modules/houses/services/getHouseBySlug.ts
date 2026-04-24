@@ -10,6 +10,7 @@ export async function getHouseBySlug(slug: string): Promise<HouseRecord | null> 
       `
         id,
         district_id,
+        management_company_id,
         name,
         slug,
         address,
@@ -24,6 +25,17 @@ export async function getHouseBySlug(slug: string): Promise<HouseRecord | null> 
           name,
           slug,
           theme_color
+        ),
+        management_company:management_companies (
+          id,
+          slug,
+          name,
+          slogan,
+          phone,
+          email,
+          address,
+          work_schedule,
+          is_active
         )
       `,
     )

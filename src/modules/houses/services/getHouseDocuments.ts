@@ -14,6 +14,16 @@ export type HouseDocumentVisibility =
   | "private"
   | "published";
 
+export type HouseDocumentScope = "information" | "founding";
+
+export type HouseDocumentType =
+  | "statute"
+  | "extract"
+  | "protocol"
+  | "registration"
+  | "contracts"
+  | "other";
+
 export type HouseDocumentListItem = {
   id: string;
   house_id: string;
@@ -22,6 +32,8 @@ export type HouseDocumentListItem = {
   visibility_status: HouseDocumentVisibility;
   description: string | null;
   document_year: number | null;
+  document_scope: HouseDocumentScope;
+  document_type: HouseDocumentType | null;
   created_at: string;
   updated_at: string;
   storage_bucket: string | null;
@@ -36,12 +48,13 @@ export type HouseDocumentListItem = {
 
 export async function getHouseDocuments(
   houseId: string,
+  options: { scope?: HouseDocumentScope } = {},
 ): Promise<HouseDocumentListItem[]> {
   noStore();
 
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("house_documents")
     .select(
       [
@@ -52,6 +65,8 @@ export async function getHouseDocuments(
         "visibility_status",
         "description",
         "document_year",
+        "document_scope",
+        "document_type",
         "created_at",
         "updated_at",
         "storage_bucket",
@@ -63,7 +78,13 @@ export async function getHouseDocuments(
         "attachment_status",
       ].join(", "),
     )
-    .eq("house_id", houseId)
+    .eq("house_id", houseId);
+
+  if (options.scope) {
+    query = query.eq("document_scope", options.scope);
+  }
+
+  const { data, error } = await query
     .order("updated_at", { ascending: false })
     .order("created_at", { ascending: false });
 

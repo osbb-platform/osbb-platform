@@ -30,6 +30,7 @@ const WORKSPACE_KEYS: HouseWorkspaceKey[] = [
   "requisites",
   "specialists",
   "debtors",
+  "foundingDocuments",
 ];
 
 const WORKSPACE_ACTIONS: WorkspaceActionKey[] = [

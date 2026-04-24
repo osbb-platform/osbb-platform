@@ -10,6 +10,11 @@ type CreateHouseFormProps = {
     name: string;
     slug?: string;
   }>;
+  managementCompanies: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 };
 
 const initialState = {
@@ -17,6 +22,7 @@ const initialState = {
 };
 
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
+const DEFAULT_COMPANY_SLUG = "tov-bukhhalter-onlain";
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
 
 function formatFileSize(bytes: number) {
@@ -27,7 +33,10 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
-export function CreateHouseForm({ districts }: CreateHouseFormProps) {
+export function CreateHouseForm({
+  districts,
+  managementCompanies,
+}: CreateHouseFormProps) {
   const [state, formAction, isPending] = useActionState(
     createHouse,
     initialState,
@@ -46,6 +55,7 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
     const defaultDistrict = districts.find(
       (district) => district.slug === DEFAULT_DISTRICT_SLUG,
     );
+
     const regularDistricts = districts.filter(
       (district) => district.slug !== DEFAULT_DISTRICT_SLUG,
     );
@@ -54,6 +64,11 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
       ? [defaultDistrict, ...regularDistricts]
       : regularDistricts;
   }, [districts]);
+
+  const defaultCompanyId =
+    managementCompanies.find(
+      (company) => company.slug === DEFAULT_COMPANY_SLUG,
+    )?.id ?? "";
 
   useEffect(() => {
     return () => {
@@ -131,9 +146,32 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           <option value="" disabled>
             Оберіть район
           </option>
+
           {orderedDistricts.map((district) => (
             <option key={district.id} value={district.id}>
               {district.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-200">
+          Керуюча компанія
+        </label>
+        <select
+          name="managementCompanyId"
+          required
+          defaultValue={defaultCompanyId}
+          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+        >
+          <option value="" disabled>
+            Оберіть керуючу компанію
+          </option>
+
+          {managementCompanies.map((company) => (
+            <option key={company.id} value={company.id}>
+              {company.name}
             </option>
           ))}
         </select>
@@ -183,7 +221,9 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
           <div className="min-w-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-200">Фото будинку</div>
+                <div className="text-sm font-medium text-slate-200">
+                  Фото будинку
+                </div>
                 <div className="mt-1 text-xs leading-5 text-slate-400">
                   Використовується на сторінці входу до кабінету будинку.
                 </div>
@@ -223,7 +263,10 @@ export function CreateHouseForm({ districts }: CreateHouseFormProps) {
               <div>Мінімум: 1280×720 px</div>
               <div>Формат: JPG, PNG або WebP</div>
               <div>Розмір файлу: до 5 МБ</div>
-              <div>Краще завантажувати горизонтальну фотографію, де будинок знаходиться по центру кадру</div>
+              <div>
+                Краще завантажувати горизонтальну фотографію, де будинок
+                знаходиться по центру кадру
+              </div>
             </div>
 
             {selectedImage ? (

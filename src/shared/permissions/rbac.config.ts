@@ -27,6 +27,7 @@ const ALL_WORKSPACE_KEYS: HouseWorkspaceKey[] = [
   "requisites",
   "specialists",
   "debtors",
+  "foundingDocuments",
 ];
 
 const ALL_WORKSPACE_ACTIONS: WorkspaceActionKey[] = [
@@ -166,6 +167,19 @@ managerWorkspaces.specialists = {
 };
 
 managerWorkspaces.debtors = {
+  view: true,
+  create: true,
+  edit: true,
+  saveDraft: true,
+  changeWorkflowStatus: false,
+  publish: false,
+  confirm: false,
+  archive: false,
+  restore: false,
+  delete: true,
+};
+
+managerWorkspaces.foundingDocuments = {
   view: true,
   create: true,
   edit: true,
@@ -391,6 +405,14 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
         delete: true,
       },
       debtors: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+
+      foundingDocuments: {
         publish: true,
         confirm: true,
         archive: true,

@@ -17,12 +17,22 @@ type ApartmentOption = {
   ownerName: string;
 };
 
+type PublicHouseFooterCompany = {
+  name: string;
+  slogan: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  work_schedule: string | null;
+};
+
 type PublicHouseFooterProps = {
   districtColor: string;
   houseId: string;
   houseSlug: string;
   houseName: string;
   apartmentOptions: ApartmentOption[];
+  managementCompany: PublicHouseFooterCompany | null;
 };
 
 const initialState: CreateFooterHouseMessageState = {
@@ -170,10 +180,24 @@ export function PublicHouseFooter({
   houseSlug,
   houseName,
   apartmentOptions,
+  managementCompany,
 }: PublicHouseFooterProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subject, setSubject] = useState<FooterSubject>("contact");
   const [dialogKey, setDialogKey] = useState(0);
+
+  const companyName = managementCompany?.name?.trim() || "{companyName}";
+  const companySlogan =
+    managementCompany?.slogan?.trim() || "{companySlogan}";
+  const companyPhone =
+    managementCompany?.phone?.trim() || "{companyPhone}";
+  const companyEmail =
+    managementCompany?.email?.trim() || "{companyEmail}";
+  const companyAddress =
+    managementCompany?.address?.trim() ||
+    "{companyAddress}";
+  const companyWorkSchedule =
+    managementCompany?.work_schedule?.trim() || houseCopy.footer.scheduleValue;
 
   const modalTitle = useMemo(() => houseCopy.footer.modalTitle, []);
   const modalDescription = useMemo(() => {
@@ -219,10 +243,10 @@ export function PublicHouseFooter({
 
                 <div className="min-w-0">
                   <div className="text-2xl font-semibold tracking-tight text-white">
-                    ТОВ Бухгалтер онлайн
+                    {companyName}
                   </div>
                   <div className="mt-1 text-base text-white/90">
-                    Робимо те, у що віримо
+                    {companySlogan}
                   </div>
                 </div>
               </div>
@@ -248,7 +272,7 @@ export function PublicHouseFooter({
                   Телефон
                 </div>
                 <div className="mt-2 text-lg font-semibold text-white">
-                  +38066-319-29-55
+                  {companyPhone}
                 </div>
               </div>
 
@@ -257,7 +281,7 @@ export function PublicHouseFooter({
                   E-mail
                 </div>
                 <div className="mt-2 break-all text-base text-white">
-                  scotc7542@gmail.com
+                  {companyEmail}
                 </div>
               </div>
 
@@ -266,7 +290,7 @@ export function PublicHouseFooter({
                   Адрес
                 </div>
                 <div className="mt-2 text-lg leading-8 text-white">
-                  м. Запоріжжя, вул. Академіка Амосова, буд. 79
+                  {companyAddress}
                 </div>
               </div>
 
@@ -275,7 +299,7 @@ export function PublicHouseFooter({
                   {houseCopy.footer.schedule}
                 </div>
                 <div className="mt-2 text-lg leading-8 text-white">
-                  {houseCopy.footer.scheduleValue}
+                  {companyWorkSchedule}
                 </div>
               </div>
             </div>

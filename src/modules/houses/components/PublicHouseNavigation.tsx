@@ -7,7 +7,7 @@ import { useState } from "react";
 import { PublicHouseSidePanel } from "@/src/modules/houses/components/PublicHouseSidePanel";
 
 type PublicHouseNavigationProps = {
-  chairman?: any;
+  chairman?: unknown;
   slug: string;
   houseName: string;
   houseAddress: string;
@@ -28,6 +28,7 @@ const secondaryItems = [
   { label: houseCopy.navigation.requisites, href: (slug: string) => `/house/${slug}/requisites` },
   { label: houseCopy.navigation.specialists, href: (slug: string) => `/house/${slug}/specialists` },
   { label: houseCopy.navigation.debtors, href: (slug: string) => `/house/${slug}/debtors` },
+  { label: houseCopy.navigation.foundingDocuments, href: (slug: string) => `/house/${slug}/founding-documents` },
 ];
 
 export function PublicHouseNavigation({ chairman,

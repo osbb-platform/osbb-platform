@@ -21,8 +21,14 @@ type EditHouseFormProps = {
       name: string;
       slug?: string;
     } | null;
+    management_company_id: string | null;
   };
   districts: Array<{
+    id: string;
+    name: string;
+    slug?: string;
+  }>;
+  managementCompanies: Array<{
     id: string;
     name: string;
     slug?: string;
@@ -44,6 +50,7 @@ const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
 export function EditHouseForm({
   house,
   districts,
+  managementCompanies,
   onSuccess,
   formId,
   onPendingChange,
@@ -174,6 +181,29 @@ export function EditHouseForm({
           {orderedDistricts.map((district) => (
             <option key={district.id} value={district.id}>
               {district.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-200">
+          Керуюча компанія
+        </label>
+        <select
+          name="managementCompanyId"
+          required
+          defaultValue={house.management_company_id ?? ""}
+          className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-slate-500"
+        >
+          <option value="" disabled>
+            Оберіть керуючу компанію
+          </option>
+
+          {managementCompanies.map((company) => (
+            <option key={company.id} value={company.id}>
+              {company.name}
             </option>
           ))}
         </select>

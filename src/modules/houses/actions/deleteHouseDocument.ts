@@ -127,6 +127,7 @@ export async function deleteHouseDocument(
   revalidatePath(`/admin/houses/${houseId}`);
   if (house?.slug) {
     revalidatePath(`/house/${house.slug}/information`);
+    revalidatePath(`/house/${house.slug}/founding-documents`);
   }
 
   return { error: null };

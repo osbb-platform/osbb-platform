@@ -5,9 +5,22 @@ export type DistrictRecord = {
   theme_color: string;
 };
 
+export type ManagementCompanyRecord = {
+  id: string;
+  slug: string;
+  name: string;
+  slogan: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  work_schedule: string | null;
+  is_active: boolean;
+};
+
 export type HouseRecord = {
   id: string;
   district_id: string | null;
+  management_company_id: string;
   name: string;
   slug: string;
   address: string;
@@ -19,6 +32,7 @@ export type HouseRecord = {
   is_active: boolean;
   tariff_amount: number | null;
   district: DistrictRecord | null;
+  management_company: ManagementCompanyRecord | null;
 };
 
 export type HousePageRecord = {

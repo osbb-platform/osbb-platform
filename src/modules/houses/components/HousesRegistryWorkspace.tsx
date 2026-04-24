@@ -27,6 +27,12 @@ type HouseItem = {
   is_active: boolean;
   archived_at: string | null;
   created_at: string;
+  management_company_id: string;
+  management_company: {
+    id: string;
+    slug: string;
+    name: string;
+  } | null;
   district: {
     id: string;
     name: string;
@@ -52,6 +58,11 @@ type HouseItem = {
 type HousesRegistryWorkspaceProps = {
   houses: HouseItem[];
   districts: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  managementCompanies: Array<{
     id: string;
     name: string;
     slug: string;
@@ -145,10 +156,16 @@ function SettingsIcon() {
 function HouseEditorCard({
   house,
   districts,
+  managementCompanies,
   onClose,
 }: {
   house: HouseItem;
   districts: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  managementCompanies: Array<{
     id: string;
     name: string;
     slug: string;
@@ -238,7 +255,14 @@ function HouseEditorCard({
       </div>
     </div>
 
-      <EditHouseForm house={house} districts={districts} onSuccess={onClose} formId={`edit-house-${house.id}`} onPendingChange={setIsSavePending} />
+      <EditHouseForm
+        house={house}
+        districts={districts}
+        managementCompanies={managementCompanies}
+        onSuccess={onClose}
+        formId={`edit-house-${house.id}`}
+        onPendingChange={setIsSavePending}
+      />
 
       {archiveState.error ? (
         <div className="mt-6 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
@@ -528,6 +552,7 @@ function ArchivedHouseRestoreCard({
 export function HousesRegistryWorkspace({
   houses,
   districts,
+  managementCompanies,
   currentUser,
 }: HousesRegistryWorkspaceProps) {
   const access = getResolvedAccess(currentUser.role);
@@ -667,7 +692,7 @@ export function HousesRegistryWorkspace({
             </button>
           </div>
 
-          <CreateHouseForm districts={districts} />
+          <CreateHouseForm districts={districts} managementCompanies={managementCompanies} />
         </div>
       ) : null}
 
@@ -675,6 +700,7 @@ export function HousesRegistryWorkspace({
         <HouseEditorCard
           house={editingHouse}
           districts={districts}
+          managementCompanies={managementCompanies}
           onClose={closeSettings}
         />
       ) : null}

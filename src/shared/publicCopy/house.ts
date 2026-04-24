@@ -32,6 +32,7 @@ export const houseCopy = {
     requisites: "Реквізити",
     specialists: "Спеціалісти",
     debtors: "Боржники",
+    foundingDocuments: "Установчі документи",
     openMenu: "Відкрити меню розділів",
   },
 

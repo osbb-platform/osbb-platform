@@ -80,6 +80,7 @@ export async function createHouse(
   const address = String(formData.get("address") ?? "").trim();
   const osbbName = String(formData.get("osbbName") ?? "").trim();
   const districtId = String(formData.get("districtId") ?? "").trim();
+  const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
   const fileEntry = formData.get("coverImage");
@@ -92,6 +93,10 @@ export async function createHouse(
 
   if (!districtId) {
     return { error: "Оберіть район для будинку." };
+  }
+
+  if (!managementCompanyId) {
+    return { error: "Оберіть керуючу компанію для будинку." };
   }
 
   let uploadedCoverImagePath: string | null = null;
@@ -137,6 +142,7 @@ export async function createHouse(
     .from("houses")
     .insert({
       district_id: districtId,
+      management_company_id: managementCompanyId,
       name,
       slug,
       address,
@@ -252,7 +258,7 @@ export async function createHouse(
           : null,
     });
   } catch (e) {
-    console.error("announcement pdf trigger error FULL:", e); throw e;
+    console.error("announcement pdf trigger error FULL:", e);
   }
 
   return { error: null };

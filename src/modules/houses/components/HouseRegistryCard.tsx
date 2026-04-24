@@ -24,6 +24,12 @@ type HouseRegistryCardProps = {
     is_active: boolean;
     archived_at: string | null;
     created_at: string;
+    management_company_id: string;
+    management_company: {
+      id: string;
+      slug: string;
+      name: string;
+    } | null;
     district: {
       id: string;
       name: string;
@@ -233,6 +239,12 @@ export function HouseRegistryCard({
                     style={{ backgroundColor: house.district.theme_color }}
                   >
                     {house.district.name}
+                  </span>
+                ) : null}
+
+                {house.management_company ? (
+                  <span className="rounded-full border border-slate-600 bg-slate-800/90 px-3 py-1 text-xs font-medium text-slate-100">
+                    {house.management_company.name}
                   </span>
                 ) : null}
                 

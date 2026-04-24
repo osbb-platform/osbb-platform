@@ -5,6 +5,7 @@ import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardS
 import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
+import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
 import { HouseReportsWorkspace } from "@/src/modules/houses/components/HouseReportsWorkspace";
 import { HousePlanWorkspace } from "@/src/modules/houses/components/HousePlanWorkspace";
 import { HouseDebtorsWorkspace } from "@/src/modules/houses/components/HouseDebtorsWorkspace";
@@ -48,6 +49,7 @@ const allowedBlocks = new Set([
   "meetings",
   "requisites",
   "specialists",
+  "founding-documents",
 ]);
 
 function normalizeBlock(value: string | undefined) {
@@ -210,6 +212,7 @@ export default async function AdminHouseDetailPage({
       meetings: `${basePublicUrl}/meetings`,
       requisites: `${basePublicUrl}/requisites`,
       specialists: `${basePublicUrl}/specialists`,
+      "founding-documents": `${basePublicUrl}/founding-documents`,
     }[activeBlock] ?? basePublicUrl;
 
   let pages = await getAdminHousePages(house.id);
@@ -463,7 +466,12 @@ export default async function AdminHouseDetailPage({
 
   const documents =
     activeBlock === "information"
-      ? await getHouseDocuments(house.id)
+      ? await getHouseDocuments(house.id, { scope: "information" })
+      : [];
+
+  const foundingDocuments =
+    activeBlock === "founding-documents"
+      ? await getHouseDocuments(house.id, { scope: "founding" })
       : [];
 
   const reports =
@@ -535,6 +543,7 @@ export default async function AdminHouseDetailPage({
                     meetings: "Збори",
                     requisites: "Реквізити",
                     specialists: "Спеціалісти",
+                    "founding-documents": "Установчі документи",
                   }[activeBlock]
                 }
               </span>
@@ -654,6 +663,21 @@ export default async function AdminHouseDetailPage({
           posts={validInformationPostSections.map(normalizeSectionForWorkspace)}
           documents={documents}
           faqSections={faqSections.map(normalizeSectionForWorkspace)}
+        />
+      ) : null}
+
+      {activeBlock === "founding-documents" ? (
+        <HouseDocumentsWorkspace
+          houseId={house.id}
+          documents={foundingDocuments}
+          documentScope="founding"
+          headingTitle="Установчі документи"
+          createTitle="Новий установчий документ"
+          editTitle="Редагування установчого документа"
+          emptyTitle="Установчі документи поки не додані. Створи перший документ через кнопку «Новий документ»."
+          canConfirm={access.houseWorkspaces.foundingDocuments.confirm}
+          canArchive={access.houseWorkspaces.foundingDocuments.archive}
+          canDelete={access.houseWorkspaces.foundingDocuments.delete}
         />
       ) : null}
 

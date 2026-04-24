@@ -52,6 +52,7 @@ export async function updateHouse(
   const address = String(formData.get("address") ?? "").trim();
   const osbbName = String(formData.get("osbbName") ?? "").trim();
   const districtId = String(formData.get("districtId") ?? "").trim();
+  const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
   const removeCoverImage =
@@ -70,6 +71,13 @@ export async function updateHouse(
   if (!districtId) {
     return {
       error: "Оберіть район для будинку.",
+      successMessage: null,
+    };
+  }
+
+  if (!managementCompanyId) {
+    return {
+      error: "Оберіть керуючу компанію для будинку.",
       successMessage: null,
     };
   }
@@ -167,6 +175,7 @@ export async function updateHouse(
       address,
       osbb_name: osbbName || null,
       district_id: districtId,
+      management_company_id: managementCompanyId,
       short_description: shortDescription || null,
       public_description: publicDescription || null,
       cover_image_path: nextCoverImagePath,

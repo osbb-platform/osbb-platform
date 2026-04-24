@@ -161,6 +161,7 @@ export default async function PublicHouseLayout({
         houseSlug={house.slug}
         houseName={house.name}
         apartmentOptions={apartmentOptions}
+        managementCompany={house.management_company}
       />
     </main>
   );
