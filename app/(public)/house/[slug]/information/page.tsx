@@ -15,8 +15,6 @@ type Props = {
   }>;
 };
 
-const DOCUMENT_YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => String(2026 - index));
-
 function getSortTimestamp(content: Record<string, unknown>) {
   const candidates = [content.publishedAt, content.updatedAt, content.createdAt];
 

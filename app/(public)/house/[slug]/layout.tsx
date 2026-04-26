@@ -79,8 +79,16 @@ export default async function PublicHouseLayout({
     ? (boardContent.roles as Array<Record<string, unknown>>)
     : [];
 
-  const chairman =
+  const rawChairman =
     boardRoles.find((role) => role.status === "chairman") ?? null;
+
+  const chairman = rawChairman
+    ? {
+        name: String(rawChairman.name ?? "").trim(),
+        role: String(rawChairman.role ?? "").trim() || null,
+        phone: String(rawChairman.phone ?? "").trim() || null,
+      }
+    : null;
 
   const bellFeed = await getPublicHouseBellFeed({
     houseId: house.id,
@@ -140,7 +148,8 @@ export default async function PublicHouseLayout({
           <div className="flex items-center gap-3">
             <PublicHouseBell feed={bellFeed} />
 
-            <PublicHouseNavigation chairman={chairman}
+            <PublicHouseNavigation
+              chairman={chairman}
               slug={slug}
               houseName={house.name}
               houseAddress={house.address}

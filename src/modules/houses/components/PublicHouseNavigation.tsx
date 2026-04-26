@@ -6,8 +6,14 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { PublicHouseSidePanel } from "@/src/modules/houses/components/PublicHouseSidePanel";
 
+type ChairmanPreview = {
+  name: string;
+  role?: string | null;
+  phone?: string | null;
+};
+
 type PublicHouseNavigationProps = {
-  chairman?: unknown;
+  chairman?: ChairmanPreview | null;
   slug: string;
   houseName: string;
   houseAddress: string;
@@ -31,7 +37,8 @@ const secondaryItems = [
   { label: houseCopy.navigation.foundingDocuments, href: (slug: string) => `/house/${slug}/founding-documents` },
 ];
 
-export function PublicHouseNavigation({ chairman,
+export function PublicHouseNavigation({
+  chairman,
   slug,
   houseName,
   houseAddress,
@@ -98,7 +105,8 @@ export function PublicHouseNavigation({ chairman,
         </button>
       </div>
 
-      <PublicHouseSidePanel chairman={chairman}
+      <PublicHouseSidePanel
+        chairman={chairman}
         slug={slug}
         houseName={houseName}
         houseAddress={houseAddress}

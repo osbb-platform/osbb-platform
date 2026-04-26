@@ -238,32 +238,6 @@ function sortSpecialists(items: SpecialistItem[]) {
   });
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Дата не вказана";
-  }
-
-  return date.toLocaleString("uk-UA", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function getRequestPreview(request: HouseSpecialistContactRequestRecord) {
-  const subject = request.subject?.trim();
-  if (subject) return subject;
-
-  const comment = request.comment?.trim();
-  if (!comment) return "Без теми";
-
-  return comment.length > 120 ? `${comment.slice(0, 120).trim()}…` : comment;
-}
-
 function getStatusLabel(status: SpecialistStatus) {
   if (status === "active") return "Активна";
   if (status === "archived") return "Архів";
@@ -274,7 +248,6 @@ export function HouseSpecialistsWorkspace({
   houseId,
   houseSlug,
   section,
-  requests,
 }: Props) {
   const [state, formAction, isPending] = useActionState(
     updateHouseSection,
@@ -504,33 +477,6 @@ export function HouseSpecialistsWorkspace({
     persistItems(nextItems);
   }
 
-  function handleRestoreItem(itemId: string) {
-    const nextItems = specialists.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            status: "active" as const,
-            archivedAt: null,
-            updatedAt: new Date().toISOString(),
-          }
-        : item,
-    );
-
-    closeWorkspace();
-    persistItems(nextItems);
-  }
-
-  function handleDeleteArchivedItem(itemId: string) {
-    const target = specialists.find((item) => item.id === itemId);
-    if (!target || target.status !== "archived") {
-      window.alert("Видаляти можна лише картки з архіву.");
-      return;
-    }
-
-    const nextItems = specialists.filter((item) => item.id !== itemId);
-    closeWorkspace();
-    persistItems(nextItems);
-  }
 
   return (
     <div className="relative space-y-6">

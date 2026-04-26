@@ -1,7 +1,6 @@
 "use client";
 import { houseHomeCopy } from "@/src/shared/publicCopy/house";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type PublicHouseHeroCarouselProps = {
@@ -18,15 +17,8 @@ type Slide = {
   description: string;
 };
 
-const sectionLinks = [
-  { label: houseHomeCopy.hero.sections.announcements, href: (slug: string) => `/house/${slug}/announcements` },
-  { label: houseHomeCopy.hero.sections.reports, href: (slug: string) => `/house/${slug}/reports` },
-  { label: houseHomeCopy.hero.sections.plan, href: (slug: string) => `/house/${slug}/plan` },
-  { label: houseHomeCopy.hero.sections.meetings, href: (slug: string) => `/house/${slug}/meetings` },
-];
 
 export function PublicHouseHeroCarousel({
-  slug,
   districtColor,
   headline,
   subheadline,

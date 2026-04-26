@@ -7,7 +7,6 @@ import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import {
   validateMultiplePdfFiles,
-  validateSinglePdfFile,
 } from "@/src/shared/utils/validators/pdfUpload";
 
 type UpdateHouseSectionState = {
@@ -56,7 +55,6 @@ const SPECIALIST_CATEGORIES = [
   "Керуюча компанія",
 ] as const;
 
-const REPORTS_BUCKET = "house-reports";
 const INFORMATION_IMAGES_BUCKET = "house-information-images";
 const PLAN_IMAGES_BUCKET = "house-plan-media";
 const PLAN_DOCUMENTS_BUCKET = "house-plan-documents";
@@ -565,7 +563,6 @@ export async function updateHouseSection(
     const reportAction = String(formData.get("reportAction") ?? "save").trim();
     const removeReportPdf =
       String(formData.get("removeReportPdf") ?? "") === "true";
-    const fileEntry = formData.get("reportPdf");
     let parsedPayload: Record<string, unknown>;
 
     try {
@@ -745,9 +742,6 @@ export async function updateHouseSection(
     } catch {
       return { error: "Не удалось обработать plan payload." };
     }
-
-    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
-    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
     const nowIso = new Date().toISOString();
 
@@ -1028,9 +1022,6 @@ export async function updateHouseSection(
         return { error: "Не удалось обработать payload должников." };
       }
     }
-
-    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
-    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
 
     const nowIso = new Date().toISOString();
 

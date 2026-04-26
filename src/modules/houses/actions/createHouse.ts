@@ -13,8 +13,6 @@ type CreateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
-const DEFAULT_ANNOUNCEMENT_IMAGE_URL =
-  "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80";
 const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_COVER_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -99,7 +97,6 @@ export async function createHouse(
     return { error: "Оберіть керуючу компанію для будинку." };
   }
 
-  let uploadedCoverImagePath: string | null = null;
 
   if (coverImage) {
     if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
@@ -185,7 +182,6 @@ export async function createHouse(
       })
       .eq("id", createdHouse.id);
 
-    uploadedCoverImagePath = coverImagePath;
 
     if (coverUpdateError) {
       await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePath]);

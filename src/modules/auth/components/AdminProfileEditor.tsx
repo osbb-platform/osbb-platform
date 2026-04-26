@@ -227,7 +227,7 @@ export function AdminProfileEditor({
       <form ref={formRef} action={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">Ім'я</label>
+            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">Ім&apos;я</label>
             <input
               type="text"
               name="fullName"

@@ -30,8 +30,15 @@ function normalizeBoardRoleLabel(value: string | null | undefined) {
   return map[normalized] ?? normalized;
 }
 
+
+type ChairmanPreview = {
+  name: string;
+  role?: string | null;
+  phone?: string | null;
+};
+
 type PublicHouseSidePanelProps = {
-  chairman?: any;
+  chairman?: ChairmanPreview | null;
   slug: string;
   houseName: string;
   houseAddress: string;

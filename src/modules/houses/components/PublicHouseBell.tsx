@@ -50,7 +50,6 @@ export function PublicHouseBell({
       return;
     }
 
-    const lastSeen = sessionStorage.getItem(storageKey);
     // removed invalid setState in effect
   }, [feed.total, latestItemId, storageKey]);
 

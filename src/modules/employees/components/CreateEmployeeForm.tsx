@@ -5,8 +5,6 @@ import { createEmployee } from "@/src/modules/employees/actions/createEmployee";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 import {
   adminPrimaryButtonClass,
-  adminDangerButtonClass,
-  adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = {
