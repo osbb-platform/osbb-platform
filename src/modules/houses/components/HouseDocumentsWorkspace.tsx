@@ -215,10 +215,37 @@ export function HouseDocumentsWorkspace({
   );
 
   const visibleDocuments = useMemo(() => {
+    if (embedded) {
+      const statusOrder: Record<HouseDocumentVisibility, number> = {
+        published: 0,
+        draft: 1,
+        private: 2,
+      };
+
+      return documents
+        .slice()
+        .sort((left, right) => {
+          const statusDiff =
+            statusOrder[left.visibility_status] -
+            statusOrder[right.visibility_status];
+
+          if (statusDiff !== 0) return statusDiff;
+
+          return right.updated_at.localeCompare(left.updated_at);
+        });
+    }
+
     if (activeTab === "active") return activeDocuments;
     if (activeTab === "archive") return archivedDocuments;
     return draftDocuments;
-  }, [activeDocuments, activeTab, archivedDocuments, draftDocuments]);
+  }, [
+    activeDocuments,
+    activeTab,
+    archivedDocuments,
+    documents,
+    draftDocuments,
+    embedded,
+  ]);
 
   const selectedDocument = useMemo(
     () =>
@@ -260,7 +287,10 @@ export function HouseDocumentsWorkspace({
   }
 
   function openCreateMode() {
-    setActiveTab("draft");
+    if (!embedded) {
+      setActiveTab("draft");
+    }
+
     setSelectedDocumentId(null);
     resetForm();
     setIsFormOpen(true);
@@ -402,13 +432,15 @@ export function HouseDocumentsWorkspace({
           return;
         }
 
-        setActiveTab(
-          nextVisibility === "published"
-            ? "active"
-            : nextVisibility === "private"
-              ? "archive"
-              : "draft",
-        );
+        if (!embedded) {
+          setActiveTab(
+            nextVisibility === "published"
+              ? "active"
+              : nextVisibility === "private"
+                ? "archive"
+                : "draft",
+          );
+        }
         closeForm();
         router.refresh();
       } catch (error) {

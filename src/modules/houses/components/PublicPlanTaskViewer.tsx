@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 
 type PlanTaskStatus =
   | "draft"
@@ -254,17 +255,15 @@ export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
                   </div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.documents.map((document, index) => {
-                      const href = document.url || document.path || "";
-                      return href ? (
-                        <a
-                          key={document.id || `${task.id}-document-${index}`}
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-white"
-                        >
-                          Відкрити документ {index + 1}
-                        </a>
+                      const filePath = document.path || "";
+                      return filePath ? (
+                        <div key={document.id || `${task.id}-document-${index}`}>
+                          <PublicReportPdfViewer
+                            filePath={filePath}
+                            fileName={`Документ ${index + 1}`}
+                            bucket="house-plan"
+                          />
+                        </div>
                       ) : null;
                     })}
                   </div>

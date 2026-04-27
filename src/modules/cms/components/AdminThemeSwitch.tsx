@@ -28,11 +28,20 @@ function getStoredTheme(): AdminTheme {
 }
 
 export function AdminThemeSwitch() {
-  const [theme, setTheme] = useState<AdminTheme>(() => getStoredTheme());
+  const [theme, setTheme] = useState<AdminTheme>("dark");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    const storedTheme = getStoredTheme();
+    setTheme(storedTheme);
+    applyTheme(storedTheme);
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
     applyTheme(theme);
-  }, [theme]);
+  }, [isMounted, theme]);
 
   function handleThemeChange(nextTheme: AdminTheme) {
     setTheme(nextTheme);

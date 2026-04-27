@@ -25,7 +25,7 @@ export function PublicReportPdfViewer({
     if (fileName?.trim()) {
       params.set("filename", fileName);
     }
-    return `/api/reports/view?${params.toString()}`;
+    return `/api/reports/view?${params.toString()}#toolbar=0&navpanes=0&scrollbar=0`;
   }, [bucket, fileName, filePath]);
 
   if (!filePath.trim()) {

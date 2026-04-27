@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,11 +29,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="uk" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: themeInitScript,
-          }}
-        />
+        <Script id="admin-theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
       </head>
 
       <body>{children}</body>
