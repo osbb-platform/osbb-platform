@@ -100,11 +100,11 @@ function matchesFilters(
 
 function getPriorityCardClass(priority: string | null) {
   if (priority === "high") {
-    return "border-[rgba(220,38,38,0.28)] bg-[rgba(254,242,242,0.96)]";
+    return "border-[rgba(239,68,68,0.55)] bg-[rgba(239,68,68,0.10)]";
   }
 
   if (priority === "medium") {
-    return "border-[rgba(249,115,22,0.28)] bg-[rgba(255,247,237,0.96)]";
+    return "border-[rgba(249,115,22,0.55)] bg-[rgba(249,115,22,0.10)]";
   }
 
   return "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]";
