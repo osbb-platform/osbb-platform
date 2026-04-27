@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { deleteDraftApprovalTask } from "@/src/modules/tasks/services/deleteDraftApprovalTask";
 
 type DeleteHouseSectionResult = {
   error: string | null;
@@ -89,6 +90,8 @@ export async function deleteHouseSection(
     };
   }
 
+  await deleteDraftApprovalTask(sectionId, currentAdmin?.id ?? null);
+
   const { error: versionsDeleteError } = await supabase
     .from("content_versions")
     .delete()
@@ -140,6 +143,7 @@ export async function deleteHouseSection(
     });
   }
 
+  revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/houses/${houseId}`);
   revalidatePath(`/admin/houses/${houseId}/announcements`);
   revalidatePath(`/house/${houseSlug}`);

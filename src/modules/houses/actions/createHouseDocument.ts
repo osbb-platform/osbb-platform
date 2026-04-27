@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { ensureDocumentDraftApprovalTask } from "@/src/modules/tasks/services/ensureDocumentDraftApprovalTask";
 
 type CreateHouseDocumentResult = {
   error: string | null;
@@ -115,7 +116,15 @@ export async function createHouseDocument(
     return { error: error?.message ?? "Помилка створення документа" };
   }
 
+
   const currentAdmin = await getCurrentAdminUser();
+
+  await ensureDocumentDraftApprovalTask({
+    houseId,
+    documentId: data.id,
+    title: data.title,
+    createdBy: currentAdmin?.id ?? null,
+  });
 
   await logPlatformChange({
     actorAdminId: currentAdmin?.id ?? null,

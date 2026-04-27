@@ -5,6 +5,7 @@ export type CmsTopLevelSectionKey =
   | "districts"
   | "houses"
   | "apartments"
+  | "tasks"
   | "history"
   | "employees"
   | "companyPages"

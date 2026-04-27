@@ -9,6 +9,7 @@ export const TOP_LEVEL_ROUTE_ACCESS: Array<{
   { href: ROUTES.admin.districts, section: "districts" },
   { href: ROUTES.admin.houses, section: "houses" },
   { href: ROUTES.admin.apartments, section: "apartments" },
+  { href: ROUTES.admin.tasks, section: "tasks" },
   { href: ROUTES.admin.history, section: "history" },
   { href: ROUTES.admin.employees, section: "employees" },
   { href: ROUTES.admin.companyPages, section: "companyPages" },

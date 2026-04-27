@@ -7,16 +7,26 @@ import type { ResolvedRoleAccess } from "@/src/shared/permissions/rbac.types";
 type AdminShellProps = Readonly<{
   currentUser: CurrentAdminUser;
   access: ResolvedRoleAccess;
+  activeTasksCount?: number;
   children: React.ReactNode;
 }>;
 
-export function AdminShell({ currentUser, access, children }: AdminShellProps) {
+export function AdminShell({
+  currentUser,
+  access,
+  activeTasksCount = 0,
+  children,
+}: AdminShellProps) {
   return (
     <>
       <AdminOnboardingGate />
 
       <div className="cms-theme-root h-dvh overflow-hidden bg-[var(--cms-bg)] text-[var(--cms-text)] lg:flex">
-        <AdminSidebar currentUser={currentUser} access={access} />
+        <AdminSidebar
+          currentUser={currentUser}
+          access={access}
+          activeTasksCount={activeTasksCount}
+        />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <AdminTopbar />

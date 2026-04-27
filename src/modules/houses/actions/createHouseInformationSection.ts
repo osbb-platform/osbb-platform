@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { ensureDraftApprovalTask } from "@/src/modules/tasks/services/ensureDraftApprovalTask";
 
 type CreateHouseInformationSectionState = {
   error: string | null;
@@ -225,6 +226,13 @@ export async function createHouseInformationSection(
       kind: "rich_text",
       category,
     },
+  });
+
+  await ensureDraftApprovalTask({
+    houseId,
+    houseSectionId: section.id,
+    title: headline,
+    createdBy: currentAdmin?.id ?? null,
   });
 
   revalidatePath(`/admin/houses/${houseId}`);

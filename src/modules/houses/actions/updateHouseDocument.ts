@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { completeDocumentDraftApprovalTask } from "@/src/modules/tasks/services/completeDocumentDraftApprovalTask";
 
 type UpdateHouseDocumentResult = {
   error: string | null;
@@ -160,7 +161,18 @@ export async function updateHouseDocument(
     return { error: `Не вдалося оновити документ. ${updateError.message}` };
   }
 
+
   const currentAdmin = await getCurrentAdminUser();
+
+  if (
+    existingDocument.visibility_status === "draft" &&
+    visibilityStatus === "published"
+  ) {
+    await completeDocumentDraftApprovalTask(
+      documentId,
+      currentAdmin?.id ?? null,
+    );
+  }
 
   await logPlatformChange({
     actorAdminId: currentAdmin?.id ?? null,

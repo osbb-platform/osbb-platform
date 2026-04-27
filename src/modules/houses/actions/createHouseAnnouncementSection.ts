@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { ensureDraftApprovalTask } from "@/src/modules/tasks/services/ensureDraftApprovalTask";
 
 function normalizeLevel(value: string) {
   if (value === "danger" || value === "warning" || value === "info") {
@@ -95,6 +96,13 @@ export async function createHouseAnnouncementSection(formData: FormData) {
       `Оголошення створено, але версію не збережено: ${versionError.message}`,
     );
   }
+
+  await ensureDraftApprovalTask({
+    houseId,
+    houseSectionId: insertedSection.id,
+    title,
+    createdBy: null,
+  });
 
   revalidatePath(`/admin/houses/${houseId}`);
 

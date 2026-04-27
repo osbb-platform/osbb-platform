@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
+import { completeDraftApprovalTask } from "@/src/modules/tasks/services/completeDraftApprovalTask";
 
 export async function publishHouseInformationSection(formData: FormData) {
   const currentUser = await getCurrentAdminUser();
@@ -98,6 +99,9 @@ export async function publishHouseInformationSection(formData: FormData) {
     },
   });
 
+  await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
+
+  revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/houses/${houseId}`);
   revalidatePath(`/house/${houseSlug}`);
   revalidatePath(`/house/${houseSlug}/information`);

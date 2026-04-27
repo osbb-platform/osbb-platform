@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { insertHouseSectionVersion } from "@/src/modules/houses/actions/insertHouseSectionVersion";
+import { completeDraftApprovalTask } from "@/src/modules/tasks/services/completeDraftApprovalTask";
 
 type PublishHouseAnnouncementSectionResult = {
   error: string | null;
@@ -120,6 +121,9 @@ export async function publishHouseAnnouncementSection(
     };
   }
 
+  await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
+
+  revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/houses/${houseId}`);
   revalidatePath(`/admin/houses/${houseId}/announcements`);
   revalidatePath(`/house/${houseSlug}`);

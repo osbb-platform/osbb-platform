@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { ensureDraftApprovalTask } from "@/src/modules/tasks/services/ensureDraftApprovalTask";
 
 type CreateHouseInformationFaqSectionState = {
   error: string | null;
@@ -116,7 +117,16 @@ export async function createHouseInformationFaqSection(
     },
   });
 
+
   const currentAdmin = await getCurrentAdminUser();
+
+  await ensureDraftApprovalTask({
+    houseId,
+    houseSectionId: sectionId,
+    title: "FAQ",
+    createdBy: currentAdmin?.id ?? null,
+  });
+
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,

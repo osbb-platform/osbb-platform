@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { ensureResidentRequestTask } from "@/src/modules/tasks/services/ensureResidentRequestTask";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
@@ -70,27 +71,39 @@ export async function createFooterHouseMessage(
 
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase.from("specialist_contact_requests").insert({
-    house_id: houseId,
-    house_slug: houseSlug,
-    category,
-    specialist_id: null,
-    specialist_label: "Footer / Написати нам",
-    requester_name: requesterName,
-    requester_email: requesterEmail,
-    requester_phone: null,
-    apartment,
-    subject,
-    comment,
-    status: "new",
-  });
+  const { data: insertedRequest, error } = await supabase
+    .from("specialist_contact_requests")
+    .insert({
+      house_id: houseId,
+      house_slug: houseSlug,
+      category,
+      specialist_id: null,
+      specialist_label: "Footer / Написати нам",
+      requester_name: requesterName,
+      requester_email: requesterEmail,
+      requester_phone: null,
+      apartment,
+      subject,
+      comment,
+      status: "new",
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !insertedRequest) {
     return {
       error: `Не вдалося надіслати повідомлення: ${error.message}`,
       successMessage: null,
     };
   }
+
+  await ensureResidentRequestTask({
+    requestId: insertedRequest.id,
+    houseId,
+    category,
+    requesterName,
+    apartment,
+  });
 
   await logPlatformChange({
     actorAdminId: null,
@@ -114,6 +127,7 @@ export async function createFooterHouseMessage(
 
   revalidatePath(`/house/${houseSlug}`);
   revalidatePath(`/admin/houses`);
+  revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/history`);
 
   return {

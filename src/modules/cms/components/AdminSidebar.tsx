@@ -11,11 +11,13 @@ type NavigationItem = {
   href: string;
   label: string;
   visible?: boolean;
+  badgeCount?: number;
 };
 
 type AdminSidebarProps = {
   currentUser: CurrentAdminUser;
   access: ResolvedRoleAccess;
+  activeTasksCount?: number;
 };
 
 function isItemActive(pathname: string, href: string) {
@@ -26,7 +28,11 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
+export function AdminSidebar({
+  currentUser,
+  access,
+  activeTasksCount = 0,
+}: AdminSidebarProps) {
   const pathname = usePathname();
 
   const navigation: NavigationItem[] = [
@@ -49,6 +55,12 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
       href: ROUTES.admin.apartments,
       label: "Квартири",
       visible: access.topLevel.apartments,
+    },
+    {
+      href: ROUTES.admin.tasks,
+      label: "Задачі",
+      visible: access.topLevel.tasks,
+      badgeCount: activeTasksCount,
     },
     {
       href: ROUTES.admin.history,
@@ -96,13 +108,39 @@ export function AdminSidebar({ currentUser, access }: AdminSidebarProps) {
                     key={item.href}
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
-                    className={`flex rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? "border border-amber-500/40 bg-[rgba(217,119,6,0.12)] text-white shadow-[inset_0_1px_0_rgba(251,191,36,0.18)]"
                         : "text-[var(--cms-text-secondary)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text-primary)]"
                     }`}
                   >
-                    {item.label}
+                    <div className="flex items-center gap-2">
+                      <span>{item.label}</span>
+
+                      {item.href === ROUTES.admin.tasks ? (
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
+                            isActive
+                              ? "bg-white/15 text-white"
+                              : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]"
+                          }`}
+                        >
+                          DEMO
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {typeof item.badgeCount === "number" && item.badgeCount > 0 ? (
+                      <span
+                        className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          isActive
+                            ? "bg-white/15 text-white"
+                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-primary)]"
+                        }`}
+                      >
+                        {item.badgeCount > 99 ? "99+" : item.badgeCount}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}

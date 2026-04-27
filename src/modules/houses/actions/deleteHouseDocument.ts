@@ -88,6 +88,7 @@ export async function deleteHouseDocument(
     return { error: `Не вдалося видалити документ: ${error.message}` };
   }
 
+
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,

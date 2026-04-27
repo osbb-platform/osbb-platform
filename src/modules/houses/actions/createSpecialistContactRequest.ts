@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { ensureSpecialistRequestTask } from "@/src/modules/tasks/services/ensureSpecialistRequestTask";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
@@ -67,27 +68,39 @@ export async function createSpecialistContactRequest(
 
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase.from("specialist_contact_requests").insert({
-    house_id: houseId,
-    house_slug: houseSlug,
-    category,
-    specialist_id: specialistId || null,
-    specialist_label: specialistLabel,
-    requester_name: requesterName,
-    requester_email: requesterEmail,
-    requester_phone: requesterPhone || null,
-    apartment,
-    subject,
-    comment: comment || null,
-    status: "new",
-  });
+  const { data: insertedRequest, error } = await supabase
+    .from("specialist_contact_requests")
+    .insert({
+      house_id: houseId,
+      house_slug: houseSlug,
+      category,
+      specialist_id: specialistId || null,
+      specialist_label: specialistLabel,
+      requester_name: requesterName,
+      requester_email: requesterEmail,
+      requester_phone: requesterPhone || null,
+      apartment,
+      subject,
+      comment: comment || null,
+      status: "new",
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !insertedRequest) {
     return {
       error: `Не вдалося зберегти заявку: ${error.message}`,
       successMessage: null,
     };
   }
+
+  await ensureSpecialistRequestTask({
+    requestId: insertedRequest.id,
+    houseId,
+    specialistLabel,
+    requesterName,
+    apartment,
+  });
 
   await logPlatformChange({
     actorAdminId: null,
@@ -112,6 +125,7 @@ export async function createSpecialistContactRequest(
   });
 
   revalidatePath(`/house/${houseSlug}/specialists`);
+  revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/history`);
   revalidatePath(`/admin/houses/${houseId}?block=specialists`);
 

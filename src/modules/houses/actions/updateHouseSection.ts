@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { ensureDraftApprovalTask } from "@/src/modules/tasks/services/ensureDraftApprovalTask";
+import { completeDraftApprovalTask } from "@/src/modules/tasks/services/completeDraftApprovalTask";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
@@ -552,6 +554,23 @@ export async function updateHouseSection(
 
       historyDescription = "Обновлен раздел собраний.";
       historySubSection = "meetings";
+
+      const meetingsList = Array.isArray(parsed.items) ? parsed.items : [];
+      const hasDraftMeetings = meetingsList.some((item) => {
+        if (!item || typeof item !== "object") return false;
+        return String((item as Record<string, unknown>).status ?? "") === "draft";
+      });
+
+      if (hasDraftMeetings) {
+        await ensureDraftApprovalTask({
+          houseId,
+          houseSectionId: sectionId,
+          title: title || "Збори",
+          createdBy: currentUser?.id ?? null,
+        });
+      } else {
+        await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
+      }
     } catch {
       return { error: "Не удалось обработать payload собраний." };
     }
@@ -649,6 +668,8 @@ export async function updateHouseSection(
         targetReport.status = "active";
         targetReport.archivedAt = null;
         targetReport.updatedAt = nowIso;
+
+        await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
       }
 
       if (reportAction === "archive") {
@@ -687,6 +708,19 @@ export async function updateHouseSection(
               ? "Звіт переміщено в архів."
               : "Обновлен раздел отчетов.";
     historySubSection = "reports";
+
+    const hasDraftReports = nextReports.some(
+      (item) => String(item.status ?? "") === "draft",
+    );
+
+    if (hasDraftReports) {
+      await ensureDraftApprovalTask({
+        houseId,
+        houseSectionId: sectionId,
+        title: title || "Звіти",
+        createdBy: currentUser?.id ?? null,
+      });
+    }
   }
 
   if (kind === "plan") {
@@ -972,6 +1006,27 @@ export async function updateHouseSection(
     nextPlanItems = items;
     historyDescription = "Обновлен раздел плана работ.";
     historySubSection = "plan";
+
+    const hasDraftPlanTasks = nextPlanItems.some((item) => {
+      if (!item || typeof item !== "object") {
+        return false;
+      }
+
+      return (
+        String((item as Record<string, unknown>).status ?? "") === "draft"
+      );
+    });
+
+    if (hasDraftPlanTasks) {
+      await ensureDraftApprovalTask({
+        houseId,
+        houseSectionId: sectionId,
+        title: title || "План робіт",
+        createdBy: currentUser?.id ?? null,
+      });
+    } else {
+      await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
+    }
   }
 
 
@@ -1011,6 +1066,19 @@ export async function updateHouseSection(
 
   if (kind === "debtors") {
     const mode = String(formData.get("debtorsMode") ?? "save_draft").trim();
+
+    if (mode === "save_draft") {
+      await ensureDraftApprovalTask({
+        houseId,
+        houseSectionId: sectionId,
+        title: title || "Боржники",
+        createdBy: currentUser?.id ?? null,
+      });
+    }
+
+    if (mode === "publish") {
+      await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
+    }
     const rawPayload = String(formData.get("debtorsPayload") ?? "").trim();
 
     let parsedPayload: Record<string, unknown> = {};

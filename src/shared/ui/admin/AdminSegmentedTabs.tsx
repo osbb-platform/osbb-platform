@@ -33,10 +33,10 @@ export function AdminSegmentedTabs({
             type="button"
             onClick={() => onChange(item.key)}
             className={[
-              adminTabBaseClass,
+              "inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition",
               isActive
-                ? "border border-[var(--cms-tab-active-border)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)] shadow-sm"
-                : "border border-[var(--cms-border-strong)] bg-[var(--cms-tab-inactive-bg)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]",
+                ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]",
             ].join(" ")}
           >
             <span>{item.label}</span>
@@ -44,10 +44,10 @@ export function AdminSegmentedTabs({
             {typeof item.count === "number" ? (
               <span
                 className={[
-                  adminTabCountBaseClass,
+                  "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold",
                   isActive
                     ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                    : "bg-[var(--cms-pill-bg)] text-[var(--cms-pill-text)]",
+                    : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]",
                 ].join(" ")}
               >
                 {item.count}
