@@ -167,7 +167,11 @@ export default async function ReportsPage({
   ).sort((a, b) => b - a);
 
   const selectedMode =
-    resolvedSearchParams.mode === "archive" ? "archive" : "current";
+    resolvedSearchParams.mode === "archive"
+      ? "archive"
+      : resolvedSearchParams.mode === "past"
+        ? "past"
+        : "current";
 
   const selectedMonth =
     resolvedSearchParams.month && availableMonths.includes(resolvedSearchParams.month)
@@ -180,9 +184,11 @@ export default async function ReportsPage({
       : (availableYears[0] ? String(availableYears[0]) : null);
 
   const filteredReports =
-    selectedMode === "archive"
-      ? pastReports.filter((item) =>
-          selectedYear ? String(item.year ?? "") === selectedYear : false,
+    selectedMode === "archive" || selectedMode === "past"
+      ? sortReportsForGrid(
+          pastReports.filter((item) =>
+            selectedYear ? String(item.year ?? "") === selectedYear : false,
+          ),
         )
       : sortReportsForGrid(
           currentReports.filter((item) =>
@@ -214,9 +220,9 @@ export default async function ReportsPage({
                   count: currentReports.length,
                 },
                 {
-                  key: "archive",
-                  label: houseReportsCopy.tabs.archive,
-                  href: `/house/${slug}/reports?mode=archive${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
+                  key: "past",
+                  label: "Минулі роки",
+                  href: `/house/${slug}/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
                   count: pastReports.length,
                 },
               ].map((item) => {
@@ -259,12 +265,12 @@ export default async function ReportsPage({
 
           <div className="mt-5 w-full min-w-0 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
             <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {selectedMode === "archive" ? (
+              {selectedMode === "past" || selectedMode === "archive" ? (
               <>
                 {availableYears.map((year) => (
                   <Link
                     key={year}
-                    href={`/house/${slug}/reports?mode=archive&year=${year}`}
+                    href={`/house/${slug}/reports?mode=past&year=${year}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
                       selectedYear === String(year)
                         ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -317,9 +323,11 @@ export default async function ReportsPage({
         <section>
           {filteredReports.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-[#E2D8CC] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
-              {selectedMode === "archive"
-                ? "Архів звітів за обраний період поки порожній."
-                : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
+              {selectedMode === "past"
+                ? "Звіти минулих років за обраний період поки відсутні."
+                : selectedMode === "archive"
+                  ? "Архів звітів за обраний період поки порожній."
+                  : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
             </div>
           ) : (
             <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
