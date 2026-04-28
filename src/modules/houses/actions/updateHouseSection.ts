@@ -707,14 +707,6 @@ export async function updateHouseSection(
       return { error: "Не передан payload плана работ." };
     }
 
-    const imageFiles = formData
-      .getAll("planImageFiles")
-      .filter((entry): entry is File => isFileLike(entry) && entry.size > 0);
-
-    const pdfFiles = formData
-      .getAll("planPdfFiles")
-      .filter((entry): entry is File => isFileLike(entry) && entry.size > 0);
-
     const rawRemovePlanImageIds = String(
       formData.get("removePlanImageIds") ?? "[]",
     ).trim();
@@ -794,12 +786,6 @@ export async function updateHouseSection(
       };
     }
 
-    if ((imageFiles.length > 0 || pdfFiles.length > 0) && !activePlanTaskId) {
-      return {
-        error: "Не удалось определить задачу для загрузки вложений.",
-      };
-    }
-
     const targetTask =
       activePlanTaskId
         ? items.find((item) => {
@@ -807,12 +793,6 @@ export async function updateHouseSection(
             return String((item as Record<string, unknown>).id ?? "") === activePlanTaskId;
           })
         : null;
-
-    if ((imageFiles.length > 0 || pdfFiles.length > 0) && !targetTask) {
-      return {
-        error: "Не найдена задача для загрузки вложений.",
-      };
-    }
 
     if (targetTask && typeof targetTask === "object") {
       const task = targetTask as Record<string, unknown>;
@@ -882,89 +862,16 @@ export async function updateHouseSection(
         return !removePlanDocumentIds.includes(String(raw.id ?? ""));
       });
 
-      if (keptImages.length + imageFiles.length > 5) {
+      if (keptImages.length > 5) {
         return {
           error: "К задаче можно прикрепить не более 5 фото.",
         };
       }
 
-      if (keptDocuments.length + pdfFiles.length > 2) {
+      if (keptDocuments.length > 2) {
         return {
           error: "К задаче можно прикрепить не более 2 PDF документов.",
         };
-      }
-
-      for (let index = 0; index < imageFiles.length; index += 1) {
-        const nextFile = imageFiles[index];
-        const isImage =
-          nextFile.type.startsWith("image/") ||
-          /\.(png|jpe?g|webp|gif|svg)$/i.test(nextFile.name);
-
-        if (!isImage) {
-          return {
-            error: `Файл «${nextFile.name}» не является изображением.`,
-          };
-        }
-
-        const safeFileName = sanitizeFileName(nextFile.name);
-        const nextStoragePath = `${houseId}/${activePlanTaskId}/images/${Date.now()}-${index}-${safeFileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from(PLAN_IMAGES_BUCKET)
-          .upload(nextStoragePath, nextFile, {
-            upsert: true,
-            contentType: nextFile.type || undefined,
-          });
-
-        if (uploadError) {
-          return {
-            error: `Не удалось загрузить фото задачи: ${uploadError.message}`,
-          };
-        }
-
-        keptImages.push({
-          id: `plan-image-${Date.now()}-${index}`,
-          path: nextStoragePath,
-          fileName: nextFile.name,
-          kind: "image",
-          createdAt: nowIso,
-        });
-      }
-
-      const pdfValidation = validateMultiplePdfFiles(pdfFiles, {
-      maxCount: 2,
-    });
-
-    if (!pdfValidation.isValid) {
-      return { error: pdfValidation.error };
-    }
-
-    for (let index = 0; index < pdfFiles.length; index += 1) {
-        const nextFile = pdfFiles[index];
-
-        const safeFileName = sanitizeFileName(nextFile.name);
-        const nextStoragePath = `${houseId}/${activePlanTaskId}/documents/${Date.now()}-${index}-${safeFileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from(PLAN_DOCUMENTS_BUCKET)
-          .upload(nextStoragePath, nextFile, {
-            upsert: true,
-            contentType: nextFile.type || undefined,
-          });
-
-        if (uploadError) {
-          return {
-            error: `Не удалось загрузить PDF задачи. Попробуйте еще раз. ${uploadError.message}`,
-          };
-        }
-
-        keptDocuments.push({
-          id: `plan-pdf-${Date.now()}-${index}`,
-          path: nextStoragePath,
-          fileName: nextFile.name,
-          kind: "pdf",
-          createdAt: nowIso,
-        });
       }
 
       task.images = keptImages;

@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
@@ -406,11 +407,88 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 : "Створюємо завдання...",
     );
 
+    const nowIso = new Date().toISOString();
+    const activeTaskId = selectedTaskId ?? normalizedDraft.id;
+    let nextNormalized = nextTasksPayload;
+
+    if (selectedImageFiles.length > 0 || selectedPdfFiles.length > 0) {
+      const supabase = createSupabaseBrowserClient();
+
+      const uploadedImages: PlanAttachment[] = [];
+      const uploadedDocuments: PlanAttachment[] = [];
+
+      for (let index = 0; index < selectedImageFiles.length; index += 1) {
+        const file = selectedImageFiles[index];
+        const fileExt = file.name.split(".").pop() ?? "jpg";
+        const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const filePath = `${houseId}/${activeTaskId}/images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("house-plan-media")
+          .upload(filePath, file, {
+            upsert: true,
+            contentType: file.type || undefined,
+          });
+
+        if (uploadError) {
+          return;
+        }
+
+        uploadedImages.push({
+          id: `plan-image-${Date.now()}-${index}`,
+          path: filePath,
+          fileName: file.name,
+          kind: "image",
+          createdAt: nowIso,
+        });
+      }
+
+      for (let index = 0; index < selectedPdfFiles.length; index += 1) {
+        const file = selectedPdfFiles[index];
+        const fileExt = file.name.split(".").pop() ?? "pdf";
+        const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const filePath = `${houseId}/${activeTaskId}/documents/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("house-plan-documents")
+          .upload(filePath, file, {
+            upsert: true,
+            contentType: file.type || "application/pdf",
+          });
+
+        if (uploadError) {
+          return;
+        }
+
+        uploadedDocuments.push({
+          id: `plan-pdf-${Date.now()}-${index}`,
+          path: filePath,
+          fileName: file.name,
+          kind: "pdf",
+          createdAt: nowIso,
+        });
+      }
+
+      nextNormalized = nextTasksPayload.map((item) =>
+        item.id === activeTaskId
+          ? {
+              ...item,
+              images: [...item.images, ...uploadedImages],
+              documents: [...item.documents, ...uploadedDocuments],
+              updatedAt: nowIso,
+            }
+          : item,
+      );
+
+      formData.set("planPayload", JSON.stringify({ items: nextNormalized }));
+    }
+
+    formData.delete("planImageFiles");
+    formData.delete("planPdfFiles");
+
     await formAction(formData);
 
     startTransition(() => {
-      const nextNormalized = nextTasksPayload;
-
       setTasks(nextNormalized);
 
       if (submitIntent === "delete") {

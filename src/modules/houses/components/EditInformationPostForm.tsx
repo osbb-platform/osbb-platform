@@ -208,6 +208,8 @@ export function EditInformationPostForm({
           {isDraft ? (
             <form action={publishHouseInformationSection}>
               <input type="hidden" name="sectionId" value={section.id} />
+              <input type="hidden" name="houseId" value={houseId} />
+              <input type="hidden" name="houseSlug" value={houseSlug} />
               <button className={adminSuccessButtonClass}>
                 Підтвердити
               </button>
