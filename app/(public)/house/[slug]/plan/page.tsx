@@ -378,24 +378,50 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
             </p>
           </div>
 
-          <form method="get" className="w-full max-w-xs">
-            <input type="hidden" name="mode" value="archive" />
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-900">
-                Рік архіву
-              </span>
-              <PublicPlanArchiveMonthSelect
-                name="year"
-                defaultValue={selectedArchiveYear}
-                options={archiveYears.map((year) => ({
-                  value: year,
-                  label: year,
-                }))}
-                emptyLabel={housePlanCopy.archive.empty}
-                className="w-full rounded-2xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm text-slate-900 outline-none transition"
-              />
-            </label>
-          </form>
+          {archiveYears.length > 0 ? (
+            <div className="w-full rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8] p-3 shadow-sm backdrop-blur-sm lg:max-w-fit">
+              <div className="flex w-full min-w-0 gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
+                {archiveYears.map((year) => {
+                  const isActive = selectedArchiveYear === year;
+                  const count = archivedTasks.filter(
+                    (task) => getArchiveYearValue(task) === year,
+                  ).length;
+
+                  return (
+                    <Link
+                      key={year}
+                      href={`/house/${slug}/plan?mode=archive&year=${year}`}
+                      className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
+                        isActive
+                          ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
+                          : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
+                      }`}
+                      style={
+                        isActive
+                          ? {
+                              "--tab-active-bg": `${districtColor}20`,
+                              "--tab-active-text": "#1F2A37",
+                              borderColor: districtColor,
+                            } as React.CSSProperties
+                          : undefined
+                      }
+                    >
+                      <span>{year}</span>
+                      <span
+                        className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          isActive
+                            ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]"
+                            : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-6 space-y-5">

@@ -389,32 +389,6 @@ export async function updateHouseSection(
 
 
 
-  // 🔥 FIX: announcements handler (prevents content wipe)
-  if (kind === "announcements") {
-    const body = String(formData.get("body") ?? "").trim();
-    const level = String(formData.get("level") ?? "info").trim();
-
-    content = {
-      ...existingContent,
-      body,
-      level,
-      createdAt:
-        typeof existingContent.createdAt === "string"
-          ? existingContent.createdAt
-          : new Date().toISOString(),
-      publishedAt:
-        typeof existingContent.publishedAt === "string" ||
-        existingContent.publishedAt === null
-          ? existingContent.publishedAt
-          : null,
-      updatedAt: new Date().toISOString(),
-    };
-
-    historyDescription = `Оновлено оголошення «${title || "без назви"}».`;
-    historySubSection = "announcements";
-  }
-
-
   if (kind === "rich_text") {
     const headline = String(formData.get("headline") ?? "").trim();
     const body = String(formData.get("body") ?? "").trim();

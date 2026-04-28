@@ -11,7 +11,7 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { updateHouseAnnouncementSection } from "@/src/modules/houses/actions/updateHouseAnnouncementSection";
 import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
 import { archiveHouseAnnouncementSection } from "@/src/modules/houses/actions/archiveHouseAnnouncementSection";
 import { publishHouseAnnouncementSection } from "@/src/modules/houses/actions/publishHouseAnnouncementSection";
@@ -82,7 +82,7 @@ export function EditAnnouncementSectionForm({
   const [isMutating, startTransition] = useTransition();
 
   const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
+    updateHouseAnnouncementSection,
     initialState,
   );
 

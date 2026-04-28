@@ -105,6 +105,7 @@ export async function createHouseAnnouncementSection(formData: FormData) {
   });
 
   revalidatePath(`/admin/houses/${houseId}`);
+  revalidatePath(`/admin/houses/${houseId}/announcements`);
 
-  redirect(`/admin/houses/${houseId}`);
+  redirect(`/admin/houses/${houseId}/announcements`);
 }
