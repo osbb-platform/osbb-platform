@@ -56,6 +56,14 @@ export function EditInformationPostForm({
     Boolean(section.content.isPinned),
   );
 
+  const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    typeof section.content.coverImageUrl === "string"
+      ? section.content.coverImageUrl
+      : null,
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const category = useMemo(
     () =>
       typeof section.content.category === "string"
@@ -81,7 +89,12 @@ export function EditInformationPostForm({
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <form
         id="information-post-edit-form"
-        action={formAction}
+        action={(formData) => {
+          if (selectedCoverImage) {
+            formData.set("coverImage", selectedCoverImage);
+          }
+          return formAction(formData);
+        }}
         className="grid gap-4"
       >
         <input type="hidden" name="sectionId" value={section.id} />
@@ -136,6 +149,53 @@ export function EditInformationPostForm({
               </option>
             ))}
           </select>
+        </div>
+
+        {/* COVER */}
+        <div className={adminInsetSurfaceClass}>
+          <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="overflow-hidden rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
+              <div className="aspect-[16/9] w-full">
+                {previewUrl ? (
+                  <div
+                    className="h-full w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url("${previewUrl}")` }}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-[var(--cms-text-muted)]">
+                    Попередній перегляд
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-medium text-[var(--cms-text)]">
+                Обкладинка
+              </div>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={adminPrimaryButtonClass}
+              >
+                Обрати файл
+              </button>
+
+              <input
+                ref={fileInputRef}
+                name="coverImage"
+                type="file"
+                hidden
+                accept="image/jpeg,image/png,image/jpg,image/webp"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  setSelectedCoverImage(file);
+                  setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* PIN */}
@@ -197,6 +257,8 @@ export function EditInformationPostForm({
           {isDraft && (
             <form action={deleteDraftAction}>
               <input type="hidden" name="sectionId" value={section.id} />
+              <input type="hidden" name="houseId" value={houseId} />
+              <input type="hidden" name="houseSlug" value={houseSlug} />
               <button className={adminDangerButtonClass}>
                 Видалити
               </button>
