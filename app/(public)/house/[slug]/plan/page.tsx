@@ -6,7 +6,7 @@ import { PublicPlanArchiveMonthSelect } from "@/src/modules/houses/components/Pu
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ month?: string; mode?: string }>;
+  searchParams: Promise<{ year?: string; mode?: string }>;
 };
 
 type PlanTaskStatus =
@@ -191,7 +191,7 @@ function sortPlanTasks(tasks: PlanTask[]) {
   });
 }
 
-function getArchiveMonthValue(task: PlanTask) {
+function getArchiveYearValue(task: PlanTask) {
   const source = task.archivedAt ?? task.updatedAt;
   const date = new Date(source);
 
@@ -199,33 +199,17 @@ function getArchiveMonthValue(task: PlanTask) {
     return null;
   }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
+  return String(date.getFullYear());
 }
 
-function getArchiveMonthLabel(value: string) {
-  const [year, month] = value.split("-");
-  const date = new Date(`${year}-${month}-01T00:00:00`);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleDateString(housePlanCopy.archive.locale, {
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function buildArchiveMonthOptions(tasks: PlanTask[]) {
+function buildArchiveYearOptions(tasks: PlanTask[]) {
   return Array.from(
     new Set(
       tasks
-        .map((task) => getArchiveMonthValue(task))
+        .map((task) => getArchiveYearValue(task))
         .filter((value): value is string => Boolean(value)),
     ),
-  ).sort((a, b) => b.localeCompare(a));
+  ).sort((a, b) => Number(b) - Number(a));
 }
 
 
@@ -262,18 +246,18 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
     tasks.filter((task) => task.status === "archived"),
   );
 
-  const archiveMonths = buildArchiveMonthOptions(archivedTasks);
+  const archiveYears = buildArchiveYearOptions(archivedTasks);
   const selectedMode =
     resolvedSearchParams.mode === "archive" ? "archive" : "active";
 
-  const selectedArchiveMonth =
-    resolvedSearchParams.month && archiveMonths.includes(resolvedSearchParams.month)
-      ? resolvedSearchParams.month
-      : archiveMonths[0] ?? "";
+  const selectedArchiveYear =
+    resolvedSearchParams.year && archiveYears.includes(resolvedSearchParams.year)
+      ? resolvedSearchParams.year
+      : archiveYears[0] ?? "";
 
-  const visibleArchivedTasks = selectedArchiveMonth
+  const visibleArchivedTasks = selectedArchiveYear
     ? archivedTasks.filter(
-        (task) => getArchiveMonthValue(task) === selectedArchiveMonth,
+        (task) => getArchiveYearValue(task) === selectedArchiveYear,
       )
     : archivedTasks;
 
@@ -398,14 +382,14 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
             <input type="hidden" name="mode" value="archive" />
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-900">
-                Месяц архива
+                Рік архіву
               </span>
               <PublicPlanArchiveMonthSelect
-                name="month"
-                defaultValue={selectedArchiveMonth}
-                options={archiveMonths.map((month) => ({
-                  value: month,
-                  label: getArchiveMonthLabel(month),
+                name="year"
+                defaultValue={selectedArchiveYear}
+                options={archiveYears.map((year) => ({
+                  value: year,
+                  label: year,
                 }))}
                 emptyLabel={housePlanCopy.archive.empty}
                 className="w-full rounded-2xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm text-slate-900 outline-none transition"
