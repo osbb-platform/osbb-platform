@@ -1248,7 +1248,15 @@ export async function updateHouseSection(
       (item) => item.status === "draft"
     );
 
-    nextSectionStatus = hasDraftReports ? "in_review" : "published";
+    const hasActiveReports = reportsList.some(
+      (item) => item.status === "active"
+    );
+
+    nextSectionStatus = hasActiveReports
+      ? "published"
+      : hasDraftReports
+        ? "in_review"
+        : "published";
   }
 
 
