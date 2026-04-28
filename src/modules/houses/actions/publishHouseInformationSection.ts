@@ -104,5 +104,6 @@ export async function publishHouseInformationSection(formData: FormData) {
   revalidatePath(`/admin/tasks`);
   revalidatePath(`/admin/houses/${houseId}`);
   revalidatePath(`/house/${houseSlug}`);
+  revalidatePath(`/house/${houseSlug}`, "layout");
   revalidatePath(`/house/${houseSlug}/information`);
 }

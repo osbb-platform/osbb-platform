@@ -231,7 +231,9 @@ export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
                   </div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.images.map((image, index) => {
-                      const href = image.url || image.path || "";
+                      const href = image.path
+                        ? `/api/reports/view?path=${encodeURIComponent(image.path)}&bucket=house-plan-media`
+                        : "";
                       return href ? (
                         <a
                           key={image.id || `${task.id}-image-${index}`}
@@ -261,7 +263,7 @@ export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
                           <PublicReportPdfViewer
                             filePath={filePath}
                             fileName={`Документ ${index + 1}`}
-                            bucket="house-plan"
+                            bucket="house-plan-documents"
                           />
                         </div>
                       ) : null;
