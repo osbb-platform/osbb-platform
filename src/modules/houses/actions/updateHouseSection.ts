@@ -362,6 +362,7 @@ export async function updateHouseSection(
       : {};
 
   let content: Record<string, unknown> = {};
+  let nextTitle = title;
   let historyDescription = "Обновлена секция.";
   let historySubSection = "information";
   let nextPlanItems: unknown[] | null = null;
@@ -443,6 +444,7 @@ export async function updateHouseSection(
       updatedAt: new Date().toISOString(),
     };
 
+    nextTitle = headline;
     historyDescription = `Обновлен информационный блок «${headline || title}».`;
     historySubSection = "information";
   }
@@ -1144,7 +1146,7 @@ export async function updateHouseSection(
   const { error: updateError } = await supabase
     .from("house_sections")
     .update({
-      title: title || null,
+      title: nextTitle || null,
       status: nextSectionStatus,
       content,
     })
@@ -1167,7 +1169,7 @@ export async function updateHouseSection(
     actorRole: currentAdmin?.role ?? null,
     entityType: "house_section",
     entityId: sectionId,
-    entityLabel: title || kind,
+    entityLabel: nextTitle || kind,
     actionType: "update_house_section",
     description: historyDescription,
     houseId,
@@ -1178,7 +1180,7 @@ export async function updateHouseSection(
       subSectionKey: historySubSection,
       entityType: "house_section",
       entityId: sectionId,
-      entityTitle: title || kind,
+      entityTitle: nextTitle || kind,
       houseId,
       kind,
     },
