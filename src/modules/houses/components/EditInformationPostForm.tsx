@@ -279,6 +279,8 @@ export function EditInformationPostForm({
           ) : (
             <form action={archiveHouseInformationSection}>
               <input type="hidden" name="sectionId" value={section.id} />
+              <input type="hidden" name="houseId" value={houseId} />
+              <input type="hidden" name="houseSlug" value={houseSlug} />
               <button className={adminWarningButtonClass}>
                 Архівувати
               </button>
