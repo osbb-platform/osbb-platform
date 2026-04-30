@@ -8,7 +8,7 @@ function escapeHtml(value: string) {
 }
 
 function normalizeAccentColor(value: string | null | undefined) {
-  const fallback = "#2563eb";
+  const fallback = "#e05a1a";
   if (!value) return fallback;
 
   const normalized = value.trim();
@@ -20,18 +20,49 @@ function normalizeAccentColor(value: string | null | undefined) {
   return fallback;
 }
 
+function hexToRgb(value: string) {
+  const normalized = value.replace("#", "");
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : normalized;
+
+  const parsed = Number.parseInt(full, 16);
+
+  return {
+    r: (parsed >> 16) & 255,
+    g: (parsed >> 8) & 255,
+    b: parsed & 255,
+  };
+}
+
+function rgba(value: string, alpha: number) {
+  const { r, g, b } = hexToRgb(value);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export function getHouseAnnouncementHtml(params: {
   houseName: string;
   address: string;
   osbbName?: string | null;
+  publicUrl: string;
   qrCodeDataUrl: string;
   accentColor?: string | null;
 }) {
   const safeHouseName = escapeHtml(params.houseName);
   const safeAddress = escapeHtml(params.address);
-  const safeOsbbName = escapeHtml(params.osbbName?.trim() || "ОСББ");
+  const safeOsbbName = escapeHtml(params.osbbName?.trim() || params.houseName);
+  const safePublicUrl = escapeHtml(params.publicUrl.replace(/^https?:\/\//, ""));
   const safeQrCodeDataUrl = escapeHtml(params.qrCodeDataUrl);
+
   const accentColor = normalizeAccentColor(params.accentColor);
+  const accentSoft = rgba(accentColor, 0.1);
+  const accentSoftStrong = rgba(accentColor, 0.16);
+  const accentBorder = rgba(accentColor, 0.32);
+  const accentDark = "#0f172a";
 
   return `<!DOCTYPE html>
 <html lang="uk">
@@ -43,14 +74,15 @@ export function getHouseAnnouncementHtml(params: {
 
       * { box-sizing: border-box; }
 
-      html, body {
+      html,
+      body {
         margin: 0;
         padding: 0;
         width: 210mm;
         height: 297mm;
         background: #ffffff;
         font-family: Arial, Helvetica, sans-serif;
-        color: #0f172a;
+        color: ${accentDark};
       }
 
       body {
@@ -61,239 +93,340 @@ export function getHouseAnnouncementHtml(params: {
       .page {
         width: 210mm;
         height: 297mm;
-        padding: 8mm 12mm 9mm;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
         overflow: hidden;
         background: #ffffff;
+        position: relative;
+      }
+
+      .hero {
+        position: relative;
+        height: 102mm;
+        padding: 15mm 16mm 0;
+        background: ${accentColor};
+        color: #ffffff;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -34mm;
+        right: -30mm;
+        width: 92mm;
+        height: 92mm;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        bottom: 12mm;
+        left: -24mm;
+        width: 70mm;
+        height: 70mm;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        padding: 2.6mm 5mm;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      h1 {
+        margin: 7mm 0 0;
+        max-width: 158mm;
+        font-size: 34px;
+        line-height: 1.08;
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        color: #ffffff;
       }
 
       .meta {
-        margin-bottom: 3mm;
-      }
-
-      .meta-label {
-        font-size: 11px;
-        line-height: 1.2;
+        margin-top: 7mm;
+        max-width: 160mm;
+        font-size: 14px;
+        line-height: 1.45;
         font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: #64748b;
-        margin-bottom: 1.2mm;
+        color: rgba(255, 255, 255, 0.88);
       }
 
-      .address {
-        font-size: 16px;
-        line-height: 1.24;
+      .wave {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        z-index: 1;
+        width: 210mm;
+        height: 18mm;
+        display: block;
+      }
+
+      .body {
+        height: 195mm;
+        padding: 10mm 16mm 12mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 5mm;
+      }
+
+      .intro {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.42;
         font-weight: 600;
-        color: #334155;
-        max-width: 166mm;
-        margin: 0 auto 1.5mm;
+        color: #1f2937;
       }
 
-      .house-name {
-        font-size: 22px;
-        line-height: 1.08;
-        font-weight: 800;
-        color: #0f172a;
-        max-width: 170mm;
-        margin: 0 auto 1.6mm;
-      }
-
-      .site-badge {
-        display: inline-block;
-        padding: 2.1mm 5mm;
-        border-radius: 999px;
-        background: #eff6ff;
-        color: ${accentColor};
-        font-size: 13px;
-        line-height: 1.1;
-        font-weight: 700;
-        margin-bottom: 4.2mm;
-      }
-
-      .message {
-        max-width: 158mm;
-        margin: 0 auto 4mm;
-      }
-
-      .message p {
-        margin: 0 0 2.4mm;
-        font-size: 15px;
-        line-height: 1.34;
-        color: #1e293b;
-      }
-
-      .message p:last-child {
-        margin-bottom: 0;
-      }
-
-      .message strong {
-        font-weight: 800;
+      .intro strong {
+        font-weight: 900;
+        color: ${accentDark};
       }
 
       .features {
-        list-style: none;
-        padding: 0;
-        margin: 0 auto 4.2mm;
-        width: 100%;
-        max-width: 156mm;
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2.2mm 3.2mm;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3mm;
       }
 
-      .features li {
-        font-size: 14px;
-        line-height: 1.2;
-        font-weight: 700;
-        color: #0f172a;
-        padding: 2.7mm 3mm;
+      .feature {
+        min-height: 24mm;
         border-radius: 5mm;
-        border: 1.6px solid color-mix(in srgb, ${accentColor} 70%, white);
-        background: #ffffff;
-      }
-
-      .instruction-box {
-        width: 100%;
-        max-width: 154mm;
-        padding: 3.8mm 4.6mm;
-        border-radius: 5mm;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 4.2mm;
-      }
-
-      .instruction-title {
-        font-size: 15px;
-        line-height: 1.2;
-        font-weight: 800;
-        color: #0f172a;
-        margin-bottom: 1.8mm;
-      }
-
-      .instruction-step {
-        font-size: 13.5px;
-        line-height: 1.28;
-        color: #1e293b;
-        margin-bottom: 0.9mm;
-      }
-
-      .instruction-step:last-child {
-        margin-bottom: 0;
-      }
-
-      .qr-section {
-        margin-top: auto;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .qr-card {
-        width: 100%;
-        max-width: 92mm;
-        padding: 3.6mm 3.8mm 3.2mm;
-        border-radius: 7mm;
-        background: #ffffff;
-        border: 1.7px solid color-mix(in srgb, ${accentColor} 55%, #d7e3f3);
-        margin-bottom: 2.6mm;
-      }
-
-      .qr-title {
-        font-size: 16px;
-        line-height: 1.15;
-        font-weight: 800;
-        color: ${accentColor};
-        margin: 0 0 2.2mm;
-      }
-
-      .qr-box {
-        width: 54mm;
-        height: 54mm;
-        padding: 2.4mm;
-        border-radius: 5mm;
-        background: #ffffff;
-        border: 1.4px solid #dbe4ef;
+        border: 1.4px solid ${accentBorder};
+        background: ${accentSoft};
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 2mm;
+        padding: 3mm;
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.18;
+        font-weight: 900;
+        color: ${accentDark};
       }
 
-      .qr-box img {
+      .divider {
+        height: 1px;
+        width: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          ${accentBorder},
+          transparent
+        );
+      }
+
+      .steps-label {
+        margin-bottom: 4mm;
+        text-align: center;
+        font-size: 15px;
+        line-height: 1.2;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: ${accentDark};
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4mm;
+      }
+
+      .step {
+        min-height: 38mm;
+        border-radius: 5mm;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        padding: 4mm 3mm;
+        text-align: center;
+      }
+
+      .step-num {
+        width: 12mm;
+        height: 12mm;
+        margin: 0 auto 3mm;
+        border-radius: 999px;
+        background: ${accentColor};
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .step-text {
+        font-size: 13px;
+        line-height: 1.24;
+        font-weight: 800;
+        color: #334155;
+      }
+
+      .qr-card {
+        display: grid;
+        grid-template-columns: 58mm 1fr;
+        align-items: center;
+        gap: 7mm;
+        border-radius: 7mm;
+        border: 1.6px solid ${accentBorder};
+        background: ${accentSoftStrong};
+        padding: 5mm;
+      }
+
+      .qr-frame {
+        width: 54mm;
+        height: 54mm;
+        border-radius: 5mm;
+        background: #ffffff;
+        border: 1.4px solid ${accentBorder};
+        padding: 3mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qr-frame img {
         width: 100%;
         height: 100%;
         object-fit: contain;
         display: block;
       }
 
-      .qr-caption {
+      .qr-copy {
+        text-align: left;
+      }
+
+      .qr-title {
+        margin: 0 0 2.4mm;
+        font-size: 21px;
+        line-height: 1.12;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: ${accentDark};
+      }
+
+      .qr-description {
+        margin: 0 0 3.2mm;
         font-size: 14px;
-        line-height: 1.22;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-      }
-
-      .password-note {
-        max-width: 154mm;
-        font-size: 13.5px;
-        line-height: 1.3;
+        line-height: 1.4;
         color: #334155;
-        margin: 0 auto;
+        font-weight: 700;
       }
 
-      .password-note strong {
-        color: #0f172a;
-        font-weight: 800;
+      .site-url {
+        display: inline-flex;
+        max-width: 100%;
+        padding: 2.6mm 4mm;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid ${accentBorder};
+        color: ${accentColor};
+        font-size: 13px;
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      .footer {
+        height: 12mm;
+        background: #0f172a;
+        color: rgba(255, 255, 255, 0.78);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
     </style>
   </head>
+
   <body>
     <main class="page">
-      <section class="meta">
-        <div class="meta-label">${safeOsbbName}</div>
-        <div class="address">${safeAddress}</div>
-        <h1 class="house-name">${safeHouseName}</h1>
-        <div class="site-badge">Офіційний сайт вашого будинку</div>
-      </section>
-
-      <section class="message">
-        <p><strong>Шановні мешканці!</strong></p>
-        <p>Для вашої зручності створено сайт будинку, де зібрана важлива інформація для жителів.</p>
-      </section>
-
-      <ul class="features">
-        <li>Оголошення</li>
-        <li>Новини будинку</li>
-        <li>Роботи та плани</li>
-        <li>Збори мешканців</li>
-      </ul>
-
-      <section class="instruction-box">
-        <div class="instruction-title">Як користуватись сайтом:</div>
-        <div class="instruction-step">1. Відскануйте QR-код</div>
-        <div class="instruction-step">2. Перейдіть на сайт будинку</div>
-        <div class="instruction-step">3. Введіть пароль</div>
-      </section>
-
-      <section class="qr-section">
-        <div class="qr-card">
-          <div class="qr-title">Скануйте QR-код</div>
-          <div class="qr-box">
-            <img src="${safeQrCodeDataUrl}" alt="QR-код сайту будинку" />
-          </div>
-          <div class="qr-caption">та переходьте на сайт будинку</div>
+      <header class="hero">
+        <div class="hero-content">
+          <div class="eyebrow">Офіційний сайт вашого будинку</div>
+          <h1>Сайт будинку вже доступний для мешканців</h1>
+          <div class="meta">${safeOsbbName} · ${safeAddress}</div>
         </div>
 
-        <p class="password-note">
-          <strong>Пароль для входу</strong> можна отримати у голови будинку.
+        <svg class="wave" viewBox="0 0 794 68" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,68 L0,38 C142,62 252,4 397,28 C542,52 652,16 794,34 L794,68 Z" fill="#ffffff"></path>
+        </svg>
+      </header>
+
+      <div class="body">
+        <p class="intro">
+          <strong>Шановні мешканці!</strong> Для вашого будинку створено офіційний сайт —
+          зручний спосіб завжди бути в курсі оголошень, новин та важливих рішень.
         </p>
-      </section>
+
+        <div class="features">
+          <div class="feature">Оголошення</div>
+          <div class="feature">Новини<br />будинку</div>
+          <div class="feature">Роботи<br />та плани</div>
+          <div class="feature">Збори<br />мешканців</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <div class="steps-label">Як отримати доступ</div>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Відскануйте<br />QR-код</div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Перейдіть<br />на сайт будинку</div>
+            </div>
+
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Введіть пароль<br />від голови будинку</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qr-card">
+          <div class="qr-frame">
+            <img src="${safeQrCodeDataUrl}" alt="QR-код сайту будинку" />
+          </div>
+
+          <div class="qr-copy">
+            <h2 class="qr-title">Скануйте QR-код та переходьте на сайт</h2>
+            <p class="qr-description">
+              Пароль для входу можна отримати у голови будинку або відповідальної особи.
+            </p>
+            <div class="site-url">${safePublicUrl}</div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">${safeHouseName}</footer>
     </main>
   </body>
 </html>`;

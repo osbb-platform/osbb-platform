@@ -26,6 +26,7 @@ export async function generateHouseAnnouncementPdf(params: {
       houseName: params.houseName,
       address: params.address,
       osbbName: params.osbbName,
+      publicUrl,
       qrCodeDataUrl,
       accentColor: params.accentColor,
     });
