@@ -23,11 +23,11 @@ export function PublicHouseDashboardStatusStrip({ items }: Props) {
             key={item.id}
             className="rounded-[26px] border border-[#DDD4CA] bg-[#F6F2EC] px-5 py-6 text-center shadow-[0_1px_0_rgba(255,255,255,0.55)_inset]"
           >
-            <div className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#5F5A54]">
+            <div className="text-[15px] font-semibold leading-snug text-[#3F3A34] sm:text-[16px]">
               {item.label}
             </div>
 
-            <div className="mt-3 text-[26px] font-semibold leading-none tracking-[-0.02em] text-slate-950 sm:text-[30px]">
+            <div className="mt-2 text-[18px] font-medium leading-snug text-[#1F2A37] sm:text-[20px] break-words">
               {item.value}
             </div>
           </div>

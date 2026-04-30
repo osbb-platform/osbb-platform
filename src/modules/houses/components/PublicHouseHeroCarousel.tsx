@@ -35,7 +35,7 @@ export function PublicHouseHeroCarousel({
       },
       {
         image:
-          "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1280&q=68",
+          "/images/house/hero-life.jpg",
         eyebrow: houseHomeCopy.hero.slides.life.eyebrow,
         title: houseHomeCopy.hero.slides.life.title,
         description:
@@ -43,7 +43,7 @@ export function PublicHouseHeroCarousel({
       },
       {
         image:
-          "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1280&q=68",
+          "/images/house/hero-main.jpg",
         eyebrow: houseHomeCopy.hero.slides.all.eyebrow,
         title: houseHomeCopy.hero.slides.all.title,
         description:
