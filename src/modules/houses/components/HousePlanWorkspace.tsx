@@ -39,6 +39,13 @@ type PlanTaskPriority = "high" | "medium" | "low";
 type PlanTaskDateMode = "deadline" | "range";
 type PublishablePlanTaskStatus = "planned" | "in_progress" | "completed";
 
+const PLAN_ARCHIVE_YEAR_START = 2016;
+const PLAN_ARCHIVE_YEAR_END = 2026;
+const PLAN_ARCHIVE_YEARS = Array.from(
+  { length: PLAN_ARCHIVE_YEAR_END - PLAN_ARCHIVE_YEAR_START + 1 },
+  (_, index) => PLAN_ARCHIVE_YEAR_START + index,
+);
+
 type WorkspaceTab = "active" | "draft" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
 type SubmitIntent = "save" | "delete" | "publish" | "archive";
@@ -67,6 +74,7 @@ type PlanTask = {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  archiveYear: number;
 };
 
 type Props = {
@@ -83,6 +91,25 @@ type Props = {
 
 function createTaskId() {
   return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeArchiveYear(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (
+    Number.isInteger(parsed) &&
+    parsed >= PLAN_ARCHIVE_YEAR_START &&
+    parsed <= PLAN_ARCHIVE_YEAR_END
+  ) {
+    return parsed;
+  }
+
+  return PLAN_ARCHIVE_YEAR_END;
 }
 
 function createEmptyTask(): PlanTask {
@@ -104,6 +131,7 @@ function createEmptyTask(): PlanTask {
     createdAt: now,
     updatedAt: now,
     archivedAt: null,
+    archiveYear: PLAN_ARCHIVE_YEAR_END,
   };
 }
 
@@ -147,6 +175,7 @@ function normalizePlanTasks(content: Record<string, unknown>): PlanTask[] {
         createdAt: String(raw.createdAt ?? new Date().toISOString()),
         updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
         archivedAt: raw.archivedAt ? String(raw.archivedAt) : null,
+        archiveYear: normalizeArchiveYear(raw.archiveYear),
       } satisfies PlanTask;
     })
     .filter((item): item is PlanTask => Boolean(item));
@@ -737,6 +766,29 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               className={adminInputClass}
             />
 
+            <div>
+              <select
+                value={draft.archiveYear}
+                onChange={(e) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    archiveYear: normalizeArchiveYear(e.target.value),
+                  }))
+                }
+                className={adminInputClass}
+              >
+                {PLAN_ARCHIVE_YEARS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+
+              <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                Рік використовується для групування завдання в публічному архіві після архівації.
+              </div>
+            </div>
+
             <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="flex flex-col gap-4">
                 <div>
@@ -1091,6 +1143,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
                   <span>{getDatePreview(task)}</span>
+                  <span>{task.archiveYear}</span>
                   {task.contractor ? <span>{task.contractor}</span> : null}
                   <span>
                     Фото: {task.images.length} · PDF: {task.documents.length}

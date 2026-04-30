@@ -321,7 +321,7 @@ function HouseEditorCard({
                 <a
                   href={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&download=1&filename=${encodeURIComponent(`${house.slug}.pdf`)}`}
                   download={`${house.slug}.pdf`}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                  className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] shadow-sm transition hover:bg-[var(--cms-pill-bg)]"
                 >
                   Завантажити PDF
                 </a>

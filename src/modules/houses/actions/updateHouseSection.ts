@@ -60,6 +60,8 @@ const SPECIALIST_CATEGORIES = [
 const INFORMATION_IMAGES_BUCKET = "house-information-images";
 const PLAN_IMAGES_BUCKET = "house-plan-media";
 const PLAN_DOCUMENTS_BUCKET = "house-plan-documents";
+const PLAN_ARCHIVE_YEAR_START = 2016;
+const PLAN_ARCHIVE_YEAR_END = 2026;
 
 function sanitizeFileName(value: string) {
   const normalized = value
@@ -73,6 +75,25 @@ function sanitizeFileName(value: string) {
 
 function isFileLike(value: FormDataEntryValue | null): value is File {
   return typeof File !== "undefined" && value instanceof File;
+}
+
+function normalizePlanArchiveYear(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (
+    Number.isInteger(parsed) &&
+    parsed >= PLAN_ARCHIVE_YEAR_START &&
+    parsed <= PLAN_ARCHIVE_YEAR_END
+  ) {
+    return parsed;
+  }
+
+  return PLAN_ARCHIVE_YEAR_END;
 }
 
 function normalizeCategory(value: string) {
@@ -750,7 +771,12 @@ export async function updateHouseSection(
     const items = Array.isArray(parsedPayload.items)
       ? parsedPayload.items.map((item) =>
           item && typeof item === "object"
-            ? { ...(item as Record<string, unknown>) }
+            ? {
+                ...(item as Record<string, unknown>),
+                archiveYear: normalizePlanArchiveYear(
+                  (item as Record<string, unknown>).archiveYear,
+                ),
+              }
             : item,
         )
       : [];

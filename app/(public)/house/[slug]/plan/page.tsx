@@ -51,6 +51,7 @@ type PlanTask = {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  archiveYear: number | null;
 };
 
 const activeColumns = [
@@ -71,8 +72,30 @@ const activeColumns = [
   },
 ] as const;
 
+const PLAN_ARCHIVE_YEAR_START = 2016;
+const PLAN_ARCHIVE_YEAR_END = 2026;
+
 function createTaskId() {
   return `plan-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizePlanArchiveYear(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (
+    Number.isInteger(parsed) &&
+    parsed >= PLAN_ARCHIVE_YEAR_START &&
+    parsed <= PLAN_ARCHIVE_YEAR_END
+  ) {
+    return parsed;
+  }
+
+  return null;
 }
 
 function normalizePlanTasks(value: unknown): PlanTask[] {
@@ -136,6 +159,7 @@ function normalizePlanTasks(value: unknown): PlanTask[] {
           typeof raw.archivedAt === "string" && raw.archivedAt
             ? raw.archivedAt
             : null,
+        archiveYear: normalizePlanArchiveYear(raw.archiveYear),
       } satisfies PlanTask;
     })
     .filter((item): item is PlanTask => item !== null && Boolean(item.title));
@@ -192,6 +216,10 @@ function sortPlanTasks(tasks: PlanTask[]) {
 }
 
 function getArchiveYearValue(task: PlanTask) {
+  if (task.archiveYear) {
+    return String(task.archiveYear);
+  }
+
   const source = task.archivedAt ?? task.updatedAt;
   const date = new Date(source);
 
