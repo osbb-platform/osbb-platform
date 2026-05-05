@@ -293,6 +293,61 @@ function combineMeetingDateTime(date: string, time: string) {
   return `${date}T${time || "00:00"}`;
 }
 
+function formatApartmentVoteLabel(apartment: {
+  apartmentLabel: string;
+  ownerName?: string;
+}) {
+  const label = apartment.apartmentLabel.trim();
+  const normalizedLabel =
+    /^(кв\.?|прим\.?)\s+/i.test(label) ? label : `Кв. ${label}`;
+
+  return apartment.ownerName
+    ? `${normalizedLabel} — ${apartment.ownerName}`
+    : normalizedLabel;
+}
+
+function recalculateMeetingQuestionResults(meeting: MeetingItem): MeetingItem {
+  const manualVotes = meeting.manualVotes ?? [];
+
+  return {
+    ...meeting,
+    questions: meeting.questions.map((question) => {
+      let votesFor = 0;
+      let votesAgainst = 0;
+      let votesAbstained = 0;
+
+      for (const vote of manualVotes) {
+        const answer = vote.answers.find(
+          (item) => item.questionId === question.id,
+        );
+
+        if (!answer) continue;
+
+        if (answer.choice === "for") votesFor += 1;
+        if (answer.choice === "against") votesAgainst += 1;
+        if (answer.choice === "abstained") votesAbstained += 1;
+      }
+
+      const totalApartmentsVoted = votesFor + votesAgainst + votesAbstained;
+      const approvalOutcome =
+        totalApartmentsVoted === 0
+          ? "pending"
+          : votesFor > votesAgainst
+            ? "approved"
+            : "rejected";
+
+      return {
+        ...question,
+        votesFor,
+        votesAgainst,
+        votesAbstained,
+        totalApartmentsVoted,
+        approvalOutcome,
+      };
+    }),
+  };
+}
+
 export function HouseMeetingsWorkspace({
   houseId,
   houseSlug,
@@ -433,7 +488,7 @@ export function HouseMeetingsWorkspace({
   function buildMeetingForSave(nextStatus?: MeetingLifecycleStatus): MeetingItem {
     const now = new Date().toISOString();
 
-    return {
+    return recalculateMeetingQuestionResults({
       ...draft,
       title: draft.title.trim(),
       shortDescription: draft.shortDescription.trim(),
@@ -451,7 +506,7 @@ export function HouseMeetingsWorkspace({
         description: question.description.trim(),
         decisionDraft: question.decisionDraft.trim(),
       })),
-    };
+    });
   }
 
   function persistMeetings(nextMeetings: MeetingItem[]) {
@@ -663,9 +718,7 @@ export function HouseMeetingsWorkspace({
                     <option value="">Оберіть квартиру</option>
                     {availableVotingApartments.map((apartment) => (
                       <option key={apartment.id} value={apartment.id}>
-                        {apartment.ownerName
-                          ? `Кв. ${apartment.apartmentLabel} — ${apartment.ownerName}`
-                          : `Кв. ${apartment.apartmentLabel}`}
+                        {formatApartmentVoteLabel(apartment)}
                       </option>
                     ))}
                   </select>
@@ -730,9 +783,7 @@ export function HouseMeetingsWorkspace({
 
                       const nextVote: ManualVoteEntry = {
                         apartmentId: selectedApartment.id,
-                        apartmentLabel: selectedApartment.ownerName
-                          ? `Кв. ${selectedApartment.apartmentLabel} — ${selectedApartment.ownerName}`
-                          : `Кв. ${selectedApartment.apartmentLabel}`,
+                        apartmentLabel: formatApartmentVoteLabel(selectedApartment),
                         submittedAt: new Date().toISOString(),
                         answers: draft.questions.map((question) => ({
                           questionId: question.id,
@@ -740,10 +791,12 @@ export function HouseMeetingsWorkspace({
                         })),
                       };
 
-                      setDraft((prev) => ({
-                        ...prev,
-                        manualVotes: [...(prev.manualVotes ?? []), nextVote],
-                      }));
+                      setDraft((prev) =>
+                        recalculateMeetingQuestionResults({
+                          ...prev,
+                          manualVotes: [...(prev.manualVotes ?? []), nextVote],
+                        }),
+                      );
 
                       setSelectedApartmentVote("");
                       setManualVoteAnswers({});
@@ -783,13 +836,15 @@ export function HouseMeetingsWorkspace({
                           <button
                             type="button"
                             onClick={() =>
-                              setDraft((prev) => ({
-                                ...prev,
-                                manualVotes: (prev.manualVotes ?? []).filter(
-                                  (entry) =>
-                                    entry.apartmentId !== vote.apartmentId,
-                                ),
-                              }))
+                              setDraft((prev) =>
+                                recalculateMeetingQuestionResults({
+                                  ...prev,
+                                  manualVotes: (prev.manualVotes ?? []).filter(
+                                    (entry) =>
+                                      entry.apartmentId !== vote.apartmentId,
+                                  ),
+                                }),
+                              )
                             }
                             className="text-sm text-rose-400"
                           >
