@@ -157,6 +157,14 @@ function getEmptyText(tab: WorkspaceTab, fallback: string) {
   return "Архів документів поки порожній. Перенесені картки відображатимуться тут.";
 }
 
+type DocumentSortMode =
+  | "updated_desc"
+  | "updated_asc"
+  | "title_asc"
+  | "title_desc"
+  | "year_desc"
+  | "year_asc";
+
 export function HouseDocumentsWorkspace({
   houseId,
   documents = [],
@@ -184,6 +192,9 @@ export function HouseDocumentsWorkspace({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
+  const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  const [documentSortMode, setDocumentSortMode] =
+    useState<DocumentSortMode>("updated_desc");
 
   const [title, setTitle] = useState("");
   const [category, setCategory] =
@@ -214,7 +225,7 @@ export function HouseDocumentsWorkspace({
     [documents],
   );
 
-  const visibleDocuments = useMemo(() => {
+  const baseVisibleDocuments = useMemo(() => {
     if (embedded) {
       const statusOrder: Record<HouseDocumentVisibility, number> = {
         published: 0,
@@ -246,6 +257,56 @@ export function HouseDocumentsWorkspace({
     draftDocuments,
     embedded,
   ]);
+
+  const visibleDocuments = useMemo(() => {
+    const normalizedQuery = documentSearchQuery.trim().toLowerCase();
+
+    const filtered = baseVisibleDocuments.filter((document) => {
+      if (!normalizedQuery) return true;
+
+      return [
+        document.title,
+        document.description,
+        document.original_file_name,
+        document.document_year ? String(document.document_year) : "",
+        getCategoryLabel(document.category),
+        getDocumentTypeLabel(document.document_type),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+
+    return filtered.slice().sort((left, right) => {
+      if (documentSortMode === "title_asc") {
+        return left.title.localeCompare(right.title, "uk", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+
+      if (documentSortMode === "title_desc") {
+        return right.title.localeCompare(left.title, "uk", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+
+      if (documentSortMode === "year_desc") {
+        return Number(right.document_year ?? 0) - Number(left.document_year ?? 0);
+      }
+
+      if (documentSortMode === "year_asc") {
+        return Number(left.document_year ?? 0) - Number(right.document_year ?? 0);
+      }
+
+      if (documentSortMode === "updated_asc") {
+        return left.updated_at.localeCompare(right.updated_at);
+      }
+
+      return right.updated_at.localeCompare(left.updated_at);
+    });
+  }, [baseVisibleDocuments, documentSearchQuery, documentSortMode]);
 
   const selectedDocument = useMemo(
     () =>
@@ -896,9 +957,47 @@ export function HouseDocumentsWorkspace({
       ) : null}
 
       <div className={`${adminSurfaceClass} p-6`}>
+        {baseVisibleDocuments.length > 0 ? (
+          <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                Пошук документа
+              </span>
+              <input
+                value={documentSearchQuery}
+                onChange={(event) => setDocumentSearchQuery(event.target.value)}
+                placeholder="Назва, опис, файл або рік"
+                className={adminInputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                Сортування
+              </span>
+              <select
+                value={documentSortMode}
+                onChange={(event) =>
+                  setDocumentSortMode(event.target.value as DocumentSortMode)
+                }
+                className={adminInputClass}
+              >
+                <option value="updated_desc">Спочатку оновлені</option>
+                <option value="updated_asc">Спочатку старі оновлення</option>
+                <option value="title_asc">Назва А–Я</option>
+                <option value="title_desc">Назва Я–А</option>
+                <option value="year_desc">Рік: нові зверху</option>
+                <option value="year_asc">Рік: старі зверху</option>
+              </select>
+            </label>
+          </div>
+        ) : null}
+
         {visibleDocuments.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
-            {getEmptyText(activeTab, emptyTitle)}
+            {baseVisibleDocuments.length === 0
+              ? getEmptyText(activeTab, emptyTitle)
+              : "За цим пошуком документів не знайдено. Змініть запит або очистіть поле пошуку."}
           </div>
         ) : (
           <div className="grid gap-4">
