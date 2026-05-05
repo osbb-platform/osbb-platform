@@ -182,6 +182,7 @@ function SpecialistCardView({
           <CopyPhoneButton phone={item.phone} />
         ) : (
           <Link
+            prefetch={false}
             href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}&specialist=${encodeURIComponent(item.id)}`}
             scroll={false}
             className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#E4DBD1] bg-[#EFE7DD] px-5 text-sm font-semibold text-[#2A3642] transition hover:bg-[#E5DBCF]"
@@ -288,6 +289,7 @@ export default async function SpecialistsPage({
 
                     return (
                       <Link
+            prefetch={false}
                         key={item.key}
                         href={`/house/${slug}/specialists?category=${encodeURIComponent(item.key)}`}
                         scroll={false}
@@ -340,6 +342,7 @@ export default async function SpecialistsPage({
       {canOpenModal ? (
         <>
           <Link
+            prefetch={false}
             href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
             scroll={false}
             className="fixed inset-0 z-40 bg-[#1F2A37]/30 backdrop-blur-sm"
@@ -359,6 +362,7 @@ export default async function SpecialistsPage({
                 </div>
 
                 <Link
+            prefetch={false}
                   href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
                   scroll={false}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] transition hover:bg-[#F0E9E1]"

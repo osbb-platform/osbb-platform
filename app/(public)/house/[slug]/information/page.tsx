@@ -164,6 +164,7 @@ export default async function InformationPage({
 
                 return (
                   <Link
+            prefetch={false}
                     key={year}
                     href={`/house/${slug}/information?year=${year}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${

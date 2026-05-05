@@ -213,6 +213,7 @@ export default async function PublicHouseAnnouncementsPage({
 
                 return (
                   <Link
+            prefetch={false}
                     key={item.key}
                     href={`/house/${slug}/announcements?filter=${item.key}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${

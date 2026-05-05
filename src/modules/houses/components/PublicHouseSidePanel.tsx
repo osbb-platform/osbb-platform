@@ -135,6 +135,7 @@ export function PublicHouseSidePanel({ chairman,
 
               return (
                 <Link
+            prefetch={false}
                   key={item.label}
                   href={href}
                   onClick={onClose}

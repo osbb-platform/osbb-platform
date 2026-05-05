@@ -103,6 +103,7 @@ export default async function PublicHouseLayout({
       <header className="sticky top-0 z-50 border-b border-[#E2D9CF] bg-[#F1ECE6]">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <Link
+            prefetch={false}
             href={`/house/${slug}`}
             className="flex min-w-0 items-center gap-4 rounded-full pr-3 transition-all duration-200 hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
           >

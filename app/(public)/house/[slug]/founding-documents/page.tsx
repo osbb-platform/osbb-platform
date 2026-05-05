@@ -104,6 +104,7 @@ export default async function FoundingDocumentsPage({
 
                   return (
                     <Link
+            prefetch={false}
                       key={type}
                       href={`/house/${slug}/founding-documents?type=${type}`}
                       className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${

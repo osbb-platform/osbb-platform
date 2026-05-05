@@ -13,6 +13,7 @@ export function PublicHouseDashboardAlert({ alert }: Props) {
 
   return (
     <Link
+            prefetch={false}
       href={alert.href}
       className="group block rounded-[32px] border border-[#E6D3A3] bg-[#F5EFE4] p-5 shadow-[0_10px_30px_rgba(28,24,19,0.05)] transition duration-200 hover:shadow-[0_16px_40px_rgba(28,24,19,0.08)] sm:p-6"
     >

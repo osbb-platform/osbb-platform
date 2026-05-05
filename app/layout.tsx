@@ -5,6 +5,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "OSBB Platform",
   description: "Платформа управляющей компании для сети домов",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 type RootLayoutProps = Readonly<{

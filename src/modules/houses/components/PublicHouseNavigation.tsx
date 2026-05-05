@@ -60,6 +60,7 @@ export function PublicHouseNavigation({
 
             return (
               <Link
+            prefetch={false}
                 key={item.label}
                 href={href}
                 className={`inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm font-semibold transition ${

@@ -49,6 +49,7 @@ export function PublicHouseDashboardCard({ widget }: Props) {
 
   return (
     <Link
+            prefetch={false}
       href={widget.href}
       className={`group flex h-full min-h-[220px] flex-col rounded-[28px] border p-4 shadow-[0_10px_30px_rgba(28,24,19,0.05)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(28,24,19,0.08)] sm:min-h-[320px] sm:rounded-[32px] sm:p-6 ${tone.shell}`}
     >

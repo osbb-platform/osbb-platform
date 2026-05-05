@@ -305,6 +305,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
         <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm">
           <div className="flex flex-wrap justify-center gap-3">
             <Link
+            prefetch={false}
               href={`/house/${slug}/plan`}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "active"
@@ -322,6 +323,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
             </Link>
 
             <Link
+            prefetch={false}
               href={`/house/${slug}/plan?mode=archive`}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "archive"
@@ -417,6 +419,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
 
                   return (
                     <Link
+            prefetch={false}
                       key={year}
                       href={`/house/${slug}/plan?mode=archive&year=${year}`}
                       className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
