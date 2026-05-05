@@ -74,15 +74,17 @@ export async function replaceHouseApartmentsByImport(
     };
   }
 
-  const { error: deleteError } = await supabase
+  const archivedAt = new Date().toISOString();
+
+  const { error: archiveError } = await supabase
     .from("house_apartments")
-    .delete()
+    .update({ archived_at: archivedAt })
     .eq("house_id", houseId)
     .is("archived_at", null);
 
-  if (deleteError) {
+  if (archiveError) {
     return {
-      error: `Не вдалося видалити поточний активний список: ${deleteError.message}`,
+      error: `Не вдалося архівувати поточний активний список: ${archiveError.message}`,
       success: null,
     };
   }
@@ -108,6 +110,26 @@ export async function replaceHouseApartmentsByImport(
     };
   }
 
+  const { count: activeCountAfterImport, error: activeCountAfterImportError } = await supabase
+    .from("house_apartments")
+    .select("id", { count: "exact", head: true })
+    .eq("house_id", houseId)
+    .is("archived_at", null);
+
+  if (activeCountAfterImportError) {
+    return {
+      error: `Імпорт завершено, але не вдалося перевірити активний список: ${activeCountAfterImportError.message}`,
+      success: null,
+    };
+  }
+
+  if ((activeCountAfterImport ?? 0) !== rows.length) {
+    return {
+      error: `Імпорт зупинено: після заміни активний список містить ${activeCountAfterImport ?? 0} квартир замість ${rows.length}. Перевірте реєстр перед повторним імпортом.`,
+      success: null,
+    };
+  }
+
   if (currentUser) {
     await logPlatformChange({
       actorAdminId: currentUser.id,
@@ -123,7 +145,7 @@ export async function replaceHouseApartmentsByImport(
         sourceType: "cms",
         sourceModule: "apartments",
         houseId,
-        deletedActiveCount: existingActiveCount ?? 0,
+        archivedActiveCount: existingActiveCount ?? 0,
         importedCount: rows.length,
       },
     });

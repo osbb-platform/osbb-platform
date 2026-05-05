@@ -127,7 +127,7 @@ export function ApartmentsImportPanel({
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
-              Завантажте CSV, XLS або XLSX. Активний список квартир буде повністю замінено даними з файлу.
+              Завантажте CSV, XLS або XLSX. Поточний активний список квартир буде переміщено в архів, а новий файл стане єдиним активним реєстром.
             </p>
           </div>
 
@@ -197,7 +197,7 @@ export function ApartmentsImportPanel({
               {previewRows.length > 0 ? (
                 <>
                   <div className="mt-4 rounded-2xl border border-amber-900 bg-amber-950/30 px-4 py-2.5 text-sm text-amber-200">
-                    Після підтвердження активний список квартир обраного будинку буде повністю замінено новим файлом.
+                    Після підтвердження поточний активний список квартир обраного будинку буде переміщено в архів. У зборах, боржниках та інших розділах буде використовуватись тільки новий активний список.
                   </div>
 
                   <div className="mt-4 overflow-hidden rounded-3xl border border-[var(--cms-border)]">
@@ -266,7 +266,7 @@ export function ApartmentsImportPanel({
                   disabled={previewRows.length === 0}
                 />
                 <span className="leading-6">
-                  Підтверджую, що потрібно повністю замінити поточний активний список квартир обраного будинку даними з файлу.
+                  Підтверджую, що потрібно архівувати поточний активний список квартир і зробити дані з файлу новим активним реєстром будинку.
                 </span>
               </label>
 
