@@ -26,6 +26,13 @@ type ReportStatus = "draft" | "active" | "archived";
 type PeriodType = "current" | "past";
 type TabKey = "current" | "past" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
+type ReportSortMode =
+  | "updated_desc"
+  | "updated_asc"
+  | "title_asc"
+  | "title_desc"
+  | "year_desc"
+  | "year_asc";
 
 type ReportItem = {
   id: string;
@@ -226,6 +233,9 @@ export function HouseReportsWorkspace({
   const [confirmAction, setConfirmAction] = useState<"publish" | "archive" | "delete" | "delete_archive" | null>(null);
   const [submitIntent, setSubmitIntent] = useState<"save" | "publish" | "archive" | "delete" | "delete_archive">("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
+  const [reportSearchQuery, setReportSearchQuery] = useState("");
+  const [reportSortMode, setReportSortMode] =
+    useState<ReportSortMode>("updated_desc");
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
@@ -279,11 +289,62 @@ export function HouseReportsWorkspace({
     [reports],
   );
 
-  const visibleReports = useMemo(() => {
+  const baseVisibleReports = useMemo(() => {
     if (activeTab === "current") return currentReports;
     if (activeTab === "past") return pastReports;
     return archivedReports;
   }, [activeTab, archivedReports, currentReports, pastReports]);
+
+  const visibleReports = useMemo(() => {
+    const normalizedQuery = reportSearchQuery.trim().toLowerCase();
+
+    const filtered = baseVisibleReports.filter((report) => {
+      if (!normalizedQuery) return true;
+
+      return [
+        report.title,
+        report.description,
+        report.category,
+        report.pdfFileName,
+        report.year ? String(report.year) : "",
+        report.month ? getMonthLabel(report.month) : "",
+        report.reportDate,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+
+    return filtered.slice().sort((left, right) => {
+      if (reportSortMode === "title_asc") {
+        return left.title.localeCompare(right.title, "uk", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+
+      if (reportSortMode === "title_desc") {
+        return right.title.localeCompare(left.title, "uk", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+
+      if (reportSortMode === "year_desc") {
+        return Number(right.year ?? 0) - Number(left.year ?? 0);
+      }
+
+      if (reportSortMode === "year_asc") {
+        return Number(left.year ?? 0) - Number(right.year ?? 0);
+      }
+
+      if (reportSortMode === "updated_asc") {
+        return (left.updatedAt ?? "").localeCompare(right.updatedAt ?? "");
+      }
+
+      return (right.updatedAt ?? "").localeCompare(left.updatedAt ?? "");
+    });
+  }, [baseVisibleReports, reportSearchQuery, reportSortMode]);
 
   function resetWorkspace(nextTab = activeTab) {
     setWorkspaceMode("idle");
@@ -1007,13 +1068,51 @@ export function HouseReportsWorkspace({
 
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="mt-0">
+          {baseVisibleReports.length > 0 ? (
+            <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                  Пошук звіту
+                </span>
+                <input
+                  value={reportSearchQuery}
+                  onChange={(event) => setReportSearchQuery(event.target.value)}
+                  placeholder="Назва, опис, файл або рік"
+                  className={adminInputClass}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                  Сортування
+                </span>
+                <select
+                  value={reportSortMode}
+                  onChange={(event) =>
+                    setReportSortMode(event.target.value as ReportSortMode)
+                  }
+                  className={adminInputClass}
+                >
+                  <option value="updated_desc">Спочатку оновлені</option>
+                  <option value="updated_asc">Спочатку старі оновлення</option>
+                  <option value="title_asc">Назва А–Я</option>
+                  <option value="title_desc">Назва Я–А</option>
+                  <option value="year_desc">Рік: нові зверху</option>
+                  <option value="year_asc">Рік: старі зверху</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
+
           {visibleReports.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm text-[var(--cms-text-muted)]">
-              {activeTab === "current"
-                ? "Тут відображатимуться звіти поточного року після створення."
-                : activeTab == "past"
-                  ? "Тут зберігатимуться звіти за минулі роки."
-                  : "Архівні звіти відображатимуться в цьому розділі."}
+              {baseVisibleReports.length === 0
+                ? activeTab === "current"
+                  ? "Тут відображатимуться звіти поточного року після створення."
+                  : activeTab == "past"
+                    ? "Тут зберігатимуться звіти за минулі роки."
+                    : "Архівні звіти відображатимуться в цьому розділі."
+                : "За цим пошуком звітів не знайдено. Змініть запит або очистіть поле пошуку."}
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
