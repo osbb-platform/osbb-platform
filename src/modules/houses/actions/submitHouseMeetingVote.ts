@@ -57,6 +57,28 @@ export async function submitHouseMeetingVote(
 
   const supabase = await createSupabaseServerClient();
 
+  const { count: totalApartmentsCount, error: totalApartmentsError } = await supabase
+    .from("house_apartments")
+    .select("id", { count: "exact", head: true })
+    .eq("house_id", houseId)
+    .is("archived_at", null);
+
+  if (totalApartmentsError) {
+    return {
+      error: `Не вдалося отримати список квартир: ${totalApartmentsError.message}`,
+      successMessage: null,
+    };
+  }
+
+  const totalApartments = totalApartmentsCount ?? 0;
+
+  if (totalApartments <= 0) {
+    return {
+      error: "Для цього будинку ще не заповнено список квартир.",
+      successMessage: null,
+    };
+  }
+
   const { data: section, error: sectionError } = await supabase
     .from("house_sections")
     .select("id, content")
@@ -134,7 +156,7 @@ export async function submitHouseMeetingVote(
           const votesFor = Number(question.votesFor ?? 0);
           const votesAgainst = Number(question.votesAgainst ?? 0);
           const votesAbstained = Number(question.votesAbstained ?? 0);
-          const total = Number(question.totalApartmentsVoted ?? 0) + 1;
+          const total = totalApartments;
 
           return {
             ...question,

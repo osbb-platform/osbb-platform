@@ -306,8 +306,12 @@ function formatApartmentVoteLabel(apartment: {
     : normalizedLabel;
 }
 
-function recalculateMeetingQuestionResults(meeting: MeetingItem): MeetingItem {
+function recalculateMeetingQuestionResults(
+  meeting: MeetingItem,
+  totalApartments: number,
+): MeetingItem {
   const manualVotes = meeting.manualVotes ?? [];
+  const totalApartmentsVoted = Math.max(0, totalApartments);
 
   return {
     ...meeting,
@@ -328,9 +332,9 @@ function recalculateMeetingQuestionResults(meeting: MeetingItem): MeetingItem {
         if (answer.choice === "abstained") votesAbstained += 1;
       }
 
-      const totalApartmentsVoted = votesFor + votesAgainst + votesAbstained;
+      const totalManualVotes = votesFor + votesAgainst + votesAbstained;
       const approvalOutcome =
-        totalApartmentsVoted === 0
+        totalManualVotes === 0
           ? "pending"
           : votesFor > votesAgainst
             ? "approved"
@@ -488,25 +492,28 @@ export function HouseMeetingsWorkspace({
   function buildMeetingForSave(nextStatus?: MeetingLifecycleStatus): MeetingItem {
     const now = new Date().toISOString();
 
-    return recalculateMeetingQuestionResults({
-      ...draft,
-      title: draft.title.trim(),
-      shortDescription: draft.shortDescription.trim(),
-      location: draft.location.trim(),
-      meetingDateTime: combineMeetingDateTime(
-        meetingDateInput,
-        meetingTimeInput,
-      ),
-      status: nextStatus ?? draft.status,
-      updatedAt: now,
-      questions: draft.questions.map((question, index) => ({
-        ...question,
-        order: index,
-        title: question.title.trim(),
-        description: question.description.trim(),
-        decisionDraft: question.decisionDraft.trim(),
-      })),
-    });
+    return recalculateMeetingQuestionResults(
+      {
+        ...draft,
+        title: draft.title.trim(),
+        shortDescription: draft.shortDescription.trim(),
+        location: draft.location.trim(),
+        meetingDateTime: combineMeetingDateTime(
+          meetingDateInput,
+          meetingTimeInput,
+        ),
+        status: nextStatus ?? draft.status,
+        updatedAt: now,
+        questions: draft.questions.map((question, index) => ({
+          ...question,
+          order: index,
+          title: question.title.trim(),
+          description: question.description.trim(),
+          decisionDraft: question.decisionDraft.trim(),
+        })),
+      },
+      apartments.length,
+    );
   }
 
   function persistMeetings(nextMeetings: MeetingItem[]) {
@@ -792,10 +799,13 @@ export function HouseMeetingsWorkspace({
                       };
 
                       setDraft((prev) =>
-                        recalculateMeetingQuestionResults({
-                          ...prev,
-                          manualVotes: [...(prev.manualVotes ?? []), nextVote],
-                        }),
+                        recalculateMeetingQuestionResults(
+                          {
+                            ...prev,
+                            manualVotes: [...(prev.manualVotes ?? []), nextVote],
+                          },
+                          apartments.length,
+                        ),
                       );
 
                       setSelectedApartmentVote("");
@@ -837,13 +847,16 @@ export function HouseMeetingsWorkspace({
                             type="button"
                             onClick={() =>
                               setDraft((prev) =>
-                                recalculateMeetingQuestionResults({
-                                  ...prev,
-                                  manualVotes: (prev.manualVotes ?? []).filter(
-                                    (entry) =>
-                                      entry.apartmentId !== vote.apartmentId,
-                                  ),
-                                }),
+                                recalculateMeetingQuestionResults(
+                                  {
+                                    ...prev,
+                                    manualVotes: (prev.manualVotes ?? []).filter(
+                                      (entry) =>
+                                        entry.apartmentId !== vote.apartmentId,
+                                    ),
+                                  },
+                                  apartments.length,
+                                ),
                               )
                             }
                             className="text-sm text-rose-400"
@@ -908,7 +921,8 @@ export function HouseMeetingsWorkspace({
                     {mode === "edit" &&
                     (draft.status === "review" ||
                       draft.status === "completed") ? (() => {
-                      const totalVotes = (draft.manualVotes ?? []).length;
+                      const totalVotes = apartments.length;
+                      const votedApartments = (draft.manualVotes ?? []).length;
 
                       const votesFor = (draft.manualVotes ?? []).filter((vote) =>
                         vote.answers.some(
@@ -971,7 +985,7 @@ export function HouseMeetingsWorkspace({
                               Утрималися: {votesAbstained} ({abstainedPercent}%)
                             </div>
                             <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              Квартир: {totalVotes}
+                              Проголосувало квартир: {votedApartments} / {totalVotes}
                             </div>
                           </div>
 
