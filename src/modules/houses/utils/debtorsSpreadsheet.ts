@@ -58,10 +58,6 @@ function normalizeCellValue(value: unknown) {
   return String(value).trim();
 }
 
-function normalizeAreaForCompare(value: string) {
-  return value.replace(",", ".").trim();
-}
-
 function formatAreaForSheet(value: number | null) {
   if (value === null || value === undefined) {
     return "";
@@ -89,13 +85,11 @@ function buildReferenceKey(row: {
   apartmentLabel: string;
   accountNumber: string;
   ownerName: string;
-  area: string;
 }) {
   return [
     row.apartmentLabel.trim().toLowerCase(),
     row.accountNumber.trim().toLowerCase(),
     row.ownerName.trim().toLowerCase(),
-    normalizeAreaForCompare(row.area).toLowerCase(),
   ].join("||");
 }
 

@@ -486,7 +486,6 @@ export function HouseDebtorsWorkspace({
             row.apartmentLabel,
             row.accountNumber,
             row.ownerName,
-            row.area,
           ].join("||"),
           row,
         ]),
@@ -498,7 +497,6 @@ export function HouseDebtorsWorkspace({
             row.apartmentLabel,
             row.accountNumber,
             row.ownerName,
-            row.area === null ? "" : String(row.area).replace(".", ","),
           ].join("||");
 
           const imported = importedMap.get(key);
