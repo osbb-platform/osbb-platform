@@ -816,9 +816,39 @@ export function HouseReportsWorkspace({
                 PDF файл звіту
               </div>
 
-              <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                {currentPdfLabel}
+              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--cms-text-soft)]">
+                    Поточний файл
+                  </div>
+                  <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
+                    {removeReportPdf ? "PDF буде видалено після збереження" : currentPdfLabel}
+                  </div>
+                </div>
+
+                {draft.pdfPath && !removeReportPdf ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRemoveReportPdf(true);
+                      setSelectedPdfLabel("");
+                      setReportPdfError(null);
+                      if (reportPdfInputRef.current) {
+                        reportPdfInputRef.current.value = "";
+                      }
+                    }}
+                    className="inline-flex items-center justify-center rounded-xl border border-[var(--cms-danger-border)] px-4 py-2 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-[var(--cms-danger-bg)] disabled:opacity-60"
+                  >
+                    Видалити PDF
+                  </button>
+                ) : null}
               </div>
+
+              {removeReportPdf ? (
+                <div className="mt-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
+                  Файл буде відʼєднано від звіту після натискання «Зберегти».
+                </div>
+              ) : null}
 
               <label className="mt-4 block">
                 <span className={`mb-2 block ${adminTextLabelClass}`}>
