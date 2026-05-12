@@ -9,19 +9,18 @@ import { assertTopLevelAccess } from "@/src/shared/permissions/rbac.guards";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHousesPage() {
-  const currentUser = await getCurrentAdminUser();
+  const [currentUser, houses, districts, managementCompanies] = await Promise.all([
+    getCurrentAdminUser(),
+    getAdminHouses(),
+    getAdminDistricts(),
+    getManagementCompanies(),
+  ]);
 
   if (!currentUser) {
     redirect("/admin/login");
   }
 
   assertTopLevelAccess(currentUser.role, "houses");
-
-  const [houses, districts, managementCompanies] = await Promise.all([
-    getAdminHouses(),
-    getAdminDistricts(),
-    getManagementCompanies(),
-  ]);
 
   return (
     <HousesRegistryWorkspace

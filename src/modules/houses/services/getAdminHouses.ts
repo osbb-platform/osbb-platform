@@ -57,9 +57,9 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
   noStore();
 
   const supabase = await createSupabaseServerClient();
-  const unreadCounts = await getHouseMessageUnreadCounts();
 
-  const [{ data, error }, { data: messageData, error: messageError }] = await Promise.all([
+  const [unreadCounts, { data, error }, { data: messageData, error: messageError }] = await Promise.all([
+    getHouseMessageUnreadCounts(),
     supabase
       .from("houses")
       .select(

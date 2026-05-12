@@ -8,7 +8,11 @@ import { getAdminHouses } from "@/src/modules/houses/services/getAdminHouses";
 import { assertTopLevelAccess } from "@/src/shared/permissions/rbac.guards";
 
 export default async function AdminTasksPage() {
-  const currentUser = await getCurrentAdminUser();
+  const [currentUser, assignees, houses] = await Promise.all([
+    getCurrentAdminUser(),
+    getTaskAssignees(),
+    getAdminHouses(),
+  ]);
 
   if (!currentUser) {
     redirect("/admin/login");
@@ -17,11 +21,7 @@ export default async function AdminTasksPage() {
   assertTopLevelAccess(currentUser.role, "tasks");
 
   await cleanupPlatformTasks();
-  const [tasks, assignees, houses] = await Promise.all([
-    getAdminTasksBoard(),
-    getTaskAssignees(),
-    getAdminHouses(),
-  ]);
+  const tasks = await getAdminTasksBoard();
 
   return (
     <div className="space-y-5">

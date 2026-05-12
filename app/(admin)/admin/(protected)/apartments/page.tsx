@@ -18,7 +18,10 @@ type AdminApartmentsPageProps = {
 export default async function AdminApartmentsPage({
   searchParams,
 }: AdminApartmentsPageProps) {
-  const currentUser = await getCurrentAdminUser();
+  const [currentUser, houses] = await Promise.all([
+    getCurrentAdminUser(),
+    getAdminHouses(),
+  ]);
 
   if (!currentUser) {
     redirect("/admin/login");
@@ -30,8 +33,6 @@ export default async function AdminApartmentsPage({
   const requestedDistrictId = String(resolvedSearchParams?.districtId ?? "").trim();
   const requestedHouseId = String(resolvedSearchParams?.houseId ?? "").trim();
   const archived = resolvedSearchParams?.archived === "1";
-
-  const houses = await getAdminHouses();
   const activeHouses = houses.filter((house) => !house.archived_at && house.district);
 
   const districts = Array.from(
