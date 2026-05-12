@@ -25,14 +25,14 @@ function EyeIcon() {
 }
 
 export default async function AdminCompanyPagesPage() {
-  const currentUser = await getCurrentAdminUser();
-  assertTopLevelAccess(currentUser?.role, "companyPages");
-
-  const [unreadRequestsCount, searchStats, requests] = await Promise.all([
+  const [currentUser, unreadRequestsCount, searchStats, requests] = await Promise.all([
+    getCurrentAdminUser(),
     getCompanyUnreadRequestsCount(),
     getCompanySearchStats(),
     getCompanyContactRequests(),
   ]);
+
+  assertTopLevelAccess(currentUser?.role, "companyPages");
 
   return (
     <div className="space-y-6">

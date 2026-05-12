@@ -223,14 +223,6 @@ function getEmptyStateCopy(params: {
 export default async function AdminHistoryPage({
   searchParams,
 }: AdminHistoryPageProps) {
-  const currentUser = await getCurrentAdminUser();
-
-  if (!currentUser) {
-    redirect("/admin/login");
-  }
-
-  assertTopLevelAccess(currentUser.role, "history");
-
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const tab = normalizeTab(resolvedSearchParams.tab);
   const page = normalizePage(resolvedSearchParams.page);
@@ -243,11 +235,18 @@ export default async function AdminHistoryPage({
   const dateFrom = (resolvedSearchParams.dateFrom ?? "").trim();
   const dateTo = (resolvedSearchParams.dateTo ?? "").trim();
 
-  const [filterOptions, districts, houses] = await Promise.all([
+  const [currentUser, filterOptions, districts, houses] = await Promise.all([
+    getCurrentAdminUser(),
     getPlatformHistoryFilterOptions(),
     getAdminDistricts(),
     getAdminHouses(),
   ]);
+
+  if (!currentUser) {
+    redirect("/admin/login");
+  }
+
+  assertTopLevelAccess(currentUser.role, "history");
 
   const housesForSelectedDistrict = districtId
     ? houses.filter((house) => house.district?.id === districtId)
