@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type { HouseDocumentType } from "@/src/modules/houses/services/getHouseDocuments";
 
@@ -12,9 +13,9 @@ export type PublicHouseFoundingDocumentItem = {
   original_file_name: string | null;
 };
 
-export async function getPublicHouseFoundingDocuments(
+export const getPublicHouseFoundingDocuments = cache(async (
   houseId: string,
-): Promise<PublicHouseFoundingDocumentItem[]> {
+): Promise<PublicHouseFoundingDocumentItem[]> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -45,4 +46,4 @@ export async function getPublicHouseFoundingDocuments(
   }
 
   return (data ?? []) as unknown as PublicHouseFoundingDocumentItem[];
-}
+});

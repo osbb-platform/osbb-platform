@@ -62,12 +62,14 @@ export default async function InformationPage({
 
   const districtColor = house.district?.theme_color ?? "#22c55e";
 
-  const informationPage = await getHouseInformationPageByHouseId(house.id);
+  const [informationPage, documents] = await Promise.all([
+    getHouseInformationPageByHouseId(house.id),
+    getPublicHouseInformationDocuments(house.id),
+  ]);
 
   const sections = informationPage
     ? await getPublishedHouseSections(informationPage.id)
     : [];
-  const documents = await getPublicHouseInformationDocuments(house.id);
 
   const articles = sections
     .filter((section) => section.kind === "rich_text")

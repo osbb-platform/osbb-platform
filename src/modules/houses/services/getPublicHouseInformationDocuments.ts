@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 export type PublicHouseInformationDocumentItem = {
@@ -12,9 +13,9 @@ export type PublicHouseInformationDocumentItem = {
   original_file_name: string | null;
 };
 
-export async function getPublicHouseInformationDocuments(
+export const getPublicHouseInformationDocuments = cache(async (
   houseId: string,
-): Promise<PublicHouseInformationDocumentItem[]> {
+): Promise<PublicHouseInformationDocumentItem[]> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -45,4 +46,4 @@ export async function getPublicHouseInformationDocuments(
   }
 
   return (data ?? []) as unknown as PublicHouseInformationDocumentItem[];
-}
+});

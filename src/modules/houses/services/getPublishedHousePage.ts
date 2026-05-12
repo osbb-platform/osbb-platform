@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type { HousePageRecord } from "@/src/shared/types/entities/house.types";
 
-export async function getPublishedHousePage(
+export const getPublishedHousePage = cache(async (
   houseId: string,
   slug: string,
-): Promise<HousePageRecord | null> {
+): Promise<HousePageRecord | null> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -24,4 +25,4 @@ export async function getPublishedHousePage(
   }
 
   return data as HousePageRecord;
-}
+});

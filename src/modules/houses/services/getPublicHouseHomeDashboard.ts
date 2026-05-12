@@ -2,8 +2,10 @@ import { houseSystemCopy } from "@/src/shared/publicCopy/house";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
-import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
-import type { HouseSectionRecord } from "@/src/shared/types/entities/house.types";
+import type {
+  HouseRecord,
+  HouseSectionRecord,
+} from "@/src/shared/types/entities/house.types";
 
 type HomeWidgetKind = "announcements" | "plan" | "meetings" | "debtors";
 
@@ -110,8 +112,7 @@ type DebtorItem = {
 };
 
 type GetPublicHouseHomeDashboardParams = {
-  houseId: string;
-  slug: string;
+  house: HouseRecord;
 };
 
 const CTA_LABEL = houseSystemCopy.cta.open;
@@ -773,10 +774,11 @@ function pickTopAlert(
 }
 
 export async function getPublicHouseHomeDashboard({
-  houseId,
-  slug,
+  house,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
-  const house = await getHouseBySlug(slug);
+  const houseId = house.id;
+  const slug = house.slug;
+
   const [homePage, informationPage] = await Promise.all([
     getHouseHomePageByHouseId(houseId),
     getHouseInformationPageByHouseId(houseId),

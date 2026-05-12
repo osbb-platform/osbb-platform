@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 export type PublicHouseDocumentFeedItem = {
@@ -5,9 +6,9 @@ export type PublicHouseDocumentFeedItem = {
   updated_at: string;
 };
 
-export async function getPublicHouseDocumentsFeed(
+export const getPublicHouseDocumentsFeed = cache(async (
   houseId: string,
-): Promise<PublicHouseDocumentFeedItem[]> {
+): Promise<PublicHouseDocumentFeedItem[]> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -24,4 +25,4 @@ export async function getPublicHouseDocumentsFeed(
   }
 
   return (data ?? []) as PublicHouseDocumentFeedItem[];
-}
+});

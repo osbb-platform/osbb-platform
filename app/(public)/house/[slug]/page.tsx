@@ -21,8 +21,7 @@ export default async function PublicHouseHomePage({ params }: Props) {
   const districtColor = house.district?.theme_color ?? "#16a34a";
 
   const dashboard = await getPublicHouseHomeDashboard({
-    houseId: house.id,
-    slug,
+    house,
   });
 
   const headline = dashboard.heroContent.headline;
