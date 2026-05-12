@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 
-export async function getPublicHouseApartmentOptions({
+export const getPublicHouseApartmentOptions = cache(async ({
   houseId,
 }: {
   houseId: string;
-}) {
+}) => {
   const supabase = createSupabaseAdminClient();
 
   const { data, error } = await supabase
@@ -24,4 +25,4 @@ export async function getPublicHouseApartmentOptions({
     label: item.apartment_label,
     ownerName: item.owner_name,
   }));
-}
+});

@@ -1,9 +1,10 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type { HouseSectionRecord } from "@/src/shared/types/entities/house.types";
 
-export async function getPublishedHouseSections(
+export const getPublishedHouseSections = cache(async (
   housePageId: string,
-): Promise<HouseSectionRecord[]> {
+): Promise<HouseSectionRecord[]> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -18,4 +19,4 @@ export async function getPublishedHouseSections(
   }
 
   return (data ?? []) as HouseSectionRecord[];
-}
+});

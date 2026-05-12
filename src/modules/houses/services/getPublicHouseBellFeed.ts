@@ -1,5 +1,5 @@
-import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
-import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
+import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
+import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHousePage } from "@/src/modules/houses/services/getPublishedHousePage";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseDocumentsFeed } from "@/src/modules/houses/services/getPublicHouseDocumentsFeed";
@@ -99,14 +99,16 @@ export async function getPublicHouseBellFeed({
 }): Promise<PublicHouseBellFeed> {
   const items: PublicHouseBellItem[] = [];
 
-  const homePage = await ensureHouseHomePage({ houseId });
-  const informationPage = await ensureHouseInformationPage({ houseId });
-  const reportsPage = await getPublishedHousePage(houseId, "reports");
+  const [homePage, informationPage, reportsPage] = await Promise.all([
+    getHouseHomePageByHouseId(houseId),
+    getHouseInformationPageByHouseId(houseId),
+    getPublishedHousePage(houseId, "reports"),
+  ]);
 
   const [homeSections, informationSections, reportSections, documents] =
     await Promise.all([
-      getPublishedHouseSections(homePage.id),
-      getPublishedHouseSections(informationPage.id),
+      homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
+      informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
       reportsPage ? getPublishedHouseSections(reportsPage.id) : Promise.resolve([]),
       getPublicHouseDocumentsFeed(houseId),
     ]);

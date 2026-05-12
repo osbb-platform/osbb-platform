@@ -1,7 +1,6 @@
 import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { ensureHouseSpecialistsSection } from "@/src/modules/houses/services/ensureHouseSpecialistsSection";
-import { getEnsuredPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getEnsuredPublishedHomeSectionsBySlug";
+import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
@@ -207,10 +206,7 @@ export default async function SpecialistsPage({
       ? resolvedSearchParams.specialist
       : "";
 
-  const { house, sections } = await getEnsuredPublishedHomeSectionsBySlug({
-    slug,
-    ensureSection: ensureHouseSpecialistsSection,
-  });
+  const { house, sections } = await getPublishedHomeSectionsBySlug(slug);
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
   const apartmentOptions = await getPublicHouseApartmentOptions({

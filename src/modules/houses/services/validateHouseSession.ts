@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 type ValidateHouseSessionParams = {
@@ -5,10 +6,10 @@ type ValidateHouseSessionParams = {
   sessionToken: string;
 };
 
-export async function validateHouseSession({
+export const validateHouseSession = cache(async ({
   slug,
   sessionToken,
-}: ValidateHouseSessionParams): Promise<boolean> {
+}: ValidateHouseSessionParams): Promise<boolean> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase.rpc("is_house_session_valid", {
@@ -21,4 +22,4 @@ export async function validateHouseSession({
   }
 
   return Boolean(data);
-}
+});

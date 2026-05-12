@@ -1,7 +1,6 @@
 import { houseBoardCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { ensureHouseBoardSection } from "@/src/modules/houses/services/ensureHouseBoardSection";
-import { getEnsuredPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getEnsuredPublishedHomeSectionsBySlug";
+import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -252,11 +251,7 @@ export default async function BoardPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const filter = normalizeFilter(resolvedSearchParams.filter);
 
-  const { house, sections } =
-    await getEnsuredPublishedHomeSectionsBySlug({
-      slug,
-      ensureSection: ensureHouseBoardSection,
-    });
+  const { house, sections } = await getPublishedHomeSectionsBySlug(slug);
 
   const districtColor = house.district?.theme_color ?? "#0f172a";
   const boardSection = sections.find((section) => section.kind === "contacts");

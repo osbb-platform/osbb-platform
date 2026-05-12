@@ -1,7 +1,7 @@
 import { houseInformationCopy } from "@/src/shared/publicCopy/house";
 import { notFound } from "next/navigation";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
-import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
+import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseInformationDocuments } from "@/src/modules/houses/services/getPublicHouseInformationDocuments";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
@@ -62,11 +62,11 @@ export default async function InformationPage({
 
   const districtColor = house.district?.theme_color ?? "#22c55e";
 
-  const informationPage = await ensureHouseInformationPage({
-    houseId: house.id,
-  });
+  const informationPage = await getHouseInformationPageByHouseId(house.id);
 
-  const sections = await getPublishedHouseSections(informationPage.id);
+  const sections = informationPage
+    ? await getPublishedHouseSections(informationPage.id)
+    : [];
   const documents = await getPublicHouseInformationDocuments(house.id);
 
   const articles = sections

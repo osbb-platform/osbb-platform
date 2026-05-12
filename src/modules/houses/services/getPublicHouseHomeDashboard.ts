@@ -1,6 +1,6 @@
 import { houseSystemCopy } from "@/src/shared/publicCopy/house";
-import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
-import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
+import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
+import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import type { HouseSectionRecord } from "@/src/shared/types/entities/house.types";
@@ -777,12 +777,14 @@ export async function getPublicHouseHomeDashboard({
   slug,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
   const house = await getHouseBySlug(slug);
-  const homePage = await ensureHouseHomePage({ houseId });
-  const informationPage = await ensureHouseInformationPage({ houseId });
+  const [homePage, informationPage] = await Promise.all([
+    getHouseHomePageByHouseId(houseId),
+    getHouseInformationPageByHouseId(houseId),
+  ]);
 
   const [homeSections, informationSections] = await Promise.all([
-    getPublishedHouseSections(homePage.id),
-    getPublishedHouseSections(informationPage.id),
+    homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
+    informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
   ]);
 
   const heroSection = homeSections.find((section) => section.kind === "hero");

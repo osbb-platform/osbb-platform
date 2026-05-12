@@ -1,27 +1,27 @@
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
-type HouseHomePageRecord = {
+type HouseInformationPageRecord = {
   id: string;
   slug: string;
   title: string;
   status: string;
 };
 
-export const getHouseHomePageByHouseId = cache(async (
+export const getHouseInformationPageByHouseId = cache(async (
   houseId: string,
-): Promise<HouseHomePageRecord | null> => {
+): Promise<HouseInformationPageRecord | null> => {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("house_pages")
     .select("id, slug, title, status")
     .eq("house_id", houseId)
-    .eq("slug", "home")
+    .eq("slug", "information")
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to load house home page: ${error.message}`);
+    throw new Error(`Failed to load house information page: ${error.message}`);
   }
 
   return data ?? null;
