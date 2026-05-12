@@ -1,7 +1,9 @@
-import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getPlatformChangeHistory } from "@/src/modules/history/services/getPlatformChangeHistory";
-import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
-import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
+import {
+  getAdminActiveApartmentCountsByHouseIds,
+  getAdminHousePagesByHouseIds,
+  getAdminHouseSectionsByPageIds,
+} from "@/src/modules/houses/services/getAdminDashboardBatchData";
 import { getAdminHouses } from "@/src/modules/houses/services/getAdminHouses";
 
 export type AdminDashboardKpi = {
@@ -119,91 +121,97 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     (house) => house.is_active && !house.archived_at,
   );
 
-  const houseRows = await Promise.all(
-    houses.map(async (house): Promise<HouseAggregationRow> => {
-      const pages = await getAdminHousePages(house.id);
+  const houseIds = houses.map((house) => house.id);
 
-      let hasDrafts = false;
-      let draftSectionCount = 0;
-      let publishedSectionCount = 0;
-      const draftItems: AdminDashboardLinkItem[] = [];
+  const [pages, apartmentCounts, history] = await Promise.all([
+    getAdminHousePagesByHouseIds(houseIds),
+    getAdminActiveApartmentCountsByHouseIds(houseIds),
+    getPlatformChangeHistory({
+      tab: "cms",
+      pageSize: 50,
+      sort: "date_desc",
+    }),
+  ]);
 
-      for (const page of pages) {
-        if (page.status === "draft") {
-          hasDrafts = true;
+  const pageIds = pages.map((page) => page.id);
+  const sections = await getAdminHouseSectionsByPageIds(pageIds);
 
-          draftItems.push({
-            id: page.id,
-            houseId: house.id,
-            houseName: house.name,
-            section: page.slug,
-            title: page.title,
-            href: getHouseBlockHref(house.id, page.slug),
-            updatedAt: page.updated_at ?? page.created_at,
-          });
-        }
+  const pagesByHouseId = new Map<string, typeof pages>();
 
-        let sections: Awaited<ReturnType<typeof getAdminHouseSections>> = [];
+  for (const page of pages) {
+    const bucket = pagesByHouseId.get(page.house_id) ?? [];
+    bucket.push(page);
+    pagesByHouseId.set(page.house_id, bucket);
+  }
 
-        try {
-          sections = await getAdminHouseSections(page.id);
-        } catch (e) {
-          console.error("Dashboard: failed to load sections", {
-            houseId: house.id,
-            pageId: page.id,
-            error: e,
-          });
-          sections = [];
-        }
+  const sectionsByPageId = new Map<string, typeof sections>();
 
-        for (const section of sections) {
-          if (section.status === "draft") {
-            hasDrafts = true;
-            draftSectionCount += 1;
+  for (const section of sections) {
+    const bucket = sectionsByPageId.get(section.house_page_id) ?? [];
+    bucket.push(section);
+    sectionsByPageId.set(section.house_page_id, bucket);
+  }
 
-            draftItems.push({
-              id: section.id,
-              houseId: house.id,
-              houseName: house.name,
-              section: section.kind,
-              title: section.title ?? "Без назви",
-              href: getHouseBlockHref(
-                house.id,
-                inferBlockFromSection(section.kind),
-              ),
-              updatedAt:
-                section.updated_at ?? section.created_at,
-            });
-          }
+  const houseRows = houses.map((house): HouseAggregationRow => {
+    const housePages = pagesByHouseId.get(house.id) ?? [];
 
-          if (section.status === "published") {
-            publishedSectionCount += 1;
-          }
-        }
+    let hasDrafts = false;
+    let draftSectionCount = 0;
+    let publishedSectionCount = 0;
+    const draftItems: AdminDashboardLinkItem[] = [];
+
+    for (const page of housePages) {
+      if (page.status === "draft") {
+        hasDrafts = true;
+
+        draftItems.push({
+          id: page.id,
+          houseId: house.id,
+          houseName: house.name,
+          section: page.slug,
+          title: page.title,
+          href: getHouseBlockHref(house.id, page.slug),
+          updatedAt: page.updated_at ?? page.created_at,
+        });
       }
 
-      const apartments = await getAdminHouseApartments({
-        houseId: house.id,
-        includeArchivedSummary: false,
-      });
+      const pageSections = sectionsByPageId.get(page.id) ?? [];
 
-      return {
-        houseId: house.id,
-        houseName: house.name,
-        houseSlug: house.slug,
-        hasDrafts,
-        hasApartments: apartments.summary.activeCount > 0,
-        draftItems,
-        draftSectionCount,
-        publishedSectionCount,
-      };
-    }),
-  );
+      for (const section of pageSections) {
+        if (section.status === "draft") {
+          hasDrafts = true;
+          draftSectionCount += 1;
 
-  const history = await getPlatformChangeHistory({
-    tab: "cms",
-    pageSize: 50,
-    sort: "date_desc",
+          draftItems.push({
+            id: section.id,
+            houseId: house.id,
+            houseName: house.name,
+            section: section.kind,
+            title: section.title ?? "Без назви",
+            href: getHouseBlockHref(
+              house.id,
+              inferBlockFromSection(section.kind),
+            ),
+            updatedAt: section.updated_at ?? section.created_at,
+          });
+        }
+
+        if (section.status === "published") {
+          publishedSectionCount += 1;
+        }
+      }
+    }
+
+    return {
+      houseId: house.id,
+      houseName: house.name,
+      houseSlug: house.slug,
+      hasDrafts,
+      hasApartments: (apartmentCounts.get(house.id) ?? 0) > 0,
+      draftItems,
+      draftSectionCount,
+      publishedSectionCount,
+    };
   });
 
   const houseNameById = new Map(
