@@ -10,6 +10,7 @@ export type AdminHouseSectionListItem = {
   status: "draft" | "in_review" | "published" | "archived";
   created_at: string;
   updated_at: string | null;
+  content?: Record<string, unknown>;
 };
 
 export async function getAdminHouseSections(
@@ -25,7 +26,7 @@ export async function getAdminHouseSections(
     const { data, error } = await supabase
       .from("house_sections")
       .select(
-        "id, house_page_id, kind, title, sort_order, status, created_at, updated_at",
+        "id, house_page_id, kind, title, sort_order, status, content, created_at, updated_at",
       )
       .eq("house_page_id", housePageId)
       .order("sort_order", { ascending: true });

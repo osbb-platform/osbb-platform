@@ -262,17 +262,7 @@ export default async function AdminHouseDetailPage({
 
   const validAnnouncementSections =
     activeBlock === "announcements"
-      ? (
-          await Promise.all(
-            homeSections
-              .filter((section) => section.kind === "announcements")
-              .map((section) => getAdminHouseSectionById(section.id)),
-          )
-        ).filter(
-          (
-            section,
-          ): section is NonNullable<typeof section> => Boolean(section),
-        )
+      ? homeSections.filter((section) => section.kind === "announcements")
       : [];
 
   const boardSectionList =
@@ -289,7 +279,7 @@ export default async function AdminHouseDetailPage({
     boardSection = await getAdminHouseSectionById(ensuredBoardSectionId);
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (boardSectionList) {
-    boardSection = await getAdminHouseSectionById(boardSectionList.id);
+    boardSection = boardSectionList;
   }
 
   if (
@@ -301,38 +291,19 @@ export default async function AdminHouseDetailPage({
   }
 
 
-  const informationSections = informationPage
-    ? await getAdminHouseSections(informationPage.id)
-    : [];
+  const informationSections =
+    activeBlock === "information" && informationPage
+      ? await getAdminHouseSections(informationPage.id)
+      : [];
 
   const validInformationPostSections =
     activeBlock === "information"
-      ? (
-          await Promise.all(
-            informationSections
-              .filter((section) => section.kind === "rich_text")
-              .map((section) => getAdminHouseSectionById(section.id)),
-          )
-        ).filter(
-          (
-            section,
-          ): section is NonNullable<typeof section> => Boolean(section),
-        )
+      ? informationSections.filter((section) => section.kind === "rich_text")
       : [];
 
   const faqSections =
     activeBlock === "information"
-      ? (
-          await Promise.all(
-            informationSections
-              .filter((section) => section.kind === "faq")
-              .map((section) => getAdminHouseSectionById(section.id)),
-          )
-        ).filter(
-          (
-            section,
-          ): section is NonNullable<typeof section> => Boolean(section),
-        )
+      ? informationSections.filter((section) => section.kind === "faq")
       : [];
 
   const specialistsSectionList =
@@ -351,7 +322,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "specialists" && specialistsSectionList) {
-    specialistsSection = await getAdminHouseSectionById(specialistsSectionList.id);
+    specialistsSection = specialistsSectionList;
   } else if (activeBlock !== "specialists") {
     specialistsSection = null;
   }
@@ -371,7 +342,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "reports" && reportsSectionList) {
-    reportsSection = await getAdminHouseSectionById(reportsSectionList.id);
+    reportsSection = reportsSectionList;
   } else if (activeBlock !== "reports") {
     reportsSection = null;
   }
@@ -391,7 +362,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "plan" && planSectionList) {
-    planSection = await getAdminHouseSectionById(planSectionList.id);
+    planSection = planSectionList;
   } else if (activeBlock !== "plan") {
     planSection = null;
   }
@@ -411,7 +382,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "debtors" && debtorsSectionList) {
-    debtorsSection = await getAdminHouseSectionById(debtorsSectionList.id);
+    debtorsSection = debtorsSectionList;
   } else if (activeBlock !== "debtors") {
     debtorsSection = null;
   }
@@ -431,7 +402,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "meetings" && meetingsSectionList) {
-    meetingsSection = await getAdminHouseSectionById(meetingsSectionList.id);
+    meetingsSection = meetingsSectionList;
   } else if (activeBlock !== "meetings") {
     meetingsSection = null;
   }
@@ -451,9 +422,7 @@ export default async function AdminHouseDetailPage({
     );
     homeSections = await getAdminHouseSections(homePage.id);
   } else if (activeBlock === "requisites" && requisitesSectionList) {
-    requisitesSection = await getAdminHouseSectionById(
-      requisitesSectionList.id,
-    );
+    requisitesSection = requisitesSectionList;
   } else if (activeBlock !== "requisites") {
     requisitesSection = null;
   }
