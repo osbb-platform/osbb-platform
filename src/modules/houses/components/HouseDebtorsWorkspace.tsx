@@ -262,7 +262,6 @@ export function HouseDebtorsWorkspace({
     if (submittedMode === "save_payment") {
       startTransition(() => {
         setIsPaymentSettingsOpen(false);
-        router.refresh();
       });
     }
 
@@ -270,7 +269,6 @@ export function HouseDebtorsWorkspace({
       startTransition(() => {
         setCalculator((prev) => ({ ...prev, enabled: true }));
         setIsCalculatorSettingsOpen(false);
-        router.refresh();
       });
     }
 
