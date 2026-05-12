@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createSupabaseMiddlewareClient } from "@/src/integrations/supabase/server/middleware";
 
 const ROOT_DOMAIN = "osbb-platform.com.ua";
 const ADMIN_HOST = `admin.${ROOT_DOMAIN}`;
@@ -15,9 +14,7 @@ function withSearch(pathname: string, search: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabase, response } = createSupabaseMiddlewareClient(request);
-
-  await supabase.auth.getUser();
+  const response = NextResponse.next({ request });
 
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));
@@ -99,6 +96,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|_next/data|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff|woff2|ttf|otf)$).*)",
   ],
 };

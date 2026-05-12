@@ -814,12 +814,6 @@ export async function getPublicHouseHomeDashboard({
     .filter((item) => item.label && item.value);
 
 
-  console.log("BUILD_STATUS_STRIP_RESULT", {
-    slug,
-    tariffAmount: house?.tariff_amount,
-    statusStrip: statusWidgets,
-  });
-
   return {
     heroContent: {
       headline:

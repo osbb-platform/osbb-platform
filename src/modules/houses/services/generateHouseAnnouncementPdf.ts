@@ -1,7 +1,6 @@
 "use server";
 
 import QRCode from "qrcode";
-import puppeteer from "puppeteer";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getHouseAnnouncementHtml } from "./getHouseAnnouncementHtml";
 
@@ -15,9 +14,20 @@ export async function generateHouseAnnouncementPdf(params: {
   slug: string;
   accentColor?: string | null;
 }) {
-  try {
-    console.log("PDF START", params.houseId);
+  // Puppeteer не работает на Vercel serverless. Генерацию PDF запускаем только локально/CLI.
+  if (process.env.VERCEL === "1" || process.env.NEXT_RUNTIME === "nodejs") {
+    if (!process.env.ALLOW_LOCAL_PDF_GENERATION) {
+      console.warn(
+        "generateHouseAnnouncementPdf skipped: Puppeteer не работает в serverless. " +
+          "Запустите локально через scripts/regenerate-house-announcements.mjs"
+      );
+      return;
+    }
+  }
 
+  const { default: puppeteer } = await import("puppeteer");
+
+  try {
     const supabase = createSupabaseAdminClient();
     const publicUrl = `https://${params.slug}.osbb-platform.com.ua`;
     const qrCodeDataUrl = await QRCode.toDataURL(publicUrl);
@@ -31,7 +41,6 @@ export async function generateHouseAnnouncementPdf(params: {
       accentColor: params.accentColor,
     });
 
-    console.log("Launching puppeteer...");
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -40,7 +49,6 @@ export async function generateHouseAnnouncementPdf(params: {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 
-    console.log("Generating PDF...");
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
@@ -50,7 +58,6 @@ export async function generateHouseAnnouncementPdf(params: {
 
     const filePath = `${params.houseId}/announcement.pdf`;
 
-    console.log("Uploading PDF...");
     const { error } = await supabase.storage
       .from(BUCKET)
       .upload(filePath, pdfBuffer, {
@@ -63,7 +70,6 @@ export async function generateHouseAnnouncementPdf(params: {
       return;
     }
 
-    console.log("PDF generated:", filePath);
   } catch (error) {
     console.error("generateHouseAnnouncementPdf error:", error);
   }
