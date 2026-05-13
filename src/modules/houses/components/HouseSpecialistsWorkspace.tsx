@@ -69,34 +69,29 @@ function createSpecialistId() {
 }
 
 function formatPhoneMask(value: string) {
-  const digits = value.replace(/\D/g, "");
+  const input = value.trim();
 
-  let normalized = digits;
-
-  if (normalized.startsWith("380")) {
-    normalized = normalized.slice(0, 12);
-  } else if (normalized.startsWith("0")) {
-    normalized = `38${normalized}`.slice(0, 12);
-  } else if (!normalized.startsWith("38")) {
-    normalized = `380${normalized}`.slice(0, 12);
-  } else {
-    normalized = normalized.slice(0, 12);
+  if (!input) {
+    return "";
   }
 
-  const cc = normalized.slice(0, 3);
-  const p1 = normalized.slice(3, 5);
-  const p2 = normalized.slice(5, 8);
-  const p3 = normalized.slice(8, 10);
-  const p4 = normalized.slice(10, 12);
+  const hasPlus = input.startsWith("+");
+  const digits = input.replace(/\D/g, "");
 
-  let result = `+${cc}`;
+  if (!digits) {
+    return "";
+  }
 
-  if (p1) result += ` ${p1}`;
-  if (p2) result += ` ${p2}`;
-  if (p3) result += ` ${p3}`;
-  if (p4) result += ` ${p4}`;
+  if (hasPlus) {
+    return `+${digits.slice(0, 15)}`;
+  }
 
-  return result.trim();
+  return digits.slice(0, 15);
+}
+
+function isValidPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 5 && digits.length <= 15;
 }
 
 function createEmptyDraft(): SpecialistDraft {
@@ -407,8 +402,8 @@ export function HouseSpecialistsWorkspace({
       return;
     }
 
-    if (trimmedPhone && trimmedPhone.replace(/\D/g, "").length < 12) {
-      window.alert("Введіть телефон в українському форматі.");
+    if (trimmedPhone && !isValidPhone(trimmedPhone)) {
+      window.alert("Введіть коректний номер телефону.");
       return;
     }
 
@@ -625,7 +620,7 @@ export function HouseSpecialistsWorkspace({
                       handleDraftChange("phone", event.target.value)
                     }
                     className={adminInputClass}
-                    placeholder="+380 67 123 45 67"
+                    placeholder="+380 67 123 45 67 або 0800 00 00 00"
                   />
                   <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
                     Якщо телефон заповнений, на сайті будинку буде кнопка «Подзвонити».

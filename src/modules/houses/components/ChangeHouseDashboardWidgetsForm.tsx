@@ -34,13 +34,9 @@ function createEmptyWidget(index: number): Widget {
   };
 }
 
-function ensureAtLeastTwo(widgets: Widget[]): Widget[] {
-  if (widgets.length >= 2) return widgets;
-  const next = [...widgets];
-  while (next.length < 2) {
-    next.push(createEmptyWidget(next.length));
-  }
-  return next;
+function ensureAtLeastOne(widgets: Widget[]): Widget[] {
+  if (widgets.length >= 1) return widgets;
+  return [createEmptyWidget(0)];
 }
 
 export function ChangeHouseDashboardWidgetsForm({
@@ -49,7 +45,7 @@ export function ChangeHouseDashboardWidgetsForm({
   houseSlug,
   initialWidgets,
 }: Props) {
-  const [widgets, setWidgets] = useState<Widget[]>(ensureAtLeastTwo(initialWidgets));
+  const [widgets, setWidgets] = useState<Widget[]>(ensureAtLeastOne(initialWidgets));
   const [realSectionId, setRealSectionId] = useState<string | null>(sectionId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingSection, setIsLoadingSection] = useState(true);
@@ -70,7 +66,7 @@ export function ChangeHouseDashboardWidgetsForm({
           ? (section.content.statusWidgets as Widget[])
           : [];
 
-        setWidgets(ensureAtLeastTwo(loadedWidgets));
+        setWidgets(ensureAtLeastOne(loadedWidgets));
       } catch (e) {
         console.error("Failed to load home indicators section", e);
         if (!cancelled) {
@@ -107,7 +103,7 @@ export function ChangeHouseDashboardWidgetsForm({
   }
 
   function removeWidget(index: number) {
-    if (widgets.length <= 2) return;
+    if (widgets.length <= 1) return;
     setWidgets((current) => current.filter((_, widgetIndex) => widgetIndex !== index));
   }
 
@@ -127,7 +123,7 @@ export function ChangeHouseDashboardWidgetsForm({
     !isLoadingSection &&
     !isSaving &&
     Boolean(realSectionId) &&
-    cleaned.length >= 2;
+    cleaned.length >= 1;
 
   async function handleSubmit() {
     if (!realSectionId) {
@@ -135,8 +131,8 @@ export function ChangeHouseDashboardWidgetsForm({
       return;
     }
 
-    if (cleaned.length < 2) {
-      setError("Заповніть щонайменше 2 показники, щоб зберегти блок.");
+    if (cleaned.length < 1) {
+      setError("Заповніть щонайменше 1 показник, щоб зберегти блок.");
       setSuccessMessage(null);
       return;
     }
@@ -189,7 +185,7 @@ export function ChangeHouseDashboardWidgetsForm({
               <button
                 type="button"
                 onClick={() => removeWidget(index)}
-                disabled={widgets.length <= 2}
+                disabled={widgets.length <= 1}
                 className={`${adminSecondaryButtonClass} px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 Видалити
@@ -253,9 +249,9 @@ export function ChangeHouseDashboardWidgetsForm({
           </button>
         </div>
 
-        {cleaned.length < 2 ? (
+        {cleaned.length < 1 ? (
           <div className="mt-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
-            Заповніть щонайменше 2 показники, щоб показати блок на головній сторінці.
+            Заповніть щонайменше 1 показник, щоб показати блок на головній сторінці.
           </div>
         ) : null}
 

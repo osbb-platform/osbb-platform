@@ -23,23 +23,25 @@ const initialState = {
   successMessage: null,
 };
 
-function formatUaPhone(value: string) {
-  const digits = value.replace(/\D/g, "").replace(/^380/, "");
-  const trimmed = digits.slice(0, 9);
+function formatPhone(value: string) {
+  const input = value.trim();
 
-  const part1 = trimmed.slice(0, 2);
-  const part2 = trimmed.slice(2, 5);
-  const part3 = trimmed.slice(5, 7);
-  const part4 = trimmed.slice(7, 9);
+  if (!input) {
+    return "";
+  }
 
-  let result = "+380";
+  const hasPlus = input.startsWith("+");
+  const digits = input.replace(/\D/g, "");
 
-  if (part1) result += ` ${part1}`;
-  if (part2) result += ` ${part2}`;
-  if (part3) result += ` ${part3}`;
-  if (part4) result += ` ${part4}`;
+  if (!digits) {
+    return "";
+  }
 
-  return result;
+  if (hasPlus) {
+    return `+${digits.slice(0, 15)}`;
+  }
+
+  return digits.slice(0, 15);
 }
 
 export function SpecialistContactRequestForm({
@@ -55,7 +57,7 @@ export function SpecialistContactRequestForm({
     createSpecialistContactRequest,
     initialState,
   );
-  const [phone, setPhone] = useState("+380");
+  const [phone, setPhone] = useState("");
 
   if (state.successMessage) {
     return (
@@ -113,8 +115,8 @@ export function SpecialistContactRequestForm({
           name="requesterPhone"
           type="tel"
           value={phone}
-          onChange={(event) => setPhone(formatUaPhone(event.target.value))}
-          placeholder="+380 67 123 45 67"
+          onChange={(event) => setPhone(formatPhone(event.target.value))}
+          placeholder="+380 67 123 45 67 або 0800 00 00 00"
           className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
         />
       </div>
