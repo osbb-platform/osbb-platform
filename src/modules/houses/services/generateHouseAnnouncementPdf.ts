@@ -14,15 +14,15 @@ export async function generateHouseAnnouncementPdf(params: {
   slug: string;
   accentColor?: string | null;
 }) {
-  // Puppeteer не работает на Vercel serverless. Генерацию PDF запускаем только локально/CLI.
-  if (process.env.VERCEL === "1" || process.env.NEXT_RUNTIME === "nodejs") {
-    if (!process.env.ALLOW_LOCAL_PDF_GENERATION) {
-      console.warn(
-        "generateHouseAnnouncementPdf skipped: Puppeteer не работает в serverless. " +
-          "Запустите локально через scripts/regenerate-house-announcements.mjs"
-      );
-      return;
-    }
+  // Puppeteer не работает на Vercel serverless. В production на Vercel PDF
+  // генерируем отдельным локальным/CLI-скриптом, но не блокируем обычный
+  // локальный Next.js node runtime: иначе файл объявления никогда не создается.
+  if (process.env.VERCEL === "1" && !process.env.ALLOW_LOCAL_PDF_GENERATION) {
+    console.warn(
+      "generateHouseAnnouncementPdf skipped: Puppeteer не работает в Vercel serverless. " +
+        "Запустите локально через scripts/regenerate-house-announcements.mjs"
+    );
+    return;
   }
 
   const { default: puppeteer } = await import("puppeteer");
