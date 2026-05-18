@@ -218,6 +218,44 @@ function parseSpecialistsPayload(formData: FormData) {
   }
 }
 
+function normalizeSpecialistPhones(raw: Record<string, unknown>) {
+  const phonesFromArray = Array.isArray(raw.phones)
+    ? raw.phones
+        .map((phone) => String(phone ?? "").trim())
+        .filter(Boolean)
+    : [];
+
+  const legacyPhone = String(raw.phone ?? "").trim();
+
+  return (phonesFromArray.length > 0
+    ? phonesFromArray
+    : legacyPhone
+      ? [legacyPhone]
+      : []
+  ).filter((phone, index, array) => array.indexOf(phone) === index);
+}
+
+function normalizeSpecialistsPayloadItems(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const raw = item as Record<string, unknown>;
+      const phones = normalizeSpecialistPhones(raw);
+
+      return {
+        ...raw,
+        phone: phones[0] ?? "",
+        phones,
+      };
+    })
+    .filter((item): item is Record<string, unknown> => Boolean(item));
+}
+
 function normalizeSpecialistsForDiff(value: unknown): SpecialistLogItem[] {
   if (!Array.isArray(value)) {
     return [];
@@ -510,8 +548,12 @@ export async function updateHouseSection(
       existingContent.specialists,
     );
 
-    const nextSpecialists = normalizeSpecialistsForDiff(
+    const normalizedSpecialists = normalizeSpecialistsPayloadItems(
       parsedSpecialists.specialists,
+    );
+
+    const nextSpecialists = normalizeSpecialistsForDiff(
+      normalizedSpecialists,
     );
 
     historyDescription = buildSpecialistsDiffLog({
@@ -522,9 +564,7 @@ export async function updateHouseSection(
       categoriesCatalog: Array.isArray(parsedSpecialists.categoriesCatalog)
         ? parsedSpecialists.categoriesCatalog
         : [...SPECIALIST_CATEGORIES],
-      specialists: Array.isArray(parsedSpecialists.specialists)
-        ? parsedSpecialists.specialists
-        : [],
+      specialists: normalizedSpecialists,
       updatedAt: new Date().toISOString(),
     };
 

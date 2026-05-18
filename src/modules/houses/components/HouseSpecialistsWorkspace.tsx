@@ -34,6 +34,7 @@ type SpecialistItem = {
   title: string;
   categories: string[];
   phone: string;
+  phones: string[];
   officeHours: string;
   isPinned: boolean;
   status: SpecialistStatus;
@@ -47,6 +48,7 @@ type SpecialistDraft = {
   title: string;
   categories: string[];
   phone: string;
+  phones: string[];
   officeHours: string;
   isPinned: boolean;
   status: SpecialistStatus;
@@ -94,12 +96,29 @@ function isValidPhone(value: string) {
   return digits.length >= 5 && digits.length <= 15;
 }
 
+function normalizeSpecialistPhones(value: Record<string, unknown>) {
+  const phonesFromArray = Array.isArray(value.phones)
+    ? value.phones
+        .map((phone) => formatPhoneMask(String(phone ?? "")))
+        .filter(Boolean)
+    : [];
+
+  const legacyPhone = formatPhoneMask(String(value.phone ?? ""));
+
+  return phonesFromArray.length > 0
+    ? phonesFromArray.filter((phone, index, array) => array.indexOf(phone) === index)
+    : legacyPhone
+      ? [legacyPhone]
+      : [];
+}
+
 function createEmptyDraft(): SpecialistDraft {
   return {
     id: createSpecialistId(),
     title: "",
     categories: [],
     phone: "",
+    phones: [""],
     officeHours: "",
     isPinned: false,
     status: "draft",
@@ -157,6 +176,8 @@ function normalizeLegacySpecialists(
             ? item.status
             : "draft";
 
+        const phones = normalizeSpecialistPhones(item);
+
         return {
           id:
             typeof item.id === "string" && item.id.trim()
@@ -164,7 +185,8 @@ function normalizeLegacySpecialists(
               : createSpecialistId(),
           title,
           categories: category,
-          phone: String(item.phone ?? "").trim(),
+          phone: phones[0] ?? "",
+          phones,
           officeHours: String(item.officeHours ?? "").trim(),
           isPinned: Boolean(item.isPinned),
           status,
@@ -176,7 +198,7 @@ function normalizeLegacySpecialists(
               : null,
         } satisfies SpecialistItem;
       })
-      .filter((item) => item.title || item.categories.length > 0 || item.phone);
+      .filter((item) => item.title || item.categories.length > 0 || item.phones.length > 0);
   }
 
   const legacyCategories = Array.isArray(content.categories)
@@ -201,6 +223,7 @@ function normalizeLegacySpecialists(
           title,
           categories: categoryName ? [categoryName] : [],
           phone: "",
+          phones: [],
           officeHours: "",
           isPinned: false,
           status: "active" as const,
@@ -301,7 +324,8 @@ export function HouseSpecialistsWorkspace({
       id: item.id,
       title: item.title,
       categories: item.categories,
-      phone: item.phone,
+      phone: item.phones[0] ?? item.phone,
+      phones: item.phones,
       officeHours: item.officeHours,
       isPinned: item.isPinned,
       status: item.status,
@@ -336,7 +360,8 @@ export function HouseSpecialistsWorkspace({
       id: item.id,
       title: item.title,
       categories: item.categories,
-      phone: item.phone,
+      phone: item.phones[0] ?? item.phone,
+      phones: item.phones,
       officeHours: item.officeHours,
       isPinned: item.isPinned,
       status: item.status,
@@ -355,16 +380,49 @@ export function HouseSpecialistsWorkspace({
     setDraft((prev) => {
       if (!prev) return prev;
 
-      if (field === "phone" && typeof value === "string") {
-        return {
-          ...prev,
-          phone: formatPhoneMask(value),
-        };
-      }
-
       return {
         ...prev,
         [field]: value,
+      };
+    });
+  }
+
+  function handleDraftPhoneChange(index: number, value: string) {
+    setDraft((prev) => {
+      if (!prev) return prev;
+
+      const nextPhones = [...prev.phones];
+      nextPhones[index] = formatPhoneMask(value);
+
+      return {
+        ...prev,
+        phone: nextPhones.find(Boolean) ?? "",
+        phones: nextPhones,
+      };
+    });
+  }
+
+  function addDraftPhone() {
+    setDraft((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        phones: [...prev.phones, ""],
+      };
+    });
+  }
+
+  function removeDraftPhone(index: number) {
+    setDraft((prev) => {
+      if (!prev) return prev;
+
+      const nextPhones = prev.phones.filter((_, phoneIndex) => phoneIndex !== index);
+
+      return {
+        ...prev,
+        phone: nextPhones.find(Boolean) ?? "",
+        phones: nextPhones.length > 0 ? nextPhones : [""],
       };
     });
   }
@@ -388,7 +446,11 @@ export function HouseSpecialistsWorkspace({
     if (!draft) return;
 
     const trimmedTitle = draft.title.trim();
-    const trimmedPhone = draft.phone.trim();
+    const normalizedPhones = draft.phones
+      .map((phone) => formatPhoneMask(phone))
+      .filter(Boolean)
+      .filter((phone, index, array) => array.indexOf(phone) === index);
+    const trimmedPhone = normalizedPhones[0] ?? "";
     const trimmedOfficeHours = draft.officeHours.trim();
     const normalizedCategories = draft.categories.filter(Boolean);
 
@@ -402,7 +464,9 @@ export function HouseSpecialistsWorkspace({
       return;
     }
 
-    if (trimmedPhone && !isValidPhone(trimmedPhone)) {
+    const hasInvalidPhone = normalizedPhones.some((phone) => !isValidPhone(phone));
+
+    if (hasInvalidPhone) {
       window.alert("Введіть коректний номер телефону.");
       return;
     }
@@ -415,6 +479,7 @@ export function HouseSpecialistsWorkspace({
       title: trimmedTitle,
       categories: normalizedCategories,
       phone: trimmedPhone,
+      phones: normalizedPhones,
       officeHours: trimmedOfficeHours,
       isPinned: draft.isPinned,
       status: existingItem?.status ?? "draft",
@@ -612,18 +677,44 @@ export function HouseSpecialistsWorkspace({
 
                 <div>
                   <label className={`mb-2 block ${adminTextLabelClass}`}>
-                    Телефон
+                    Телефони
                   </label>
-                  <input
-                    value={draft.phone}
-                    onChange={(event) =>
-                      handleDraftChange("phone", event.target.value)
-                    }
-                    className={adminInputClass}
-                    placeholder="+380 67 123 45 67 або 0800 00 00 00"
-                  />
+
+                  <div className="grid gap-2">
+                    {draft.phones.map((phone, index) => (
+                      <div key={`phone-${index}`} className="flex gap-2">
+                        <input
+                          value={phone}
+                          onChange={(event) =>
+                            handleDraftPhoneChange(index, event.target.value)
+                          }
+                          className={adminInputClass}
+                          placeholder="+380 67 123 45 67 або 0800 00 00 00"
+                        />
+
+                        {draft.phones.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => removeDraftPhone(index)}
+                            className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                          >
+                            Видалити
+                          </button>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={addDraftPhone}
+                    className="mt-3 inline-flex items-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  >
+                    + Додати ще телефон
+                  </button>
+
                   <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
-                    Якщо телефон заповнений, на сайті будинку буде кнопка «Подзвонити».
+                    Якщо хоча б один телефон заповнений, на сайті будинку буде кнопка «Подзвонити».
                     Якщо ні — кнопка «Залишити заявку».
                   </div>
                 </div>
@@ -746,8 +837,8 @@ export function HouseSpecialistsWorkspace({
                         <div className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--cms-text)] sm:grid-cols-[140px_1fr]">
                           <div className="text-[var(--cms-text-soft)]">Телефон</div>
                           <div>
-                            {item.phone
-                              ? item.phone
+                            {item.phones.length > 0
+                              ? item.phones.join(", ")
                               : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
                           </div>
 

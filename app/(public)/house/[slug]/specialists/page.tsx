@@ -15,6 +15,7 @@ type SpecialistCard = {
   title: string;
   categories: string[];
   phone: string;
+  phones: string[];
   officeHours: string;
   isPinned: boolean;
   status: "active" | "draft" | "archived";
@@ -27,6 +28,23 @@ const DEFAULT_CATEGORIES = [
   "Прибирання / обслуговування",
   "Керуюча компанія",
 ] as const;
+
+function normalizeSpecialistPhones(value: Record<string, unknown>) {
+  const phonesFromArray = Array.isArray(value.phones)
+    ? value.phones
+        .map((phone) => String(phone ?? "").trim())
+        .filter(Boolean)
+    : [];
+
+  const legacyPhone = String(value.phone ?? "").trim();
+
+  return (phonesFromArray.length > 0
+    ? phonesFromArray
+    : legacyPhone
+      ? [legacyPhone]
+      : []
+  ).filter((phone, index, array) => array.indexOf(phone) === index);
+}
 
 function normalizeSpecialists(content: Record<string, unknown>) {
   if (Array.isArray(content.specialists)) {
@@ -46,6 +64,8 @@ function normalizeSpecialists(content: Record<string, unknown>) {
             ? item.createdAt
             : new Date(Date.now() - index * 1000).toISOString();
 
+        const phones = normalizeSpecialistPhones(item);
+
         return {
           id:
             typeof item.id === "string" && item.id.trim()
@@ -53,7 +73,8 @@ function normalizeSpecialists(content: Record<string, unknown>) {
               : `specialist-${index + 1}`,
           title,
           categories,
-          phone: String(item.phone ?? "").trim(),
+          phone: phones[0] ?? "",
+          phones,
           officeHours: String(item.officeHours ?? "").trim(),
           isPinned: Boolean(item.isPinned),
           status: (
@@ -85,6 +106,7 @@ function normalizeSpecialists(content: Record<string, unknown>) {
         title: String(item.label ?? "").trim(),
         categories: categoryName ? [categoryName] : [],
         phone: "",
+        phones: [],
         officeHours: "",
         isPinned: false,
         status: "active" as const,
@@ -169,7 +191,14 @@ function SpecialistCardView({
       </h2>
 
       <div className="mt-6 space-y-3">
-        <ContactRow label={houseSpecialistsCopy.card.phone} value={item.phone || houseSpecialistsCopy.card.phoneHidden} />
+        <ContactRow
+          label={houseSpecialistsCopy.card.phone}
+          value={
+            item.phones.length > 0
+              ? item.phones.join(", ")
+              : houseSpecialistsCopy.card.phoneHidden
+          }
+        />
         <ContactRow
           label={houseSpecialistsCopy.card.hours}
           value={item.officeHours || houseSpecialistsCopy.card.hoursEmpty}
@@ -177,8 +206,12 @@ function SpecialistCardView({
       </div>
 
       <div className="mt-6">
-        {item.phone ? (
-          <CopyPhoneButton phone={item.phone} />
+        {item.phones.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {item.phones.map((phone) => (
+              <CopyPhoneButton key={`${item.id}-${phone}`} phone={phone} />
+            ))}
+          </div>
         ) : (
           <Link
             prefetch={false}
