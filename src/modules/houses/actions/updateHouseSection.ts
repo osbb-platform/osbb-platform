@@ -253,7 +253,7 @@ function normalizeSpecialistsPayloadItems(value: unknown) {
         phones,
       };
     })
-    .filter((item): item is Record<string, unknown> => Boolean(item));
+    .filter(Boolean);
 }
 
 function normalizeSpecialistsForDiff(value: unknown): SpecialistLogItem[] {
