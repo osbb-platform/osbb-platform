@@ -174,10 +174,10 @@ export async function getHouseContentHistory({
 
   const totalCount = count ?? 0;
 
+  const rows = (data ?? []) as unknown as HouseContentHistoryRow[];
+
   return {
-    items: ((data ?? []) as HouseContentHistoryRow[]).map(
-      mapHouseContentHistoryRow,
-    ),
+    items: rows.map(mapHouseContentHistoryRow),
     totalCount,
     totalPages: Math.ceil(totalCount / safePageSize),
     page: safePage,
