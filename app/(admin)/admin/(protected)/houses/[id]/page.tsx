@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
+import { EditHeroSectionForm } from "@/src/modules/houses/components/EditHeroSectionForm";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
@@ -26,6 +27,7 @@ import { ensureHousePlanSection } from "@/src/modules/houses/services/ensureHous
 import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
+import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -41,6 +43,7 @@ type AdminHouseDetailPageProps = {
 };
 
 const allowedBlocks = new Set([
+  "hero",
   "announcements",
   "board",
   "information",
@@ -230,6 +233,7 @@ export default async function AdminHouseDetailPage({
 
   const publicPreviewHref =
     {
+      hero: basePublicUrl,
       announcements: `${basePublicUrl}/announcements`,
       board: `${basePublicUrl}/board`,
       information: `${basePublicUrl}/information`,
@@ -436,6 +440,15 @@ export default async function AdminHouseDetailPage({
     meetingsSection = null;
   }
 
+  const hero =
+    activeBlock === "hero"
+      ? await getAdminHouseHero({
+          houseId: house.id,
+          houseName: house.name,
+          publicDescription: house.public_description,
+        })
+      : null;
+
   const requisites =
     activeBlock === "requisites"
       ? await getAdminHouseRequisites({ houseId: house.id })
@@ -517,6 +530,7 @@ export default async function AdminHouseDetailPage({
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 Розділ: {
                   {
+                    hero: "Hero",
                     announcements: "Оголошення",
                     board: "Правління",
                     information: "Інформація",

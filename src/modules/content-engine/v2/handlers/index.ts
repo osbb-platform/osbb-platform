@@ -1,4 +1,5 @@
 import { registerHandler } from "../registry";
+import { heroHandler } from "./hero";
 import { requisitesHandler } from "./requisites";
 import { announcementsHandler } from "./announcements";
 
@@ -12,5 +13,6 @@ import { announcementsHandler } from "./announcements";
  */
 export function registerAllHandlers() {
   registerHandler(announcementsHandler);
+  registerHandler(heroHandler);
   registerHandler(requisitesHandler);
 }

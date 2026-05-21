@@ -19,6 +19,31 @@ export async function bootstrapHouseContent({
   const homePage = await ensureHouseHomePage({ houseId });
   const homePageId = homePage.id;
 
+  const heroContent = {
+    headline: `Ласкаво просимо на сайт будинку ${houseName}`,
+    subheadline:
+      publicDescription ||
+      "Тут будуть розміщуватися оголошення, звіти, важлива інформація, документи та сервісні оновлення по будинку.",
+    ctaLabel: "Відкрити оголошення",
+  };
+
+  const { error: houseHeroError } = await supabase.from("house_hero").upsert(
+    {
+      house_id: houseId,
+      headline: heroContent.headline,
+      subheadline: heroContent.subheadline,
+      cta_label: heroContent.ctaLabel,
+    },
+    {
+      onConflict: "house_id",
+      ignoreDuplicates: true,
+    },
+  );
+
+  if (houseHeroError) {
+    throw new Error(`Failed to create default house hero: ${houseHeroError.message}`);
+  }
+
   const { data: existingHero, error: heroLookupError } = await supabase
     .from("house_sections")
     .select("id")
@@ -33,14 +58,6 @@ export async function bootstrapHouseContent({
   }
 
   if (!existingHero) {
-    const heroContent = {
-      headline: `Ласкаво просимо на сайт будинку ${houseName}`,
-      subheadline:
-        publicDescription ||
-        "Тут будуть розміщуватися оголошення, звіти, важлива інформація, документи та сервісні оновлення по будинку.",
-      ctaLabel: "Відкрити оголошення",
-    };
-
     const { data: createdHero, error: createHeroError } = await supabase
       .from("house_sections")
       .insert({

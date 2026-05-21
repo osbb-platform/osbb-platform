@@ -1,4 +1,5 @@
 import { houseSystemCopy } from "@/src/shared/publicCopy/house";
+import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishedHouseHero";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
@@ -784,13 +785,18 @@ export async function getPublicHouseHomeDashboard({
     getHouseInformationPageByHouseId(houseId),
   ]);
 
-  const [homeSections, informationSections] = await Promise.all([
+  const [homeSections, informationSections, houseHero] = await Promise.all([
     homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
     informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
+    getPublishedHouseHero(houseId),
   ]);
 
   const heroSection = homeSections.find((section) => section.kind === "hero");
-  const heroContent = asRecord(heroSection?.content);
+  const legacyHeroContent = asRecord(heroSection?.content);
+  const heroContent = {
+    headline: houseHero?.headline || asString(legacyHeroContent.headline),
+    subheadline: houseHero?.subheadline || asString(legacyHeroContent.subheadline),
+  };
 
   const announcementsSections = homeSections.filter(
     (section) => section.kind === "announcements",
@@ -821,9 +827,9 @@ export async function getPublicHouseHomeDashboard({
   return {
     heroContent: {
       headline:
-        asString(heroContent.headline) || houseSystemCopy.homeDashboard.hero.headlineFallback,
+        heroContent.headline || houseSystemCopy.homeDashboard.hero.headlineFallback,
       subheadline:
-        asString(heroContent.subheadline) ||
+        heroContent.subheadline ||
         houseSystemCopy.homeDashboard.hero.subheadlineFallback,
     },
     statusStrip: statusWidgets,

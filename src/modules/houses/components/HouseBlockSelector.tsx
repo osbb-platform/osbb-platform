@@ -10,6 +10,7 @@ type HouseBlockSelectorProps = {
 };
 
 const houseNavigationBlocks = [
+  { value: "hero", label: "Hero" },
   { value: "announcements", label: "Оголошення" },
   { value: "reports", label: "Звіти" },
   { value: "plan", label: "План робіт" },
