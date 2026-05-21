@@ -1,6 +1,10 @@
 "use client";
 
-import { createHouseAnnouncementSection } from "@/src/modules/houses/actions/createHouseAnnouncementSection";
+import { useActionState } from "react";
+import {
+  createHouseAnnouncementSection,
+  type CreateHouseAnnouncementSectionState,
+} from "@/src/modules/houses/actions/createHouseAnnouncementSection";
 import {
   adminBodyClass,
   adminIconButtonClass,
@@ -23,6 +27,12 @@ export function CreateAnnouncementInlineForm({
   housePageId,
   onClose,
 }: CreateAnnouncementInlineFormProps) {
+  const initialState: CreateHouseAnnouncementSectionState = { error: null };
+  const [state, formAction, isPending] = useActionState(
+    createHouseAnnouncementSection,
+    initialState,
+  );
+
   return (
     <div className={[adminInsetSurfaceClass, adminInsetPaddingClass].join(" ")}>
       <div className="mb-4 flex items-start justify-between gap-4">
@@ -47,7 +57,7 @@ export function CreateAnnouncementInlineForm({
         ) : null}
       </div>
 
-      <form action={createHouseAnnouncementSection} className="grid gap-4">
+      <form action={formAction} className="grid gap-4">
         <input type="hidden" name="houseId" value={houseId} />
         <input type="hidden" name="houseSlug" value={houseSlug} />
         <input type="hidden" name="housePageId" value={housePageId} />
@@ -91,12 +101,19 @@ export function CreateAnnouncementInlineForm({
           />
         </div>
 
+        {state.error ? (
+          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+            {state.error}
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl"].join(" ")}
+            disabled={isPending}
+            className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
           >
-            Зберегти
+            {isPending ? "Зберігаємо..." : "Зберегти"}
           </button>
         </div>
       </form>

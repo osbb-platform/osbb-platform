@@ -13,7 +13,14 @@ function normalizeLevel(value: string) {
   return "info";
 }
 
-export async function createHouseAnnouncementSection(formData: FormData) {
+export type CreateHouseAnnouncementSectionState = {
+  error: string | null;
+};
+
+export async function createHouseAnnouncementSection(
+  _prevState: CreateHouseAnnouncementSectionState,
+  formData: FormData,
+): Promise<CreateHouseAnnouncementSectionState> {
   const houseId = String(formData.get("houseId") ?? "").trim();
   const houseSlug = String(formData.get("houseSlug") ?? "").trim();
   const housePageId = String(formData.get("housePageId") ?? "").trim();
@@ -23,11 +30,11 @@ export async function createHouseAnnouncementSection(formData: FormData) {
   const level = normalizeLevel(String(formData.get("level") ?? "info").trim());
 
   if (!houseId || !houseSlug || !housePageId) {
-    throw new Error("Не передано дані будинку для створення оголошення.");
+    return { error: "Не передано дані будинку для створення оголошення." };
   }
 
   if (!title) {
-    throw new Error("Заповніть заголовок оголошення.");
+    return { error: "Заповніть заголовок оголошення." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -41,7 +48,7 @@ export async function createHouseAnnouncementSection(formData: FormData) {
     .limit(1);
 
   if (existingError) {
-    throw new Error(existingError.message);
+    return { error: existingError.message };
   }
 
   const nextSortOrder =
@@ -75,7 +82,7 @@ export async function createHouseAnnouncementSection(formData: FormData) {
     .single();
 
   if (insertError || !insertedSection) {
-    throw new Error(insertError?.message ?? "Не вдалося створити оголошення.");
+    return { error: insertError?.message ?? "Не вдалося створити оголошення." };
   }
 
   const { error: versionError } = await supabase
@@ -92,9 +99,9 @@ export async function createHouseAnnouncementSection(formData: FormData) {
     });
 
   if (versionError) {
-    throw new Error(
-      `Оголошення створено, але версію не збережено: ${versionError.message}`,
-    );
+    return {
+      error: `Оголошення створено, але версію не збережено: ${versionError.message}`,
+    };
   }
 
   await ensureDraftApprovalTask({
