@@ -51,38 +51,40 @@ set
   work_schedule = excluded.work_schedule,
   is_active = excluded.is_active;
 
-alter table public.houses
-add column if not exists management_company_id uuid null;
-
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conname = 'houses_management_company_id_fkey'
-  ) then
+  if to_regclass('public.houses') is not null then
     alter table public.houses
-      add constraint houses_management_company_id_fkey
-      foreign key (management_company_id)
-      references public.management_companies(id)
-      on delete restrict;
+      add column if not exists management_company_id uuid null;
+
+    if not exists (
+      select 1
+      from pg_constraint
+      where conname = 'houses_management_company_id_fkey'
+    ) then
+      alter table public.houses
+        add constraint houses_management_company_id_fkey
+        foreign key (management_company_id)
+        references public.management_companies(id)
+        on delete restrict;
+    end if;
+
+    create index if not exists houses_management_company_id_idx
+      on public.houses (management_company_id);
+
+    update public.houses
+    set management_company_id = company.id
+    from public.management_companies company
+    where company.slug = 'tov-bukhhalter-onlain'
+      and public.houses.management_company_id is null;
+
+    alter table public.houses
+      alter column management_company_id set not null;
+
+    comment on column public.houses.management_company_id is
+      'Прив’язка будинку до керуючої компанії для public footer та CMS';
   end if;
 end $$;
-
-create index if not exists houses_management_company_id_idx
-  on public.houses (management_company_id);
-
-update public.houses
-set management_company_id = company.id
-from public.management_companies company
-where company.slug = 'tov-bukhhalter-onlain'
-  and public.houses.management_company_id is null;
-
-alter table public.houses
-alter column management_company_id set not null;
-
-comment on column public.houses.management_company_id is
-  'Прив’язка будинку до керуючої компанії для public footer та CMS';
 
 create or replace function public.set_management_companies_updated_at()
 returns trigger
