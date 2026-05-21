@@ -1,4 +1,5 @@
 import { registerHandler } from "../registry";
+import { announcementsHandler } from "./announcements";
 
 /**
  * Central content-engine v2 handler registration point.
@@ -9,5 +10,5 @@ import { registerHandler } from "../registry";
  * N5 will add the remaining migrated handlers one by one.
  */
 export function registerAllHandlers() {
-  void registerHandler;
+  registerHandler(announcementsHandler);
 }
