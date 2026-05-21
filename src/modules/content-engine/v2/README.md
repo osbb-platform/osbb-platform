@@ -270,3 +270,26 @@ From v2.0.0 stable onward:
 - prefer handler-local helpers over core changes.
 
 N5 handlers must depend on this API as stable.
+
+## How to create a new handler
+
+Use the template files as a starting point:
+
+```txt
+src/modules/content-engine/v2/handlers/_template/handler.ts.template
+src/modules/content-engine/v2/handlers/_template/commands/_template.ts.template
+```
+
+Recommended flow:
+
+1. Copy `handlers/_template/` to `handlers/<handler_key>/`.
+2. Rename `handler.ts.template` to `handler.ts`.
+3. Rename `commands/_template.ts.template` to a real command file, for example `commands/create.ts`.
+4. Replace placeholders such as `<HANDLER_KEY>`, `<WORKSPACE_KEY>`, `<COMMAND_NAME>`, `<DomainType>`, `<TABLE_NAME>`, and `<ENTITY_TYPE>`.
+5. Add domain `types.ts` and `index.ts`, following `handlers/announcements/`.
+6. Add every required command to the handler `commands` map.
+7. Register the handler in `handlers/index.ts`.
+8. Run typecheck/build before using it from UI.
+
+Keep common behavior in the existing command bus and pipeline. Add handler-local helpers first. Change core only through a dedicated mini-task.
+
