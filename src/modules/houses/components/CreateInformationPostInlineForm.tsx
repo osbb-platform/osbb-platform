@@ -192,7 +192,7 @@ export function CreateInformationPostInlineForm({
             name="body"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            maxLength={256}
+            maxLength={512}
             rows={6}
             className={adminInputClass}
             required
