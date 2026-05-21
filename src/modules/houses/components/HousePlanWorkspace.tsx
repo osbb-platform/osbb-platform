@@ -232,7 +232,8 @@ export function HousePlanWorkspace({
 
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedPdfFiles, setSelectedPdfFiles] = useState<File[]>([]);
-const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
 
@@ -271,6 +272,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedTaskId(null);
     setDraft(createEmptyTask());
     setDraftPublishStatus("planned");
+    setFormError(null);
+    setPdfError(null);
     setSelectedImageFiles([]);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
@@ -288,6 +291,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedTaskId(null);
     setDraft(createEmptyTask());
     setDraftPublishStatus("planned");
+    setFormError(null);
+    setPdfError(null);
     setSelectedImageFiles([]);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
@@ -301,6 +306,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setWorkspaceMode("edit");
     setSelectedTaskId(task.id);
     setDraft(task);
+    setFormError(null);
+    setPdfError(null);
     setDraftPublishStatus(
       task.status === "in_progress"
         ? "in_progress"
@@ -421,7 +428,50 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             item.id === normalizedDraft.id ? normalizedDraft : item,
           );
 
+  function validateDraftBeforeSubmit() {
+    if (submitIntent === "delete") {
+      return null;
+    }
+
+    if (!draft.title.trim()) {
+      return "Заповніть назву завдання перед збереженням.";
+    }
+
+    const publishableStatus =
+      normalizedDraft.status === "planned" ||
+      normalizedDraft.status === "in_progress" ||
+      normalizedDraft.status === "completed" ||
+      normalizedDraft.status === "archived";
+
+    if (!publishableStatus) {
+      return null;
+    }
+
+    if (draft.dateMode === "deadline" && !String(draft.deadlineAt ?? "").trim()) {
+      return "Для активного або архівного завдання потрібно вказати кінцевий термін.";
+    }
+
+    if (
+      draft.dateMode === "range" &&
+      (!String(draft.startDate ?? "").trim() || !String(draft.endDate ?? "").trim())
+    ) {
+      return "Для активного або архівного завдання потрібно вказати початок і кінець періоду.";
+    }
+
+    return null;
+  }
+
   async function handleSubmit(formData: FormData) {
+    setFormError(null);
+
+    const validationError = validateDraftBeforeSubmit();
+
+    if (validationError) {
+      setFormError(validationError);
+      setActionLabel("Обробляємо завдання...");
+      return;
+    }
+
     setActionLabel(
       submitIntent === "delete"
         ? "Видаляємо завдання..."
@@ -460,6 +510,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           });
 
         if (uploadError) {
+          setFormError(`Не вдалося завантажити фото: ${uploadError.message}`);
+          setActionLabel("Обробляємо завдання...");
           return;
         }
 
@@ -486,6 +538,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           });
 
         if (uploadError) {
+          setFormError(`Не вдалося завантажити PDF: ${uploadError.message}`);
+          setActionLabel("Обробляємо завдання...");
           return;
         }
 
@@ -1049,9 +1103,9 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               </div>
             </div>
 
-            {state.error ? (
+            {formError || state.error ? (
               <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                {state.error}
+                {formError ?? state.error}
               </div>
             ) : null}
           </div>

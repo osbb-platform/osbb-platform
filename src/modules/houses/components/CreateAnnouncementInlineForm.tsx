@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   createHouseAnnouncementSection,
   type CreateHouseAnnouncementSectionState,
@@ -32,6 +32,26 @@ export function CreateAnnouncementInlineForm({
     createHouseAnnouncementSection,
     initialState,
   );
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  async function handleSubmit(formData: FormData) {
+    setClientError(null);
+
+    const title = String(formData.get("title") ?? "").trim();
+    const body = String(formData.get("body") ?? "").trim();
+
+    if (!title) {
+      setClientError("Заповніть заголовок оголошення.");
+      return;
+    }
+
+    if (!body) {
+      setClientError("Заповніть текст оголошення.");
+      return;
+    }
+
+    await formAction(formData);
+  }
 
   return (
     <div className={[adminInsetSurfaceClass, adminInsetPaddingClass].join(" ")}>
@@ -57,7 +77,7 @@ export function CreateAnnouncementInlineForm({
         ) : null}
       </div>
 
-      <form action={formAction} className="grid gap-4">
+      <form action={handleSubmit} className="grid gap-4">
         <input type="hidden" name="houseId" value={houseId} />
         <input type="hidden" name="houseSlug" value={houseSlug} />
         <input type="hidden" name="housePageId" value={housePageId} />
@@ -101,9 +121,9 @@ export function CreateAnnouncementInlineForm({
           />
         </div>
 
-        {state.error ? (
+        {clientError || state.error ? (
           <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {state.error}
+            {clientError ?? state.error}
           </div>
         ) : null}
 

@@ -110,6 +110,21 @@ export function EditAnnouncementSectionForm({
     return new FormData(formElement);
   }
 
+  function validateAnnouncementFormData(formData: FormData) {
+    const title = String(formData.get("title") ?? "").trim();
+    const body = String(formData.get("body") ?? "").trim();
+
+    if (!title) {
+      return "Заповніть заголовок оголошення.";
+    }
+
+    if (!body) {
+      return "Заповніть текст оголошення.";
+    }
+
+    return null;
+  }
+
   function runMutation(
     kind: "publish" | "archive" | "delete",
     action: (formData: FormData) => Promise<{ error: string | null }>,
@@ -120,6 +135,14 @@ export function EditAnnouncementSectionForm({
     startTransition(async () => {
       try {
         const formData = buildFormData();
+        const validationError =
+          kind === "delete" ? null : validateAnnouncementFormData(formData);
+
+        if (validationError) {
+          setActionError(validationError);
+          return;
+        }
+
         const result = await action(formData);
 
         if (result.error) {
@@ -270,9 +293,31 @@ export function EditAnnouncementSectionForm({
                 type="button"
                 disabled={buttonsDisabled || isSaving}
                 onClick={() => {
+                  setActionError(null);
+
+                  try {
+                    const formData = buildFormData();
+                    const validationError = validateAnnouncementFormData(formData);
+
+                    if (validationError) {
+                      setActionError(validationError);
+                      setIsSaving(false);
+                      hasSubmittedRef.current = false;
+                      return;
+                    }
+                  } catch (error) {
+                    setActionError(
+                      error instanceof Error
+                        ? error.message
+                        : "Не вдалося перевірити форму оголошення.",
+                    );
+                    setIsSaving(false);
+                    hasSubmittedRef.current = false;
+                    return;
+                  }
+
                   hasSubmittedRef.current = true;
                   setIsSaving(true);
-                  setActionError(null);
 
                   requestAnimationFrame(() => {
                     formRef.current?.requestSubmit();
