@@ -25,7 +25,7 @@ import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureH
 import { ensureHousePlanSection } from "@/src/modules/houses/services/ensureHousePlanSection";
 import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
-import { ensureHouseRequisitesSection } from "@/src/modules/houses/services/ensureHouseRequisitesSection";
+import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -436,25 +436,10 @@ export default async function AdminHouseDetailPage({
     meetingsSection = null;
   }
 
-  const requisitesSectionList =
-    homeSections.find((section) => section.kind === "requisites") ?? null;
-
-  let requisitesSection = null;
-
-  if (activeBlock === "requisites" && homePage && !requisitesSectionList) {
-    const ensuredRequisitesSectionId = await ensureHouseRequisitesSection({
-      housePageId: homePage.id,
-    });
-
-    requisitesSection = await getAdminHouseSectionById(
-      ensuredRequisitesSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "requisites" && requisitesSectionList) {
-    requisitesSection = requisitesSectionList;
-  } else if (activeBlock !== "requisites") {
-    requisitesSection = null;
-  }
+  const requisites =
+    activeBlock === "requisites"
+      ? await getAdminHouseRequisites({ houseId: house.id })
+      : null;
 
   const specialistRequests =
     activeBlock === "specialists"
@@ -744,20 +729,11 @@ export default async function AdminHouseDetailPage({
         )
       ) : null}
 
-      {activeBlock === "requisites" ? (
+      {activeBlock === "requisites" && requisites ? (
         <HouseRequisitesWorkspace
           readOnlyMode={!access.houseWorkspaces.requisites.edit}
           houseId={house.id}
-          houseSlug={house.slug}
-          section={
-            requisitesSection
-              ? {
-                  id: requisitesSection.id,
-                  title: requisitesSection.title,
-                  content: getSectionContent(requisitesSection),
-                }
-              : null
-          }
+          requisites={requisites}
         />
       ) : null}
 

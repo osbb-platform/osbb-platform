@@ -1,114 +1,95 @@
-import { houseRequisitesCopy } from "@/src/shared/publicCopy/house";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { notFound } from "next/navigation";
+
 import { PublicHouseRequisitesClient } from "@/src/modules/houses/components/PublicHouseRequisitesClient";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseRequisites } from "@/src/modules/houses/services/getPublishedHouseRequisites";
+import { houseRequisitesCopy } from "@/src/shared/publicCopy/house";
 
 type Props = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{
+    slug: string;
+  }>;
 };
 
-type RequisitesSnapshot = {
-  recipient: string;
-  iban: string;
-  edrpou: string;
-  bank: string;
-  purposeTemplate: string;
-  paymentUrl: string;
-  paymentButtonLabel: string;
-};
+const DEFAULT_PURPOSE_TEMPLATE =
+  "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}";
 
-function normalizeSnapshot(value: unknown): RequisitesSnapshot {
-  if (!value || typeof value !== "object") {
-    return {
-      recipient: "",
-      iban: "",
-      edrpou: "",
-      bank: "",
-      purposeTemplate:
-        "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
-      paymentUrl: "",
-      paymentButtonLabel: houseRequisitesCopy.payment.buttonFallback,
-    };
+function normalizeLegacyPurposeTemplate(value: string) {
+  const normalized = value.trim();
+
+  if (
+    normalized ===
+    "Оплата взносов за квартиру {{apartment}}, лицевой счет {{account}}, за {{period}}"
+  ) {
+    return DEFAULT_PURPOSE_TEMPLATE;
   }
 
-  const raw = value as Record<string, unknown>;
-
-  return {
-    recipient: String(raw.recipient ?? "").trim(),
-    iban: String(raw.iban ?? "").trim(),
-    edrpou: String(raw.edrpou ?? "").trim(),
-    bank: String(raw.bank ?? "").trim(),
-    purposeTemplate:
-      String(
-        raw.purposeTemplate ??
-          "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
-      ).trim() ||
-      "Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}",
-    paymentUrl: String(raw.paymentUrl ?? "").trim(),
-    paymentButtonLabel:
-      String(raw.paymentButtonLabel ?? houseRequisitesCopy.payment.buttonFallback).trim() ||
-      houseRequisitesCopy.payment.buttonFallback,
-  };
-}
-
-function buildExamplePurpose(template: string) {
-  return template
-    .replaceAll("{{apartment}}", "12")
-    .replaceAll("{{account}}", "1002")
-    .replaceAll("{{period}}", "04.2026");
+  return normalized;
 }
 
 export default async function RequisitesPage({ params }: Props) {
   const { slug } = await params;
 
-  const { sections } =
-    await getPublishedHomeSectionsBySlug(slug);
-  const requisitesSection = sections.find((section) => section.kind === "requisites");
+  const house = await getHouseBySlug(slug);
 
-  const sectionContent =
-    requisitesSection &&
-    typeof requisitesSection.content === "object" &&
-    requisitesSection.content
-      ? (requisitesSection.content as Record<string, unknown>)
-      : null;
+  if (!house) {
+    notFound();
+  }
 
-  const liveSnapshot = normalizeSnapshot(
-    sectionContent?.liveSnapshot ?? sectionContent,
-  );
+  const requisites = await getPublishedHouseRequisites(house.id);
+
+  const purposeTemplate =
+    normalizeLegacyPurposeTemplate(
+      requisites?.purposeTemplate ?? DEFAULT_PURPOSE_TEMPLATE,
+    ) || DEFAULT_PURPOSE_TEMPLATE;
+
   const hasPublishedSnapshot = Boolean(
-    liveSnapshot.recipient ||
-      liveSnapshot.iban ||
-      liveSnapshot.edrpou ||
-      liveSnapshot.bank ||
-      liveSnapshot.purposeTemplate,
+    requisites &&
+      [
+        requisites.recipient,
+        requisites.iban,
+        requisites.edrpou,
+        requisites.bank,
+        purposeTemplate,
+      ].some((value) => value.trim().length > 0),
   );
+
+  const examplePurpose = purposeTemplate
+    .replaceAll("{{apartment}}", "12")
+    .replaceAll("{{account}}", "000012")
+    .replaceAll("{{period}}", "травень 2026");
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[32px] border border-[#E3D9CE] bg-[#F3EEE8] p-6 shadow-sm sm:p-10">
-        <div className="text-center">
-          <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A37] sm:text-5xl">
+    <div className="relative overflow-hidden">
+      <section className="relative border-b border-[var(--color-public-border)] bg-[var(--color-public-hero-bg)] px-4 py-14 text-[var(--color-public-text)] md:px-8">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-public-text-muted)]">
+            {house.name}
+          </span>
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--color-public-text)] md:text-5xl">
             {houseRequisitesCopy.page.title}
           </h1>
-
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#6B7280]">
+          <p className="max-w-3xl text-base leading-7 text-[var(--color-public-text-soft)] md:text-lg">
             {houseRequisitesCopy.page.description}
           </p>
         </div>
-      </div>
+      </section>
 
       <PublicHouseRequisitesClient
         requisites={{
-          recipient: liveSnapshot.recipient,
-          iban: liveSnapshot.iban,
-          edrpou: liveSnapshot.edrpou,
-          bank: liveSnapshot.bank,
-          purposeTemplate: liveSnapshot.purposeTemplate,
-          examplePurpose: buildExamplePurpose(liveSnapshot.purposeTemplate),
-          paymentUrl: liveSnapshot.paymentUrl,
-          paymentButtonLabel: liveSnapshot.paymentButtonLabel,
           hasPublishedSnapshot,
+          recipient: requisites?.recipient ?? "",
+          iban: requisites?.iban ?? "",
+          edrpou: requisites?.edrpou ?? "",
+          bank: requisites?.bank ?? "",
+          purposeTemplate,
+          examplePurpose,
+          paymentUrl: requisites?.paymentUrl ?? "",
+          paymentButtonLabel:
+            requisites?.paymentButtonLabel ||
+            houseRequisitesCopy.payment.buttonFallback,
         }}
       />
-    </section>
+    </div>
   );
 }
