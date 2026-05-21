@@ -8,6 +8,7 @@ import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFo
 import { PublicHouseNavigation } from "@/src/modules/houses/components/PublicHouseNavigation";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getChairmanForHouse } from "@/src/modules/houses/services/getPublishedHouseBoard";
 import { getPublicHouseBellFeed } from "@/src/modules/houses/services/getPublicHouseBellFeed";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
@@ -63,30 +64,13 @@ export default async function PublicHouseLayout({
     );
   }
 
-  const { getPublishedHomeSectionsBySlug } = await import("@/src/modules/houses/services/getPublishedHomeSectionsBySlug");
-
-  const { sections } = await getPublishedHomeSectionsBySlug(slug);
-
-  const boardSection = sections.find((s) => s.kind === "contacts");
-  const boardContent =
-    boardSection &&
-    typeof boardSection.content === "object" &&
-    boardSection.content
-      ? (boardSection.content as Record<string, unknown>)
-      : null;
-
-  const boardRoles = Array.isArray(boardContent?.roles)
-    ? (boardContent.roles as Array<Record<string, unknown>>)
-    : [];
-
-  const rawChairman =
-    boardRoles.find((role) => role.status === "chairman") ?? null;
+  const rawChairman = await getChairmanForHouse(house.id);
 
   const chairman = rawChairman
     ? {
-        name: String(rawChairman.name ?? "").trim(),
-        role: String(rawChairman.role ?? "").trim() || null,
-        phone: String(rawChairman.phone ?? "").trim() || null,
+        name: rawChairman.name.trim(),
+        role: rawChairman.role.trim() || null,
+        phone: rawChairman.phone.trim() || null,
       }
     : null;
 

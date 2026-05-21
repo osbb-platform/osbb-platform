@@ -18,7 +18,6 @@ import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdm
 import { getAdminHouseSectionById } from "@/src/modules/houses/services/getAdminHouseSectionById";
 import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
-import { ensureHouseBoardSection } from "@/src/modules/houses/services/ensureHouseBoardSection";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { ensureHouseSpecialistsSection } from "@/src/modules/houses/services/ensureHouseSpecialistsSection";
@@ -28,6 +27,7 @@ import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureH
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
+import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -298,22 +298,8 @@ export default async function AdminHouseDetailPage({
         )
       : [];
 
-  const boardSectionList =
-    homeSections.find((section) => section.kind === "contacts") ?? null;
-
-  let boardSection = null;
-
-  if (activeBlock === "board" && homePage && !boardSectionList) {
-    const ensuredBoardSectionId = await ensureHouseBoardSection({
-      housePageId: homePage.id,
-      houseSlug: house.slug,
-    });
-
-    boardSection = await getAdminHouseSectionById(ensuredBoardSectionId);
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (boardSectionList) {
-    boardSection = boardSectionList;
-  }
+  const board =
+    activeBlock === "board" ? await getAdminHouseBoard(house.id) : null;
 
   if (
     activeBlock === "information" &&
@@ -608,22 +594,17 @@ export default async function AdminHouseDetailPage({
       ) : null}
 
       {activeBlock === "board" ? (
-        boardSection ? (
+        board ? (
           <EditBoardSectionForm
             readOnlyMode={!access.houseWorkspaces.board.edit}
             houseId={house.id}
             houseSlug={house.slug}
-            section={{
-              id: boardSection.id,
-              title: boardSection.title,
-              status: boardSection.status,
-              content: getSectionContent(boardSection),
-            }}
+            board={board}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="Правління"
-            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити наявність сторінки home і коректність ініціалізації будинку."
+            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити коректність ініціалізації будинку."
           />
         )
       ) : null}

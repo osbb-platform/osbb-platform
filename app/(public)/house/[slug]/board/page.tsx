@@ -1,6 +1,8 @@
 import { houseBoardCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { notFound } from "next/navigation";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseBoard } from "@/src/modules/houses/services/getPublishedHouseBoard";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -74,49 +76,22 @@ function normalizeBoardRoleLabel(value: string | null | undefined) {
   return map[normalized] ?? normalized;
 }
 
-function normalizeBoardContent(content: Record<string, unknown>) {
-  const intro =
-    typeof content.intro === "string"
-      ? content.intro.trim()
-      : typeof content.message === "string"
-        ? content.message.trim()
-        : "";
-
-  const roles =
-    Array.isArray(content.roles)
-      ? content.roles
-          .map((item, index) => {
-            if (!item || typeof item !== "object") return null;
-            const raw = item as Record<string, unknown>;
-
-            const status: BoardRoleStatus =
-              raw.status === "chairman" ||
-              raw.status === "vice_chairman" ||
-              raw.status === "member" ||
-              raw.status === "revision_commission"
-                ? raw.status
-                : "member";
-
-            return {
-              id:
-                typeof raw.id === "string" && raw.id.trim()
-                  ? raw.id
-                  : `role-${index + 1}`,
-              status,
-              name: String(raw.name ?? "").trim(),
-              role: normalizeBoardRoleLabel(String(raw.role ?? "")),
-              phone: String(raw.phone ?? "").trim(),
-              email: String(raw.email ?? "").trim(),
-              officeHours: String(raw.officeHours ?? "").trim(),
-              description: String(raw.description ?? "").trim(),
-              sortOrder:
-                typeof raw.sortOrder === "number" ? raw.sortOrder : index,
-            } satisfies BoardRoleItem;
-          })
-          .filter((item): item is BoardRoleItem => Boolean(item))
-      : [];
-
-  return { intro, roles };
+function normalizeBoardData(board: Awaited<ReturnType<typeof getPublishedHouseBoard>>) {
+  return {
+    intro: board.intro.intro.trim(),
+    roles: board.members.map((member, index) => ({
+      id: member.id,
+      status: member.roleStatus,
+      name: member.name.trim(),
+      role: normalizeBoardRoleLabel(member.role),
+      phone: member.phone.trim(),
+      email: member.email.trim(),
+      officeHours: member.officeHours.trim(),
+      description: member.description.trim(),
+      sortOrder:
+        typeof member.sortOrder === "number" ? member.sortOrder : index,
+    }) satisfies BoardRoleItem),
+  };
 }
 
 function sortRolesByPriority(roles: BoardRoleItem[]) {
@@ -251,19 +226,16 @@ export default async function BoardPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const filter = normalizeFilter(resolvedSearchParams.filter);
 
-  const { house, sections } = await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    notFound();
+  }
+
+  const board = await getPublishedHouseBoard(house.id);
 
   const districtColor = house.district?.theme_color ?? "#0f172a";
-  const boardSection = sections.find((section) => section.kind === "contacts");
-
-  const content =
-    boardSection &&
-    typeof boardSection.content === "object" &&
-    boardSection.content
-      ? (boardSection.content as Record<string, unknown>)
-      : {};
-
-  const normalized = normalizeBoardContent(content);
+  const normalized = normalizeBoardData(board);
   const roles = sortRolesByPriority(normalized.roles);
   const intro = normalized.intro.trim();
 
