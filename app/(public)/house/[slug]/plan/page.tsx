@@ -2,7 +2,6 @@ import { housePlanCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
 import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
 import { PublicPlanTaskViewer } from "@/src/modules/houses/components/PublicPlanTaskViewer";
-import { PublicPlanArchiveMonthSelect } from "@/src/modules/houses/components/PublicPlanArchiveMonthSelect";
 
 type Props = {
   params: Promise<{ slug: string }>;

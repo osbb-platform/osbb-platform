@@ -1,8 +1,3 @@
-import {
-  adminTabBaseClass,
-  adminTabCountBaseClass,
-} from "@/src/shared/ui/admin/adminStyles";
-
 type AdminSegmentedTabItem = {
   key: string;
   label: string;

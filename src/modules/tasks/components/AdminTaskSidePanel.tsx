@@ -100,12 +100,6 @@ function getTypeLabel(value: string) {
   return "Ручна задача";
 }
 
-function getPriorityLabel(value: string | null) {
-  if (value === "high") return "Високий";
-  if (value === "medium") return "Середній";
-  if (value === "low") return "Низький";
-  return "Без пріоритету";
-}
 
 function formatDateTime(value: string | null) {
   if (!value) return "Не вказано";

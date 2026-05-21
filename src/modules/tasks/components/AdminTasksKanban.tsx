@@ -10,7 +10,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useDraggable } from "@dnd-kit/core";
-import { useRouter } from "next/navigation";
 import { CSS } from "@dnd-kit/utilities";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import { updatePlatformTaskStatus } from "@/src/modules/tasks/actions/updatePlatformTaskStatus";
@@ -274,7 +273,6 @@ export function AdminTasksKanban({
   assignees,
   houses,
 }: AdminTasksKanbanProps) {
-  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [tasks, setTasks] = useState(initialTasks);
   const [view, setView] = useState<"board" | "archive">("board");

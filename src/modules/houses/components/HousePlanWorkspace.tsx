@@ -201,6 +201,18 @@ function getFileLabel(fileName: string | undefined, fallback: string) {
   return fileName?.trim() || fallback;
 }
 
+function createPlanUploadToken() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function createPlanUploadFileName(fileExt: string, index: number) {
+  return `${createPlanUploadToken()}-${index}.${fileExt}`;
+}
+
+function createPlanAttachmentId(prefix: string, index: number) {
+  return `${prefix}-${createPlanUploadToken()}-${index}`;
+}
+
 export function HousePlanWorkspace({
   houseId,
   houseSlug,
@@ -449,7 +461,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       for (let index = 0; index < selectedImageFiles.length; index += 1) {
         const file = selectedImageFiles[index];
         const fileExt = file.name.split(".").pop() ?? "jpg";
-        const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const fileName = createPlanUploadFileName(fileExt, index);
         const filePath = `${houseId}/${activeTaskId}/images/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -464,7 +476,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         }
 
         uploadedImages.push({
-          id: `plan-image-${Date.now()}-${index}`,
+          id: createPlanAttachmentId("plan-image", index),
           path: filePath,
           fileName: file.name,
           kind: "image",
@@ -475,7 +487,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       for (let index = 0; index < selectedPdfFiles.length; index += 1) {
         const file = selectedPdfFiles[index];
         const fileExt = file.name.split(".").pop() ?? "pdf";
-        const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const fileName = createPlanUploadFileName(fileExt, index);
         const filePath = `${houseId}/${activeTaskId}/documents/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -490,7 +502,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         }
 
         uploadedDocuments.push({
-          id: `plan-pdf-${Date.now()}-${index}`,
+          id: createPlanAttachmentId("plan-pdf", index),
           path: filePath,
           fileName: file.name,
           kind: "pdf",

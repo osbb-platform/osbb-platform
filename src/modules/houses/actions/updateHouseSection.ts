@@ -7,9 +7,6 @@ import { completeDraftApprovalTask } from "@/src/modules/tasks/services/complete
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
-import {
-  validateMultiplePdfFiles,
-} from "@/src/shared/utils/validators/pdfUpload";
 
 type UpdateHouseSectionState = {
   error: string | null;
@@ -63,19 +60,6 @@ const PLAN_DOCUMENTS_BUCKET = "house-plan-documents";
 const PLAN_ARCHIVE_YEAR_START = 2016;
 const PLAN_ARCHIVE_YEAR_END = 2026;
 
-function sanitizeFileName(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9._-]/g, "");
-
-  return normalized || "report-file.pdf";
-}
-
-function isFileLike(value: FormDataEntryValue | null): value is File {
-  return typeof File !== "undefined" && value instanceof File;
-}
 
 function normalizePlanArchiveYear(value: unknown) {
   const parsed =
