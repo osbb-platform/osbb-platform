@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
-import { getAdminHouseSectionById } from "@/src/modules/houses/services/getAdminHouseSectionById";
-import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
+import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 
 type AdminHouseAnnouncementsPageProps = {
   params: Promise<{
@@ -25,35 +24,28 @@ export default async function AdminHouseAnnouncementsPage({
   const pages = await getAdminHousePages(house.id);
 
   const homePage = pages.find((page) => page.slug === "home") ?? null;
-  const homeSections = homePage
-    ? await getAdminHouseSections(homePage.id)
-    : [];
-
-  const announcementSectionMetas = homeSections.filter(
-    (section) => section.kind === "announcements",
-  );
-
-  const announcementSections = await Promise.all(
-    announcementSectionMetas.map((section) =>
-      getAdminHouseSectionById(section.id),
-    ),
-  );
-
-  const validAnnouncementSections = announcementSections.filter(
-    (section): section is NonNullable<typeof section> => Boolean(section),
-  );
+  const validAnnouncementSections = (
+    await getAdminHouseAnnouncements({ houseId: house.id })
+  ).map((announcement) => ({
+    id: announcement.id,
+    title: announcement.title,
+    status: announcement.lifecycle_status,
+    content: {
+      body: announcement.body,
+      level: announcement.level,
+      createdAt: announcement.created_at,
+      updatedAt: announcement.updated_at,
+      publishedAt: announcement.published_at,
+      lockVersion: announcement.lock_version,
+    },
+  }));
 
   return (
     <HouseAnnouncementsWorkspace
       houseId={house.id}
       houseSlug={house.slug}
       housePageId={homePage?.id ?? null}
-      sections={validAnnouncementSections.map((section) => ({
-        id: section.id,
-        title: section.title,
-        status: section.status,
-        content: section.content,
-      }))}
+      sections={validAnnouncementSections}
     />
   );
 }

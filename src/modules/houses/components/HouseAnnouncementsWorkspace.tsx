@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
 import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/EditAnnouncementSectionForm";
-import { deleteArchivedHouseAnnouncements } from "@/src/modules/houses/actions/deleteArchivedHouseAnnouncements";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
@@ -116,13 +115,12 @@ export function HouseAnnouncementsWorkspace({
   housePageId,
   sections,
 }: HouseAnnouncementsWorkspaceProps) {
-  const router = useRouter();
+  const { dispatch, isPending: isDeletingArchive, lastError } = useAdminContentCommand();
   const [activeTab, setActiveTab] = useState<TabKey>("active");
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [isDeleteArchiveConfirmOpen, setIsDeleteArchiveConfirmOpen] = useState(false);
-  const [isDeletingArchive, startDeleteArchiveTransition] = useTransition();
 
   const [createBaseline, setCreateBaseline] = useState<number | null>(null);
 
@@ -207,38 +205,27 @@ export function HouseAnnouncementsWorkspace({
     setSelectedSectionId(null);
   }
 
-  function handleDeleteAllArchived() {
+  async function handleDeleteAllArchived() {
     if (!housePageId) {
       return;
     }
 
     setWorkspaceError(null);
 
-    startDeleteArchiveTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.set("houseId", houseId);
-        formData.set("houseSlug", houseSlug);
-        formData.set("housePageId", housePageId);
-
-        const result = await deleteArchivedHouseAnnouncements(formData);
-
-        if (result.error) {
-          setWorkspaceError(result.error);
-          return;
-        }
-
-        setMode("idle");
-        setSelectedSectionId(null);
-        router.refresh();
-      } catch (error) {
-        setWorkspaceError(
-          error instanceof Error
-            ? error.message
-            : "Не вдалося видалити архівні оголошення.",
-        );
-      }
-    });
+    await dispatch(
+      {
+        type: "announcements.deleteAllArchived",
+        houseId,
+        payload: {},
+      },
+      {
+        onSuccess: () => {
+          setMode("idle");
+          setSelectedSectionId(null);
+        },
+        onError: setWorkspaceError,
+      },
+    );
   }
 
   return (
@@ -301,9 +288,9 @@ export function HouseAnnouncementsWorkspace({
         ) : null}
       </div>
 
-      {workspaceError ? (
+      {workspaceError ?? lastError ? (
         <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {workspaceError}
+          {workspaceError ?? lastError}
         </div>
       ) : null}
 
@@ -345,7 +332,7 @@ export function HouseAnnouncementsWorkspace({
         }}
         onConfirm={() => {
           setIsDeleteArchiveConfirmOpen(false);
-          handleDeleteAllArchived();
+          void handleDeleteAllArchived();
         }}
       />
 

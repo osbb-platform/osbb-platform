@@ -1,6 +1,8 @@
 "use client";
 
-import { createHouseAnnouncementSection } from "@/src/modules/houses/actions/createHouseAnnouncementSection";
+import { FormEvent } from "react";
+
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
   adminBodyClass,
   adminIconButtonClass,
@@ -23,6 +25,32 @@ export function CreateAnnouncementInlineForm({
   housePageId,
   onClose,
 }: CreateAnnouncementInlineFormProps) {
+  const { dispatch } = useAdminContentCommand();
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    await dispatch(
+      {
+        type: "announcements.create",
+        houseId,
+        payload: {
+          title: String(formData.get("title") ?? ""),
+          body: String(formData.get("body") ?? ""),
+          level: String(formData.get("level") ?? "info"),
+        },
+      },
+      {
+        onSuccess: () => onClose?.(),
+      },
+    );
+  }
+
+  void houseSlug;
+  void housePageId;
+
   return (
     <div className={[adminInsetSurfaceClass, adminInsetPaddingClass].join(" ")}>
       <div className="mb-4 flex items-start justify-between gap-4">
@@ -47,11 +75,7 @@ export function CreateAnnouncementInlineForm({
         ) : null}
       </div>
 
-      <form action={createHouseAnnouncementSection} className="grid gap-4">
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="housePageId" value={housePageId} />
-
+      <form onSubmit={handleSubmit} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення

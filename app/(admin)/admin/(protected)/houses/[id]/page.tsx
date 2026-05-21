@@ -13,6 +13,7 @@ import { HouseSpecialistsWorkspace } from "@/src/modules/houses/components/House
 import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseRequisitesWorkspace";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
+import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 import { getAdminHouseSectionById } from "@/src/modules/houses/services/getAdminHouseSectionById";
 import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
@@ -72,6 +73,32 @@ function normalizeSectionForWorkspace<T extends {
     title: section.title ?? "Без назви",
     status: section.status ?? "draft",
     content: section.content ?? {},
+  };
+}
+
+function normalizeAnnouncementForWorkspace(announcement: {
+  id: string;
+  title: string;
+  body: string;
+  level: "info" | "warning" | "danger";
+  lifecycle_status: "draft" | "published" | "archived";
+  lock_version: number;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+}) {
+  return {
+    id: announcement.id,
+    title: announcement.title,
+    status: announcement.lifecycle_status,
+    content: {
+      body: announcement.body,
+      level: announcement.level,
+      createdAt: announcement.created_at,
+      updatedAt: announcement.updated_at,
+      publishedAt: announcement.published_at,
+      lockVersion: announcement.lock_version,
+    },
   };
 }
 
@@ -262,7 +289,9 @@ export default async function AdminHouseDetailPage({
 
   const validAnnouncementSections =
     activeBlock === "announcements"
-      ? homeSections.filter((section) => section.kind === "announcements")
+      ? (await getAdminHouseAnnouncements({ houseId: house.id })).map(
+          normalizeAnnouncementForWorkspace,
+        )
       : [];
 
   const boardSectionList =
