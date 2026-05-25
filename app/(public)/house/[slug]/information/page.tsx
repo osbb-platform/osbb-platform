@@ -229,10 +229,6 @@ export default async function InformationPage({
                       {document.description || houseInformationCopy.documents.pdfFallback}
                     </div>
 
-                    <div className="mt-3 text-xs text-slate-500">
-                      {formatPublishedAt(document.updated_at || document.created_at)}
-                    </div>
-
                     <PublicReportPdfViewer
                       filePath={document.storage_path || ""}
                       fileName={document.original_file_name || document.title}
