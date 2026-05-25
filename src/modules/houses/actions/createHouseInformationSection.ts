@@ -71,8 +71,8 @@ export async function createHouseInformationSection(
     return { error: "Введіть текст повідомлення." };
   }
 
-  if (body.length > 256) {
-    return { error: "Текст повідомлення не повинен перевищувати 256 символів." };
+  if (body.length > 512) {
+    return { error: "Текст повідомлення не повинен перевищувати 512 символів." };
   }
 
   if (coverImage) {

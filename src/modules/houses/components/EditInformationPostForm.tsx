@@ -230,7 +230,7 @@ export function EditInformationPostForm({
             required
           />
           <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
-            {body.length}/256
+            {body.length}/512
           </div>
         </div>
 

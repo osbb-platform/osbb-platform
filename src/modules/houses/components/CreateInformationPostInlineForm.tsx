@@ -198,7 +198,7 @@ export function CreateInformationPostInlineForm({
             required
           />
           <div className="text-xs text-[var(--cms-text-muted)]">
-            {body.length}/256
+            {body.length}/512
           </div>
         </div>
       </div>
