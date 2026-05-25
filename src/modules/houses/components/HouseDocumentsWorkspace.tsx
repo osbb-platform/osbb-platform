@@ -193,6 +193,7 @@ export function HouseDocumentsWorkspace({
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
   const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  const [selectedDocumentYearFilter, setSelectedDocumentYearFilter] = useState("all");
   const [documentSortMode, setDocumentSortMode] =
     useState<DocumentSortMode>("updated_desc");
 
@@ -258,10 +259,29 @@ export function HouseDocumentsWorkspace({
     embedded,
   ]);
 
+  const documentYearFilterOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        baseVisibleDocuments
+          .map((document) => document.document_year)
+          .filter((year): year is number => Number.isInteger(year)),
+      ),
+    )
+      .sort((left, right) => right - left)
+      .map(String);
+  }, [baseVisibleDocuments]);
+
   const visibleDocuments = useMemo(() => {
     const normalizedQuery = documentSearchQuery.trim().toLowerCase();
 
     const filtered = baseVisibleDocuments.filter((document) => {
+      if (
+        selectedDocumentYearFilter !== "all" &&
+        String(document.document_year ?? "") !== selectedDocumentYearFilter
+      ) {
+        return false;
+      }
+
       if (!normalizedQuery) return true;
 
       return [
@@ -306,7 +326,12 @@ export function HouseDocumentsWorkspace({
 
       return right.updated_at.localeCompare(left.updated_at);
     });
-  }, [baseVisibleDocuments, documentSearchQuery, documentSortMode]);
+  }, [
+    baseVisibleDocuments,
+    documentSearchQuery,
+    documentSortMode,
+    selectedDocumentYearFilter,
+  ]);
 
   const selectedDocument = useMemo(
     () =>
@@ -387,6 +412,7 @@ export function HouseDocumentsWorkspace({
     setActionError(null);
     setConfirmAction(null);
     resetForm();
+    setSelectedDocumentYearFilter("all");
   }
 
   async function submitDocument(intent: SubmitIntent) {
@@ -958,7 +984,7 @@ export function HouseDocumentsWorkspace({
 
       <div className={`${adminSurfaceClass} p-6`}>
         {baseVisibleDocuments.length > 0 ? (
-          <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_260px]">
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                 Пошук документа
@@ -969,6 +995,24 @@ export function HouseDocumentsWorkspace({
                 placeholder="Назва, опис, файл або рік"
                 className={adminInputClass}
               />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                Рік
+              </span>
+              <select
+                value={selectedDocumentYearFilter}
+                onChange={(event) => setSelectedDocumentYearFilter(event.target.value)}
+                className={adminInputClass}
+              >
+                <option value="all">Усі роки</option>
+                {documentYearFilterOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="block">
@@ -997,7 +1041,7 @@ export function HouseDocumentsWorkspace({
           <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
             {baseVisibleDocuments.length === 0
               ? getEmptyText(activeTab, emptyTitle)
-              : "За цим пошуком документів не знайдено. Змініть запит або очистіть поле пошуку."}
+              : "За цими фільтрами документів не знайдено. Змініть рік, запит або очистіть поле пошуку."}
           </div>
         ) : (
           <div className="grid gap-4">

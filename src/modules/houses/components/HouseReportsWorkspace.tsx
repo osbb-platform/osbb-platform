@@ -130,6 +130,22 @@ function getMonthLabel(value: string | undefined) {
   );
 }
 
+function getReportYearValue(report: ReportItem) {
+  if (Number.isInteger(report.year)) {
+    return String(report.year);
+  }
+
+  if (report.reportDate) {
+    const year = new Date(report.reportDate).getFullYear();
+
+    if (Number.isInteger(year) && year > 0) {
+      return String(year);
+    }
+  }
+
+  return "";
+}
+
 function getDefaultSectionStatus(status: SectionStatus): SectionStatus {
   if (status === "archived") {
     return "published";
@@ -234,6 +250,7 @@ export function HouseReportsWorkspace({
   const [submitIntent, setSubmitIntent] = useState<"save" | "publish" | "archive" | "delete" | "delete_archive">("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
   const [reportSearchQuery, setReportSearchQuery] = useState("");
+  const [selectedReportYearFilter, setSelectedReportYearFilter] = useState("all");
   const [reportSortMode, setReportSortMode] =
     useState<ReportSortMode>("updated_desc");
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
@@ -295,10 +312,27 @@ export function HouseReportsWorkspace({
     return archivedReports;
   }, [activeTab, archivedReports, currentReports, pastReports]);
 
+  const reportYearFilterOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        baseVisibleReports
+          .map(getReportYearValue)
+          .filter((year) => Boolean(year)),
+      ),
+    ).sort((left, right) => Number(right) - Number(left));
+  }, [baseVisibleReports]);
+
   const visibleReports = useMemo(() => {
     const normalizedQuery = reportSearchQuery.trim().toLowerCase();
 
     const filtered = baseVisibleReports.filter((report) => {
+      if (
+        selectedReportYearFilter !== "all" &&
+        getReportYearValue(report) !== selectedReportYearFilter
+      ) {
+        return false;
+      }
+
       if (!normalizedQuery) return true;
 
       return [
@@ -344,7 +378,12 @@ export function HouseReportsWorkspace({
 
       return (right.updatedAt ?? "").localeCompare(left.updatedAt ?? "");
     });
-  }, [baseVisibleReports, reportSearchQuery, reportSortMode]);
+  }, [
+    baseVisibleReports,
+    reportSearchQuery,
+    reportSortMode,
+    selectedReportYearFilter,
+  ]);
 
   function resetWorkspace(nextTab = activeTab) {
     setWorkspaceMode("idle");
@@ -401,6 +440,7 @@ export function HouseReportsWorkspace({
       reportPdfInputRef.current.value = "";
     }
     setDraft(getEmptyDraft(tab, firstCategory));
+    setSelectedReportYearFilter("all");
   }
 
   const isPastContext = draft.periodType === "past";
@@ -1099,7 +1139,7 @@ export function HouseReportsWorkspace({
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="mt-0">
           {baseVisibleReports.length > 0 ? (
-            <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_260px]">
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                   Пошук звіту
@@ -1110,6 +1150,24 @@ export function HouseReportsWorkspace({
                   placeholder="Назва, опис, файл або рік"
                   className={adminInputClass}
                 />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
+                  Рік
+                </span>
+                <select
+                  value={selectedReportYearFilter}
+                  onChange={(event) => setSelectedReportYearFilter(event.target.value)}
+                  className={adminInputClass}
+                >
+                  <option value="all">Усі роки</option>
+                  {reportYearFilterOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="block">
@@ -1142,7 +1200,7 @@ export function HouseReportsWorkspace({
                   : activeTab == "past"
                     ? "Тут зберігатимуться звіти за минулі роки."
                     : "Архівні звіти відображатимуться в цьому розділі."
-                : "За цим пошуком звітів не знайдено. Змініть запит або очистіть поле пошуку."}
+                : "За цими фільтрами звітів не знайдено. Змініть рік, запит або очистіть поле пошуку."}
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
