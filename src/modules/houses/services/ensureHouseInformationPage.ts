@@ -37,10 +37,28 @@ export async function ensureHouseInformationPage({
     .select("id, slug, title, status")
     .single();
 
-  if (createPageError || !createdPage) {
+  if (createPageError) {
+    if (createPageError.code === "23505") {
+      const { data: pageAfterConflict, error: pageAfterConflictError } =
+        await supabase
+          .from("house_pages")
+          .select("id, slug, title, status")
+          .eq("house_id", houseId)
+          .eq("slug", "information")
+          .maybeSingle();
+
+      if (!pageAfterConflictError && pageAfterConflict) {
+        return pageAfterConflict;
+      }
+    }
+
     throw new Error(
-      `Failed to create information page: ${createPageError?.message ?? "Unknown error"}`,
+      `Failed to create information page: ${createPageError.message}`,
     );
+  }
+
+  if (!createdPage) {
+    throw new Error("Failed to create information page: Unknown error");
   }
 
   return createdPage;
