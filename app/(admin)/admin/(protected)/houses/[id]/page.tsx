@@ -29,6 +29,7 @@ import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminH
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
 import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
+import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
@@ -312,14 +313,9 @@ export default async function AdminHouseDetailPage({
   }
 
 
-  const informationSections =
-    activeBlock === "information" && informationPage
-      ? await getAdminHouseSections(informationPage.id)
-      : [];
-
   const validInformationPostSections =
     activeBlock === "information"
-      ? informationSections.filter((section) => section.kind === "rich_text")
+      ? await getAdminHouseInformationPosts({ houseId: house.id })
       : [];
 
   const faq =
@@ -643,7 +639,7 @@ export default async function AdminHouseDetailPage({
           houseId={house.id}
           houseSlug={house.slug}
           housePageId={informationPage?.id ?? null}
-          posts={validInformationPostSections.map(normalizeSectionForWorkspace)}
+          posts={validInformationPostSections}
           documents={documents}
           faq={faq}
         />

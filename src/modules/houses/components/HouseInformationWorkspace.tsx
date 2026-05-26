@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
+import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { CreateInformationPostInlineForm } from "@/src/modules/houses/components/CreateInformationPostInlineForm";
 import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInformationFaqForm";
@@ -21,12 +22,7 @@ export const INFORMATION_CATEGORIES = [
 type InformationMainTab = "posts" | "faq" | "materials";
 type PostWorkspaceMode = "idle" | "create" | "edit";
 
-type InformationSectionItem = {
-  id: string;
-  title: string;
-  status: "draft" | "in_review" | "published" | "archived";
-  content: Record<string, unknown>;
-};
+type InformationSectionItem = HouseInformationPostSnapshot;
 
 type Props = {
   houseId: string;

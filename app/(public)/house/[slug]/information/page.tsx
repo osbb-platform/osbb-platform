@@ -1,10 +1,9 @@
 import { houseInformationCopy } from "@/src/shared/publicCopy/house";
 import { notFound } from "next/navigation";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
-import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
-import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseInformationDocuments } from "@/src/modules/houses/services/getPublicHouseInformationDocuments";
 import { getPublishedHouseFaq } from "@/src/modules/houses/services/getPublishedHouseFaq";
+import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { PublicInformationSlider } from "@/src/modules/houses/components/PublicInformationSlider";
 import Link from "next/link";
@@ -15,21 +14,6 @@ type Props = {
     year?: string;
   }>;
 };
-
-function getSortTimestamp(content: Record<string, unknown>) {
-  const candidates = [content.publishedAt, content.updatedAt, content.createdAt];
-
-  for (const value of candidates) {
-    if (typeof value === "string" && value) {
-      const time = new Date(value).getTime();
-      if (!Number.isNaN(time)) {
-        return time;
-      }
-    }
-  }
-
-  return 0;
-}
 
 function formatPublishedAt(value: unknown) {
   if (typeof value !== "string" || !value) {
@@ -63,38 +47,11 @@ export default async function InformationPage({
 
   const districtColor = house.district?.theme_color ?? "#22c55e";
 
-  const [informationPage, documents, faq] = await Promise.all([
-    getHouseInformationPageByHouseId(house.id),
+  const [articles, documents, faq] = await Promise.all([
+    getPublishedHouseInformationPosts(house.id),
     getPublicHouseInformationDocuments(house.id),
     getPublishedHouseFaq(house.id),
   ]);
-
-  const sections = informationPage
-    ? await getPublishedHouseSections(informationPage.id)
-    : [];
-
-  const articles = sections
-    .filter((section) => section.kind === "rich_text")
-    .sort((a, b) => {
-      const aContent =
-        typeof a.content === "object" && a.content
-          ? (a.content as Record<string, unknown>)
-          : {};
-      const bContent =
-        typeof b.content === "object" && b.content
-          ? (b.content as Record<string, unknown>)
-          : {};
-
-      const pinnedDiff =
-        Number(Boolean(bContent.isPinned)) -
-        Number(Boolean(aContent.isPinned));
-
-      if (pinnedDiff !== 0) {
-        return pinnedDiff;
-      }
-
-      return getSortTimestamp(bContent) - getSortTimestamp(aContent);
-    });
 
   const documentYearsWithContent = Array.from(
     new Set(

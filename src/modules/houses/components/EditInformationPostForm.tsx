@@ -1,12 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { archiveHouseInformationSection } from "@/src/modules/houses/actions/archiveHouseInformationSection";
-import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
-import { publishHouseInformationSection } from "@/src/modules/houses/actions/publishHouseInformationSection";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 import {
   adminPrimaryButtonClass,
@@ -18,7 +17,14 @@ import {
   adminInsetSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
-const initialState = { error: null };
+const INFORMATION_IMAGE_BUCKET = "house-information-images";
+const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_COVER_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "image/webp",
+]);
 
 type Props = {
   houseId: string;
@@ -26,11 +32,27 @@ type Props = {
   section: {
     id: string;
     title: string;
-    status: "draft" | "in_review" | "published" | "archived";
+    status: "draft" | "published" | "archived";
     content: Record<string, unknown>;
   };
   onClose: () => void;
 };
+
+function sanitizeFileName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120);
+}
+
+function getLockVersion(section: Props["section"]) {
+  return typeof section.content.lockVersion === "number"
+    ? section.content.lockVersion
+    : 1;
+}
 
 export function EditInformationPostForm({
   houseId,
@@ -38,30 +60,28 @@ export function EditInformationPostForm({
   section,
   onClose,
 }: Props) {
-  const router = useRouter();
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
-
-  async function deleteDraftAction(formData: FormData) {
-    await deleteHouseSection(formData);
-  }
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const [body, setBody] = useState(
     typeof section.content.body === "string" ? section.content.body : "",
   );
-
-  const [isPinned, setIsPinned] = useState(
-    Boolean(section.content.isPinned),
-  );
-
+  const [isPinned, setIsPinned] = useState(Boolean(section.content.isPinned));
   const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     typeof section.content.coverImageUrl === "string"
       ? section.content.coverImageUrl
       : null,
   );
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "publish" | "archive" | "delete" | null
+  >(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "publish" | "archive" | "delete" | null
+  >(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const category = useMemo(
@@ -72,39 +92,172 @@ export function EditInformationPostForm({
     [section.content.category],
   );
 
-  const isDraft = section.status !== "published";
-  const hasSubmittedRef = useRef(false);
+  const isDraft = section.status === "draft";
+  const isPublished = section.status === "published";
+  const isArchived = section.status === "archived";
 
   useEffect(() => {
-    if (!hasSubmittedRef.current) return;
+    return () => {
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
-    if (!isPending && state.error === null) {
-      router.refresh();
-      onClose();
-      hasSubmittedRef.current = false;
+  async function uploadCoverImage(file: File) {
+    if (!ALLOWED_COVER_IMAGE_TYPES.has(file.type)) {
+      throw new Error("Обкладинка має бути JPG, PNG або WebP.");
     }
-  }, [isPending, state.error, router, onClose]);
+
+    if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
+      throw new Error("Обкладинка має бути не більшою за 5 МБ.");
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const fileExt = file.name.split(".").pop() || "jpg";
+    const safeFileName = sanitizeFileName(file.name) || `cover.${fileExt}`;
+    const filePath = `${houseId}/${section.id}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}-${safeFileName}`;
+
+    const { error } = await supabase.storage
+      .from(INFORMATION_IMAGE_BUCKET)
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+
+    if (error) {
+      throw new Error(`Не вдалося завантажити обкладинку: ${error.message}`);
+    }
+
+    return {
+      bucket: INFORMATION_IMAGE_BUCKET,
+      path: filePath,
+      originalName: file.name,
+      mimeType: file.type || null,
+      size: file.size,
+    };
+  }
+
+  function buildFormData() {
+    const formElement = formRef.current;
+
+    if (!formElement) {
+      throw new Error("Форму інформаційного матеріалу не знайдено.");
+    }
+
+    return new FormData(formElement);
+  }
+
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setIsSaving(true);
+    setActionError(null);
+
+    let uploadedCoverImage: Awaited<ReturnType<typeof uploadCoverImage>> | null = null;
+
+    try {
+      const formData = buildFormData();
+      uploadedCoverImage = selectedCoverImage
+        ? await uploadCoverImage(selectedCoverImage)
+        : null;
+
+      const result = await dispatch(
+        {
+          type: "information_posts.update",
+          houseId,
+          payload: {
+            id: section.id,
+            lockVersion: getLockVersion(section),
+            headline: String(formData.get("headline") ?? ""),
+            category: String(formData.get("category") ?? INFORMATION_CATEGORIES[0]),
+            body: String(formData.get("body") ?? ""),
+            isPinned,
+            coverImage: uploadedCoverImage,
+          },
+        },
+        {
+          onSuccess: () => onClose(),
+          onError: setActionError,
+        },
+      );
+
+      if (!result && uploadedCoverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage
+          .from(uploadedCoverImage.bucket)
+          .remove([uploadedCoverImage.path]);
+      }
+    } catch (error) {
+      if (uploadedCoverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage
+          .from(uploadedCoverImage.bucket)
+          .remove([uploadedCoverImage.path]);
+      }
+
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося зберегти інформаційний матеріал.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function runMutation(kind: "publish" | "archive" | "delete") {
+    setActionError(null);
+    setPendingAction(kind);
+
+    const commandType =
+      kind === "publish"
+        ? "information_posts.publish"
+        : kind === "archive"
+          ? "information_posts.archive"
+          : "information_posts.delete";
+
+    try {
+      await dispatch(
+        {
+          type: commandType,
+          houseId,
+          payload: {
+            id: section.id,
+            lockVersion: getLockVersion(section),
+          },
+        },
+        {
+          onSuccess: () => onClose(),
+          onError: setActionError,
+        },
+      );
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося виконати дію.",
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  void houseSlug;
+
+  const combinedError = actionError ?? lastError;
+  const buttonsDisabled = isPending || pendingAction !== null || isSaving;
 
   return (
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <form
+        ref={formRef}
         id="information-post-edit-form"
-        action={(formData) => {
-          if (selectedCoverImage) {
-            formData.set("coverImage", selectedCoverImage);
-          }
-          return formAction(formData);
-        }}
+        onSubmit={handleSave}
         className="grid gap-4"
       >
-        <input type="hidden" name="sectionId" value={section.id} />
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="kind" value="rich_text" />
-        <input type="hidden" name="title" value={section.title} />
-        <input type="hidden" name="isPinned" value={isPinned ? "true" : "false"} />
-        <input type="hidden" name="status" value={section.status} />
-
         {/* HEADER */}
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -234,11 +387,11 @@ export function EditInformationPostForm({
           </div>
         </div>
 
-        {state.error && (
+        {combinedError ? (
           <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {state.error}
+            {combinedError}
           </div>
-        )}
+        ) : null}
       </form>
 
       {/* ACTIONS */}
@@ -247,47 +400,109 @@ export function EditInformationPostForm({
           <button
             type="submit"
             form="information-post-edit-form"
-            disabled={isPending}
-            onClick={() => (hasSubmittedRef.current = true)}
+            disabled={buttonsDisabled}
             className={`${adminPrimaryButtonClass} disabled:opacity-60`}
           >
-            {isPending ? "Зберігаємо..." : "Зберегти"}
+            {isSaving ? "Зберігаємо..." : "Зберегти"}
           </button>
 
-          {isDraft && (
-            <form action={deleteDraftAction}>
-              <input type="hidden" name="sectionId" value={section.id} />
-              <input type="hidden" name="houseId" value={houseId} />
-              <input type="hidden" name="houseSlug" value={houseSlug} />
-              <button className={adminDangerButtonClass}>
-                Видалити
-              </button>
-            </form>
-          )}
+          {(isDraft || isArchived) ? (
+            <button
+              type="button"
+              disabled={buttonsDisabled}
+              onClick={() => setConfirmAction("delete")}
+              className={`${adminDangerButtonClass} disabled:opacity-60`}
+            >
+              {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
+            </button>
+          ) : null}
         </div>
 
         <div className="flex gap-3">
           {isDraft ? (
-            <form action={publishHouseInformationSection}>
-              <input type="hidden" name="sectionId" value={section.id} />
-              <input type="hidden" name="houseId" value={houseId} />
-              <input type="hidden" name="houseSlug" value={houseSlug} />
-              <button className={adminSuccessButtonClass}>
-                Підтвердити
-              </button>
-            </form>
-          ) : (
-            <form action={archiveHouseInformationSection}>
-              <input type="hidden" name="sectionId" value={section.id} />
-              <input type="hidden" name="houseId" value={houseId} />
-              <input type="hidden" name="houseSlug" value={houseSlug} />
-              <button className={adminWarningButtonClass}>
-                Архівувати
-              </button>
-            </form>
-          )}
+            <button
+              type="button"
+              disabled={buttonsDisabled}
+              onClick={() => setConfirmAction("publish")}
+              className={`${adminSuccessButtonClass} disabled:opacity-60`}
+            >
+              {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+            </button>
+          ) : null}
+
+          {isPublished ? (
+            <button
+              type="button"
+              disabled={buttonsDisabled}
+              onClick={() => setConfirmAction("archive")}
+              className={`${adminWarningButtonClass} disabled:opacity-60`}
+            >
+              {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
+            </button>
+          ) : null}
         </div>
       </div>
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete"}
+        title={isArchived ? "Видалити архівний матеріал?" : "Видалити чернетку матеріалу?"}
+        description={
+          isArchived
+            ? "Архівний інформаційний матеріал буде видалено із системи без можливості відновлення."
+            : "Чернетку інформаційного матеріалу буде видалено без можливості відновлення."
+        }
+        confirmLabel="Видалити матеріал"
+        pendingLabel="Видаляємо..."
+        tone="destructive"
+        isPending={pendingAction === "delete"}
+        onCancel={() => {
+          if (!pendingAction) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void runMutation("delete");
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish"}
+        title="Підтвердити публікацію матеріалу?"
+        description="Після підтвердження матеріал стане видимим для мешканців на сторінці інформації."
+        confirmLabel="Підтвердити публікацію"
+        pendingLabel="Підтверджуємо..."
+        tone="publish"
+        isPending={pendingAction === "publish"}
+        onCancel={() => {
+          if (!pendingAction) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void runMutation("publish");
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "archive"}
+        title="Перенести матеріал в архів?"
+        description="Після архівації матеріал зникне з публічної частини сайту. У CMS він залишиться доступним в архіві."
+        confirmLabel="Архівувати матеріал"
+        pendingLabel="Архівуємо..."
+        tone="warning"
+        isPending={pendingAction === "archive"}
+        onCancel={() => {
+          if (!pendingAction) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void runMutation("archive");
+        }}
+      />
     </div>
   );
 }
