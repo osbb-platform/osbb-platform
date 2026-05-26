@@ -27,6 +27,7 @@ import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureH
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
+import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
@@ -438,6 +439,11 @@ export default async function AdminHouseDetailPage({
   const requisites =
     activeBlock === "requisites"
       ? await getAdminHouseRequisites({ houseId: house.id })
+      : null;
+
+  const homeWidgets =
+    activeBlock === "registry"
+      ? await getAdminHouseHomeWidgets(house.id)
       : null;
 
   const specialistRequests =

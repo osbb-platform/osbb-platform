@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeHousePasswordForm } from "@/src/modules/houses/components/ChangeHousePasswordForm";
 import { ChangeHouseDashboardWidgetsForm } from "@/src/modules/houses/components/ChangeHouseDashboardWidgetsForm";
+import type { HouseHomeWidgetsSnapshot } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
@@ -57,6 +58,7 @@ type HouseRegistryCardProps = {
     }>;
   };
   currentUser: CurrentAdminUser;
+  homeWidgets?: HouseHomeWidgetsSnapshot;
   onOpenSettings: (house: HouseRegistryCardProps["house"]) => void;
 };
 
@@ -184,8 +186,16 @@ function getMessagePreview(item: HouseRegistryCardProps["house"]["message_items"
 export function HouseRegistryCard({
   house,
   currentUser,
+  homeWidgets,
   onOpenSettings,
 }: HouseRegistryCardProps) {
+  const dashboardWidgets = homeWidgets ?? {
+    id: "",
+    houseId: house.id,
+    statusWidgets: [],
+    lockVersion: 1,
+    updatedAt: "",
+  };
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isTariffOpen, setIsTariffOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -535,10 +545,10 @@ export function HouseRegistryCard({
 
             <div className="flex-1 px-6 py-6">
               <ChangeHouseDashboardWidgetsForm
-                sectionId=""
                 houseId={house.id}
                 houseSlug={house.slug}
-                initialWidgets={[]}
+                initialWidgets={dashboardWidgets.statusWidgets}
+                initialLockVersion={dashboardWidgets.lockVersion}
               />
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { houseSystemCopy } from "@/src/shared/publicCopy/house";
 import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishedHouseHero";
+import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getPublishedHouseHomeWidgets";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
@@ -805,17 +806,15 @@ export async function getPublicHouseHomeDashboard({
   const planSections = homeSections.filter((section) => section.kind === "plan");
   const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
   const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
-  const dashboardSection = homeSections.find(
-    (section) => section.kind === "custom" && section.title === "Home widgets",
-  );
+  const homeWidgets = await getPublishedHouseHomeWidgets(house.id);
 
-  const dashboardContent = dashboardSection?.content ?? {};
-  const rawWidgets = Array.isArray(dashboardContent["statusWidgets"])
-    ? dashboardContent["statusWidgets"]
-    : [];
+  const rawWidgets = homeWidgets?.statusWidgets ?? [];
 
   const statusWidgets: PublicHouseHomeStatusItem[] = rawWidgets
-    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .filter(
+      (item): item is { id: string; label: string; value: string } =>
+        Boolean(item) && typeof item === "object",
+    )
     .map((item, index) => ({
       id: typeof item.id === "string" && item.id.trim() ? item.id : `widget-${index}`,
       label: String(item.label ?? "").slice(0, 30),
