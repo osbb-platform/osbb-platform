@@ -1,116 +1,127 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createHouseInformationFaqSection } from "@/src/modules/houses/actions/createHouseInformationFaqSection";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
-import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
+import { useEffect, useMemo, useState } from "react";
+
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
-  adminPrimaryButtonClass,
-  adminSuccessButtonClass,
   adminDangerButtonClass,
   adminIconButtonClass,
   adminInputClass,
   adminInsetSurfaceClass,
+  adminPrimaryButtonClass,
+  adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
-type DeleteState = { error: string | null };
-
-const initialState: DeleteState = { error: null };
+type FaqCommand = "replaceItems" | "publish" | "archive" | "restore" | "delete";
 
 type Props = {
   houseId: string;
-  houseSlug: string;
-  housePageId: string | null;
-  section: { id: string; status: "draft" | "in_review" | "published" | "archived"; content: { items?: { question: string; answer: string }[]; }; } | null;
+  faq: HouseFaqSnapshot;
   onClose: () => void;
 };
 
 export function EditInformationFaqForm({
   houseId,
-  houseSlug,
-  housePageId,
-  section,
+  faq,
   onClose,
 }: Props) {
-  const router = useRouter();
-  const actionToUse = section ? updateHouseSection : createHouseInformationFaqSection;
-
-  const [state, formAction, isPending] = useActionState(actionToUse, initialState);
-
-  const deleteWrapper = async (state: DeleteState, formData: FormData) => {
-    return deleteHouseSection(formData);
-  };
-
-  const [, deleteAction, isDeletePending] = useActionState(deleteWrapper, initialState);
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const initialItems = useMemo(() => {
-    if (!section) return [{ question: "", answer: "" }];
-
-    const items = Array.isArray(section.content.items)
-      ? section.content.items
-      : [];
-
-    return items.length ? items : [{ question: "", answer: "" }];
-  }, [section]);
+    return faq.items.length
+      ? faq.items.map((item) => ({
+          question: item.question,
+          answer: item.answer,
+        }))
+      : [{ question: "", answer: "" }];
+  }, [faq.items]);
 
   const [items, setItems] = useState(initialItems);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
-    if (!hasSubmittedRef.current) return;
+    setItems(initialItems);
+    setLocalError(null);
+  }, [initialItems]);
 
-    if (!isPending && state.error === null) {
-      router.refresh();
-      onClose();
-      hasSubmittedRef.current = false;
-    }
-  }, [isPending, state.error, router, onClose]);
-
-  function updateItem(index: number, field: string, value: string) {
+  function updateItem(index: number, field: "question" | "answer", value: string) {
     setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item,
+      prev.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     );
+    setLocalError(null);
   }
 
   function addItem() {
     setItems((prev) => [...prev, { question: "", answer: "" }]);
+    setLocalError(null);
   }
 
-  return (
-    <form
-      action={formAction}
-      className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
-    >
-      <input type="hidden" name="sectionId" value={section?.id ?? ""} />
-      <input type="hidden" name="houseId" value={houseId} />
-      <input type="hidden" name="houseSlug" value={houseSlug} />
-      <input type="hidden" name="housePageId" value={housePageId ?? ""} />
-      <input type="hidden" name="kind" value="faq" />
-      <input type="hidden" name="title" value="FAQ" />
-      <input
-        type="hidden"
-        name="status"
-        value={isPublishing ? "published" : (section?.status ?? "draft")}
-      />
-      <input
-        type="hidden"
-        name="faqPayload"
-        value={JSON.stringify(items)}
-      />
+  function removeItem(index: number) {
+    setItems((prev) => {
+      const next = prev.filter((_, itemIndex) => itemIndex !== index);
+      return next.length ? next : [{ question: "", answer: "" }];
+    });
+    setLocalError(null);
+  }
 
-      {/* HEADER */}
+  async function runCommand(command: FaqCommand) {
+    setLocalError(null);
+
+    const payload =
+      command === "replaceItems"
+        ? {
+            lockVersion: faq.lockVersion,
+            items,
+          }
+        : {
+            lockVersion: faq.lockVersion,
+          };
+
+    const result = await dispatch<HouseFaqSnapshot>(
+      {
+        type: `faq.${command}`,
+        houseId,
+        payload,
+      },
+      {
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess() {
+          onClose();
+        },
+      },
+    );
+
+    if (!result && !lastError) {
+      return;
+    }
+  }
+
+  const error = localError ?? lastError;
+  const isArchived = faq.status === "archived";
+  const canPublish = faq.status !== "published";
+  const canArchive = faq.status === "published";
+  const canRestore = faq.status === "archived";
+
+  return (
+    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <div className="mb-4 flex justify-between">
         <div>
           <div className="text-lg font-semibold text-[var(--cms-text)]">
             FAQ
           </div>
           <div className="text-sm text-[var(--cms-text-muted)]">
-            Додавайте запитання та відповіді
+            Додавайте запитання та відповіді. Статус:{" "}
+            {faq.status === "published"
+              ? "опубліковано"
+              : faq.status === "archived"
+                ? "архів"
+                : "чернетка"}
           </div>
         </div>
 
@@ -119,84 +130,125 @@ export function EditInformationFaqForm({
         </button>
       </div>
 
-      {/* LIST */}
       <div className="space-y-4">
         {items.map((item, index) => (
           <div key={index} className={adminInsetSurfaceClass}>
             <div className="grid gap-3">
               <input
                 value={item.question}
-                onChange={(e) => updateItem(index, "question", e.target.value)}
+                onChange={(event) => updateItem(index, "question", event.target.value)}
                 placeholder="Запитання"
                 className={adminInputClass}
               />
 
               <textarea
                 value={item.answer}
-                onChange={(e) => updateItem(index, "answer", e.target.value)}
+                onChange={(event) => updateItem(index, "answer", event.target.value)}
                 rows={4}
                 placeholder="Відповідь"
                 className={adminInputClass}
               />
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  disabled={isPending || items.length <= 1}
+                  className={[
+                    adminDangerButtonClass,
+                    "disabled:cursor-not-allowed disabled:opacity-40",
+                  ].join(" ")}
+                >
+                  Видалити питання
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ADD */}
       <div className="mt-4">
-        <button type="button" onClick={addItem} className={adminPrimaryButtonClass}>
+        <button
+          type="button"
+          onClick={addItem}
+          disabled={isPending || isArchived}
+          className={[
+            adminPrimaryButtonClass,
+            "disabled:cursor-not-allowed disabled:opacity-40",
+          ].join(" ")}
+        >
           + Додати
         </button>
       </div>
 
-      {state.error && (
+      {error ? (
         <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {state.error}
+          {error}
         </div>
-      )}
+      ) : null}
 
-      {/* ACTIONS */}
-      <div className="mt-6 flex justify-between gap-3">
-        <div className="flex gap-3">
+      <div className="mt-6 flex flex-wrap justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
-            type="submit"
-            disabled={isPending}
-            onClick={() => {
-              hasSubmittedRef.current = true;
-              setIsPublishing(false);
-            }}
-            className={adminPrimaryButtonClass}
+            type="button"
+            disabled={isPending || isArchived}
+            onClick={() => runCommand("replaceItems")}
+            className={[
+              adminPrimaryButtonClass,
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
           >
             Зберегти
           </button>
 
-          {section && (
-            <button
-              type="submit"
-              formAction={deleteAction}
-              disabled={isDeletePending}
-              className={adminDangerButtonClass}
-            >
-              Видалити
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => runCommand("delete")}
+            className={adminDangerButtonClass}
+          >
+            Видалити FAQ
+          </button>
         </div>
 
-        {section && (
-          <button
-            type="submit"
-            disabled={isPending}
-            onClick={() => {
-              hasSubmittedRef.current = true;
-              setIsPublishing(true);
-            }}
-            className={adminSuccessButtonClass}
-          >
-            Підтвердити
-          </button>
-        )}
+        <div className="flex flex-wrap gap-3">
+          {canRestore ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => runCommand("restore")}
+              className={adminPrimaryButtonClass}
+            >
+              Відновити
+            </button>
+          ) : null}
+
+          {canArchive ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => runCommand("archive")}
+              className={adminDangerButtonClass}
+            >
+              В архів
+            </button>
+          ) : null}
+
+          {canPublish ? (
+            <button
+              type="button"
+              disabled={isPending || isArchived}
+              onClick={() => runCommand("publish")}
+              className={[
+                adminSuccessButtonClass,
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              ].join(" ")}
+            >
+              Підтвердити
+            </button>
+          ) : null}
+        </div>
       </div>
-    </form>
+    </div>
   );
 }

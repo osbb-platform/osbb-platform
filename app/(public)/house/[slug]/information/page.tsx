@@ -4,6 +4,7 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseInformationDocuments } from "@/src/modules/houses/services/getPublicHouseInformationDocuments";
+import { getPublishedHouseFaq } from "@/src/modules/houses/services/getPublishedHouseFaq";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { PublicInformationSlider } from "@/src/modules/houses/components/PublicInformationSlider";
 import Link from "next/link";
@@ -62,9 +63,10 @@ export default async function InformationPage({
 
   const districtColor = house.district?.theme_color ?? "#22c55e";
 
-  const [informationPage, documents] = await Promise.all([
+  const [informationPage, documents, faq] = await Promise.all([
     getHouseInformationPageByHouseId(house.id),
     getPublicHouseInformationDocuments(house.id),
+    getPublishedHouseFaq(house.id),
   ]);
 
   const sections = informationPage
@@ -114,14 +116,7 @@ export default async function InformationPage({
     document.document_year ? String(document.document_year) === selectedDocumentYear : false,
   );
 
-  const faqSection = sections.find((section) => section.kind === "faq");
-  const faqItems =
-    faqSection &&
-    typeof faqSection.content === "object" &&
-    faqSection.content &&
-    Array.isArray((faqSection.content as Record<string, unknown>).items)
-      ? ((faqSection.content as Record<string, unknown>).items as Array<Record<string, unknown>>)
-      : [];
+  const faqItems = faq?.items ?? [];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -262,10 +257,10 @@ export default async function InformationPage({
               className="group rounded-2xl border border-[#E4DBD1] bg-[#F9F6F2] px-5 py-4 transition-all duration-200 hover:border-[#D8CEC2] hover:bg-[#F5F1EB]"
             >
               <summary className="cursor-pointer list-none text-base font-semibold text-[#1F2A37]">
-                {String(item.question ?? houseInformationCopy.faq.questionFallback)}
+                {item.question || houseInformationCopy.faq.questionFallback}
               </summary>
               <div className="mt-4 rounded-xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm leading-7 text-[#42546A]">
-                {String(item.answer ?? "")}
+                {item.answer}
               </div>
             </details>
           ))}

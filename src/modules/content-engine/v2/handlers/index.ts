@@ -5,6 +5,7 @@ import { announcementsHandler } from "./announcements";
 import { boardIntroHandler } from "./board_intro";
 import { boardMembersHandler } from "./board_members";
 import { homeWidgetsHandler } from "./home_widgets";
+import { faqHandler } from "./faq";
 
 /**
  * Central content-engine v2 handler registration point.
@@ -18,6 +19,7 @@ export function registerAllHandlers() {
   registerHandler(announcementsHandler);
   registerHandler(boardIntroHandler);
   registerHandler(boardMembersHandler);
+  registerHandler(faqHandler);
   registerHandler(heroHandler);
   registerHandler(homeWidgetsHandler);
   registerHandler(requisitesHandler);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
+import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { CreateInformationPostInlineForm } from "@/src/modules/houses/components/CreateInformationPostInlineForm";
 import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInformationFaqForm";
 import { EditInformationPostForm } from "@/src/modules/houses/components/EditInformationPostForm";
@@ -32,7 +33,7 @@ type Props = {
   houseSlug: string;
   housePageId: string | null;
   posts: InformationSectionItem[];
-  faqSections: InformationSectionItem[];
+  faq: HouseFaqSnapshot | null;
   documents: HouseDocumentListItem[];
 };
 
@@ -63,14 +64,13 @@ export function HouseInformationWorkspace({
   houseSlug,
   housePageId,
   posts,
-  faqSections,
+  faq,
   documents,
 }: Props) {
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState(false);
-  const [faqEditorSectionId, setFaqEditorSectionId] = useState<string | null>(null);
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
 
   const visiblePosts = posts
@@ -109,13 +109,7 @@ export function HouseInformationWorkspace({
   }
 
 
-  const editingFaqSection =
-    faqEditorSectionId
-      ? faqSections.find((section) => section.id === faqEditorSectionId) ?? null
-      : null;
-
-  function openCreateFaqWorkspace() {
-    setFaqEditorSectionId(null);
+  function openFaqWorkspace() {
     setFaqOpen(true);
     closePostWorkspace();
   }
@@ -129,7 +123,6 @@ export function HouseInformationWorkspace({
 
   function closeFaqWorkspace() {
     setFaqOpen(false);
-    setFaqEditorSectionId(null);
   }
 
   function handleMainTabChange(nextTab: InformationMainTab) {
@@ -177,11 +170,11 @@ export function HouseInformationWorkspace({
               {mainTab === "faq" ? (
             <button
               type="button"
-              onClick={openCreateFaqWorkspace}
-              disabled={!housePageId}
+              onClick={openFaqWorkspace}
+              disabled={!faq}
               className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
             >
-              Новий FAQ
+              Редагувати FAQ
             </button>
           ) : null}
             </div>
@@ -200,7 +193,7 @@ export function HouseInformationWorkspace({
                 {
                   key: "faq",
                   label: "FAQ",
-                  count: faqSections.length,
+                  count: faq?.items.length ?? 0,
                 },
                 {
                   key: "materials",
@@ -322,53 +315,49 @@ export function HouseInformationWorkspace({
         <>
           {!faqOpen ? (
             <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-              <div className="space-y-4">
-                {faqSections.length > 0 ? (
-                  faqSections.map((section) => (
-                    <button
-                      key={section.id}
-                      type="button"
-                      onClick={() => {
-                        setFaqEditorSectionId(section.id);
-                        setFaqOpen(true);
-                      }}
-                      className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+              {faq ? (
+                <button
+                  type="button"
+                  onClick={openFaqWorkspace}
+                  className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                        faq.status === "published"
+                          ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                          : faq.status === "archived"
+                            ? "border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
+                            : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                      }`}
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                            section.status === "published"
-                              ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                              : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                          }`}
-                        >
-                          {section.status === "published" ? "Активна" : "Чернетка"}
-                        </span>
-                        <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                          Запитань: {Array.isArray(section.content.items) ? section.content.items.length : 0}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
-                        FAQ для мешканців
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                    FAQ поки не створено. Використай кнопку зверху, щоб додати перший блок.
+                      {faq.status === "published"
+                        ? "Активна"
+                        : faq.status === "archived"
+                          ? "Архів"
+                          : "Чернетка"}
+                    </span>
+                    <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                      Запитань: {faq.items.length}
+                    </span>
                   </div>
-                )}
-              </div>
+
+                  <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
+                    FAQ для мешканців
+                  </div>
+                </button>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
+                  FAQ поки не створено. Онови сторінку або перевір міграцію content-engine.
+                </div>
+              )}
             </div>
           ) : null}
 
-          {faqOpen ? (
+          {faqOpen && faq ? (
             <EditInformationFaqForm
               houseId={houseId}
-              houseSlug={houseSlug}
-              housePageId={housePageId}
-              section={editingFaqSection}
+              faq={faq}
               onClose={closeFaqWorkspace}
             />
           ) : null}

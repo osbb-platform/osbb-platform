@@ -28,6 +28,7 @@ import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensure
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
 import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
+import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
@@ -321,10 +322,8 @@ export default async function AdminHouseDetailPage({
       ? informationSections.filter((section) => section.kind === "rich_text")
       : [];
 
-  const faqSections =
-    activeBlock === "information"
-      ? informationSections.filter((section) => section.kind === "faq")
-      : [];
+  const faq =
+    activeBlock === "information" ? await getAdminHouseFaq(house.id) : null;
 
   const specialistsSectionList =
     homeSections.find((section) => section.kind === "specialists") ?? null;
@@ -646,7 +645,7 @@ export default async function AdminHouseDetailPage({
           housePageId={informationPage?.id ?? null}
           posts={validInformationPostSections.map(normalizeSectionForWorkspace)}
           documents={documents}
-          faqSections={faqSections.map(normalizeSectionForWorkspace)}
+          faq={faq}
         />
       ) : null}
 
