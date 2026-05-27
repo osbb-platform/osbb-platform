@@ -471,7 +471,10 @@ export function HouseDocumentsWorkspace({
             });
 
           if (uploadError) {
-            setActionError(uploadError.message);
+            console.error("House document PDF upload error:", uploadError);
+            setActionError(
+              "Не вдалося завантажити PDF. Якщо сесія завершилась, увійдіть в адмінку ще раз і повторіть дію.",
+            );
             return;
           }
 
@@ -531,12 +534,11 @@ export function HouseDocumentsWorkspace({
         closeForm();
         router.refresh();
       } catch (error) {
+        console.error("House document submit error:", error);
         setActionError(
-          error instanceof Error
-            ? error.message
-            : formMode === "edit"
-              ? "Не вдалося оновити документ."
-              : "Не вдалося створити документ.",
+          formMode === "edit"
+            ? "Не вдалося оновити документ. Оновіть сторінку і повторіть дію."
+            : "Не вдалося створити документ. Оновіть сторінку і повторіть дію.",
         );
       }
     });
