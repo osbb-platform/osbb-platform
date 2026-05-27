@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { createSupabaseMiddlewareClient } from "./src/integrations/supabase/server/middleware";
 
 const ROOT_DOMAIN = "osbb-platform.com.ua";
 const ADMIN_HOST = `admin.${ROOT_DOMAIN}`;
@@ -14,7 +15,11 @@ function withSearch(pathname: string, search: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next({ request });
+  const { supabase, response } = createSupabaseMiddlewareClient(request);
+
+  // Важно для Supabase SSR: обновляет auth cookies на каждом request.
+  // Без этого server components/actions на Vercel могут получать Auth session missing.
+  await supabase.auth.getUser();
 
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));

@@ -86,6 +86,14 @@ export async function createHouseDocument(
   if (!title) return { error: "Заповни назву документа." };
   if (!uploadedPdfPath) return { error: "PDF не завантажено." };
 
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (!currentAdmin || currentAdmin.status !== "active" || !currentAdmin.role) {
+    return {
+      error: "Сесія адміністратора завершилась. Увійдіть ще раз і повторіть дію.",
+    };
+  }
+
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
 
@@ -113,11 +121,11 @@ export async function createHouseDocument(
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Помилка створення документа" };
+    console.error("createHouseDocument insert error:", error);
+    return {
+      error: "Не вдалося створити документ. Оновіть сторінку, увійдіть ще раз і повторіть дію.",
+    };
   }
-
-
-  const currentAdmin = await getCurrentAdminUser();
 
   await ensureDocumentDraftApprovalTask({
     houseId,

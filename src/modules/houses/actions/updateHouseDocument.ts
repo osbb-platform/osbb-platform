@@ -98,6 +98,14 @@ export async function updateHouseDocument(
   if (!houseId) return { error: "Не передано ідентифікатор будинку." };
   if (!title) return { error: "Заповни назву документа." };
 
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (!currentAdmin || currentAdmin.status !== "active" || !currentAdmin.role) {
+    return {
+      error: "Сесія адміністратора завершилась. Увійдіть ще раз і повторіть дію.",
+    };
+  }
+
   const supabase = await createSupabaseServerClient();
   const nowIso = new Date().toISOString();
 
@@ -158,11 +166,11 @@ export async function updateHouseDocument(
     .eq("house_id", houseId);
 
   if (updateError) {
-    return { error: `Не вдалося оновити документ. ${updateError.message}` };
+    console.error("updateHouseDocument update error:", updateError);
+    return {
+      error: "Не вдалося оновити документ. Оновіть сторінку, увійдіть ще раз і повторіть дію.",
+    };
   }
-
-
-  const currentAdmin = await getCurrentAdminUser();
 
   if (
     existingDocument.visibility_status === "draft" &&
