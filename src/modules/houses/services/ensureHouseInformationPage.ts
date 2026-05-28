@@ -9,18 +9,21 @@ export async function ensureHouseInformationPage({
 }: EnsureHouseInformationPageParams) {
   const supabase = await createSupabaseServerClient();
 
-  const { data: existingPage, error: existingPageError } = await supabase
+  const { data: existingPages, error: existingPageError } = await supabase
     .from("house_pages")
     .select("id, slug, title, status")
     .eq("house_id", houseId)
     .eq("slug", "information")
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
 
   if (existingPageError) {
     throw new Error(
       `Failed to check information page: ${existingPageError.message}`,
     );
   }
+
+  const existingPage = existingPages?.[0] ?? null;
 
   if (existingPage) {
     return existingPage;
@@ -39,13 +42,16 @@ export async function ensureHouseInformationPage({
 
   if (createPageError) {
     if (createPageError.code === "23505") {
-      const { data: pageAfterConflict, error: pageAfterConflictError } =
+      const { data: pagesAfterConflict, error: pageAfterConflictError } =
         await supabase
           .from("house_pages")
           .select("id, slug, title, status")
           .eq("house_id", houseId)
           .eq("slug", "information")
-          .maybeSingle();
+          .order("created_at", { ascending: true })
+          .limit(1);
+
+      const pageAfterConflict = pagesAfterConflict?.[0] ?? null;
 
       if (!pageAfterConflictError && pageAfterConflict) {
         return pageAfterConflict;
