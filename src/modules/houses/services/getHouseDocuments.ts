@@ -54,45 +54,70 @@ export async function getHouseDocuments(
 
   const supabase = await createSupabaseServerClient();
 
-  let query = supabase
-    .from("house_documents")
-    .select(
-      [
-        "id",
-        "house_id",
-        "title",
-        "category",
-        "visibility_status",
-        "description",
-        "document_year",
-        "document_scope",
-        "document_type",
-        "created_at",
-        "updated_at",
-        "storage_bucket",
-        "storage_path",
-        "original_file_name",
-        "mime_type",
-        "file_size_bytes",
-        "uploaded_at",
-        "attachment_status",
-      ].join(", "),
-    )
-    .eq("house_id", houseId);
+  const createDocumentsQuery = () => {
+    let query = supabase
+      .from("house_documents")
+      .select(
+        [
+          "id",
+          "house_id",
+          "title",
+          "category",
+          "visibility_status",
+          "description",
+          "document_year",
+          "document_scope",
+          "document_type",
+          "created_at",
+          "updated_at",
+          "storage_bucket",
+          "storage_path",
+          "original_file_name",
+          "mime_type",
+          "file_size_bytes",
+          "uploaded_at",
+          "attachment_status",
+        ].join(", "),
+      )
+      .eq("house_id", houseId);
 
-  if (options.scope) {
-    query = query.eq("document_scope", options.scope);
+    if (options.scope) {
+      query = query.eq("document_scope", options.scope);
+    }
+
+    return query
+      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false });
+  };
+
+  let documentsData: unknown[] = [];
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await createDocumentsQuery();
+
+    if (!error) {
+      documentsData = data ?? [];
+      lastError = null;
+      break;
+    }
+
+    lastError = error;
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
-  const { data, error } = await query
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
+  if (lastError) {
+    console.error("[admin.house.documents.load_failed]", {
+      houseId,
+      scope: options.scope ?? null,
+      error: lastError,
+    });
 
-  if (error) {
-    throw new Error(`Failed to load house documents: ${error.message}`);
+    return [];
   }
 
-  const documents = (data ?? []) as unknown as Omit<
+  const documents = documentsData as unknown as Omit<
     HouseDocumentListItem,
     "signed_file_url"
   >[];
