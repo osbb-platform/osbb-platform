@@ -1,14 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
-import { createHouseDocument } from "@/src/modules/houses/actions/createHouseDocument";
-import { deleteArchivedHouseDocuments } from "@/src/modules/houses/actions/deleteArchivedHouseDocuments";
-import { deleteHouseDocument } from "@/src/modules/houses/actions/deleteHouseDocument";
-import { updateHouseDocument } from "@/src/modules/houses/actions/updateHouseDocument";
 import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
@@ -26,7 +22,7 @@ import type {
   HouseDocumentListItem,
   HouseDocumentScope,
   HouseDocumentType,
-  HouseDocumentVisibility,
+  HouseDocumentLifecycle,
 } from "@/src/modules/houses/services/getHouseDocuments";
 
 type HouseDocumentsWorkspaceProps = {
@@ -89,18 +85,18 @@ function getDocumentTypeLabel(documentType: HouseDocumentType | null) {
   );
 }
 
-function getVisibilityLabel(visibility: HouseDocumentVisibility) {
-  if (visibility === "published") return "Активний";
-  if (visibility === "private") return "Архів";
+function getLifecycleLabel(lifecycle: HouseDocumentLifecycle) {
+  if (lifecycle === "published") return "Активний";
+  if (lifecycle === "archived") return "Архів";
   return "Чернетка";
 }
 
-function getVisibilityClasses(visibility: HouseDocumentVisibility) {
-  if (visibility === "published") {
+function getLifecycleClasses(lifecycle: HouseDocumentLifecycle) {
+  if (lifecycle === "published") {
     return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
-  if (visibility === "private") {
+  if (lifecycle === "archived") {
     return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
   }
 
@@ -179,7 +175,7 @@ export function HouseDocumentsWorkspace({
   canDelete = true,
   embedded = false,
 }: HouseDocumentsWorkspaceProps) {
-  const router = useRouter();
+  const { dispatch, isPending } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
@@ -188,7 +184,6 @@ export function HouseDocumentsWorkspace({
   const [isFormOpen, setIsFormOpen] = useState(startInCreateMode);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
@@ -199,8 +194,8 @@ export function HouseDocumentsWorkspace({
   const [title, setTitle] = useState("");
   const [category, setCategory] =
     useState<HouseDocumentCategory>("regulations");
-  const [visibility, setVisibility] =
-    useState<HouseDocumentVisibility>("draft");
+  const [lifecycle, setLifecycle] =
+    useState<HouseDocumentLifecycle>("draft");
   const [documentYear, setDocumentYear] = useState<string>(YEAR_OPTIONS[0]);
   const [documentType, setDocumentType] = useState<HouseDocumentType>("statute");
   const [description, setDescription] = useState("");
@@ -211,34 +206,34 @@ export function HouseDocumentsWorkspace({
   const isFoundingScope = documentScope === "founding";
 
   const activeDocuments = useMemo(
-    () => documents.filter((document) => document.visibility_status === "published"),
+    () => documents.filter((document) => document.lifecycle_status === "published"),
     [documents],
   );
 
   const draftDocuments = useMemo(
-    () => documents.filter((document) => document.visibility_status === "draft"),
+    () => documents.filter((document) => document.lifecycle_status === "draft"),
     [documents],
   );
 
   const archivedDocuments = useMemo(
-    () => documents.filter((document) => document.visibility_status === "private"),
+    () => documents.filter((document) => document.lifecycle_status === "archived"),
     [documents],
   );
 
   const baseVisibleDocuments = useMemo(() => {
     if (embedded) {
-      const statusOrder: Record<HouseDocumentVisibility, number> = {
+      const statusOrder: Record<HouseDocumentLifecycle, number> = {
         published: 0,
         draft: 1,
-        private: 2,
+        archived: 2,
       };
 
       return documents
         .slice()
         .sort((left, right) => {
           const statusDiff =
-            statusOrder[left.visibility_status] -
-            statusOrder[right.visibility_status];
+            statusOrder[left.lifecycle_status] -
+            statusOrder[right.lifecycle_status];
 
           if (statusDiff !== 0) return statusDiff;
 
@@ -317,14 +312,14 @@ export function HouseDocumentsWorkspace({
   );
 
   const formMode: FormMode = selectedDocument ? "edit" : "create";
-  const isDraftLikeEdit = formMode === "edit" && visibility === "draft";
-  const isPublishedEdit = formMode === "edit" && visibility === "published";
-  const isArchivedEdit = formMode === "edit" && visibility === "private";
+  const isDraftLikeEdit = formMode === "edit" && lifecycle === "draft";
+  const isPublishedEdit = formMode === "edit" && lifecycle === "published";
+  const isArchivedEdit = formMode === "edit" && lifecycle === "archived";
 
   function resetForm() {
     setTitle("");
     setCategory("regulations");
-    setVisibility("draft");
+    setLifecycle("draft");
     setDocumentYear(YEAR_OPTIONS[0]);
     setDocumentType("statute");
     setDescription("");
@@ -363,7 +358,7 @@ export function HouseDocumentsWorkspace({
     setActionError(null);
     setTitle(document.title);
     setCategory(document.category);
-    setVisibility(document.visibility_status);
+    setLifecycle(document.lifecycle_status);
     setDocumentYear(
       document.document_year ? String(document.document_year) : YEAR_OPTIONS[0],
     );
@@ -389,6 +384,48 @@ export function HouseDocumentsWorkspace({
     resetForm();
   }
 
+  function buildDocumentYearPayload() {
+    if (isFoundingScope) {
+      return null;
+    }
+
+    const parsedYear = Number.parseInt(documentYear, 10);
+    return Number.isInteger(parsedYear) ? parsedYear : null;
+  }
+
+  async function uploadSelectedPdf() {
+    if (!selectedFile) {
+      return null;
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const fileExt = selectedFile.name.split(".").pop() ?? "pdf";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const filePath = `${houseId}/${documentScope}-documents/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("house-documents")
+      .upload(filePath, selectedFile, {
+        upsert: true,
+        contentType: "application/pdf",
+      });
+
+    if (uploadError) {
+      console.error("House document PDF upload error:", uploadError);
+      throw new Error(
+        "Не вдалося завантажити PDF. Якщо сесія завершилась, увійдіть в адмінку ще раз і повторіть дію.",
+      );
+    }
+
+    return {
+      bucket: "house-documents",
+      path: filePath,
+      originalName: selectedFile.name,
+      mimeType: "application/pdf",
+      size: selectedFile.size,
+    };
+  }
+
   async function submitDocument(intent: SubmitIntent) {
     setActionError(null);
     setSubmitIntent(intent);
@@ -406,116 +443,142 @@ export function HouseDocumentsWorkspace({
                 : "Створюємо документ...",
     );
 
-    startTransition(async () => {
-      try {
-        if (intent === "delete") {
-          if (!selectedDocument) return;
+    try {
+      if (intent === "delete") {
+        if (!selectedDocument) return;
 
-          const formData = new FormData();
-          formData.set("houseId", houseId);
-          formData.set("documentId", selectedDocument.id);
+        const result = await dispatch<HouseDocumentListItem>(
+          {
+            type: "documents.delete",
+            houseId,
+            payload: {
+              id: selectedDocument.id,
+              lockVersion: selectedDocument.lock_version,
+            },
+          },
+          {
+            onError: setActionError,
+          },
+        );
 
-          const result = await deleteHouseDocument(formData);
+        if (!result) return;
 
-          if (result.error) {
-            setActionError(result.error);
-            return;
-          }
+        closeForm();
+        return;
+      }
 
-          closeForm();
-          router.refresh();
+      const uploadedPdf = await uploadSelectedPdf();
+
+      if (formMode === "create") {
+        if (!uploadedPdf) {
+          setActionError("PDF не завантажено.");
           return;
         }
 
-        const supabase = createSupabaseBrowserClient();
+        const created = await dispatch<HouseDocumentListItem>(
+          {
+            type: "documents.create",
+            houseId,
+            payload: {
+              title,
+              category,
+              description,
+              documentScope,
+              documentType,
+              documentYear: buildDocumentYearPayload(),
+              pdf: uploadedPdf,
+            },
+          },
+          {
+            onError: setActionError,
+          },
+        );
 
-        let uploadedPdfPath = "";
-        let uploadedPdfName = "";
-
-        if (selectedFile) {
-          const fileExt = selectedFile.name.split(".").pop() ?? "pdf";
-          const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-          const filePath = `${houseId}/${documentScope}-documents/${fileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from("house-documents")
-            .upload(filePath, selectedFile, {
-              upsert: true,
-              contentType: "application/pdf",
-            });
-
-          if (uploadError) {
-            console.error("House document PDF upload error:", uploadError);
-            setActionError(
-              "Не вдалося завантажити PDF. Якщо сесія завершилась, увійдіть в адмінку ще раз і повторіть дію.",
-            );
-            return;
-          }
-
-          uploadedPdfPath = filePath;
-          uploadedPdfName = selectedFile.name;
-        }
-
-        const nextVisibility: HouseDocumentVisibility =
-          intent === "publish"
-            ? "published"
-            : intent === "archive"
-              ? "private"
-              : formMode === "create"
-                ? "draft"
-                : visibility;
-
-        const formData = new FormData();
-        formData.set("houseId", houseId);
-        formData.set("title", title);
-        formData.set("category", category);
-        formData.set("visibilityStatus", nextVisibility);
-        formData.set("documentScope", documentScope);
-        formData.set("documentType", documentType);
-        formData.set("documentYear", isFoundingScope ? "" : documentYear);
-        formData.set("description", description);
-
-        if (uploadedPdfPath) {
-          formData.set("uploadedPdfPath", uploadedPdfPath);
-          formData.set("uploadedPdfName", uploadedPdfName);
-        }
-
-        const result =
-          formMode === "edit" && selectedDocument
-            ? await updateHouseDocument(
-                (() => {
-                  formData.set("documentId", selectedDocument.id);
-                  formData.set("removeAttachment", removeAttachment ? "true" : "false");
-                  return formData;
-                })(),
-              )
-            : await createHouseDocument(formData);
-
-        if (result.error) {
-          setActionError(result.error);
-          return;
-        }
+        if (!created) return;
 
         if (!embedded) {
-          setActiveTab(
-            nextVisibility === "published"
-              ? "active"
-              : nextVisibility === "private"
-                ? "archive"
-                : "draft",
-          );
+          setActiveTab("draft");
         }
+
         closeForm();
-        router.refresh();
-      } catch (error) {
-        console.error("House document submit error:", error);
-        setActionError(
-          formMode === "edit"
-            ? "Не вдалося оновити документ. Оновіть сторінку і повторіть дію."
-            : "Не вдалося створити документ. Оновіть сторінку і повторіть дію.",
+        return;
+      }
+
+      if (!selectedDocument) return;
+
+      const updated = await dispatch<HouseDocumentListItem>(
+        {
+          type: "documents.update",
+          houseId,
+          payload: {
+            id: selectedDocument.id,
+            lockVersion: selectedDocument.lock_version,
+            title,
+            category,
+            description,
+            documentScope,
+            documentType,
+            documentYear: buildDocumentYearPayload(),
+            pdf: uploadedPdf,
+            removePdf: removeAttachment,
+          },
+        },
+        {
+          onError: setActionError,
+        },
+      );
+
+      if (!updated) return;
+
+      if (intent === "publish" || intent === "archive") {
+        const nextType =
+          intent === "publish" ? "documents.publish" : "documents.archive";
+
+        const lifecycleResult = await dispatch<HouseDocumentListItem>(
+          {
+            type: nextType,
+            houseId,
+            payload: {
+              id: updated.id,
+              lockVersion: updated.lock_version,
+            },
+          },
+          {
+            onError: setActionError,
+          },
+        );
+
+        if (!lifecycleResult) return;
+
+        if (!embedded) {
+          setActiveTab(intent === "publish" ? "active" : "archive");
+        }
+
+        closeForm();
+        return;
+      }
+
+      if (!embedded) {
+        setActiveTab(
+          updated.lifecycle_status === "published"
+            ? "active"
+            : updated.lifecycle_status === "archived"
+              ? "archive"
+              : "draft",
         );
       }
-    });
+
+      closeForm();
+    } catch (error) {
+      console.error("House document submit error:", error);
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : formMode === "edit"
+            ? "Не вдалося оновити документ. Оновіть сторінку і повторіть дію."
+            : "Не вдалося створити документ. Оновіть сторінку і повторіть дію.",
+      );
+    }
   }
 
   function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -523,26 +586,28 @@ export function HouseDocumentsWorkspace({
     void submitDocument("save");
   }
 
-  function handleDeleteArchive() {
+  async function handleDeleteArchive() {
     setActionError(null);
     setActionLabel("Видаляємо архів документів...");
+    setSubmitIntent("delete");
 
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set("houseId", houseId);
-      formData.set("documentScope", documentScope);
+    const result = await dispatch(
+      {
+        type: "documents.deleteAllArchived",
+        houseId,
+        payload: {
+          documentScope,
+        },
+      },
+      {
+        onError: setActionError,
+      },
+    );
 
-      const result = await deleteArchivedHouseDocuments(formData);
+    if (!result) return;
 
-      if (result.error) {
-        setActionError(result.error);
-        return;
-      }
-
-      closeForm();
-      setActiveTab("archive");
-      router.refresh();
-    });
+    closeForm();
+    setActiveTab("archive");
   }
 
   const hasExistingAttachment =
@@ -1085,9 +1150,9 @@ export function HouseDocumentsWorkspace({
 
                     <div className="flex flex-col items-start gap-3 lg:items-end">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getVisibilityClasses(document.visibility_status)}`}
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
                       >
-                        {getVisibilityLabel(document.visibility_status)}
+                        {getLifecycleLabel(document.lifecycle_status)}
                       </span>
 
                       <span className="text-xs text-[var(--cms-text-soft)]">
