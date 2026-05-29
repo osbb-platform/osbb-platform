@@ -21,7 +21,6 @@ import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
-import { ensureHousePlanSection } from "@/src/modules/houses/services/ensureHousePlanSection";
 import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
@@ -30,6 +29,7 @@ import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdmin
 import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
+import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
@@ -270,7 +270,6 @@ export default async function AdminHouseDetailPage({
     activeBlock === "specialists" ||
     activeBlock === "reports" ||
     activeBlock === "debtors" ||
-    activeBlock === "plan" ||
     activeBlock === "meetings";
 
   if (needsHomePageForBlock && !homePage) {
@@ -285,7 +284,6 @@ export default async function AdminHouseDetailPage({
     activeBlock === "specialists" ||
     activeBlock === "reports" ||
     activeBlock === "debtors" ||
-    activeBlock === "plan" ||
     activeBlock === "meetings" ||
     activeBlock === "requisites";
 
@@ -346,25 +344,10 @@ export default async function AdminHouseDetailPage({
     reportsSection = null;
   }
 
-  const planSectionList =
-    homeSections.find((section) => section.kind === "plan") ?? null;
-
-  let planSection = null;
-
-  if (activeBlock === "plan" && homePage && !planSectionList) {
-    const ensuredPlanSectionId = await ensureHousePlanSection({
-      housePageId: homePage.id,
-    });
-
-    planSection = await getAdminHouseSectionById(
-      ensuredPlanSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "plan" && planSectionList) {
-    planSection = planSectionList;
-  } else if (activeBlock !== "plan") {
-    planSection = null;
-  }
+  const planData =
+    activeBlock === "plan"
+      ? await getAdminHousePlan({ houseId: house.id })
+      : null;
 
   const debtorsSectionList =
     homeSections.find((section) => section.kind === "debtors") ?? null;
@@ -662,22 +645,17 @@ export default async function AdminHouseDetailPage({
       ) : null}
 
       {activeBlock === "plan" ? (
-        planSection ? (
+        planData ? (
           <HousePlanWorkspace
             canChangeWorkflowStatus={access.houseWorkspaces.plan.changeWorkflowStatus}
             houseId={house.id}
             houseSlug={house.slug}
-            section={{
-              id: planSection.id,
-              title: planSection.title,
-              status: planSection.status,
-              content: getSectionContent(planSection),
-            }}
+            plan={planData}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="План робіт"
-            description="Не вдалося підготувати секцію плану робіт для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
+            description="Не вдалося завантажити план робіт для цього будинку. Потрібно перевірити таблицю house_plan_tasks."
           />
         )
       ) : null}

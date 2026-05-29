@@ -1,16 +1,12 @@
 "use client";
 
-import {
-  startTransition,
-  useActionState,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { useMemo, useState } from "react";
+
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
@@ -18,17 +14,6 @@ import {
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
-type PlanWorkspaceState = {
-  error: string | null;
-  planItems: unknown[] | null;
-};
-
-const initialState: PlanWorkspaceState = {
-  error: null,
-  planItems: null,
-};
-
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
 type PlanTaskStatus =
   | "draft"
   | "planned"
@@ -52,6 +37,7 @@ type SubmitIntent = "save" | "delete" | "publish" | "archive";
 
 type PlanAttachment = {
   id: string;
+  fieldKey?: string;
   path: string;
   fileName?: string;
   kind: "image" | "pdf";
@@ -75,22 +61,35 @@ type PlanTask = {
   updatedAt: string;
   archivedAt: string | null;
   archiveYear: number;
+  lockVersion: number;
+};
+
+type UploadedPlanFile = {
+  bucket: string;
+  path: string;
+  originalName: string;
+  mimeType: string | null;
+  size: number;
+};
+
+type CommandResultWithLock = {
+  lock_version?: number;
+  lockVersion?: number;
 };
 
 type Props = {
   canChangeWorkflowStatus?: boolean;
   houseId: string;
   houseSlug: string;
-  section: {
-    id: string;
-    title: string | null;
-    status: SectionStatus;
-    content: Record<string, unknown>;
-  };
+  plan: AdminHousePlanSnapshot;
 };
 
 function createTaskId() {
-  return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `00000000-0000-4000-8000-${Date.now().toString().slice(-12).padStart(12, "0")}`;
 }
 
 function normalizeArchiveYear(value: unknown) {
@@ -132,53 +131,44 @@ function createEmptyTask(): PlanTask {
     updatedAt: now,
     archivedAt: null,
     archiveYear: PLAN_ARCHIVE_YEAR_END,
+    lockVersion: 1,
   };
 }
 
-function normalizePlanTasks(content: Record<string, unknown>): PlanTask[] {
-  const source = Array.isArray(content.items) ? content.items : [];
-  return source
-    .map((item) => {
-      if (!item || typeof item !== "object") {
-        return createEmptyTask();
-      }
-      const raw = item as Record<string, unknown>;
-
-      return {
-        id: String(raw.id ?? createTaskId()),
-        title: String(raw.title ?? ""),
-        description: String(raw.description ?? ""),
-        status:
-          raw.status === "planned" ||
-          raw.status === "in_progress" ||
-          raw.status === "completed" ||
-          raw.status === "archived"
-            ? raw.status
-            : "draft",
-        priority:
-          raw.priority === "high" ||
-          raw.priority === "medium" ||
-          raw.priority === "low"
-            ? raw.priority
-            : "medium",
-        dateMode: raw.dateMode === "range" ? "range" : "deadline",
-        deadlineAt: String(raw.deadlineAt ?? ""),
-        startDate: String(raw.startDate ?? ""),
-        endDate: String(raw.endDate ?? ""),
-        contractor: String(raw.contractor ?? ""),
-        images: Array.isArray(raw.images)
-          ? (raw.images as PlanAttachment[])
-          : [],
-        documents: Array.isArray(raw.documents)
-          ? (raw.documents as PlanAttachment[])
-          : [],
-        createdAt: String(raw.createdAt ?? new Date().toISOString()),
-        updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
-        archivedAt: raw.archivedAt ? String(raw.archivedAt) : null,
-        archiveYear: normalizeArchiveYear(raw.archiveYear),
-      } satisfies PlanTask;
-    })
-    .filter((item): item is PlanTask => Boolean(item));
+function normalizePlanTasks(plan: AdminHousePlanSnapshot): PlanTask[] {
+  return plan.tasks.map((task) => ({
+    id: task.id,
+    title: task.content.title,
+    description: task.content.description,
+    status: task.status,
+    priority: task.content.priority,
+    dateMode: task.content.dateMode,
+    deadlineAt: task.content.deadlineAt ?? "",
+    startDate: task.content.startDate ?? "",
+    endDate: task.content.endDate ?? "",
+    contractor: task.content.contractor ?? "",
+    images: task.content.images.map((file) => ({
+      id: file.fieldKey,
+      fieldKey: file.fieldKey,
+      path: file.path,
+      fileName: file.fileName,
+      kind: "image",
+      createdAt: file.createdAt,
+    })),
+    documents: task.content.documents.map((file) => ({
+      id: file.fieldKey,
+      fieldKey: file.fieldKey,
+      path: file.path,
+      fileName: file.fileName,
+      kind: "pdf",
+      createdAt: file.createdAt,
+    })),
+    createdAt: task.content.createdAt,
+    updatedAt: task.content.updatedAt,
+    archivedAt: task.content.archivedAt,
+    archiveYear: normalizeArchiveYear(task.content.archiveYear),
+    lockVersion: task.lockVersion,
+  }));
 }
 
 function getDatePreview(task: PlanTask) {
@@ -209,30 +199,52 @@ function createPlanUploadFileName(fileExt: string, index: number) {
   return `${createPlanUploadToken()}-${index}.${fileExt}`;
 }
 
-function createPlanAttachmentId(prefix: string, index: number) {
-  return `${prefix}-${createPlanUploadToken()}-${index}`;
+function getResultLockVersion(result: unknown, fallback: number) {
+  if (!result || typeof result !== "object") {
+    return fallback;
+  }
+
+  const record = result as CommandResultWithLock;
+
+  if (typeof record.lock_version === "number") {
+    return record.lock_version;
+  }
+
+  if (typeof record.lockVersion === "number") {
+    return record.lockVersion;
+  }
+
+  return fallback;
+}
+
+function taskPayload(task: PlanTask) {
+  return {
+    title: task.title,
+    description: task.description,
+    dateMode: task.dateMode,
+    deadlineAt: task.dateMode === "deadline" ? task.deadlineAt : null,
+    startDate: task.dateMode === "range" ? task.startDate : null,
+    endDate: task.dateMode === "range" ? task.endDate : null,
+    taskStatus:
+      task.status === "draft" || task.status === "archived"
+        ? "planned"
+        : task.status,
+    priority: task.priority,
+    contractor: task.contractor,
+    archiveYear: task.archiveYear,
+  };
 }
 
 export function HousePlanWorkspace({
   houseId,
   houseSlug,
-  section,
+  plan,
   canChangeWorkflowStatus,
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const pdfInputRef = useRef<HTMLInputElement | null>(null);
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
-
-  const [tasks, setTasks] = useState<PlanTask[]>(
-    normalizePlanTasks(section.content),
-  );
-
+  const [tasks, setTasks] = useState<PlanTask[]>(() => normalizePlanTasks(plan));
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -241,13 +253,11 @@ export function HousePlanWorkspace({
   const [confirmAction, setConfirmAction] = useState<"publish" | "delete" | "archive" | null>(null);
   const [draftPublishStatus, setDraftPublishStatus] = useState<PublishablePlanTaskStatus>("planned");
   const [actionLabel, setActionLabel] = useState("Обробляємо завдання...");
-
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedPdfFiles, setSelectedPdfFiles] = useState<File[]>([]);
-const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
-
 
   const counters = useMemo(
     () => ({
@@ -272,9 +282,11 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           item.status === "completed",
       );
     }
+
     if (activeTab === "archive") {
       return tasks.filter((item) => item.status === "archived");
     }
+
     return tasks.filter((item) => item.status === "draft");
   }, [tasks, activeTab]);
 
@@ -287,11 +299,9 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
     setRemovedDocumentIds([]);
+    setPdfError(null);
     setSubmitIntent("save");
     setConfirmAction(null);
-
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
   }
 
   function openCreateMode() {
@@ -304,9 +314,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
     setRemovedDocumentIds([]);
+    setPdfError(null);
     setSubmitIntent("save");
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
   }
 
   function openEditMode(task: PlanTask) {
@@ -324,9 +333,8 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
     setRemovedDocumentIds([]);
+    setPdfError(null);
     setSubmitIntent("save");
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
   }
 
   function updateStatus(next: PlanTaskStatus) {
@@ -344,11 +352,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     setSelectedImageFiles((prev) => {
       const alreadyCount = draft.images.length + prev.length;
       const availableSlots = Math.max(0, 5 - alreadyCount);
-
-      const nextFiles = files.slice(0, availableSlots);
-
-      return [...prev, ...nextFiles];
+      return [...prev, ...files.slice(0, availableSlots)];
     });
+
+    event.target.value = "";
   }
 
   function handlePdfChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -359,6 +366,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     if (nextFiles.length === 0) {
       setSelectedPdfFiles([]);
       setPdfError(null);
+      event.target.value = "";
       return;
     }
 
@@ -375,16 +383,16 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
     setPdfError(null);
     setSelectedPdfFiles(nextFiles);
+    event.target.value = "";
   }
 
   function clearSelectedImages() {
     setSelectedImageFiles([]);
-    if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
   function clearSelectedPdfs() {
     setSelectedPdfFiles([]);
-    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    setPdfError(null);
   }
 
   function removeExistingImage(attachmentId: string) {
@@ -407,39 +415,77 @@ const [pdfError, setPdfError] = useState<string | null>(null);
     );
   }
 
-  const nextDraftStatus: PlanTaskStatus =
-    submitIntent === "publish"
-      ? draftPublishStatus
-      : submitIntent === "archive"
-        ? "archived"
-        : workspaceMode === "create"
-          ? "draft"
-          : draft.status;
+  async function uploadSelectedFiles(taskId: string): Promise<UploadedPlanFile[] | null> {
+    if (selectedImageFiles.length === 0 && selectedPdfFiles.length === 0) {
+      return [];
+    }
 
-  const normalizedDraft = {
-    ...draft,
-    status: nextDraftStatus,
-    updatedAt: new Date().toISOString(),
-    archivedAt:
-      nextDraftStatus === "archived" ? draft.archivedAt ?? new Date().toISOString() : null,
-  };
+    const supabase = createSupabaseBrowserClient();
+    const uploadedFiles: UploadedPlanFile[] = [];
 
-  const nextTasksPayload =
-    submitIntent === "delete" && workspaceMode === "edit"
-      ? tasks.filter((item) => item.id !== normalizedDraft.id)
-      : workspaceMode === "create"
-        ? [normalizedDraft, ...tasks]
-        : tasks.map((item) =>
-            item.id === normalizedDraft.id ? normalizedDraft : item,
-          );
+    for (let index = 0; index < selectedImageFiles.length; index += 1) {
+      const file = selectedImageFiles[index];
+      const fileExt = file.name.split(".").pop() ?? "jpg";
+      const fileName = createPlanUploadFileName(fileExt, index);
+      const filePath = `${houseId}/${taskId}/images/${fileName}`;
 
-  async function handleSubmit(formData: FormData) {
+      const { error: uploadError } = await supabase.storage
+        .from("house-plan-media")
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type || undefined,
+        });
+
+      if (uploadError) {
+        return null;
+      }
+
+      uploadedFiles.push({
+        bucket: "house-plan-media",
+        path: filePath,
+        originalName: file.name,
+        mimeType: file.type || null,
+        size: file.size,
+      });
+    }
+
+    for (let index = 0; index < selectedPdfFiles.length; index += 1) {
+      const file = selectedPdfFiles[index];
+      const fileExt = file.name.split(".").pop() ?? "pdf";
+      const fileName = createPlanUploadFileName(fileExt, index);
+      const filePath = `${houseId}/${taskId}/documents/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("house-plan-documents")
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type || "application/pdf",
+        });
+
+      if (uploadError) {
+        return null;
+      }
+
+      uploadedFiles.push({
+        bucket: "house-plan-documents",
+        path: filePath,
+        originalName: file.name,
+        mimeType: file.type || "application/pdf",
+        size: file.size,
+      });
+    }
+
+    return uploadedFiles;
+  }
+
+  async function submitTask(intent: SubmitIntent) {
+    setSubmitIntent(intent);
     setActionLabel(
-      submitIntent === "delete"
+      intent === "delete"
         ? "Видаляємо завдання..."
-        : submitIntent === "publish"
+        : intent === "publish"
           ? "Публікуємо завдання..."
-          : submitIntent === "archive"
+          : intent === "archive"
             ? "Архівуємо завдання..."
             : selectedPdfFiles.length > 0 || selectedImageFiles.length > 0
               ? "Завантажуємо та зберігаємо вкладення..."
@@ -448,111 +494,200 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 : "Створюємо завдання...",
     );
 
-    const nowIso = new Date().toISOString();
-    const activeTaskId = selectedTaskId ?? normalizedDraft.id;
-    let nextNormalized = nextTasksPayload;
+    const activeTaskId = selectedTaskId ?? draft.id;
+    const fieldKeysToRemove = [...removedImageIds, ...removedDocumentIds];
 
-    if (selectedImageFiles.length > 0 || selectedPdfFiles.length > 0) {
-      const supabase = createSupabaseBrowserClient();
+    if (intent === "delete") {
+      const deleted = await dispatch({
+        type: "plan.delete",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: draft.lockVersion,
+        },
+      });
 
-      const uploadedImages: PlanAttachment[] = [];
-      const uploadedDocuments: PlanAttachment[] = [];
+      if (!deleted) return;
 
-      for (let index = 0; index < selectedImageFiles.length; index += 1) {
-        const file = selectedImageFiles[index];
-        const fileExt = file.name.split(".").pop() ?? "jpg";
-        const fileName = createPlanUploadFileName(fileExt, index);
-        const filePath = `${houseId}/${activeTaskId}/images/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("house-plan-media")
-          .upload(filePath, file, {
-            upsert: true,
-            contentType: file.type || undefined,
-          });
-
-        if (uploadError) {
-          return;
-        }
-
-        uploadedImages.push({
-          id: createPlanAttachmentId("plan-image", index),
-          path: filePath,
-          fileName: file.name,
-          kind: "image",
-          createdAt: nowIso,
-        });
-      }
-
-      for (let index = 0; index < selectedPdfFiles.length; index += 1) {
-        const file = selectedPdfFiles[index];
-        const fileExt = file.name.split(".").pop() ?? "pdf";
-        const fileName = createPlanUploadFileName(fileExt, index);
-        const filePath = `${houseId}/${activeTaskId}/documents/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("house-plan-documents")
-          .upload(filePath, file, {
-            upsert: true,
-            contentType: file.type || "application/pdf",
-          });
-
-        if (uploadError) {
-          return;
-        }
-
-        uploadedDocuments.push({
-          id: createPlanAttachmentId("plan-pdf", index),
-          path: filePath,
-          fileName: file.name,
-          kind: "pdf",
-          createdAt: nowIso,
-        });
-      }
-
-      nextNormalized = nextTasksPayload.map((item) =>
-        item.id === activeTaskId
-          ? {
-              ...item,
-              images: [...item.images, ...uploadedImages],
-              documents: [...item.documents, ...uploadedDocuments],
-              updatedAt: nowIso,
-            }
-          : item,
-      );
-
-      formData.set("planPayload", JSON.stringify({ items: nextNormalized }));
+      setTasks((prev) => prev.filter((item) => item.id !== activeTaskId));
+      resetWorkspace();
+      return;
     }
 
-    formData.delete("planImageFiles");
-    formData.delete("planPdfFiles");
+    if (intent === "publish") {
+      const published = await dispatch({
+        type: "plan.publish",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: draft.lockVersion,
+          taskStatus: draftPublishStatus,
+        },
+      });
 
-    await formAction(formData);
+      if (!published) return;
 
-    startTransition(() => {
-      setTasks(nextNormalized);
-
-      if (submitIntent === "delete") {
-        setActiveTab(draft.status === "archived" ? "archive" : "draft");
-      } else if (
-        normalizedDraft.status === "planned" ||
-        normalizedDraft.status === "in_progress" ||
-        normalizedDraft.status === "completed"
-      ) {
-        setActiveTab("active");
-      } else if (normalizedDraft.status === "archived") {
-        setActiveTab("archive");
-      } else {
-        setActiveTab("draft");
-      }
-
+      setTasks((prev) =>
+        prev.map((item) =>
+          item.id === activeTaskId
+            ? {
+                ...item,
+                status: draftPublishStatus,
+                lockVersion: getResultLockVersion(published, item.lockVersion + 1),
+              }
+            : item,
+        ),
+      );
+      setActiveTab("active");
       resetWorkspace();
-      setActionLabel("Обробляємо завдання...");
+      return;
+    }
+
+    if (intent === "archive") {
+      const archived = await dispatch({
+        type: "plan.archive",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: draft.lockVersion,
+        },
+      });
+
+      if (!archived) return;
+
+      setTasks((prev) =>
+        prev.map((item) =>
+          item.id === activeTaskId
+            ? {
+                ...item,
+                status: "archived",
+                archivedAt: new Date().toISOString(),
+                lockVersion: getResultLockVersion(archived, item.lockVersion + 1),
+              }
+            : item,
+        ),
+      );
+      setActiveTab("archive");
+      resetWorkspace();
+      return;
+    }
+
+    const uploadedFiles =
+      workspaceMode === "create" ? await uploadSelectedFiles(activeTaskId) : [];
+
+    if (!uploadedFiles) {
+      return;
+    }
+
+    if (workspaceMode === "create") {
+      const created = await dispatch({
+        type: "plan.create",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          ...taskPayload(draft),
+          files: uploadedFiles,
+        },
+      });
+
+      if (!created) return;
+
+      setTasks((prev) => [
+        {
+          ...draft,
+          id: activeTaskId,
+          lockVersion: getResultLockVersion(created, 1),
+          updatedAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setActiveTab("draft");
+      resetWorkspace();
+      return;
+    }
+
+    const updated = await dispatch({
+      type: "plan.update",
+      houseId,
+      payload: {
+        id: activeTaskId,
+        lockVersion: draft.lockVersion,
+        ...taskPayload(draft),
+      },
     });
+
+    if (!updated) return;
+
+    let nextLockVersion = getResultLockVersion(updated, draft.lockVersion + 1);
+
+    if (fieldKeysToRemove.length > 0) {
+      const removed = await dispatch({
+        type: "plan.removeFiles",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: nextLockVersion,
+          fieldKeys: fieldKeysToRemove,
+        },
+      });
+
+      if (!removed) return;
+
+      nextLockVersion = getResultLockVersion(removed, nextLockVersion + 1);
+    }
+
+    const updateUploadedFiles = await uploadSelectedFiles(activeTaskId);
+
+    if (!updateUploadedFiles) {
+      return;
+    }
+
+    if (updateUploadedFiles.length > 0) {
+      const added = await dispatch({
+        type: "plan.addFiles",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: nextLockVersion,
+          files: updateUploadedFiles,
+        },
+      });
+
+      if (!added) return;
+
+      nextLockVersion = getResultLockVersion(added, nextLockVersion + 1);
+    }
+
+    setTasks((prev) =>
+      prev.map((item) =>
+        item.id === activeTaskId
+          ? {
+              ...draft,
+              id: activeTaskId,
+              lockVersion: nextLockVersion,
+              updatedAt: new Date().toISOString(),
+            }
+          : item,
+      ),
+    );
+
+    if (
+      draft.status === "planned" ||
+      draft.status === "in_progress" ||
+      draft.status === "completed"
+    ) {
+      setActiveTab("active");
+    } else if (draft.status === "archived") {
+      setActiveTab("archive");
+    } else {
+      setActiveTab("draft");
+    }
+
+    resetWorkspace();
   }
 
-  const uploadImageDisabled = draft.images.length >= 5;
-  const uploadPdfDisabled = draft.documents.length >= 2;
+  const uploadImageDisabled = draft.images.length + selectedImageFiles.length >= 5;
+  const uploadPdfDisabled = draft.documents.length + selectedPdfFiles.length >= 2;
 
   return (
     <div className="relative space-y-6">
@@ -562,6 +697,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         label={actionLabel}
         className="rounded-3xl"
       />
+
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -571,11 +707,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={openCreateMode}
-            className={adminPrimaryButtonClass}
-          >
+          <button type="button" onClick={openCreateMode} className={adminPrimaryButtonClass}>
             Нове завдання
           </button>
         </div>
@@ -614,45 +746,11 @@ const [pdfError, setPdfError] = useState<string | null>(null);
       </div>
 
       {workspaceMode !== "idle" ? (
-        <form
-          ref={formRef}
-          action={handleSubmit}
-          className={`${adminSurfaceClass} p-6`}
-        >
-          <input type="hidden" name="sectionId" value={section.id} />
-          <input type="hidden" name="houseId" value={houseId} />
-          <input type="hidden" name="houseSlug" value={houseSlug} />
-          <input type="hidden" name="title" value="План робіт" />
-          <input type="hidden" name="status" value="published" />
-          <input type="hidden" name="kind" value="plan" />
-          <input type="hidden" name="planIntent" value={submitIntent} />
-          <input
-            type="hidden"
-            name="activePlanTaskId"
-            value={selectedTaskId ?? normalizedDraft.id}
-          />
-          <input
-            type="hidden"
-            name="planPayload"
-            value={JSON.stringify({ items: nextTasksPayload })}
-          />
-          <input
-            type="hidden"
-            name="removePlanImageIds"
-            value={JSON.stringify(removedImageIds)}
-          />
-          <input
-            type="hidden"
-            name="removePlanDocumentIds"
-            value={JSON.stringify(removedDocumentIds)}
-          />
-
+        <div className={`${adminSurfaceClass} p-6`}>
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                {workspaceMode === "edit"
-                  ? "Редагування завдання"
-                  : "Нове завдання"}
+                {workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
               </h3>
               <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 Нове завдання спочатку зберігається як чернетка. Після збереження картку можна повторно відкрити та змінити її статус.
@@ -672,9 +770,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           <div className="grid gap-4">
             <input
               value={draft.title}
-              onChange={(e) =>
-                setDraft((prev) => ({ ...prev, title: e.target.value }))
-              }
+              onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
               placeholder="Назва завдання"
               className={adminInputClass}
             />
@@ -682,12 +778,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             <textarea
               rows={4}
               value={draft.description}
-              onChange={(e) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
+              onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Опис"
               className={adminInputClass}
             />
@@ -707,7 +798,6 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 <option value="medium">Помаранчевий — важливе завдання</option>
                 <option value="low">Сірий — звичайне завдання</option>
               </select>
-
               <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                 Цей пріоритет буде видно на картці та допоможе швидко орієнтуватися у списку завдань.
               </div>
@@ -731,12 +821,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               <input
                 type="date"
                 value={draft.deadlineAt ?? ""}
-                onChange={(e) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    deadlineAt: e.target.value,
-                  }))
-                }
+                onChange={(e) => setDraft((prev) => ({ ...prev, deadlineAt: e.target.value }))}
                 className={adminInputClass}
               />
             ) : (
@@ -744,23 +829,13 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 <input
                   type="date"
                   value={draft.startDate ?? ""}
-                  onChange={(e) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      startDate: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => setDraft((prev) => ({ ...prev, startDate: e.target.value }))}
                   className={adminInputClass}
                 />
                 <input
                   type="date"
                   value={draft.endDate ?? ""}
-                  onChange={(e) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      endDate: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => setDraft((prev) => ({ ...prev, endDate: e.target.value }))}
                   className={adminInputClass}
                 />
               </div>
@@ -768,12 +843,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
 
             <input
               value={draft.contractor ?? ""}
-              onChange={(e) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  contractor: e.target.value,
-                }))
-              }
+              onChange={(e) => setDraft((prev) => ({ ...prev, contractor: e.target.value }))}
               placeholder="Підрядник"
               className={adminInputClass}
             />
@@ -790,202 +860,157 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 className={adminInputClass}
               >
                 {PLAN_ARCHIVE_YEARS.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
+                  <option key={year} value={year}>{year}</option>
                 ))}
               </select>
-
               <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                 Рік використовується для групування завдання в публічному архіві після архівації.
               </div>
             </div>
 
             <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <div className="text-sm font-medium text-[var(--cms-text)]">
-                    Фото завдання
-                  </div>
-                  <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
-                    До 5 зображень.
-                  </p>
-                </div>
+              <div className="text-sm font-medium text-[var(--cms-text)]">Фото завдання</div>
+              <p className="mt-1 text-sm text-[var(--cms-text-muted)]">До 5 зображень.</p>
 
-                {draft.images.length > 0 ? (
-                  <div className="space-y-2">
-                    {draft.images.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="text-sm text-[var(--cms-text)]">
-                          🖼 Фото {index + 1}: {getFileLabel(item.fileName, item.path)}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeExistingImage(item.id)}
-                          className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
-                        >
-                          Видалити
-                        </button>
+              {draft.images.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {draft.images.map((item, index) => (
+                    <div key={item.id} className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-sm text-[var(--cms-text)]">
+                        🖼 Фото {index + 1}: {getFileLabel(item.fileName, item.path)}
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  name="planImageFiles"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="plan-image-files-input"
-                />
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <label
-                    htmlFor="plan-image-files-input"
-                    className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                      uploadImageDisabled
-                        ? "cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
-                        : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
-                    }`}
-                  >
-                    Обрати
-                  </label>
-
-                  {selectedImageFiles.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={clearSelectedImages}
-                      className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                    >
-                      Очистити вибір
-                    </button>
-                  ) : null}
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(item.id)}
+                        className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                      >
+                        Видалити
+                      </button>
+                    </div>
+                  ))}
                 </div>
+              ) : null}
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageChange}
+                className="hidden"
+                id="plan-image-files-input"
+              />
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <label
+                  htmlFor="plan-image-files-input"
+                  className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                    uploadImageDisabled
+                      ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
+                      : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
+                  }`}
+                >
+                  Обрати
+                </label>
 
                 {selectedImageFiles.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedImageFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]"
-                      >
-                        🖼 Новий файл: {file.name}
-                      </div>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={clearSelectedImages}
+                    className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  >
+                    Очистити вибір
+                  </button>
                 ) : null}
               </div>
+
+              {selectedImageFiles.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {selectedImageFiles.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
+                      🖼 Новий файл: {file.name}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <div className="text-sm font-medium text-[var(--cms-text)]">
-                    PDF документи
-                  </div>
-                  <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
-                    До 2 PDF файлів.
-                  </p>
-                </div>
+              <div className="text-sm font-medium text-[var(--cms-text)]">PDF документи</div>
+              <p className="mt-1 text-sm text-[var(--cms-text-muted)]">До 2 PDF файлів.</p>
 
-                {draft.documents.length > 0 ? (
-                  <div className="space-y-2">
-                    {draft.documents.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="text-sm text-[var(--cms-text)]">
-                          📄 PDF {index + 1}: {getFileLabel(item.fileName, item.path)}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeExistingDocument(item.id)}
-                          className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
-                        >
-                          Видалити
-                        </button>
+              {draft.documents.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {draft.documents.map((item, index) => (
+                    <div key={item.id} className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-sm text-[var(--cms-text)]">
+                        📄 PDF {index + 1}: {getFileLabel(item.fileName, item.path)}
                       </div>
-                    ))}
-                  </div>
-                ) : null}
+                      <button
+                        type="button"
+                        onClick={() => removeExistingDocument(item.id)}
+                        className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                      >
+                        Видалити
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
-                <input
-                  ref={pdfInputRef}
-                  type="file"
-                  name="planPdfFiles"
-                  accept="application/pdf"
-                  multiple
-                  onChange={handlePdfChange}
-                  className="hidden"
-                  id="plan-pdf-files-input"
-                />
+              <input
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handlePdfChange}
+                className="hidden"
+                id="plan-pdf-files-input"
+              />
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <label
-                    htmlFor="plan-pdf-files-input"
-                    className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                      uploadPdfDisabled
-                        ? "cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
-                        : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
-                    }`}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <label
+                  htmlFor="plan-pdf-files-input"
+                  className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                    uploadPdfDisabled
+                      ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
+                      : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
+                  }`}
+                >
+                  Обрати
+                </label>
+
+                {selectedPdfFiles.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={clearSelectedPdfs}
+                    className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   >
-                    Обрати
-                  </label>
-
-                  {pdfError ? (
-                  <div className="mt-2 text-xs text-red-400">
-                    {pdfError}
-                  </div>
-                ) : null}
-
-                {selectedPdfFiles.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={clearSelectedPdfs}
-                      className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                    >
-                      Очистити вибір
-                    </button>
-                  ) : null}
-                </div>
-
-                {selectedPdfFiles.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedPdfFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]"
-                      >
-                        📄 Новий файл: {file.name}
-                      </div>
-                    ))}
-                  </div>
+                    Очистити вибір
+                  </button>
                 ) : null}
               </div>
+
+              {pdfError ? <div className="mt-2 text-xs text-red-400">{pdfError}</div> : null}
+
+              {selectedPdfFiles.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {selectedPdfFiles.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
+                      📄 Новий файл: {file.name}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             {workspaceMode === "edit" && draft.status === "draft" ? (
               <div>
                 <select
                   value={draftPublishStatus}
-                  onChange={(e) =>
-                    setDraftPublishStatus(
-                      e.target.value as PublishablePlanTaskStatus,
-                    )
-                  }
+                  onChange={(e) => setDraftPublishStatus(e.target.value as PublishablePlanTaskStatus)}
                   className={adminInputClass}
                 >
                   {getStatusOptions().map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
                 <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
@@ -995,15 +1020,11 @@ const [pdfError, setPdfError] = useState<string | null>(null);
             ) : workspaceMode === "edit" && draft.status !== "draft" ? (
               <select
                 value={draft.status}
-                onChange={(e) =>
-                  updateStatus(e.target.value as PlanTaskStatus)
-                }
+                onChange={(e) => updateStatus(e.target.value as PlanTaskStatus)}
                 className={adminInputClass}
               >
                 {getStatusOptions().map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                  <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             ) : null}
@@ -1012,9 +1033,9 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
                 <div className="flex flex-nowrap items-center gap-3">
                   <button
-                    type="submit"
+                    type="button"
                     disabled={isPending}
-                    onClick={() => setSubmitIntent("save")}
+                    onClick={() => void submitTask("save")}
                     className={`${adminPrimaryButtonClass} min-h-16 px-10 py-5 text-2xl disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
@@ -1061,13 +1082,13 @@ const [pdfError, setPdfError] = useState<string | null>(null);
               </div>
             </div>
 
-            {state.error ? (
+            {lastError ? (
               <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                {state.error}
+                {lastError}
               </div>
             ) : null}
           </div>
-        </form>
+        </div>
       ) : null}
 
       <div className="space-y-4">
@@ -1081,9 +1102,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
           </div>
         ) : (
           visibleTasks.map((task) => {
-            const isSelected =
-              workspaceMode === "edit" && selectedTaskId === task.id;
-
+            const isSelected = workspaceMode === "edit" && selectedTaskId === task.id;
             const priorityLabel =
               task.priority === "high"
                 ? "Терміновий"
@@ -1132,15 +1151,10 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}
-                  >
+                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}>
                     {priorityLabel}
                   </span>
-
-                  <span
-                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}
-                  >
+                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}>
                     {statusLabel}
                   </span>
                 </div>
@@ -1157,15 +1171,14 @@ const [pdfError, setPdfError] = useState<string | null>(null);
                   <span>{getDatePreview(task)}</span>
                   <span>{task.archiveYear}</span>
                   {task.contractor ? <span>{task.contractor}</span> : null}
-                  <span>
-                    Фото: {task.images.length} · PDF: {task.documents.length}
-                  </span>
+                  <span>Фото: {task.images.length} · PDF: {task.documents.length}</span>
                 </div>
               </button>
             );
           })
         )}
       </div>
+
       <PlatformConfirmModal
         open={confirmAction === "delete"}
         title="Видалити чернетку завдання?"
@@ -1177,10 +1190,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         onCancel={() => setConfirmAction(null)}
         onConfirm={() => {
           setConfirmAction(null);
-          setSubmitIntent("delete");
-          requestAnimationFrame(() => {
-            formRef.current?.requestSubmit();
-          });
+          void submitTask("delete");
         }}
       />
 
@@ -1195,10 +1205,7 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         onCancel={() => setConfirmAction(null)}
         onConfirm={() => {
           setConfirmAction(null);
-          setSubmitIntent("publish");
-          requestAnimationFrame(() => {
-            formRef.current?.requestSubmit();
-          });
+          void submitTask("publish");
         }}
       />
 
@@ -1213,13 +1220,9 @@ const [pdfError, setPdfError] = useState<string | null>(null);
         onCancel={() => setConfirmAction(null)}
         onConfirm={() => {
           setConfirmAction(null);
-          setSubmitIntent("archive");
-          requestAnimationFrame(() => {
-            formRef.current?.requestSubmit();
-          });
+          void submitTask("archive");
         }}
       />
-
     </div>
   );
 }

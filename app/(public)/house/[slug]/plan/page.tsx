@@ -1,6 +1,8 @@
 import { housePlanCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { notFound } from "next/navigation";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { PublicPlanTaskViewer } from "@/src/modules/houses/components/PublicPlanTaskViewer";
 
 type Props = {
@@ -70,99 +72,6 @@ const activeColumns = [
     style: "border-[#5475e3]/30 bg-[#5475e3]/10",
   },
 ] as const;
-
-const PLAN_ARCHIVE_YEAR_START = 2016;
-const PLAN_ARCHIVE_YEAR_END = 2026;
-
-function createTaskId() {
-  return `plan-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function normalizePlanArchiveYear(value: unknown) {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
-
-  if (
-    Number.isInteger(parsed) &&
-    parsed >= PLAN_ARCHIVE_YEAR_START &&
-    parsed <= PLAN_ARCHIVE_YEAR_END
-  ) {
-    return parsed;
-  }
-
-  return null;
-}
-
-function normalizePlanTasks(value: unknown): PlanTask[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const raw = item as Record<string, unknown>;
-      const now = new Date(Date.now() - index * 1000).toISOString();
-
-      return {
-        id:
-          typeof raw.id === "string" && raw.id.trim()
-            ? raw.id.trim()
-            : createTaskId(),
-        title: String(raw.title ?? "").trim(),
-        description: String(raw.description ?? "").trim(),
-        status:
-          raw.status === "planned" ||
-          raw.status === "in_progress" ||
-          raw.status === "completed" ||
-          raw.status === "archived"
-            ? raw.status
-            : "draft",
-        priority:
-          raw.priority === "high" ||
-          raw.priority === "medium" ||
-          raw.priority === "low"
-            ? raw.priority
-            : "medium",
-        dateMode: raw.dateMode === "range" ? "range" : "deadline",
-        deadlineAt:
-          typeof raw.deadlineAt === "string" ? raw.deadlineAt : null,
-        startDate:
-          typeof raw.startDate === "string" ? raw.startDate : null,
-        endDate:
-          typeof raw.endDate === "string" ? raw.endDate : null,
-        contractor:
-          typeof raw.contractor === "string" ? raw.contractor.trim() : null,
-        images: Array.isArray(raw.images)
-          ? (raw.images as PlanTaskImage[])
-          : [],
-        documents: Array.isArray(raw.documents)
-          ? (raw.documents as PlanTaskDocument[])
-          : [],
-        createdAt:
-          typeof raw.createdAt === "string" && raw.createdAt
-            ? raw.createdAt
-            : now,
-        updatedAt:
-          typeof raw.updatedAt === "string" && raw.updatedAt
-            ? raw.updatedAt
-            : now,
-        archivedAt:
-          typeof raw.archivedAt === "string" && raw.archivedAt
-            ? raw.archivedAt
-            : null,
-        archiveYear: normalizePlanArchiveYear(raw.archiveYear),
-      } satisfies PlanTask;
-    })
-    .filter((item): item is PlanTask => item !== null && Boolean(item.title));
-}
 
 function getPriorityOrder(priority: PlanTaskPriority) {
   if (priority === "high") return 0;
@@ -245,21 +154,47 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
 
-  const { house, sections } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    notFound();
+  }
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
+  const plan = await getPublishedHousePlan(house.id);
 
-  const planSection = sections.find((section) => section.kind === "plan");
-
-  const content =
-    planSection &&
-    typeof planSection.content === "object" &&
-    planSection.content
-      ? (planSection.content as Record<string, unknown>)
-      : {};
-
-  const tasks = normalizePlanTasks(content.items);
+  const tasks: PlanTask[] = plan.tasks
+    .map((task) => ({
+      id: task.id,
+      title: task.content.title,
+      description: task.content.description,
+      status: task.content.taskStatus,
+      priority: task.content.priority,
+      dateMode: task.content.dateMode,
+      deadlineAt: task.content.deadlineAt,
+      startDate: task.content.startDate,
+      endDate: task.content.endDate,
+      contractor: task.content.contractor,
+      images: task.content.images.map((image) => ({
+        id: image.fieldKey,
+        path: image.path,
+        url: image.url ?? undefined,
+        kind: "image" as const,
+        createdAt: image.createdAt,
+      })),
+      documents: task.content.documents.map((document) => ({
+        id: document.fieldKey,
+        path: document.path,
+        url: document.url ?? undefined,
+        kind: "pdf" as const,
+        createdAt: document.createdAt,
+      })),
+      createdAt: task.content.createdAt,
+      updatedAt: task.content.updatedAt,
+      archivedAt: task.content.archivedAt,
+      archiveYear: task.content.archiveYear,
+    }))
+    .filter((task) => Boolean(task.title));
   const activeTasks = sortPlanTasks(
     tasks.filter(
       (task) =>

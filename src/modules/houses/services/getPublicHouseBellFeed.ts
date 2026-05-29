@@ -3,6 +3,7 @@ import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/
 import { getPublishedHousePage } from "@/src/modules/houses/services/getPublishedHousePage";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseDocumentsFeed } from "@/src/modules/houses/services/getPublicHouseDocumentsFeed";
+import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 
 type BellSourceKind =
   | "announcements"
@@ -105,12 +106,13 @@ export async function getPublicHouseBellFeed({
     getPublishedHousePage(houseId, "reports"),
   ]);
 
-  const [homeSections, informationSections, reportSections, documents] =
+  const [homeSections, informationSections, reportSections, documents, housePlan] =
     await Promise.all([
       homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
       informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
       reportsPage ? getPublishedHouseSections(reportsPage.id) : Promise.resolve([]),
       getPublicHouseDocumentsFeed(houseId),
+      getPublishedHousePlan(houseId),
     ]);
 
   for (const section of homeSections) {
@@ -161,34 +163,6 @@ export async function getPublicHouseBellFeed({
           date: formatDate(latest),
           timestamp: latest,
           source: "meetings",
-        });
-      }
-    }
-
-    if (section.kind === "plan") {
-      const planItems = Array.isArray(content.items)
-        ? (content.items as Array<Record<string, unknown>>)
-        : [];
-
-      const recentTasks = planItems.filter((item) =>
-        isRecent(getPlanBellTimestamp(item)),
-      );
-
-      if (recentTasks.length > 0) {
-        const latest = Math.max(
-          ...recentTasks.map((item) => getPlanBellTimestamp(item)),
-        );
-
-        items.push({
-          id: `${section.id}-plan`,
-          section: "План робіт",
-          text:
-            recentTasks.length === 1
-              ? "Додано нову задачу"
-              : `Добавлено ${recentTasks.length} новых задач`,
-          date: formatDate(latest),
-          timestamp: latest,
-          source: "plan",
         });
       }
     }
@@ -274,6 +248,40 @@ export async function getPublicHouseBellFeed({
         });
       }
     }
+  }
+
+  const recentPlanTasks = housePlan.tasks.filter((task) =>
+    isRecent(
+      Math.max(
+        toTimestamp(task.content.updatedAt),
+        toTimestamp(task.content.archivedAt),
+        toTimestamp(task.content.createdAt),
+      ),
+    ),
+  );
+
+  if (recentPlanTasks.length > 0) {
+    const latest = Math.max(
+      ...recentPlanTasks.map((task) =>
+        Math.max(
+          toTimestamp(task.content.updatedAt),
+          toTimestamp(task.content.archivedAt),
+          toTimestamp(task.content.createdAt),
+        ),
+      ),
+    );
+
+    items.push({
+      id: `${houseId}-plan`,
+      section: "План робіт",
+      text:
+        recentPlanTasks.length === 1
+          ? "Додано нову задачу"
+          : `Добавлено ${recentPlanTasks.length} новых задач`,
+      date: formatDate(latest),
+      timestamp: latest,
+      source: "plan",
+    });
   }
 
   for (const section of informationSections) {

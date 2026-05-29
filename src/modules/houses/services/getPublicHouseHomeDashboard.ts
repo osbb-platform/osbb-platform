@@ -1,6 +1,7 @@
 import { houseSystemCopy } from "@/src/shared/publicCopy/house";
 import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishedHouseHero";
 import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getPublishedHouseHomeWidgets";
+import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
@@ -467,12 +468,11 @@ function buildAnnouncementsWidget(
 
 function buildPlanWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  tasks: PlanTask[],
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/plan`;
-  const planSection = sections[0];
 
-  if (!planSection) {
+  if (tasks.length === 0) {
     return {
       kind: "plan",
       title: houseSystemCopy.homeDashboard.plan.title,
@@ -486,9 +486,6 @@ function buildPlanWidget(
       meta: [],
     };
   }
-
-  const content = asRecord(planSection.content);
-  const tasks = normalizePlanTasks(content.items);
   const inProgress = sortPlanTasks(tasks.filter((task) => task.status === "in_progress"));
   const planned = sortPlanTasks(tasks.filter((task) => task.status === "planned"));
   const candidateWithDeadline = sortPlanTasks(
@@ -786,10 +783,11 @@ export async function getPublicHouseHomeDashboard({
     getHouseInformationPageByHouseId(houseId),
   ]);
 
-  const [homeSections, informationSections, houseHero] = await Promise.all([
+  const [homeSections, informationSections, houseHero, housePlan] = await Promise.all([
     homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
     informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
     getPublishedHouseHero(houseId),
+    getPublishedHousePlan(houseId),
   ]);
 
   const heroSection = homeSections.find((section) => section.kind === "hero");
@@ -803,7 +801,6 @@ export async function getPublicHouseHomeDashboard({
     (section) => section.kind === "announcements",
   );
 
-  const planSections = homeSections.filter((section) => section.kind === "plan");
   const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
   const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
   const homeWidgets = await getPublishedHouseHomeWidgets(house.id);
@@ -835,7 +832,27 @@ export async function getPublicHouseHomeDashboard({
     topAlert: pickTopAlert(slug, informationSections, meetingsSections),
     widgets: [
       buildAnnouncementsWidget(slug, announcementsSections),
-      buildPlanWidget(slug, planSections),
+      buildPlanWidget(
+        slug,
+        housePlan.tasks.map((task) => ({
+          id: task.id,
+          title: task.content.title,
+          description: task.content.description,
+          status: task.content.taskStatus,
+          priority: task.content.priority,
+          dateMode: task.content.dateMode,
+          deadlineAt: task.content.deadlineAt,
+          startDate: task.content.startDate,
+          endDate: task.content.endDate,
+          contractor: task.content.contractor,
+          images: [],
+          documents: [],
+          createdAt: task.content.createdAt,
+          updatedAt: task.content.updatedAt,
+          archivedAt: task.content.archivedAt,
+          archiveYear: task.content.archiveYear,
+        })),
+      ),
       buildMeetingsWidget(slug, meetingsSections),
       buildDebtorsWidget(slug, debtorsSections),
     ],
