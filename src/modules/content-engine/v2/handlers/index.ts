@@ -8,6 +8,7 @@ import { homeWidgetsHandler } from "./home_widgets";
 import { faqHandler } from "./faq";
 import { informationPostsHandler } from "./information_posts";
 import { documentsHandler } from "./documents";
+import { specialistsHandler } from "./specialists";
 
 /**
  * Central content-engine v2 handler registration point.
@@ -27,4 +28,5 @@ export function registerAllHandlers() {
   registerHandler(homeWidgetsHandler);
   registerHandler(informationPostsHandler);
   registerHandler(requisitesHandler);
+  registerHandler(specialistsHandler);
 }

@@ -20,7 +20,6 @@ import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHou
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
-import { ensureHouseSpecialistsSection } from "@/src/modules/houses/services/ensureHouseSpecialistsSection";
 import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
 import { ensureHousePlanSection } from "@/src/modules/houses/services/ensureHousePlanSection";
 import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
@@ -30,6 +29,7 @@ import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHe
 import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
+import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
@@ -321,26 +321,10 @@ export default async function AdminHouseDetailPage({
   const faq =
     activeBlock === "information" ? await getAdminHouseFaq(house.id) : null;
 
-  const specialistsSectionList =
-    homeSections.find((section) => section.kind === "specialists") ?? null;
-
-  let specialistsSection = null;
-
-  if (activeBlock === "specialists" && homePage && !specialistsSectionList) {
-    const ensuredSpecialistsSectionId = await ensureHouseSpecialistsSection({
-      housePageId: homePage.id,
-      houseSlug: house.slug,
-    });
-
-    specialistsSection = await getAdminHouseSectionById(
-      ensuredSpecialistsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "specialists" && specialistsSectionList) {
-    specialistsSection = specialistsSectionList;
-  } else if (activeBlock !== "specialists") {
-    specialistsSection = null;
-  }
+  const specialistsData =
+    activeBlock === "specialists"
+      ? await getAdminHouseSpecialists({ houseId: house.id })
+      : null;
 
   const reportsSectionList =
     homeSections.find((section) => section.kind === "reports") ?? null;
@@ -733,25 +717,12 @@ export default async function AdminHouseDetailPage({
         />
       ) : null}
 
-      {activeBlock === "specialists" ? (
-        specialistsSection ? (
-          <HouseSpecialistsWorkspace
-            houseId={house.id}
-            houseSlug={house.slug}
-            section={{
-              id: specialistsSection.id,
-              title: specialistsSection.title,
-              status: specialistsSection.status,
-              content: getSectionContent(specialistsSection),
-            }}
-            requests={specialistRequests}
-          />
-        ) : (
-          <HouseTechnicalPlaceholder
-            title="Спеціалісти"
-            description="Не вдалося підготувати секцію спеціалістів для цього будинку. Потрібно перевірити наявність сторінки home та коректність ініціалізації будинку."
-          />
-        )
+      {activeBlock === "specialists" && specialistsData ? (
+        <HouseSpecialistsWorkspace
+          houseId={house.id}
+          specialistsData={specialistsData}
+          requests={specialistRequests}
+        />
       ) : null}
 
     </div>
