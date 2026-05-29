@@ -21,7 +21,7 @@ import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
-import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
+import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
@@ -349,25 +349,10 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHousePlan({ houseId: house.id })
       : null;
 
-  const debtorsSectionList =
-    homeSections.find((section) => section.kind === "debtors") ?? null;
-
-  let debtorsSection = null;
-
-  if (activeBlock === "debtors" && homePage && !debtorsSectionList) {
-    const ensuredDebtorsSectionId = await ensureHouseDebtorsSection({
-      housePageId: homePage.id,
-    });
-
-    debtorsSection = await getAdminHouseSectionById(
-      ensuredDebtorsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "debtors" && debtorsSectionList) {
-    debtorsSection = debtorsSectionList;
-  } else if (activeBlock !== "debtors") {
-    debtorsSection = null;
-  }
+  const debtorsData =
+    activeBlock === "debtors"
+      ? await getAdminHouseDebtors({ houseId: house.id })
+      : null;
 
   const meetingsSectionList =
     homeSections.find((section) => section.kind === "meetings") ?? null;
@@ -631,16 +616,9 @@ export default async function AdminHouseDetailPage({
         <HouseDebtorsWorkspace
           houseId={house.id}
           houseSlug={house.slug}
+          exportTitle="Боржники"
           apartments={debtorsApartments}
-          section={
-            debtorsSection
-              ? {
-                  id: debtorsSection.id,
-                  title: debtorsSection.title,
-                  content: getSectionContent(debtorsSection),
-                }
-              : null
-          }
+          debtors={debtorsData}
         />
       ) : null}
 

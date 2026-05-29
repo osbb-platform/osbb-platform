@@ -2,6 +2,7 @@ import { houseSystemCopy } from "@/src/shared/publicCopy/house";
 import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishedHouseHero";
 import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getPublishedHouseHomeWidgets";
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
+import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
@@ -638,33 +639,20 @@ function buildMeetingsWidget(
 
 function buildDebtorsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  debtors: {
+    updatedAt: string | null;
+    activeItems: Array<{
+      amount: string;
+    }>;
+  } | null,
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/debtors`;
-  const debtorsSection = sections[0];
 
-  if (!debtorsSection) {
-    return {
-      kind: "debtors",
-      title: houseSystemCopy.homeDashboard.debtors.title,
-      href,
-      ctaLabel: CTA_LABEL,
-      isPlaceholder: true,
-      badge: null,
-      freshnessLabel: null,
-      headline: houseSystemCopy.homeDashboard.common.comingSoon,
-      description: houseSystemCopy.homeDashboard.debtors.placeholderDescription,
-      meta: [],
-    };
-  }
-
-  const content = asRecord(debtorsSection.content);
   const hasPublishedSnapshot = Boolean(
-    asString(content.updatedAt) || Array.isArray(content.activeItems),
+    debtors && debtors.updatedAt && debtors.activeItems.length > 0,
   );
-  const items = normalizeDebtorItems(content.activeItems);
 
-  if (!hasPublishedSnapshot) {
+  if (!hasPublishedSnapshot || !debtors) {
     return {
       kind: "debtors",
       title: houseSystemCopy.homeDashboard.debtors.title,
@@ -679,6 +667,7 @@ function buildDebtorsWidget(
     };
   }
 
+  const items = debtors.activeItems;
   const totalDebt = items.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
 
   return {
@@ -697,7 +686,7 @@ function buildDebtorsWidget(
       items.length > 0
         ? `${houseSystemCopy.homeDashboard.debtors.totalDebt}: ${formatCurrency(totalDebt)} ₴`
         : houseSystemCopy.homeDashboard.debtors.noDebtsDescription,
-    meta: [`${houseSystemCopy.homeDashboard.debtors.actualDate}: ${formatDate(content.updatedAt)}`],
+    meta: [`${houseSystemCopy.homeDashboard.debtors.actualDate}: ${formatDate(debtors.updatedAt)}`],
   };
 }
 
@@ -783,11 +772,12 @@ export async function getPublicHouseHomeDashboard({
     getHouseInformationPageByHouseId(houseId),
   ]);
 
-  const [homeSections, informationSections, houseHero, housePlan] = await Promise.all([
+  const [homeSections, informationSections, houseHero, housePlan, houseDebtors] = await Promise.all([
     homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
     informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
     getPublishedHouseHero(houseId),
     getPublishedHousePlan(houseId),
+    getPublishedHouseDebtors(houseId),
   ]);
 
   const heroSection = homeSections.find((section) => section.kind === "hero");
@@ -802,7 +792,6 @@ export async function getPublicHouseHomeDashboard({
   );
 
   const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
-  const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
   const homeWidgets = await getPublishedHouseHomeWidgets(house.id);
 
   const rawWidgets = homeWidgets?.statusWidgets ?? [];
@@ -854,7 +843,7 @@ export async function getPublicHouseHomeDashboard({
         })),
       ),
       buildMeetingsWidget(slug, meetingsSections),
-      buildDebtorsWidget(slug, debtorsSections),
+      buildDebtorsWidget(slug, houseDebtors),
     ],
   };
 }

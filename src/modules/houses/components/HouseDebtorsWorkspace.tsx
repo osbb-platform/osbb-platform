@@ -1,10 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { useMemo, useRef, useState } from "react";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
+import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import {
   adminInputClass,
   adminPrimaryButtonClass,
@@ -45,17 +45,9 @@ type DebtorsCalculator = {
 type Props = {
   houseId: string;
   houseSlug: string;
+  exportTitle?: string;
   apartments: AdminHouseApartmentListItem[];
-  section: {
-    id: string;
-    title: string | null;
-    content: Record<string, unknown>;
-  } | null;
-};
-
-const initialState = {
-  error: null,
-  planItems: null as unknown[] | null,
+  debtors: AdminHouseDebtorsSnapshot | null;
 };
 
 const DEFAULT_PAYMENT: DebtorsPayment = {
@@ -189,15 +181,11 @@ function formatSummaryAmount(items: DebtSnapshotItem[]) {
 export function HouseDebtorsWorkspace({
   houseId,
   houseSlug,
+  exportTitle = "Боржники",
   apartments,
-  section,
+  debtors,
 }: Props) {
-  const router = useRouter();
-
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -212,10 +200,15 @@ export function HouseDebtorsWorkspace({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const content =
-    section &&
-    typeof section.content === "object" &&
-    section.content
-      ? section.content
+    debtors
+      ? {
+          payment: debtors.payment,
+          calculator: debtors.calculator,
+          activeItems: debtors.activeItems,
+          draftItems: debtors.draftItems,
+          updatedAt: debtors.updatedAt,
+          settingsLockVersion: debtors.settingsLockVersion,
+        }
       : {};
 
   const [payment, setPayment] = useState<DebtorsPayment>(
@@ -246,41 +239,6 @@ export function HouseDebtorsWorkspace({
       };
     }),
   );
-
-  useEffect(() => {
-    if (isPending || state.error || !submittedMode) {
-      return;
-    }
-
-    if (submittedMode === "save_draft") {
-      startTransition(() => {
-        setIsPreviewOpen(false);
-        router.refresh();
-      });
-    }
-
-    if (submittedMode === "save_payment") {
-      startTransition(() => {
-        setIsPaymentSettingsOpen(false);
-      });
-    }
-
-    if (submittedMode === "save_calculator") {
-      startTransition(() => {
-        setCalculator((prev) => ({ ...prev, enabled: true }));
-        setIsCalculatorSettingsOpen(false);
-      });
-    }
-
-    if (
-      submittedMode === "publish_draft" ||
-      submittedMode === "delete_draft"
-    ) {
-      startTransition(() => {
-        router.refresh();
-      });
-    }
-  }, [isPending, router, state.error, submittedMode]);
 
   const previewItems = useMemo(
     () => workingRows.filter((item) => isPositiveAmount(item.amount)),
@@ -352,81 +310,109 @@ export function HouseDebtorsWorkspace({
     setIsPreviewOpen(false);
   }
 
-  function submitDebtorsMode(
-    mode:
-      | "save_draft"
-      | "publish_draft"
-      | "delete_draft"
-      | "save_payment"
-      | "save_calculator",
-    payload?: string,
-  ) {
-    if (!section) return;
+  async function submitDraftSave() {
+    if (!debtors) return;
 
-    const formData = new FormData();
-    formData.set("sectionId", section.id);
-    formData.set("houseId", houseId);
-    formData.set("houseSlug", houseSlug);
-    formData.set("title", section.title ?? "Боржники");
-    formData.set("status", "published");
-    formData.set("kind", "debtors");
-    formData.set("debtorsMode", mode);
+    setSubmittedMode("save_draft");
 
-    if (payload) {
-      formData.set("debtorsPayload", payload);
-    }
-
-    setSubmittedMode(mode);
-
-    startTransition(() => {
-      formAction(formData);
-    });
-  }
-
-  function submitDraftSave() {
-    const payload = JSON.stringify({
-      payment,
-      draftItems: previewItems.map((item) => ({
-        apartmentId: item.apartmentId,
-        apartmentLabel: item.apartmentLabel,
-        accountNumber: item.accountNumber,
-        ownerName: item.ownerName,
-        area: item.area,
-        amount: normalizeDecimalInput(item.amount),
-        days: item.days.trim(),
-      })),
-    });
-
-    submitDebtorsMode("save_draft", payload);
-  }
-
-  function savePaymentSettings() {
-    const payload = JSON.stringify({
-      payment,
-      calculator,
-    });
-
-    submitDebtorsMode("save_payment", payload);
-  }
-
-  function saveCalculatorSettings() {
-    const payload = JSON.stringify({
-      payment,
-      calculator: {
-        ...calculator,
-        enabled: true,
+    const saved = await dispatch({
+      type: "debtors.saveDraftItems",
+      houseId,
+      payload: {
+        items: previewItems.map((item) => ({
+          apartmentId: item.apartmentId,
+          apartmentLabel: item.apartmentLabel,
+          accountNumber: item.accountNumber,
+          ownerName: item.ownerName,
+          area: item.area,
+          amount: normalizeDecimalInput(item.amount),
+          days: item.days.trim(),
+        })),
       },
     });
 
-    submitDebtorsMode("save_calculator", payload);
+    if (!saved) return;
+
+    setIsPreviewOpen(false);
+    setActiveTab("draft");
   }
 
-  function publishDraft() {
-    submitDebtorsMode("publish_draft");
+  async function savePaymentSettings() {
+    if (!debtors) return;
+
+    setSubmittedMode("save_payment");
+
+    const saved = await dispatch({
+      type: "debtors.saveSettings",
+      houseId,
+      payload: {
+        lockVersion: debtors.settingsLockVersion,
+        payment,
+        calculator,
+      },
+    });
+
+    if (!saved) return;
+
+    setIsPaymentSettingsOpen(false);
   }
 
-  function deleteDraft() {
-    submitDebtorsMode("delete_draft");
+  async function saveCalculatorSettings() {
+    if (!debtors) return;
+
+    const nextCalculator = {
+      ...calculator,
+      enabled: true,
+    };
+
+    setSubmittedMode("save_calculator");
+
+    const saved = await dispatch({
+      type: "debtors.saveSettings",
+      houseId,
+      payload: {
+        lockVersion: debtors.settingsLockVersion,
+        payment,
+        calculator: nextCalculator,
+      },
+    });
+
+    if (!saved) return;
+
+    setCalculator(nextCalculator);
+    setIsCalculatorSettingsOpen(false);
+  }
+
+  async function publishDraft() {
+    if (!debtors) return;
+
+    setSubmittedMode("publish_draft");
+
+    const published = await dispatch({
+      type: "debtors.publishDraft",
+      houseId,
+      payload: {},
+    });
+
+    if (!published) return;
+
+    setActiveTab("published");
+  }
+
+  async function deleteDraft() {
+    if (!debtors) return;
+
+    setSubmittedMode("delete_draft");
+
+    const deleted = await dispatch({
+      type: "debtors.deleteDraft",
+      houseId,
+      payload: {},
+    });
+
+    if (!deleted) return;
+
+    setActiveTab("all");
   }
 
   function buildReferenceRows(rows: DebtSnapshotItem[]): DebtorsSpreadsheetRow[] {
@@ -442,7 +428,7 @@ export function HouseDebtorsWorkspace({
 
   function handleExport() {
     exportDebtorsRegistry({
-      houseName: section?.title ?? houseSlug,
+      houseName: exportTitle || houseSlug,
       rows: workingRows.map((row) => ({
         apartmentLabel: row.apartmentLabel,
         accountNumber: row.accountNumber,
@@ -528,7 +514,7 @@ export function HouseDebtorsWorkspace({
   const paymentDirty =
     JSON.stringify(payment) !== JSON.stringify(DEFAULT_PAYMENT);
   const paymentSaveSuccess =
-    submittedMode === "save_payment" && !isPending && !state.error;
+    submittedMode === "save_payment" && !isPending && !lastError;
   const totalApartmentsCount = workingRows.length;
   const publishedDebtorsCount = activeItems.filter((item) =>
     isPositiveAmount(item.amount),
@@ -551,7 +537,7 @@ export function HouseDebtorsWorkspace({
   const calculatorDirty =
     JSON.stringify(calculator) !== JSON.stringify(DEFAULT_CALCULATOR);
   const calculatorSaveSuccess =
-    submittedMode === "save_calculator" && !isPending && !state.error;
+    submittedMode === "save_calculator" && !isPending && !lastError;
 
   const hasCalculatorValues =
     Boolean(calculator.title.trim()) &&
@@ -613,9 +599,9 @@ export function HouseDebtorsWorkspace({
       </div>
 
       <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
-        {state.error ? (
+        {lastError ? (
         <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {state.error}
+          {lastError}
         </div>
       ) : null}
 
@@ -877,7 +863,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={savePaymentSettings}
-                  disabled={!section || !paymentDirty || !isPaymentUrlValid || isPending}
+                  disabled={!debtors || !paymentDirty || !isPaymentUrlValid || isPending}
                   className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_payment"
@@ -1085,7 +1071,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={saveCalculatorSettings}
-                  disabled={!section || (calculator.enabled && !calculatorDirty) || isPending}
+                  disabled={!debtors || (calculator.enabled && !calculatorDirty) || isPending}
                   className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_calculator"
@@ -1268,7 +1254,7 @@ export function HouseDebtorsWorkspace({
 
                 <button
                   type="button"
-                  disabled={isPreviewEmpty || !section || isPending}
+                  disabled={isPreviewEmpty || !debtors || isPending}
                   onClick={submitDraftSave}
                   className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >

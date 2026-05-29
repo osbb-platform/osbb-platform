@@ -10,6 +10,7 @@ import { informationPostsHandler } from "./information_posts";
 import { documentsHandler } from "./documents";
 import { specialistsHandler } from "./specialists";
 import { planHandler } from "./plan";
+import { debtorsHandler } from "./debtors";
 
 /**
  * Central content-engine v2 handler registration point.
@@ -23,6 +24,7 @@ export function registerAllHandlers() {
   registerHandler(announcementsHandler);
   registerHandler(boardIntroHandler);
   registerHandler(boardMembersHandler);
+  registerHandler(debtorsHandler);
   registerHandler(documentsHandler);
   registerHandler(faqHandler);
   registerHandler(heroHandler);

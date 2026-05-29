@@ -4,6 +4,7 @@ import { getPublishedHousePage } from "@/src/modules/houses/services/getPublishe
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseDocumentsFeed } from "@/src/modules/houses/services/getPublicHouseDocumentsFeed";
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
+import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 
 type BellSourceKind =
   | "announcements"
@@ -106,13 +107,14 @@ export async function getPublicHouseBellFeed({
     getPublishedHousePage(houseId, "reports"),
   ]);
 
-  const [homeSections, informationSections, reportSections, documents, housePlan] =
+  const [homeSections, informationSections, reportSections, documents, housePlan, houseDebtors] =
     await Promise.all([
       homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
       informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
       reportsPage ? getPublishedHouseSections(reportsPage.id) : Promise.resolve([]),
       getPublicHouseDocumentsFeed(houseId),
       getPublishedHousePlan(houseId),
+      getPublishedHouseDebtors(houseId),
     ]);
 
   for (const section of homeSections) {
@@ -231,23 +233,19 @@ export async function getPublicHouseBellFeed({
       }
     }
 
-    if (section.kind === "debtors") {
-      const timestamp = Math.max(
-        toTimestamp(content.updatedAt),
-        toTimestamp(content.publishedAt),
-      );
+  }
 
-      if (isRecent(timestamp)) {
-        items.push({
-          id: `${section.id}-debtors`,
-          section: "Боржники",
-          text: "Опубліковано новий список заборгованості",
-          date: formatDate(timestamp),
-          timestamp,
-          source: "debtors",
-        });
-      }
-    }
+  const debtorsTimestamp = toTimestamp(houseDebtors.updatedAt);
+
+  if (houseDebtors.activeItems.length > 0 && isRecent(debtorsTimestamp)) {
+    items.push({
+      id: `${houseId}-debtors`,
+      section: "Боржники",
+      text: "Опубліковано новий список заборгованості",
+      date: formatDate(debtorsTimestamp),
+      timestamp: debtorsTimestamp,
+      source: "debtors",
+    });
   }
 
   const recentPlanTasks = housePlan.tasks.filter((task) =>
