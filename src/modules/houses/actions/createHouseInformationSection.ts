@@ -11,14 +11,6 @@ type CreateHouseInformationSectionState = {
 };
 
 const INFORMATION_IMAGES_BUCKET = "house-information-images";
-const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_COVER_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/jpg",
-  "image/webp",
-]);
-
 const ALLOWED_CATEGORIES = [
   "Про будинок",
   "Правила проживання",
@@ -31,8 +23,14 @@ function normalizeCategory(value: string) {
   return ALLOWED_CATEGORIES.includes(value) ? value : ALLOWED_CATEGORIES[0];
 }
 
-function isFileLike(value: FormDataEntryValue | null): value is File {
-  return typeof File !== "undefined" && value instanceof File;
+function isSafeInformationCoverImagePath(houseId: string, value: string) {
+  return (
+    value.length > 0 &&
+    value.startsWith(`${houseId}/`) &&
+    !value.includes("..") &&
+    !value.startsWith("/") &&
+    !value.endsWith("/")
+  );
 }
 
 function getActorDisplayName(params: {
@@ -54,9 +52,7 @@ export async function createHouseInformationSection(
   const category = normalizeCategory(
     String(formData.get("category") ?? "").trim(),
   );
-  const fileEntry = formData.get("coverImage");
-  const coverImage =
-    isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
+  const coverImagePath = String(formData.get("coverImagePath") ?? "").trim();
   const isPinned = String(formData.get("isPinned") ?? "").trim() === "true";
 
   if (!houseId || !houseSlug || !housePageId) {
@@ -75,18 +71,8 @@ export async function createHouseInformationSection(
     return { error: "Текст повідомлення не повинен перевищувати 512 символів." };
   }
 
-  if (coverImage) {
-    if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
-      return {
-        error: "Для обкладинки дозволені лише JPG, PNG або WebP.",
-      };
-    }
-
-    if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
-      return {
-        error: "Обкладинка повідомлення має бути не більшою за 5 МБ.",
-      };
-    }
+  if (coverImagePath && !isSafeInformationCoverImagePath(houseId, coverImagePath)) {
+    return { error: "Некоректний шлях обкладинки повідомлення." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -111,6 +97,14 @@ export async function createHouseInformationSection(
       : 10;
 
   let coverImageUrl: string | null = null;
+
+  if (coverImagePath) {
+    const { data: publicUrlData } = supabase.storage
+      .from(INFORMATION_IMAGES_BUCKET)
+      .getPublicUrl(coverImagePath);
+
+    coverImageUrl = publicUrlData.publicUrl;
+  }
 
   const content: Record<string, unknown> = {
     headline,
@@ -137,38 +131,16 @@ export async function createHouseInformationSection(
     .single();
 
   if (createError || !section) {
+    if (coverImagePath) {
+      await supabase.storage.from(INFORMATION_IMAGES_BUCKET).remove([coverImagePath]);
+    }
+
     return {
       error: `Помилка створення повідомлення: ${createError?.message ?? "Unknown error"}`,
     };
   }
 
-  if (coverImage) {
-    const fileExt = coverImage.name.split(".").pop() || "jpg";
-    const filePath = `${houseId}/${section.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(INFORMATION_IMAGES_BUCKET)
-      .upload(filePath, coverImage, {
-        upsert: true,
-        contentType: coverImage.type || undefined,
-      });
-
-    if (uploadError) {
-      await supabase.from("house_sections").delete().eq("id", section.id);
-
-      return {
-        error: `Не вдалося завантажити обкладинку повідомлення: ${uploadError.message}`,
-      };
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from(INFORMATION_IMAGES_BUCKET)
-      .getPublicUrl(filePath);
-
-    coverImageUrl = publicUrlData.publicUrl;
-
-    content.coverImageUrl = coverImageUrl;
-
+  if (coverImagePath) {
     const { error: updateSectionError } = await supabase
       .from("house_sections")
       .update({
@@ -177,7 +149,7 @@ export async function createHouseInformationSection(
       .eq("id", section.id);
 
     if (updateSectionError) {
-      await supabase.storage.from(INFORMATION_IMAGES_BUCKET).remove([filePath]);
+      await supabase.storage.from(INFORMATION_IMAGES_BUCKET).remove([coverImagePath]);
       await supabase.from("house_sections").delete().eq("id", section.id);
 
       return {

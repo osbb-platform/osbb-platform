@@ -6,6 +6,7 @@ import { archiveHouseInformationSection } from "@/src/modules/houses/actions/arc
 import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
 import { publishHouseInformationSection } from "@/src/modules/houses/actions/publishHouseInformationSection";
 import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
 
 import {
@@ -19,6 +20,39 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 
 const initialState = { error: null };
+
+const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const MAX_COVER_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
+const INFORMATION_IMAGES_BUCKET = "house-information-images";
+
+function sanitizeCoverFileName(value: string) {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9._-]/g, "");
+
+  return normalized || "information-cover-image";
+}
+
+function buildInformationCoverImagePath(params: {
+  houseId: string;
+  sectionId: string;
+  file: File;
+}) {
+  const safeFileName = sanitizeCoverFileName(params.file.name);
+  return `${params.houseId}/${params.sectionId}/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}-${safeFileName}`;
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(0)} КБ`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
 
 type Props = {
   houseId: string;
@@ -57,6 +91,9 @@ export function EditInformationPostForm({
   );
 
   const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
+  const [coverImageError, setCoverImageError] = useState<string | null>(null);
+  const [uploadedCoverImagePath, setUploadedCoverImagePath] = useState("");
+  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     typeof section.content.coverImageUrl === "string"
       ? section.content.coverImageUrl
@@ -89,11 +126,18 @@ export function EditInformationPostForm({
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <form
         id="information-post-edit-form"
-        action={(formData) => {
-          if (selectedCoverImage) {
-            formData.set("coverImage", selectedCoverImage);
+        action={formAction}
+        onSubmit={(event) => {
+          if (isUploadingCoverImage) {
+            event.preventDefault();
+            setCoverImageError("Дочекайтеся завершення завантаження обкладинки.");
+            return;
           }
-          return formAction(formData);
+
+          if (selectedCoverImage && !uploadedCoverImagePath) {
+            event.preventDefault();
+            setCoverImageError("Обкладинка ще не завантажена. Оберіть файл повторно.");
+          }
         }}
         className="grid gap-4"
       >
@@ -104,6 +148,7 @@ export function EditInformationPostForm({
         <input type="hidden" name="title" value={section.title} />
         <input type="hidden" name="isPinned" value={isPinned ? "true" : "false"} />
         <input type="hidden" name="status" value={section.status} />
+        <input type="hidden" name="coverImagePath" value={uploadedCoverImagePath} />
 
         {/* HEADER */}
         <div className="flex items-start justify-between gap-4">
@@ -182,16 +227,104 @@ export function EditInformationPostForm({
                 Обрати файл
               </button>
 
+              {coverImageError ? (
+                <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-xs text-[var(--cms-danger-text)]">
+                  {coverImageError}
+                </div>
+              ) : null}
+
+              {selectedCoverImage ? (
+                <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
+                  {selectedCoverImage.name} · {formatFileSize(selectedCoverImage.size)}
+                  {isUploadingCoverImage ? " · Завантажуємо..." : uploadedCoverImagePath ? " · Завантажено" : ""}
+                </div>
+              ) : null}
+
               <input
                 ref={fileInputRef}
-                name="coverImage"
                 type="file"
                 hidden
-                accept="image/jpeg,image/png,image/jpg,image/webp"
-                onChange={(event) => {
+                accept={ACCEPTED_IMAGE_TYPES}
+                onChange={async (event) => {
                   const file = event.target.files?.[0] ?? null;
+
+                  if (previewUrl?.startsWith("blob:")) {
+                    URL.revokeObjectURL(previewUrl);
+                  }
+
+                  setUploadedCoverImagePath("");
+
+                  if (!file) {
+                    setSelectedCoverImage(null);
+                    setCoverImageError(null);
+                    setPreviewUrl(
+                      typeof section.content.coverImageUrl === "string"
+                        ? section.content.coverImageUrl
+                        : null,
+                    );
+                    return;
+                  }
+
+                  if (!ACCEPTED_IMAGE_TYPES.split(",").includes(file.type)) {
+                    event.target.value = "";
+                    setSelectedCoverImage(null);
+                    setCoverImageError("Для обкладинки дозволені лише JPG, PNG або WebP.");
+                    setPreviewUrl(
+                      typeof section.content.coverImageUrl === "string"
+                        ? section.content.coverImageUrl
+                        : null,
+                    );
+                    return;
+                  }
+
+                  if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
+                    event.target.value = "";
+                    setSelectedCoverImage(null);
+                    setCoverImageError("Обкладинка повідомлення має бути не більшою за 15 МБ.");
+                    setPreviewUrl(
+                      typeof section.content.coverImageUrl === "string"
+                        ? section.content.coverImageUrl
+                        : null,
+                    );
+                    return;
+                  }
+
+                  const nextPreviewUrl = URL.createObjectURL(file);
                   setSelectedCoverImage(file);
-                  setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                  setPreviewUrl(nextPreviewUrl);
+                  setCoverImageError(null);
+                  setIsUploadingCoverImage(true);
+
+                  const uploadPath = buildInformationCoverImagePath({
+                    houseId,
+                    sectionId: section.id,
+                    file,
+                  });
+                  const supabase = createSupabaseBrowserClient();
+                  const { error } = await supabase.storage
+                    .from(INFORMATION_IMAGES_BUCKET)
+                    .upload(uploadPath, file, {
+                      upsert: false,
+                      contentType: file.type || undefined,
+                    });
+
+                  setIsUploadingCoverImage(false);
+
+                  if (error) {
+                    event.target.value = "";
+                    setSelectedCoverImage(null);
+                    setUploadedCoverImagePath("");
+                    setCoverImageError(`Не вдалося завантажити обкладинку: ${error.message}`);
+                    setPreviewUrl(
+                      typeof section.content.coverImageUrl === "string"
+                        ? section.content.coverImageUrl
+                        : null,
+                    );
+                    URL.revokeObjectURL(nextPreviewUrl);
+                    return;
+                  }
+
+                  setUploadedCoverImagePath(uploadPath);
                 }}
               />
             </div>
@@ -247,11 +380,11 @@ export function EditInformationPostForm({
           <button
             type="submit"
             form="information-post-edit-form"
-            disabled={isPending}
+            disabled={isPending || isUploadingCoverImage}
             onClick={() => (hasSubmittedRef.current = true)}
             className={`${adminPrimaryButtonClass} disabled:opacity-60`}
           >
-            {isPending ? "Зберігаємо..." : "Зберегти"}
+            {isUploadingCoverImage ? "Завантажуємо обкладинку..." : isPending ? "Зберігаємо..." : "Зберегти"}
           </button>
 
           {isDraft && (
