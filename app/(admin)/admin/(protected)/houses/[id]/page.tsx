@@ -22,7 +22,7 @@ import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHo
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
-import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
+import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
 import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
@@ -354,25 +354,10 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHouseDebtors({ houseId: house.id })
       : null;
 
-  const meetingsSectionList =
-    homeSections.find((section) => section.kind === "meetings") ?? null;
-
-  let meetingsSection = null;
-
-  if (activeBlock === "meetings" && homePage && !meetingsSectionList) {
-    const ensuredMeetingsSectionId = await ensureHouseMeetingsSection({
-      housePageId: homePage.id,
-    });
-
-    meetingsSection = await getAdminHouseSectionById(
-      ensuredMeetingsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "meetings" && meetingsSectionList) {
-    meetingsSection = meetingsSectionList;
-  } else if (activeBlock !== "meetings") {
-    meetingsSection = null;
-  }
+  const meetingsData =
+    activeBlock === "meetings"
+      ? await getAdminHouseMeetings({ houseId: house.id })
+      : null;
 
   const hero =
     activeBlock === "hero"
@@ -639,7 +624,7 @@ export default async function AdminHouseDetailPage({
       ) : null}
 
       {activeBlock === "meetings" ? (
-        meetingsSection ? (
+        meetingsData ? (
           <HouseMeetingsWorkspace
             canChangeWorkflowStatus={access.houseWorkspaces.meetings.changeWorkflowStatus}
             houseId={house.id}
@@ -650,17 +635,12 @@ export default async function AdminHouseDetailPage({
               apartmentLabel: apartment.apartment_label,
               ownerName: apartment.owner_name,
             }))}
-            section={{
-              id: meetingsSection.id,
-              title: meetingsSection.title,
-              status: meetingsSection.status,
-              content: getSectionContent(meetingsSection),
-            }}
+            meetings={meetingsData}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="Збори"
-            description="Не вдалося підготувати секцію зборів для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
+            description="Не вдалося завантажити збори для цього будинку. Потрібно перевірити таблицю house_meetings."
           />
         )
       ) : null}

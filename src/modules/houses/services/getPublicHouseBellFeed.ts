@@ -5,6 +5,7 @@ import { getPublishedHouseSections } from "@/src/modules/houses/services/getPubl
 import { getPublicHouseDocumentsFeed } from "@/src/modules/houses/services/getPublicHouseDocumentsFeed";
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
+import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 
 type BellSourceKind =
   | "announcements"
@@ -64,13 +65,13 @@ function extractContent(
 }
 
 
-function getMeetingBellTimestamp(
-  item: Record<string, unknown>,
-): number {
+function getMeetingBellTimestamp(item: {
+  updatedAt?: string | null;
+  meetingDateTime?: string | null;
+}): number {
   return Math.max(
     toTimestamp(item.updatedAt),
-    toTimestamp(item.publishedAt),
-    toTimestamp(item.createdAt),
+    toTimestamp(item.meetingDateTime),
   );
 }
 
@@ -107,7 +108,7 @@ export async function getPublicHouseBellFeed({
     getPublishedHousePage(houseId, "reports"),
   ]);
 
-  const [homeSections, informationSections, reportSections, documents, housePlan, houseDebtors] =
+  const [homeSections, informationSections, reportSections, documents, housePlan, houseDebtors, houseMeetings] =
     await Promise.all([
       homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
       informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
@@ -115,6 +116,7 @@ export async function getPublicHouseBellFeed({
       getPublicHouseDocumentsFeed(houseId),
       getPublishedHousePlan(houseId),
       getPublishedHouseDebtors(houseId),
+      getPublishedHouseMeetings(houseId),
     ]);
 
   for (const section of homeSections) {
@@ -139,35 +141,6 @@ export async function getPublicHouseBellFeed({
       }
     }
 
-    if (section.kind === "meetings") {
-      const meetingItems = Array.isArray(content.items)
-        ? (content.items as Array<Record<string, unknown>>)
-        : [];
-
-      const recentMeetings = meetingItems.filter((item) =>
-        isRecent(getMeetingBellTimestamp(item)),
-      );
-
-      if (recentMeetings.length > 0) {
-        const latest = Math.max(
-          ...recentMeetings.map((item) =>
-            getMeetingBellTimestamp(item),
-          ),
-        );
-
-        items.push({
-          id: `${section.id}-meetings`,
-          section: "Збори",
-          text:
-            recentMeetings.length === 1
-              ? "Додано нові збори"
-              : `Добавлено ${recentMeetings.length} новых собрания`,
-          date: formatDate(latest),
-          timestamp: latest,
-          source: "meetings",
-        });
-      }
-    }
 
     if (section.kind === "contacts") {
       const timestamp = Math.max(
@@ -233,6 +206,28 @@ export async function getPublicHouseBellFeed({
       }
     }
 
+  }
+
+  const recentMeetings = houseMeetings.items.filter((item) =>
+    isRecent(getMeetingBellTimestamp(item)),
+  );
+
+  if (recentMeetings.length > 0) {
+    const latest = Math.max(
+      ...recentMeetings.map((item) => getMeetingBellTimestamp(item)),
+    );
+
+    items.push({
+      id: `${houseId}-meetings`,
+      section: "Збори",
+      text:
+        recentMeetings.length === 1
+          ? "Додано нові збори"
+          : `Добавлено ${recentMeetings.length} новых собрания`,
+      date: formatDate(latest),
+      timestamp: latest,
+      source: "meetings",
+    });
   }
 
   const debtorsTimestamp = toTimestamp(houseDebtors.updatedAt);

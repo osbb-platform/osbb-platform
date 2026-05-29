@@ -10,6 +10,7 @@ import { informationPostsHandler } from "./information_posts";
 import { documentsHandler } from "./documents";
 import { specialistsHandler } from "./specialists";
 import { planHandler } from "./plan";
+import { meetingsHandler } from "./meetings";
 import { debtorsHandler } from "./debtors";
 
 /**
@@ -30,6 +31,7 @@ export function registerAllHandlers() {
   registerHandler(heroHandler);
   registerHandler(homeWidgetsHandler);
   registerHandler(informationPostsHandler);
+  registerHandler(meetingsHandler);
   registerHandler(planHandler);
   registerHandler(requisitesHandler);
   registerHandler(specialistsHandler);

@@ -3,6 +3,7 @@ import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishe
 import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getPublishedHouseHomeWidgets";
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
+import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
 import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
 import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
@@ -547,12 +548,19 @@ function buildPlanWidget(
 
 function buildMeetingsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  meetings: Array<{
+    id: string;
+    title: string;
+    shortDescription: string;
+    meetingDateTime: string;
+    status: string;
+    updatedAt: string;
+  }>,
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/meetings`;
-  const meetingsSection = sections[0];
+  const items = meetings.filter((item) => item.status !== "draft");
 
-  if (!meetingsSection) {
+  if (items.length === 0) {
     return {
       kind: "meetings",
       title: houseSystemCopy.homeDashboard.meetings.title,
@@ -566,9 +574,6 @@ function buildMeetingsWidget(
       meta: [],
     };
   }
-
-  const content = asRecord(meetingsSection.content);
-  const items = normalizeMeetings(content.items).filter((item) => item.status !== "draft");
 
   const activeMeeting = items.find((item) => item.status == "active") ?? null;
   const reviewMeeting = items.find((item) => item.status == "review") ?? null;
@@ -693,7 +698,12 @@ function buildDebtorsWidget(
 function pickTopAlert(
   slug: string,
   informationSections: HouseSectionRecord[],
-  meetingsSections: HouseSectionRecord[],
+  meetings: Array<{
+    title: string;
+    shortDescription: string;
+    meetingDateTime: string;
+    status: string;
+  }>,
 ): PublicHouseHomeAlert {
   const informationCandidates = informationSections
     .filter((section) => section.kind === "rich_text")
@@ -717,25 +727,20 @@ function pickTopAlert(
     })
     .filter((item) => !item.isExpired);
 
-  const meetingCandidates = meetingsSections
-    .flatMap((section) => {
-      const items = normalizeMeetings(asRecord(section.content).items);
-
-      return items
-        .filter((item) => item.status === "active")
-        .map((item) => ({
-          source: "meetings" as const,
-          priority: 3,
-          title: asString(item.title) || houseSystemCopy.homeDashboard.common.activeVoting,
-          description:
-            truncateText(item.shortDescription, 180) ||
-            houseSystemCopy.homeDashboard.common.activeVotingDescription,
-          href: `/house/${slug}/meetings?mode=active`,
-          badge: houseSystemCopy.homeDashboard.common.voting,
-          publishedAt: asString(item.meetingDateTime) || null,
-          isExpired: false,
-        }));
-    });
+  const meetingCandidates = meetings
+    .filter((item) => item.status === "active")
+    .map((item) => ({
+      source: "meetings" as const,
+      priority: 3,
+      title: asString(item.title) || houseSystemCopy.homeDashboard.common.activeVoting,
+      description:
+        truncateText(item.shortDescription, 180) ||
+        houseSystemCopy.homeDashboard.common.activeVotingDescription,
+      href: `/house/${slug}/meetings?mode=active`,
+      badge: houseSystemCopy.homeDashboard.common.voting,
+      publishedAt: asString(item.meetingDateTime) || null,
+      isExpired: false,
+    }));
 
   const candidates = [...informationCandidates, ...meetingCandidates].sort((left, right) => {
     if (right.priority !== left.priority) {
@@ -772,12 +777,13 @@ export async function getPublicHouseHomeDashboard({
     getHouseInformationPageByHouseId(houseId),
   ]);
 
-  const [homeSections, informationSections, houseHero, housePlan, houseDebtors] = await Promise.all([
+  const [homeSections, informationSections, houseHero, housePlan, houseDebtors, houseMeetings] = await Promise.all([
     homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
     informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
     getPublishedHouseHero(houseId),
     getPublishedHousePlan(houseId),
     getPublishedHouseDebtors(houseId),
+    getPublishedHouseMeetings(houseId),
   ]);
 
   const heroSection = homeSections.find((section) => section.kind === "hero");
@@ -791,7 +797,6 @@ export async function getPublicHouseHomeDashboard({
     (section) => section.kind === "announcements",
   );
 
-  const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
   const homeWidgets = await getPublishedHouseHomeWidgets(house.id);
 
   const rawWidgets = homeWidgets?.statusWidgets ?? [];
@@ -818,7 +823,7 @@ export async function getPublicHouseHomeDashboard({
         houseSystemCopy.homeDashboard.hero.subheadlineFallback,
     },
     statusStrip: statusWidgets,
-    topAlert: pickTopAlert(slug, informationSections, meetingsSections),
+    topAlert: pickTopAlert(slug, informationSections, houseMeetings.items),
     widgets: [
       buildAnnouncementsWidget(slug, announcementsSections),
       buildPlanWidget(
@@ -842,7 +847,7 @@ export async function getPublicHouseHomeDashboard({
           archiveYear: task.content.archiveYear,
         })),
       ),
-      buildMeetingsWidget(slug, meetingsSections),
+      buildMeetingsWidget(slug, houseMeetings.items),
       buildDebtorsWidget(slug, houseDebtors),
     ],
   };
