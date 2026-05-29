@@ -13,25 +13,14 @@ type CreateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
-const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_COVER_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
-
-function sanitizeFileName(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9._-]/g, "");
-
-  return normalized || "house-cover-image";
-}
-
-function isFileLike(value: FormDataEntryValue | null): value is File {
-  return typeof File !== "undefined" && value instanceof File;
+function isSafeCreateCoverImagePath(value: string) {
+  return (
+    value.length > 0 &&
+    value.startsWith("pending/") &&
+    !value.includes("..") &&
+    !value.startsWith("/") &&
+    !value.endsWith("/")
+  );
 }
 
 async function resolveUniqueHouseSlug(params: { baseSlug: string }) {
@@ -81,9 +70,7 @@ export async function createHouse(
   const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
-  const fileEntry = formData.get("coverImage");
-  const coverImage =
-    isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
+  const coverImagePath = String(formData.get("coverImagePath") ?? "").trim();
 
   if (!name || !address) {
     return { error: "Заповніть назву будинку та адресу." };
@@ -98,18 +85,8 @@ export async function createHouse(
   }
 
 
-  if (coverImage) {
-    if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
-      return {
-        error: "Для фото будинку дозволені лише JPG, PNG або WebP.",
-      };
-    }
-
-    if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
-      return {
-        error: "Фото будинку має бути не більше 5 МБ.",
-      };
-    }
+  if (coverImagePath && !isSafeCreateCoverImagePath(coverImagePath)) {
+    return { error: "Некоректний шлях фото будинку." };
   }
 
   const baseSlug = slugify(name);
@@ -153,35 +130,20 @@ export async function createHouse(
     .single();
 
   if (insertError) {
+    if (coverImagePath) {
+      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePath]);
+    }
+
     return { error: `Помилка створення будинку: ${insertError.message}` };
   }
 
-  if (coverImage) {
-    const safeFileName = sanitizeFileName(coverImage.name);
-    const coverImagePath = `${createdHouse.id}/${Date.now()}-${safeFileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(HOUSE_COVER_BUCKET)
-      .upload(coverImagePath, coverImage, {
-        upsert: true,
-        contentType: coverImage.type || undefined,
-      });
-
-    if (uploadError) {
-      await supabase.from("houses").delete().eq("id", createdHouse.id);
-
-      return {
-        error: `Будинок не створено: не вдалося завантажити фото будинку (${uploadError.message}).`,
-      };
-    }
-
+  if (coverImagePath) {
     const { error: coverUpdateError } = await supabase
       .from("houses")
       .update({
         cover_image_path: coverImagePath,
       })
       .eq("id", createdHouse.id);
-
 
     if (coverUpdateError) {
       await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePath]);

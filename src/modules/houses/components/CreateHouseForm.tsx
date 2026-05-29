@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createHouse } from "@/src/modules/houses/actions/createHouse";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { slugify } from "@/src/shared/utils/slug/slugify";
 import {
   adminInputClass,
@@ -30,6 +31,8 @@ const initialState = {
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 const DEFAULT_COMPANY_SLUG = "tov-bukhhalter-onlain";
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const MAX_COVER_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
+const HOUSE_COVER_BUCKET = "house-cover-images";
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024 * 1024) {
@@ -37,6 +40,21 @@ function formatFileSize(bytes: number) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+function sanitizeCoverFileName(value: string) {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9._-]/g, "");
+
+  return normalized || "house-cover-image";
+}
+
+function buildPendingCoverImagePath(file: File) {
+  const safeFileName = sanitizeCoverFileName(file.name);
+  return `pending/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeFileName}`;
 }
 
 export function CreateHouseForm({
@@ -49,6 +67,9 @@ export function CreateHouseForm({
   );
   const [name, setName] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [uploadedCoverImagePath, setUploadedCoverImagePath] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,7 +106,23 @@ export function CreateHouseForm({
   }, [previewUrl]);
 
   return (
-    <form action={formAction} className="grid gap-4 md:grid-cols-2">
+    <form
+      action={formAction}
+      className="grid gap-4 md:grid-cols-2"
+      onSubmit={(event) => {
+        if (isUploadingImage) {
+          event.preventDefault();
+          setImageError("Дочекайтеся завершення завантаження фото.");
+          return;
+        }
+
+        if (selectedImage && !uploadedCoverImagePath) {
+          event.preventDefault();
+          setImageError("Фото ще не завантажено. Оберіть файл повторно.");
+        }
+      }}
+    >
+      <input type="hidden" name="coverImagePath" value={uploadedCoverImagePath} />
       <div>
         <label className={`mb-2 block ${adminTextLabelClass}`}>
           Назва будинку
@@ -238,19 +275,69 @@ export function CreateHouseForm({
               <div className="shrink-0">
                 <input
                   ref={fileInputRef}
-                  name="coverImage"
                   type="file"
                   accept={ACCEPTED_IMAGE_TYPES}
                   hidden
-                  onChange={(event) => {
+                  onChange={async (event) => {
                     const file = event.target.files?.[0] ?? null;
 
                     if (previewUrl) {
                       URL.revokeObjectURL(previewUrl);
                     }
 
+                    setUploadedCoverImagePath("");
+
+                    if (!file) {
+                      setImageError(null);
+                      setSelectedImage(null);
+                      setPreviewUrl(null);
+                      return;
+                    }
+
+                    if (!ACCEPTED_IMAGE_TYPES.split(",").includes(file.type)) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setImageError("Для фото будинку дозволені лише JPG, PNG або WebP.");
+                      setPreviewUrl(null);
+                      return;
+                    }
+
+                    if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setImageError("Фото будинку має бути не більше 15 МБ.");
+                      setPreviewUrl(null);
+                      return;
+                    }
+
+                    const nextPreviewUrl = URL.createObjectURL(file);
                     setSelectedImage(file);
-                    setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                    setPreviewUrl(nextPreviewUrl);
+                    setImageError(null);
+                    setIsUploadingImage(true);
+
+                    const uploadPath = buildPendingCoverImagePath(file);
+                    const supabase = createSupabaseBrowserClient();
+                    const { error } = await supabase.storage
+                      .from(HOUSE_COVER_BUCKET)
+                      .upload(uploadPath, file, {
+                        upsert: false,
+                        contentType: file.type || undefined,
+                      });
+
+                    setIsUploadingImage(false);
+
+                    if (error) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setUploadedCoverImagePath("");
+                      setImageError(`Не вдалося завантажити фото будинку: ${error.message}`);
+                      setPreviewUrl(null);
+                      URL.revokeObjectURL(nextPreviewUrl);
+                      return;
+                    }
+
+                    setUploadedCoverImagePath(uploadPath);
                   }}
                 />
 
@@ -268,16 +355,23 @@ export function CreateHouseForm({
               <div>Рекомендовано: 1600×900 px</div>
               <div>Мінімум: 1280×720 px</div>
               <div>Формат: JPG, PNG або WebP</div>
-              <div>Розмір файлу: до 5 МБ</div>
+              <div>Розмір файлу: до 15 МБ</div>
               <div>
                 Краще завантажувати горизонтальну фотографію, де будинок
                 знаходиться по центру кадру
               </div>
             </div>
 
+            {imageError ? (
+              <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-xs text-[var(--cms-danger-text)]">
+                {imageError}
+              </div>
+            ) : null}
+
             {selectedImage ? (
               <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
                 {selectedImage.name} · {formatFileSize(selectedImage.size)}
+                {isUploadingImage ? " · Завантажуємо..." : uploadedCoverImagePath ? " · Завантажено" : ""}
               </div>
             ) : null}
           </div>
@@ -293,10 +387,10 @@ export function CreateHouseForm({
       <div className="md:col-span-2">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || isUploadingImage}
           className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
-          {isPending ? "Створюємо..." : "Створити будинок"}
+          {isUploadingImage ? "Завантажуємо фото..." : isPending ? "Створюємо..." : "Створити будинок"}
         </button>
       </div>
     </form>

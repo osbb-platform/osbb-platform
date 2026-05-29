@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateHouse } from "@/src/modules/houses/actions/updateHouse";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import {
   adminInputClass,
   adminSurfaceClass,
@@ -50,6 +51,23 @@ const initialState = {
 
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const MAX_COVER_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
+const HOUSE_COVER_BUCKET = "house-cover-images";
+
+function sanitizeCoverFileName(value: string) {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9._-]/g, "");
+
+  return normalized || "house-cover-image";
+}
+
+function buildHouseCoverImagePath(houseId: string, file: File) {
+  const safeFileName = sanitizeCoverFileName(file.name);
+  return `${houseId}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeFileName}`;
+}
 
 
 export function EditHouseForm({
@@ -66,6 +84,9 @@ export function EditHouseForm({
     initialState,
   );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [uploadedCoverImagePath, setUploadedCoverImagePath] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     house.cover_image_url ?? null,
   );
@@ -95,8 +116,8 @@ export function EditHouseForm({
   }, [onSuccess, router, state.successMessage]);
 
   useEffect(() => {
-    onPendingChange?.(isPending);
-  }, [isPending, onPendingChange]);
+    onPendingChange?.(isPending || isUploadingImage);
+  }, [isPending, isUploadingImage, onPendingChange]);
 
   const syncPreviewToCurrentImage = () => {
     setPreviewUrl(removeCoverImage ? null : (house.cover_image_url ?? null));
@@ -111,13 +132,30 @@ export function EditHouseForm({
   }, [previewUrl]);
 
   return (
-    <form id={formId} action={formAction} className="grid gap-4 md:grid-cols-2">
+    <form
+      id={formId}
+      action={formAction}
+      className="grid gap-4 md:grid-cols-2"
+      onSubmit={(event) => {
+        if (isUploadingImage) {
+          event.preventDefault();
+          setImageError("Дочекайтеся завершення завантаження фото.");
+          return;
+        }
+
+        if (selectedImage && !uploadedCoverImagePath) {
+          event.preventDefault();
+          setImageError("Фото ще не завантажено. Оберіть файл повторно.");
+        }
+      }}
+    >
       <input type="hidden" name="id" value={house.id} />
       <input
         type="hidden"
         name="removeCoverImage"
         value={removeCoverImage ? "true" : "false"}
       />
+      <input type="hidden" name="coverImagePath" value={uploadedCoverImagePath} />
 
       <div>
         <label className={`mb-2 block ${adminTextLabelClass}`}>
@@ -267,25 +305,70 @@ export function EditHouseForm({
               <div className="shrink-0">
                 <input
                   ref={fileInputRef}
-                  name="coverImage"
                   type="file"
                   accept={ACCEPTED_IMAGE_TYPES}
                   hidden
-                  onChange={(event) => {
+                  onChange={async (event) => {
                     const file = event.target.files?.[0] ?? null;
 
                     if (previewUrl?.startsWith("blob:")) {
                       URL.revokeObjectURL(previewUrl);
                     }
 
-                    setSelectedImage(file);
+                    setUploadedCoverImagePath("");
 
-                    if (file) {
-                      setRemoveCoverImage(false);
-                      setPreviewUrl(URL.createObjectURL(file));
-                    } else {
+                    if (!file) {
+                      setImageError(null);
+                      setSelectedImage(null);
                       syncPreviewToCurrentImage();
+                      return;
                     }
+
+                    if (!ACCEPTED_IMAGE_TYPES.split(",").includes(file.type)) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setImageError("Для фото будинку дозволені лише JPG, PNG або WebP.");
+                      syncPreviewToCurrentImage();
+                      return;
+                    }
+
+                    if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setImageError("Фото будинку має бути не більше 15 МБ.");
+                      syncPreviewToCurrentImage();
+                      return;
+                    }
+
+                    const nextPreviewUrl = URL.createObjectURL(file);
+                    setImageError(null);
+                    setSelectedImage(file);
+                    setRemoveCoverImage(false);
+                    setPreviewUrl(nextPreviewUrl);
+                    setIsUploadingImage(true);
+
+                    const uploadPath = buildHouseCoverImagePath(house.id, file);
+                    const supabase = createSupabaseBrowserClient();
+                    const { error } = await supabase.storage
+                      .from(HOUSE_COVER_BUCKET)
+                      .upload(uploadPath, file, {
+                        upsert: false,
+                        contentType: file.type || undefined,
+                      });
+
+                    setIsUploadingImage(false);
+
+                    if (error) {
+                      event.target.value = "";
+                      setSelectedImage(null);
+                      setUploadedCoverImagePath("");
+                      setImageError(`Не вдалося завантажити фото будинку: ${error.message}`);
+                      syncPreviewToCurrentImage();
+                      URL.revokeObjectURL(nextPreviewUrl);
+                      return;
+                    }
+
+                    setUploadedCoverImagePath(uploadPath);
                   }}
                 />
 
@@ -303,13 +386,20 @@ export function EditHouseForm({
               <div>Рекомендовано: 1600×900 px</div>
               <div>Мінімум: 1280×720 px</div>
               <div>Формат: JPG, PNG або WebP</div>
-              <div>Розмір файлу: до 5 МБ</div>
+              <div>Розмір файлу: до 15 МБ</div>
               <div>Краще завантажувати горизонтальну фотографію, де будинок знаходиться по центру кадру</div>
             </div>
+
+            {imageError ? (
+              <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-xs text-[var(--cms-danger-text)]">
+                {imageError}
+              </div>
+            ) : null}
 
             {selectedImage ? (
               <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
                 Обрано новий файл
+                {isUploadingImage ? " · Завантажуємо..." : uploadedCoverImagePath ? " · Завантажено" : ""}
               </div>
             ) : null}
 
@@ -327,6 +417,7 @@ export function EditHouseForm({
                     }
 
                     setSelectedImage(null);
+                    setUploadedCoverImagePath("");
                     setPreviewUrl(null);
                   } else {
                     syncPreviewToCurrentImage();
