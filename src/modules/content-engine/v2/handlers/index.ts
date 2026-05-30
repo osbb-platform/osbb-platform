@@ -13,6 +13,8 @@ import { planHandler } from "./plan";
 import { meetingsHandler } from "./meetings";
 import { debtorsHandler } from "./debtors";
 
+let registered = false;
+
 /**
  * Central content-engine v2 handler registration point.
  *
@@ -22,6 +24,12 @@ import { debtorsHandler } from "./debtors";
  * N5 will add the remaining migrated handlers one by one.
  */
 export function registerAllHandlers() {
+  if (registered) {
+    return;
+  }
+
+  registered = true;
+
   registerHandler(announcementsHandler);
   registerHandler(boardIntroHandler);
   registerHandler(boardMembersHandler);
