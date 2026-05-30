@@ -1,62 +1,234 @@
-import { completeDraftApprovalTask } from "@/src/modules/tasks/services/completeDraftApprovalTask";
-import { deleteDraftApprovalTask } from "@/src/modules/tasks/services/deleteDraftApprovalTask";
-import { ensureDraftApprovalTask } from "@/src/modules/tasks/services/ensureDraftApprovalTask";
-
-import type { HandlerContext } from "../types/pipeline";
+import type { HandlerContext, ExecResult } from "../types/pipeline";
 import { err, ok } from "../types/result";
 import type { Result } from "../types/result";
 
-type TaskOps = NonNullable<import("../types/pipeline").ExecResult["tasks"]>;
+type TaskOps = NonNullable<ExecResult["tasks"]>;
 
-function isLegacyHouseSection(entityType: string) {
-  return entityType === "house_section";
+const DRAFT_LINK_TYPE = "draft";
+
+type ActiveDraftTask = {
+  id: string;
+  status: string;
+  deleted_at: string | null;
+};
+
+function getLinkedTask(
+  task:
+    | ActiveDraftTask
+    | ActiveDraftTask[]
+    | null
+    | undefined,
+): ActiveDraftTask | null {
+  if (Array.isArray(task)) {
+    return task[0] ?? null;
+  }
+
+  return task ?? null;
 }
 
-/**
- * N1 compatibility wrapper over legacy draft approval task services.
- *
- * Current legacy services are hardcoded to entity_type = "house_section".
- * Generic entityType support is intentionally left for N6, when legacy
- * house_sections flow is removed.
- */
+async function findActiveDraftTasks(
+  ctx: HandlerContext,
+  entityType: string,
+  entityId: string,
+): Promise<ActiveDraftTask[]> {
+  const { data, error } = await ctx.supabase
+    .from("platform_task_links")
+    .select("task_id, task:platform_tasks(id, status, deleted_at)")
+    .eq("link_type", DRAFT_LINK_TYPE)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? [])
+    .map((row) => getLinkedTask(row.task as ActiveDraftTask | ActiveDraftTask[] | null))
+    .filter((task): task is ActiveDraftTask => Boolean(task && !task.deleted_at));
+}
+
+async function ensureDraftTask(
+  ctx: HandlerContext,
+  entityType: string,
+  entityId: string,
+  title: string,
+): Promise<void> {
+  const existingTasks = await findActiveDraftTasks(ctx, entityType, entityId);
+
+  if (existingTasks.length > 0) {
+    return;
+  }
+
+  const { data: task, error } = await ctx.supabase
+    .from("platform_tasks")
+    .insert({
+      title: `Підтвердити чернетку: ${title}`,
+      description: "Чернетка очікує підтвердження адміністратора.",
+      created_by: ctx.user.id,
+      assigned_to: null,
+      task_type: "draft_approval",
+      status: "todo",
+      priority: "high",
+      is_manual: false,
+      metadata: {
+        sourceType: entityType,
+        sourceId: entityId,
+      },
+    })
+    .select("id")
+    .single();
+
+  if (error || !task) {
+    throw new Error(
+      error?.message ?? "Не вдалося створити задачу погодження чернетки.",
+    );
+  }
+
+  const { error: linkError } = await ctx.supabase
+    .from("platform_task_links")
+    .insert({
+      task_id: task.id,
+      link_type: DRAFT_LINK_TYPE,
+      entity_type: entityType,
+      entity_id: entityId,
+    });
+
+  if (linkError) {
+    throw new Error(linkError.message);
+  }
+
+  const { error: houseError } = await ctx.supabase
+    .from("platform_task_houses")
+    .insert({
+      task_id: task.id,
+      house_id: ctx.house.id,
+    });
+
+  if (houseError) {
+    throw new Error(houseError.message);
+  }
+
+  const { error: eventError } = await ctx.supabase
+    .from("platform_task_events")
+    .insert({
+      task_id: task.id,
+      actor_id: ctx.user.id,
+      event_type: "create",
+      action_label: "Автоматичне створення задачі",
+      after_value: "draft_approval",
+    });
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
+}
+
+async function completeDraftTask(
+  ctx: HandlerContext,
+  entityType: string,
+  entityId: string,
+): Promise<void> {
+  const tasks = await findActiveDraftTasks(ctx, entityType, entityId);
+
+  for (const task of tasks) {
+    if (task.status === "done") {
+      continue;
+    }
+
+    const { error: updateError } = await ctx.supabase
+      .from("platform_tasks")
+      .update({
+        status: "done",
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", task.id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    const { error: eventError } = await ctx.supabase
+      .from("platform_task_events")
+      .insert({
+        task_id: task.id,
+        actor_id: ctx.user.id,
+        event_type: "complete",
+        action_label: "Автоматичне завершення задачі",
+        before_value: task.status,
+        after_value: "done",
+      });
+
+    if (eventError) {
+      throw new Error(eventError.message);
+    }
+  }
+}
+
+async function deleteDraftTask(
+  ctx: HandlerContext,
+  entityType: string,
+  entityId: string,
+): Promise<void> {
+  const tasks = await findActiveDraftTasks(ctx, entityType, entityId);
+
+  for (const task of tasks) {
+    const { error: updateError } = await ctx.supabase
+      .from("platform_tasks")
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", task.id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    const { error: eventError } = await ctx.supabase
+      .from("platform_task_events")
+      .insert({
+        task_id: task.id,
+        actor_id: ctx.user.id,
+        event_type: "delete",
+        action_label: "Автоматичне видалення задачі",
+        after_value: "deleted",
+      });
+
+    if (eventError) {
+      throw new Error(eventError.message);
+    }
+  }
+}
+
 export async function applyTaskOps(
   ctx: HandlerContext,
   tasks: TaskOps,
 ): Promise<Result<void>> {
   try {
     if (tasks.ensure) {
-      if (isLegacyHouseSection(tasks.ensure.entityType)) {
-        await ensureDraftApprovalTask({
-          houseId: ctx.house.id,
-          houseSectionId: tasks.ensure.entityId,
-          title: tasks.ensure.title,
-          createdBy: ctx.user.id,
-        });
-      } else {
-        console.warn(
-          `Skipping draft task ensure for unsupported entityType: ${tasks.ensure.entityType}`,
-        );
-      }
+      await ensureDraftTask(
+        ctx,
+        tasks.ensure.entityType,
+        tasks.ensure.entityId,
+        tasks.ensure.title,
+      );
     }
 
     if (tasks.complete) {
-      if (isLegacyHouseSection(tasks.complete.entityType)) {
-        await completeDraftApprovalTask(tasks.complete.entityId, ctx.user.id);
-      } else {
-        console.warn(
-          `Skipping draft task complete for unsupported entityType: ${tasks.complete.entityType}`,
-        );
-      }
+      await completeDraftTask(
+        ctx,
+        tasks.complete.entityType,
+        tasks.complete.entityId,
+      );
     }
 
     if (tasks.delete) {
-      if (isLegacyHouseSection(tasks.delete.entityType)) {
-        await deleteDraftApprovalTask(tasks.delete.entityId, ctx.user.id);
-      } else {
-        console.warn(
-          `Skipping draft task delete for unsupported entityType: ${tasks.delete.entityType}`,
-        );
-      }
+      await deleteDraftTask(
+        ctx,
+        tasks.delete.entityType,
+        tasks.delete.entityId,
+      );
     }
 
     return ok(undefined);
