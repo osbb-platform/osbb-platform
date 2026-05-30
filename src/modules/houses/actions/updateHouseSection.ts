@@ -334,21 +334,14 @@ export async function updateHouseSection(
   const currentUser = await getCurrentAdminUser();
   const access = getResolvedAccess(currentUser?.role);
 
-  const readonlyKinds = new Set(["contacts", "reports", "requisites"]);
+  const readonlyKinds = new Set(["contacts", "requisites"]);
   const workflowOnlyKinds = new Set(["plan", "meetings"]);
 
   if (readonlyKinds.has(kind)) {
-    const workspaceKey =
-      kind === "contacts"
-        ? "board"
-        : kind === "reports"
-          ? "reports"
-          : "requisites";
+    const workspaceKey = kind === "contacts" ? "board" : "requisites";
 
     const workspace =
-      access.houseWorkspaces[
-        workspaceKey as "board" | "reports" | "requisites"
-      ];
+      access.houseWorkspaces[workspaceKey as "board" | "requisites"];
 
     if (!workspace.edit) {
       return { error: "У вас нет прав для редактирования этого раздела." };
@@ -372,11 +365,9 @@ export async function updateHouseSection(
         ? "board"
         : kind === "specialists"
           ? "specialists"
-          : kind === "reports"
-            ? "reports"
-            : kind === "debtors"
-              ? "debtors"
-              : null;
+          : kind === "debtors"
+            ? "debtors"
+            : null;
 
   if (
     status === "published" &&
@@ -597,152 +588,6 @@ export async function updateHouseSection(
     }
   }
 
-  if (kind === "reports") {
-    const rawPayload = String(formData.get("reportsPayload") ?? "").trim();
-    const activeReportId = String(formData.get("activeReportId") ?? "").trim();
-    const reportAction = String(formData.get("reportAction") ?? "save").trim();
-    const removeReportPdf =
-      String(formData.get("removeReportPdf") ?? "") === "true";
-    let parsedPayload: Record<string, unknown>;
-
-    try {
-      parsedPayload = JSON.parse(rawPayload) as Record<string, unknown>;
-    } catch {
-      return { error: "Не удалось обработать reports payload." };
-    }
-
-    const uploadedPdfPath = String(formData.get("uploadedPdfPath") ?? "").trim();
-    const uploadedPdfName = String(formData.get("uploadedPdfName") ?? "").trim();
-
-    const nowIso = new Date().toISOString();
-    const reports: Array<Record<string, unknown>> = [];
-
-    if (Array.isArray(parsedPayload.reports)) {
-      for (const item of parsedPayload.reports) {
-        if (!item || typeof item !== "object") {
-          continue;
-        }
-
-        const raw = item as Record<string, unknown>;
-
-        reports.push({
-          id: String(raw.id ?? "").trim(),
-          title: String(raw.title ?? "").trim(),
-          description: String(raw.description ?? "").trim(),
-          category: String(raw.category ?? "").trim(),
-          reportDate: String(raw.reportDate ?? "").trim(),
-          periodType: raw.periodType === "past" ? "past" : "current",
-          month: typeof raw.month === "string" ? raw.month : undefined,
-          year: typeof raw.year === "number" ? raw.year : undefined,
-          isPinned: Boolean(raw.isPinned),
-          isNew: Boolean(raw.isNew),
-          newUntil:
-            typeof raw.newUntil === "string" && raw.newUntil
-              ? raw.newUntil
-              : null,
-          status:
-            raw.status === "active" || raw.status === "archived"
-              ? raw.status
-              : "draft",
-          pdfFileName: typeof raw.pdfFileName === "string" ? raw.pdfFileName : "",
-          pdfPath: typeof raw.pdfPath === "string" ? raw.pdfPath : "",
-          createdAt:
-            typeof raw.createdAt === "string" && raw.createdAt
-              ? raw.createdAt
-              : nowIso,
-          updatedAt: nowIso,
-          archivedAt:
-            typeof raw.archivedAt === "string" && raw.archivedAt
-              ? raw.archivedAt
-              : null,
-        });
-      }
-    }
-
-    if ((removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !activeReportId) {
-      return { error: "Не удалось определить отчет для операции." };
-    }
-
-    const targetReport =
-      activeReportId
-        ? reports.find((item) => String(item.id ?? "") === activeReportId)
-        : null;
-
-    if ((removeReportPdf || reportAction === "publish" || reportAction === "archive" || reportAction === "delete") && !targetReport) {
-      return { error: "Не найден отчет для выполнения операции." };
-    }
-
-    if (targetReport) {
-
-      if (uploadedPdfPath && uploadedPdfName) {
-        targetReport.pdfFileName = uploadedPdfName;
-        targetReport.pdfPath = uploadedPdfPath;
-        targetReport.updatedAt = nowIso;
-      }
-      if (removeReportPdf || reportAction === "delete") {
-        targetReport.pdfFileName = "";
-        targetReport.pdfPath = "";
-        targetReport.updatedAt = nowIso;
-      }
-
-      if (reportAction === "publish") {
-        targetReport.status = "active";
-        targetReport.archivedAt = null;
-        targetReport.updatedAt = nowIso;
-
-        await completeDraftApprovalTask(sectionId, currentUser?.id ?? null);
-      }
-
-      if (reportAction === "archive") {
-        targetReport.status = "archived";
-        targetReport.archivedAt = nowIso;
-        targetReport.isPinned = false;
-        targetReport.isNew = false;
-        targetReport.newUntil = null;
-        targetReport.updatedAt = nowIso;
-      }
-    }
-
-    const nextReports =
-      reportAction === "delete"
-        ? reports.filter((item) => String(item.id ?? "") !== activeReportId)
-        : reportAction === "delete_archive"
-          ? reports.filter((item) => item.status !== "archived")
-          : reports;
-
-    content = {
-      categoriesCatalog: Array.isArray(parsedPayload.categoriesCatalog)
-        ? parsedPayload.categoriesCatalog
-        : [],
-      reports: nextReports,
-      updatedAt: nowIso,
-    };
-
-    historyDescription =
-      reportAction === "delete"
-        ? "Видалено звіт."
-        : reportAction === "delete_archive"
-          ? "Архив отчетов очищен."
-          : reportAction === "publish"
-            ? "Отчет опубликован."
-            : reportAction === "archive"
-              ? "Звіт переміщено в архів."
-              : "Обновлен раздел отчетов.";
-    historySubSection = "reports";
-
-    const hasDraftReports = nextReports.some(
-      (item) => String(item.status ?? "") === "draft",
-    );
-
-    if (hasDraftReports) {
-      await ensureDraftApprovalTask({
-        houseId,
-        houseSectionId: sectionId,
-        title: title || "Звіти",
-        createdBy: currentUser?.id ?? null,
-      });
-    }
-  }
 
   if (kind === "plan") {
     const rawPayload = String(formData.get("planPayload") ?? "").trim();
@@ -1171,27 +1016,6 @@ export async function updateHouseSection(
   }
 
   let nextSectionStatus = status || "draft";
-
-  if (kind === "reports") {
-    const reportsList = Array.isArray(content.reports)
-      ? (content.reports as Array<Record<string, unknown>>)
-      : [];
-
-    const hasDraftReports = reportsList.some(
-      (item) => item.status === "draft"
-    );
-
-    const hasActiveReports = reportsList.some(
-      (item) => item.status === "active"
-    );
-
-    nextSectionStatus = hasActiveReports
-      ? "published"
-      : hasDraftReports
-        ? "in_review"
-        : "published";
-  }
-
 
   const { error: updateError } = await supabase
     .from("house_sections")
