@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { dispatchAdminCommand } from "@/src/modules/content-engine/v2/dispatch";
+import { useToast } from "@/src/shared/ui/toast/ToastProvider";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
 
 type DispatchOptions = {
-  /** Success message reserved for future toast integration. null = do not show toast. */
+  /** Success message for toast. null = do not show toast. */
   successMessage?: string | null;
-  /** Prefix reserved for future toast integration. Default: "Помилка". */
+  /** Error toast title. Default: "Помилка". */
   errorPrefix?: string;
   /** router.refresh() after success. Default: true. */
   refreshOnSuccess?: boolean;
@@ -21,6 +22,7 @@ type DispatchOptions = {
 
 export function useAdminContentCommand() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -37,6 +39,11 @@ export function useAdminContentCommand() {
         if (!result.ok) {
           setLastError(result.error);
           options.onError?.(result.error);
+          toast({
+            tone: "error",
+            title: options.errorPrefix ?? "Помилка",
+            description: result.error,
+          });
           resolve(null);
           return;
         }
@@ -46,6 +53,14 @@ export function useAdminContentCommand() {
         }
 
         options.onSuccess?.(result.data);
+
+        if (options.successMessage !== null) {
+          toast({
+            tone: "success",
+            title: options.successMessage ?? "Збережено",
+          });
+        }
+
         resolve(result.data as T);
       });
     });

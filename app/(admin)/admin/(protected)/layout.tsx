@@ -4,6 +4,7 @@ import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdmin
 import { AdminShell } from "@/src/modules/cms/components/AdminShell";
 import { getActiveTasksCount } from "@/src/modules/tasks/services/getActiveTasksCount";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+import { ToastProvider } from "@/src/shared/ui/toast/ToastProvider";
 
 type ProtectedAdminLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -24,12 +25,14 @@ export default async function ProtectedAdminLayout({
     : 0;
 
   return (
-    <AdminShell
-      currentUser={currentUser}
-      access={access}
-      activeTasksCount={activeTasksCount}
-    >
-      {children}
-    </AdminShell>
+    <ToastProvider>
+      <AdminShell
+        currentUser={currentUser}
+        access={access}
+        activeTasksCount={activeTasksCount}
+      >
+        {children}
+      </AdminShell>
+    </ToastProvider>
   );
 }
