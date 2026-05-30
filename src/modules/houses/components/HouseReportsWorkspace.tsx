@@ -1,8 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
 
+import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
-import { startTransition, useActionState, useMemo, useRef, useState, useTransition } from "react";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import {
@@ -11,21 +11,28 @@ import {
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
 import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
 } from "@/src/shared/utils/validators/pdfUpload";
+import type {
+  HouseReportCategorySnapshot,
+  HouseReportSnapshot,
+  HouseReportLifecycle,
+  HouseReportPeriodType,
+} from "@/src/modules/houses/services/getAdminHouseReports";
 
-const initialState = {
-  error: null,
+type Props = {
+  readOnlyMode?: boolean;
+  houseId: string;
+  reports: HouseReportSnapshot[];
+  categories: HouseReportCategorySnapshot[];
 };
 
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
-type ReportStatus = "draft" | "active" | "archived";
-type PeriodType = "current" | "past";
-type TabKey = "current" | "past" | "archive";
+type TabKey = "current" | "past" | "draft" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
+type ConfirmAction = "publish" | "archive" | "restore" | "delete" | "delete_archive" | null;
+type SubmitIntent = "save" | "publish" | "archive" | "restore" | "delete";
 type ReportSortMode =
   | "updated_desc"
   | "updated_asc"
@@ -33,37 +40,6 @@ type ReportSortMode =
   | "title_desc"
   | "year_desc"
   | "year_asc";
-
-type ReportItem = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  reportDate: string;
-  periodType: PeriodType;
-  month?: string;
-  year?: number;
-  isPinned?: boolean;
-  isNew?: boolean;
-  newUntil?: string | null;
-  status: ReportStatus;
-  pdfFileName?: string;
-  pdfPath?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  archivedAt?: string | null;
-};
-
-type Props = {
-  readOnlyMode?: boolean;
-  houseId: string;
-  houseSlug: string;
-  sectionId: string;
-  sectionTitle: string | null;
-  sectionStatus: SectionStatus;
-  reports: ReportItem[];
-  categoriesCatalog?: string[];
-};
 
 const CURRENT_MONTH_OPTIONS = [
   { value: "01", label: "Січень" },
@@ -87,11 +63,26 @@ const DEFAULT_CATEGORIES = [
   "Інженерні системи",
 ];
 
-function createReportId() {
-  return `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+function normalizeReportCategory(value: string) {
+  const map: Record<string, string> = {
+    "Выполненные работы": "Виконані роботи",
+    "Финансовый отчет": "Фінансовий звіт",
+    "Ремонт и обслуживание": "Ремонт та обслуговування",
+    "Инженерные системы": "Інженерні системи",
+  };
+
+  return map[value.trim()] ?? value.trim();
 }
 
-function formatDate(value: string) {
+function getMonthLabel(value: string | null | undefined) {
+  if (!value) return "Місяць не вказано";
+
+  return (
+    CURRENT_MONTH_OPTIONS.find((item) => item.value === value)?.label ?? value
+  );
+}
+
+function formatDate(value: string | null) {
   if (!value) return "Дату не вказано";
 
   const date = new Date(value);
@@ -104,14 +95,14 @@ function formatDate(value: string) {
   });
 }
 
-function getStatusLabel(status: ReportStatus) {
-  if (status === "active") return "Активна";
+function getStatusLabel(status: HouseReportLifecycle) {
+  if (status === "published") return "Активна";
   if (status === "archived") return "Архів";
   return "Чернетка";
 }
 
-function getStatusBadgeClasses(status: ReportStatus) {
-  if (status === "active") {
+function getStatusBadgeClasses(status: HouseReportLifecycle) {
+  if (status === "published") {
     return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
   }
 
@@ -122,156 +113,110 @@ function getStatusBadgeClasses(status: ReportStatus) {
   return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
 }
 
-function getMonthLabel(value: string | undefined) {
-  if (!value) return "Місяць не вказано";
-
-  return (
-    CURRENT_MONTH_OPTIONS.find((item) => item.value === value)?.label ?? value
-  );
+function getDefaultYear(tab: TabKey) {
+  const year = new Date().getFullYear();
+  return tab === "past" ? year - 1 : year;
 }
 
-function getDefaultSectionStatus(status: SectionStatus): SectionStatus {
-  if (status === "archived") {
-    return "published";
-  }
-
-  return status || "published";
-}
-
-function getEmptyDraft(tab: TabKey, firstCategory: string): ReportItem {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-
-  if (tab === "past") {
-    return {
-      id: createReportId(),
-      title: "",
-      description: "",
-      category: firstCategory,
-      reportDate: "",
-      periodType: "past",
-      year: currentYear - 1,
-      status: "draft",
-      isPinned: false,
-      isNew: false,
-      newUntil: null,
-      pdfFileName: "",
-      pdfPath: "",
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      archivedAt: null,
-    };
-  }
-
-  if (tab === "archive") {
-    return {
-      id: createReportId(),
-      title: "",
-      description: "",
-      category: firstCategory,
-      reportDate: "",
-      periodType: "current",
-      month: "",
-      status: "draft",
-      isPinned: false,
-      isNew: false,
-      newUntil: null,
-      pdfFileName: "",
-      pdfPath: "",
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      archivedAt: null,
-    };
-  }
+function getEmptyDraft(tab: TabKey, firstCategory: string) {
+  const now = new Date().toISOString();
 
   return {
-    id: createReportId(),
     title: "",
     description: "",
-    category: firstCategory,
+    categoryTitle: firstCategory,
     reportDate: "",
-    periodType: "current",
-    month: "",
-    status: "draft",
+    periodType: tab === "past" ? "past" as HouseReportPeriodType : "current" as HouseReportPeriodType,
+    month: tab === "past" ? "" : "",
+    year: tab === "past" ? getDefaultYear(tab) : null as number | null,
     isPinned: false,
     isNew: false,
-    newUntil: null,
-    pdfFileName: "",
-    pdfPath: "",
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
-    archivedAt: null,
+    newUntil: null as string | null,
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
-const supabase = createSupabaseBrowserClient();
+function mapReportToDraft(report: HouseReportSnapshot) {
+  return {
+    title: report.title,
+    description: report.description,
+    categoryTitle: report.categoryTitle,
+    reportDate: report.reportDate ?? "",
+    periodType: report.periodType,
+    month: report.month ?? "",
+    year: report.year,
+    isPinned: report.isPinned,
+    isNew: report.isNew,
+    newUntil: report.newUntil ? report.newUntil.slice(0, 10) : null,
+    createdAt: report.createdAt,
+    updatedAt: report.updatedAt,
+  };
+}
+
+function normalizeNewUntil(value: string | null, isNew: boolean) {
+  if (!isNew) return null;
+  return value?.trim() ? value : null;
+}
 
 export function HouseReportsWorkspace({
+  readOnlyMode = false,
   houseId,
-  houseSlug,
-  sectionId,
-  sectionTitle,
-  sectionStatus,
   reports,
-  categoriesCatalog = [],
+  categories,
 }: Props) {
-  const router = useRouter();
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
-
-  const [isDeletingArchive, startDeleteArchiveTransition] = useTransition();
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>("current");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-
-  const [removeReportPdf, setRemoveReportPdf] = useState(false);
-  const [selectedPdfLabel, setSelectedPdfLabel] = useState("");
-  const [reportPdfError, setReportPdfError] = useState<string | null>(null);
-  const [confirmAction, setConfirmAction] = useState<"publish" | "archive" | "delete" | "delete_archive" | null>(null);
-  const [submitIntent, setSubmitIntent] = useState<"save" | "publish" | "archive" | "delete" | "delete_archive">("save");
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
   const [reportSearchQuery, setReportSearchQuery] = useState("");
   const [reportSortMode, setReportSortMode] =
     useState<ReportSortMode>("updated_desc");
-  const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [removeReportPdf, setRemoveReportPdf] = useState(false);
+  const [reportPdfError, setReportPdfError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const categoryOptions = useMemo(() => {
-    const legacyReportCategoryMap: Record<string, string> = {
-      "Выполненные работы": "Виконані роботи",
-      "Финансовый отчет": "Фінансовий звіт",
-      "Ремонт и обслуживание": "Ремонт та обслуговування",
-      "Инженерные системы": "Інженерні системи",
-    };
-
-    const normalizeReportCategory = (value: string) => legacyReportCategoryMap[value.trim()] ?? value.trim();
-
-    const dynamicCategories = reports
-      .map((item) => normalizeReportCategory(item.category))
-      .filter((item) => Boolean(item.trim()));
+    const fromCategories = categories.map((item) => normalizeReportCategory(item.title));
+    const fromReports = reports
+      .map((item) => normalizeReportCategory(item.categoryTitle))
+      .filter(Boolean);
 
     return Array.from(
       new Set([
         ...DEFAULT_CATEGORIES,
-        ...categoriesCatalog.map((item) => normalizeReportCategory(item)).filter((item) => item),
-        ...dynamicCategories,
-      ]),
+        ...fromCategories,
+        ...fromReports,
+      ].filter(Boolean)),
     );
-  }, [reports, categoriesCatalog]);
+  }, [categories, reports]);
 
   const firstCategory = categoryOptions[0] ?? DEFAULT_CATEGORIES[0];
 
-  const [draft, setDraft] = useState<ReportItem>(
+  const [draft, setDraft] = useState(() =>
     getEmptyDraft("current", firstCategory),
+  );
+
+  const selectedReport = useMemo(
+    () =>
+      selectedReportId
+        ? reports.find((report) => report.id === selectedReportId) ?? null
+        : null,
+    [reports, selectedReportId],
   );
 
   const currentReports = useMemo(
     () =>
       reports.filter(
-        (item) => item.periodType === "current" && item.status !== "archived",
+        (item) =>
+          item.periodType === "current" &&
+          item.lifecycleStatus === "published",
       ),
     [reports],
   );
@@ -279,21 +224,29 @@ export function HouseReportsWorkspace({
   const pastReports = useMemo(
     () =>
       reports.filter(
-        (item) => item.periodType === "past" && item.status !== "archived",
+        (item) =>
+          item.periodType === "past" &&
+          item.lifecycleStatus === "published",
       ),
     [reports],
   );
 
+  const draftReports = useMemo(
+    () => reports.filter((item) => item.lifecycleStatus === "draft"),
+    [reports],
+  );
+
   const archivedReports = useMemo(
-    () => reports.filter((item) => item.status === "archived"),
+    () => reports.filter((item) => item.lifecycleStatus === "archived"),
     [reports],
   );
 
   const baseVisibleReports = useMemo(() => {
     if (activeTab === "current") return currentReports;
     if (activeTab === "past") return pastReports;
+    if (activeTab === "draft") return draftReports;
     return archivedReports;
-  }, [activeTab, archivedReports, currentReports, pastReports]);
+  }, [activeTab, archivedReports, currentReports, draftReports, pastReports]);
 
   const visibleReports = useMemo(() => {
     const normalizedQuery = reportSearchQuery.trim().toLowerCase();
@@ -304,11 +257,11 @@ export function HouseReportsWorkspace({
       return [
         report.title,
         report.description,
-        report.category,
-        report.pdfFileName,
+        report.categoryTitle,
+        report.pdf?.originalName,
         report.year ? String(report.year) : "",
         report.month ? getMonthLabel(report.month) : "",
-        report.reportDate,
+        report.reportDate ?? "",
       ]
         .join(" ")
         .toLowerCase()
@@ -339,172 +292,80 @@ export function HouseReportsWorkspace({
       }
 
       if (reportSortMode === "updated_asc") {
-        return (left.updatedAt ?? "").localeCompare(right.updatedAt ?? "");
+        return left.updatedAt.localeCompare(right.updatedAt);
       }
 
-      return (right.updatedAt ?? "").localeCompare(left.updatedAt ?? "");
+      return right.updatedAt.localeCompare(left.updatedAt);
     });
   }, [baseVisibleReports, reportSearchQuery, reportSortMode]);
+
+  const isPastContext = draft.periodType === "past";
+  const isArchiveContext = selectedReport?.lifecycleStatus === "archived";
+  const isDraftLikeEdit =
+    workspaceMode === "edit" && selectedReport?.lifecycleStatus === "draft";
+  const isPublishedEdit =
+    workspaceMode === "edit" && selectedReport?.lifecycleStatus === "published";
+  const isArchivedEdit =
+    workspaceMode === "edit" && selectedReport?.lifecycleStatus === "archived";
+
+  const currentPdfLabel =
+    selectedPdf?.name ||
+    selectedReport?.pdf?.originalName ||
+    "PDF поки не прикріплено";
+
+  function resetPdfInput() {
+    setSelectedPdf(null);
+    setRemoveReportPdf(false);
+    setReportPdfError(null);
+
+    if (reportPdfInputRef.current) {
+      reportPdfInputRef.current.value = "";
+    }
+  }
 
   function resetWorkspace(nextTab = activeTab) {
     setWorkspaceMode("idle");
     setSelectedReportId(null);
-    setRemoveReportPdf(false);
-    setSelectedPdfLabel("");
-    setReportPdfError(null);
-    if (reportPdfInputRef.current) {
-      reportPdfInputRef.current.value = "";
-    }
+    setConfirmAction(null);
+    setSubmitIntent("save");
+    setActionLabel("Обробляємо звіт...");
+    setActionError(null);
+    resetPdfInput();
     setDraft(getEmptyDraft(nextTab, firstCategory));
   }
 
   function openCreateMode() {
+    setActiveTab("draft");
     setSelectedReportId(null);
     setWorkspaceMode("create");
-    setRemoveReportPdf(false);
-    setSelectedPdfLabel("");
-    setReportPdfError(null);
-    if (reportPdfInputRef.current) {
-      reportPdfInputRef.current.value = "";
-    }
-    setDraft(getEmptyDraft(activeTab, firstCategory));
+    setActionError(null);
+    resetPdfInput();
+    setDraft(getEmptyDraft(activeTab === "past" ? "past" : "current", firstCategory));
   }
 
-  function openEditMode(report: ReportItem) {
+  function openEditMode(report: HouseReportSnapshot) {
     setSelectedReportId(report.id);
     setWorkspaceMode("edit");
-    setRemoveReportPdf(false);
-    setSelectedPdfLabel("");
-    setReportPdfError(null);
-    if (reportPdfInputRef.current) {
-      reportPdfInputRef.current.value = "";
-    }
-    setDraft({
-      ...report,
-      isPinned: Boolean(report.isPinned),
-      isNew: Boolean(report.isNew),
-      newUntil: report.newUntil ?? null,
-      pdfFileName: report.pdfFileName ?? "",
-      pdfPath: report.pdfPath ?? "",
-      archivedAt: report.archivedAt ?? null,
-    });
+    setActionError(null);
+    resetPdfInput();
+    setDraft(mapReportToDraft(report));
   }
 
   function handleTabChange(tab: TabKey) {
     setActiveTab(tab);
     setWorkspaceMode("idle");
     setSelectedReportId(null);
-    setRemoveReportPdf(false);
-    setSelectedPdfLabel("");
-    setReportPdfError(null);
-    if (reportPdfInputRef.current) {
-      reportPdfInputRef.current.value = "";
-    }
+    setConfirmAction(null);
+    setActionError(null);
+    resetPdfInput();
     setDraft(getEmptyDraft(tab, firstCategory));
-  }
-
-  const isPastContext = draft.periodType === "past";
-  const isArchiveContext =
-    activeTab === "archive" || draft.status === "archived";
-  const isDraftLikeEdit =
-    workspaceMode === "edit" && draft.status === "draft";
-  const isPublishedEdit =
-    workspaceMode === "edit" && draft.status === "active";
-
-  const normalizedDraft: ReportItem = {
-    ...draft,
-    title: draft.title.trim(),
-    description: draft.description.trim(),
-    category: draft.category.trim(),
-    reportDate: draft.reportDate,
-    periodType: isPastContext ? "past" : "current",
-    month: isPastContext ? undefined : draft.month ?? "",
-    year: isPastContext ? draft.year ?? undefined : undefined,
-    isPinned: isPastContext || isArchiveContext ? false : Boolean(draft.isPinned),
-    isNew: isPastContext || isArchiveContext ? false : Boolean(draft.isNew),
-    newUntil:
-      isPastContext || isArchiveContext
-        ? null
-        : draft.isNew
-          ? draft.newUntil ?? null
-          : null,
-    status:
-      submitIntent === "publish"
-        ? "active"
-        : workspaceMode === "create"
-          ? "draft"
-          : draft.status,
-    pdfFileName: draft.pdfFileName ?? "",
-    pdfPath: draft.pdfPath ?? "",
-    updatedAt: new Date().toISOString(),
-    archivedAt:
-      draft.status === "archived"
-        ? draft.archivedAt ?? new Date().toISOString()
-        : null,
-  };
-
-  const nextReportsPayload =
-    workspaceMode === "idle"
-      ? reports
-      : submitIntent === "delete"
-        ? reports
-        : workspaceMode === "create"
-          ? [normalizedDraft, ...reports]
-          : reports.map((item) =>
-              item.id === normalizedDraft.id ? normalizedDraft : item,
-            );
-
-  async function handleSubmit(formData: FormData) {
-    setActionLabel(
-      submitIntent === "delete"
-        ? "Видаляємо звіт..."
-        : submitIntent === "publish"
-          ? "Публікуємо звіт..."
-          : selectedPdfLabel
-            ? "Завантажуємо та зберігаємо PDF звіт..."
-            : workspaceMode === "edit"
-              ? "Оновлюємо звіт..."
-              : "Створюємо звіт...",
-    );
-
-    const file = formData.get("reportPdf");
-
-    if (file && file instanceof File && file.size > 0) {
-      const fileExt = file.name.split(".").pop() ?? "pdf";
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const filePath = `${houseId}/${normalizedDraft.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("house-reports")
-        .upload(filePath, file, {
-          upsert: true,
-          contentType: "application/pdf",
-        });
-
-      if (uploadError) {
-        setActionLabel("Обробляємо звіт...");
-        return;
-      }
-
-      formData.delete("reportPdf");
-      formData.set("uploadedPdfPath", filePath);
-      formData.set("uploadedPdfName", file.name);
-    }
-
-    startTransition(async () => {
-      await formAction(formData);
-      router.refresh();
-      resetWorkspace();
-      setSubmitIntent("save");
-      setActionLabel("Обробляємо звіт...");
-    });
   }
 
   function handleReportPdfChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
 
     if (!file) {
-      setSelectedPdfLabel("");
+      setSelectedPdf(null);
       setReportPdfError(null);
       return;
     }
@@ -512,47 +373,277 @@ export function HouseReportsWorkspace({
     const validation = validateSinglePdfFile(file);
 
     if (!validation.isValid) {
-      setSelectedPdfLabel("");
+      setSelectedPdf(null);
       setReportPdfError(validation.error);
       event.target.value = "";
       return;
     }
 
     setReportPdfError(null);
-    setSelectedPdfLabel(file.name);
+    setSelectedPdf(file);
     setRemoveReportPdf(false);
   }
 
+  async function uploadSelectedPdf(targetId: string) {
+    if (!selectedPdf) {
+      return null;
+    }
 
-  function handleDeleteAllArchived() {
-    startDeleteArchiveTransition(async () => {
-      const formData = new FormData();
-      formData.set("sectionId", sectionId);
-      formData.set("houseId", houseId);
-      formData.set("houseSlug", houseSlug);
-      formData.set("kind", "reports");
-      formData.set("title", sectionTitle ?? "Звіти");
-      formData.set("status", getDefaultSectionStatus(sectionStatus));
-      formData.set("reportAction", "delete_archive");
-      formData.set(
-        "reportsPayload",
-        JSON.stringify({
-          categoriesCatalog: categoryOptions,
-          reports: [
-            ...currentReports,
-            ...pastReports,
-            ...archivedReports,
-          ],
-        }),
+    const supabase = createSupabaseBrowserClient();
+    const fileExt = selectedPdf.name.split(".").pop() ?? "pdf";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const filePath = `${houseId}/reports/${targetId}/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("house-reports")
+      .upload(filePath, selectedPdf, {
+        upsert: true,
+        contentType: "application/pdf",
+      });
+
+    if (error) {
+      console.error("House report PDF upload error:", error);
+      throw new Error(
+        "Не вдалося завантажити PDF. Якщо сесія завершилась, увійдіть в адмінку ще раз і повторіть дію.",
       );
+    }
 
-      await formAction(formData);
-      setConfirmAction(null);
-    });
+    return {
+      bucket: "house-reports",
+      path: filePath,
+      originalName: selectedPdf.name,
+      mimeType: "application/pdf",
+      size: selectedPdf.size,
+    };
   }
 
-  const currentPdfLabel =
-    selectedPdfLabel || draft.pdfFileName || "PDF поки не прикріплено";
+  function buildPayload(pdf: Awaited<ReturnType<typeof uploadSelectedPdf>>) {
+    return {
+      title: draft.title,
+      description: draft.description,
+      categoryTitle: normalizeReportCategory(draft.categoryTitle),
+      reportDate: draft.reportDate || null,
+      periodType: draft.periodType,
+      month: draft.periodType === "current" ? draft.month || null : null,
+      year: draft.periodType === "past" ? draft.year : null,
+      isPinned:
+        draft.periodType === "current" &&
+        !isArchiveContext &&
+        Boolean(draft.isPinned),
+      isNew:
+        draft.periodType === "current" &&
+        !isArchiveContext &&
+        Boolean(draft.isNew),
+      newUntil:
+        draft.periodType === "current"
+          ? normalizeNewUntil(draft.newUntil, Boolean(draft.isNew))
+          : null,
+      pdf,
+      removePdf: removeReportPdf,
+    };
+  }
+
+  async function submitReport(intent: SubmitIntent) {
+    setActionError(null);
+    setSubmitIntent(intent);
+    setActionLabel(
+      intent === "delete"
+        ? "Видаляємо звіт..."
+        : intent === "publish"
+          ? "Публікуємо звіт..."
+          : intent === "archive"
+            ? "Архівуємо звіт..."
+            : intent === "restore"
+              ? "Відновлюємо звіт..."
+              : selectedPdf
+                ? "Завантажуємо та зберігаємо PDF звіт..."
+                : workspaceMode === "edit"
+                  ? "Оновлюємо звіт..."
+                  : "Створюємо звіт...",
+    );
+
+    try {
+      if (intent === "delete") {
+        if (!selectedReport) return;
+
+        const result = await dispatch<HouseReportSnapshot>(
+          {
+            type: "reports.delete",
+            houseId,
+            payload: {
+              id: selectedReport.id,
+              lockVersion: selectedReport.lockVersion,
+            },
+          },
+          { onError: setActionError },
+        );
+
+        if (!result) return;
+        resetWorkspace("draft");
+        return;
+      }
+
+      if (intent === "restore") {
+        if (!selectedReport) return;
+
+        const restored = await dispatch<HouseReportSnapshot>(
+          {
+            type: "reports.restore",
+            houseId,
+            payload: {
+              id: selectedReport.id,
+              lockVersion: selectedReport.lockVersion,
+            },
+          },
+          { onError: setActionError },
+        );
+
+        if (!restored) return;
+        resetWorkspace("draft");
+        return;
+      }
+
+      const uploadTargetId = selectedReport?.id ?? `new-${Date.now()}`;
+      const uploadedPdf = await uploadSelectedPdf(uploadTargetId);
+
+      if (workspaceMode === "create") {
+        const created = await dispatch<HouseReportSnapshot>(
+          {
+            type: "reports.create",
+            houseId,
+            payload: buildPayload(uploadedPdf),
+          },
+          { onError: setActionError },
+        );
+
+        if (!created) return;
+
+        if (intent === "publish") {
+          const published = await dispatch<HouseReportSnapshot>(
+            {
+              type: "reports.publish",
+              houseId,
+              payload: {
+                id: created.id,
+                lockVersion: created.lockVersion,
+              },
+            },
+            { onError: setActionError },
+          );
+
+          if (!published) return;
+          resetWorkspace(created.periodType === "past" ? "past" : "current");
+          return;
+        }
+
+        resetWorkspace("draft");
+        return;
+      }
+
+      if (!selectedReport) return;
+
+      const updated = await dispatch<HouseReportSnapshot>(
+        {
+          type: "reports.update",
+          houseId,
+          payload: {
+            id: selectedReport.id,
+            lockVersion: selectedReport.lockVersion,
+            ...buildPayload(uploadedPdf),
+          },
+        },
+        { onError: setActionError },
+      );
+
+      if (!updated) return;
+
+      if (intent === "publish" || intent === "archive") {
+        const nextType =
+          intent === "publish" ? "reports.publish" : "reports.archive";
+
+        const lifecycleResult = await dispatch<HouseReportSnapshot>(
+          {
+            type: nextType,
+            houseId,
+            payload: {
+              id: updated.id,
+              lockVersion: updated.lockVersion,
+            },
+          },
+          { onError: setActionError },
+        );
+
+        if (!lifecycleResult) return;
+
+        resetWorkspace(
+          intent === "publish"
+            ? updated.periodType === "past"
+              ? "past"
+              : "current"
+            : "archive",
+        );
+        return;
+      }
+
+      resetWorkspace(
+        updated.lifecycleStatus === "published"
+          ? updated.periodType === "past"
+            ? "past"
+            : "current"
+          : updated.lifecycleStatus === "archived"
+            ? "archive"
+            : "draft",
+      );
+    } catch (error) {
+      console.error("House report submit error:", error);
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося виконати дію зі звітом. Оновіть сторінку і повторіть дію.",
+      );
+    }
+  }
+
+  async function handleDeleteAllArchived() {
+    setActionError(null);
+    setActionLabel("Видаляємо архів звітів...");
+    setSubmitIntent("delete");
+
+    const result = await dispatch(
+      {
+        type: "reports.deleteAllArchived",
+        houseId,
+        payload: {},
+      },
+      { onError: setActionError },
+    );
+
+    if (!result) return;
+    setConfirmAction(null);
+    resetWorkspace("archive");
+  }
+
+  async function handleCategoriesSync() {
+    setActionError(null);
+    setActionLabel("Оновлюємо каталог категорій...");
+
+    const result = await dispatch(
+      {
+        type: "reports.categoriesUpsert",
+        houseId,
+        payload: {
+          categories: categoryOptions.map((title, index) => ({
+            title,
+            sortOrder: index,
+          })),
+        },
+      },
+      { onError: setActionError },
+    );
+
+    if (!result) return;
+    setActionLabel("Обробляємо звіт...");
+  }
 
   return (
     <div className="relative space-y-6">
@@ -573,14 +664,14 @@ export function HouseReportsWorkspace({
           </div>
 
           {activeTab === "archive" ? (
-            archivedReports.length > 0 ? (
+            archivedReports.length > 0 && !readOnlyMode ? (
               <button
                 type="button"
-                disabled={isDeletingArchive}
+                disabled={isPending}
                 onClick={() => setConfirmAction("delete_archive")}
                 className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
               >
-                {isDeletingArchive
+                {isPending && submitIntent === "delete"
                   ? "Видаляємо архів..."
                   : "Видалити все"}
               </button>
@@ -589,7 +680,8 @@ export function HouseReportsWorkspace({
             <button
               type="button"
               onClick={openCreateMode}
-              className={adminPrimaryButtonClass}
+              disabled={readOnlyMode || isPending}
+              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
             >
               Створити звіт
             </button>
@@ -601,6 +693,7 @@ export function HouseReportsWorkspace({
             {[
               ["current", "Поточний рік", currentReports.length],
               ["past", "Минулі роки", pastReports.length],
+              ["draft", "Чернетки", draftReports.length],
               ["archive", "Архів", archivedReports.length],
             ].map(([key, label, count]) => {
               const isActive = activeTab === key;
@@ -630,46 +723,26 @@ export function HouseReportsWorkspace({
               );
             })}
           </div>
-        </div>
 
+          <button
+            type="button"
+            disabled={readOnlyMode || isPending}
+            onClick={() => void handleCategoriesSync()}
+            className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+          >
+            Синхронізувати категорії
+          </button>
+        </div>
       </div>
 
       {workspaceMode !== "idle" ? (
         <form
-          ref={formRef}
-          action={handleSubmit}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitReport("save");
+          }}
           className={`${adminSurfaceClass} p-6`}
         >
-          <input type="hidden" name="sectionId" value={sectionId} />
-          <input type="hidden" name="houseId" value={houseId} />
-          <input type="hidden" name="houseSlug" value={houseSlug} />
-          <input type="hidden" name="kind" value="reports" />
-          <input type="hidden" name="title" value={sectionTitle ?? "Звіти"} />
-          <input
-            type="hidden"
-            name="status"
-            value={getDefaultSectionStatus(sectionStatus)}
-          />
-          <input
-            type="hidden"
-            name="activeReportId"
-            value={normalizedDraft.id}
-          />
-          <input
-            type="hidden"
-            name="removeReportPdf"
-            value={submitIntent === "delete" ? (draft.pdfPath ? "true" : "false") : removeReportPdf ? "true" : "false"}
-          />
-          <input type="hidden" name="reportAction" value={submitIntent} />
-          <input
-            type="hidden"
-            name="reportsPayload"
-            value={JSON.stringify({
-              categoriesCatalog: categoryOptions,
-              reports: nextReportsPayload,
-            })}
-          />
-
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -695,9 +768,9 @@ export function HouseReportsWorkspace({
             </button>
           </div>
 
-          {state.error ? (
+          {actionError || lastError ? (
             <div className="mt-5 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-              {state.error}
+              {actionError ?? lastError}
             </div>
           ) : null}
 
@@ -721,9 +794,12 @@ export function HouseReportsWorkspace({
                 Категорія
               </span>
               <select
-                value={draft.category}
+                value={draft.categoryTitle}
                 onChange={(event) =>
-                  setDraft((prev) => ({ ...prev, category: event.target.value }))
+                  setDraft((prev) => ({
+                    ...prev,
+                    categoryTitle: event.target.value,
+                  }))
                 }
                 className={adminInputClass}
               >
@@ -767,13 +843,36 @@ export function HouseReportsWorkspace({
               />
             </label>
 
+            <label className="block">
+              <span className={`mb-2 block ${adminTextLabelClass}`}>
+                Тип періоду
+              </span>
+              <select
+                value={draft.periodType}
+                onChange={(event) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    periodType: event.target.value as HouseReportPeriodType,
+                    year:
+                      event.target.value === "past"
+                        ? prev.year ?? getDefaultYear("past")
+                        : null,
+                  }))
+                }
+                className={adminInputClass}
+              >
+                <option value="current">Поточний рік</option>
+                <option value="past">Минулий рік / архів років</option>
+              </select>
+            </label>
+
             {isPastContext ? (
               <label className="block">
                 <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Рік
                 </span>
                 <select
-                  value={String(draft.year ?? "")}
+                  value={String(draft.year ?? getDefaultYear("past"))}
                   onChange={(event) =>
                     setDraft((prev) => ({
                       ...prev,
@@ -782,7 +881,7 @@ export function HouseReportsWorkspace({
                   }
                   className={adminInputClass}
                 >
-                  {Array.from({ length: 10 }, (_, index) => 2016 + index).map((item) => (
+                  {Array.from({ length: 11 }, (_, index) => 2026 - index).map((item) => (
                     <option key={item} value={String(item)}>
                       {item}
                     </option>
@@ -826,12 +925,12 @@ export function HouseReportsWorkspace({
                   </div>
                 </div>
 
-                {draft.pdfPath && !removeReportPdf ? (
+                {selectedReport?.pdf?.path && !removeReportPdf ? (
                   <button
                     type="button"
                     onClick={() => {
                       setRemoveReportPdf(true);
-                      setSelectedPdfLabel("");
+                      setSelectedPdf(null);
                       setReportPdfError(null);
                       if (reportPdfInputRef.current) {
                         reportPdfInputRef.current.value = "";
@@ -856,9 +955,8 @@ export function HouseReportsWorkspace({
                 </span>
                 <input
                   ref={reportPdfInputRef}
-                  key={`${workspaceMode}-${draft.id}`}
+                  key={`${workspaceMode}-${selectedReportId ?? "new"}`}
                   type="file"
-                  name="reportPdf"
                   accept="application/pdf,.pdf"
                   onChange={handleReportPdfChange}
                   className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
@@ -874,7 +972,6 @@ export function HouseReportsWorkspace({
                   {reportPdfError}
                 </div>
               ) : null}
-
             </div>
           </div>
 
@@ -943,14 +1040,8 @@ export function HouseReportsWorkspace({
             <div className="mt-6 flex min-w-max flex-nowrap items-end justify-between gap-6">
               <div className="flex flex-nowrap items-center gap-3">
                 <button
-                  type="button"
-                  disabled={isPending || Boolean(reportPdfError)}
-                  onClick={() => {
-                    setSubmitIntent("save");
-                    requestAnimationFrame(() => {
-                      formRef.current?.requestSubmit();
-                    });
-                  }}
+                  type="submit"
+                  disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                   className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
@@ -959,7 +1050,7 @@ export function HouseReportsWorkspace({
                 {isDraftLikeEdit ? (
                   <button
                     type="button"
-                    disabled={isPending}
+                    disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
                     className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-red-500/15 disabled:opacity-60"
                   >
@@ -968,11 +1059,11 @@ export function HouseReportsWorkspace({
                 ) : null}
               </div>
 
-              {isDraftLikeEdit ? (
+              {isDraftLikeEdit || workspaceMode === "create" ? (
                 <div className="flex shrink-0 items-center">
                   <button
                     type="button"
-                    disabled={isPending || Boolean(reportPdfError)}
+                    disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
                     className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
                   >
@@ -985,227 +1076,206 @@ export function HouseReportsWorkspace({
                 <div className="flex shrink-0 items-center">
                   <button
                     type="button"
-                    disabled={isPending || Boolean(reportPdfError)}
+                    disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
+                    {isPending && submitIntent === "archive" ? "Архівуємо..." : "В архів"}
                   </button>
                 </div>
               ) : null}
 
-              {workspaceMode === "edit" && draft.status === "archived" ? (
-                <div className="flex shrink-0 items-center">
+              {isArchivedEdit ? (
+                <div className="flex shrink-0 items-center gap-3">
                   <button
                     type="button"
-                    disabled={isPending}
-                    onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    disabled={readOnlyMode || isPending}
+                    onClick={() => setConfirmAction("restore")}
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
                   >
-                    {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
+                    Відновити
+                  </button>
+                  <button
+                    type="button"
+                    disabled={readOnlyMode || isPending}
+                    onClick={() => setConfirmAction("delete")}
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-red-500/15 disabled:opacity-60"
+                  >
+                    Видалити
                   </button>
                 </div>
               ) : null}
-
             </div>
           </div>
-
-          <PlatformConfirmModal
-            open={confirmAction === "publish"}
-            title="Підтвердити публікацію звіту?"
-            description="Після підтвердження звіт стане видимим для мешканців на сайті будинку."
-            confirmLabel="Підтвердити публікацію"
-            pendingLabel="Підтверджуємо..."
-            tone="publish"
-            isPending={isPending}
-            onCancel={() => {
-              if (!isPending) {
-                setConfirmAction(null);
-              }
-            }}
-            onConfirm={() => {
-              setConfirmAction(null);
-              setSubmitIntent("publish");
-              requestAnimationFrame(() => {
-                formRef.current?.requestSubmit();
-              });
-            }}
-          />
-
-          <PlatformConfirmModal
-            open={confirmAction === "archive"}
-            title="Перенести звіт до архіву?"
-            description="Після архівації звіт зникне з публічної частини сайту та перестане бути видимим мешканцям. У CMS він залишиться доступним в архіві."
-            confirmLabel="Архівувати звіт"
-            pendingLabel="Архівуємо..."
-            tone="warning"
-            isPending={isPending}
-            onCancel={() => {
-              if (!isPending) {
-                setConfirmAction(null);
-              }
-            }}
-            onConfirm={() => {
-              setConfirmAction(null);
-              setSubmitIntent("archive");
-              requestAnimationFrame(() => {
-                formRef.current?.requestSubmit();
-              });
-            }}
-          />
-
-          <PlatformConfirmModal
-            open={confirmAction === "delete"}
-            title="Видалити чернетку звіту?"
-            description="Чернетку звіту буде видалено без можливості відновлення разом із PDF файлом."
-            confirmLabel="Видалити звіт"
-            pendingLabel="Видаляємо..."
-            tone="destructive"
-            isPending={isPending}
-            onCancel={() => {
-              if (!isPending) {
-                setConfirmAction(null);
-              }
-            }}
-            onConfirm={() => {
-              setConfirmAction(null);
-              setSubmitIntent("delete");
-              requestAnimationFrame(() => {
-                formRef.current?.requestSubmit();
-              });
-            }}
-          />
         </form>
       ) : null}
+
+      <div className={`${adminSurfaceClass} p-6`}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
+              {activeTab === "current"
+                ? "Поточний рік"
+                : activeTab === "past"
+                  ? "Минулі роки"
+                  : activeTab === "draft"
+                    ? "Чернетки"
+                    : "Архів"}
+            </h3>
+            <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
+              Відкрий картку для редагування, публікації або архівації.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              value={reportSearchQuery}
+              onChange={(event) => setReportSearchQuery(event.target.value)}
+              placeholder="Пошук за назвою, категорією, роком..."
+              className={`${adminInputClass} sm:w-80`}
+            />
+            <select
+              value={reportSortMode}
+              onChange={(event) =>
+                setReportSortMode(event.target.value as ReportSortMode)
+              }
+              className={adminInputClass}
+            >
+              <option value="updated_desc">Новіші оновлення</option>
+              <option value="updated_asc">Старіші оновлення</option>
+              <option value="title_asc">Назва А-Я</option>
+              <option value="title_desc">Назва Я-А</option>
+              <option value="year_desc">Рік ↓</option>
+              <option value="year_asc">Рік ↑</option>
+            </select>
+          </div>
+        </div>
+
+        {visibleReports.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-sm text-[var(--cms-text-muted)]">
+            У цьому списку поки немає звітів.
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 xl:grid-cols-2">
+            {visibleReports.map((report) => (
+              <button
+                key={report.id}
+                type="button"
+                onClick={() => openEditMode(report)}
+                className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={getStatusBadgeClasses(report.lifecycleStatus)}>
+                    <span className="inline-flex rounded-full px-3 py-1 text-xs font-medium">
+                      {getStatusLabel(report.lifecycleStatus)}
+                    </span>
+                  </span>
+                  <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                    {normalizeReportCategory(report.categoryTitle) || "Без категорії"}
+                  </span>
+                  {report.isPinned ? (
+                    <span className="rounded-full bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
+                      Важливе
+                    </span>
+                  ) : null}
+                  {report.isNew ? (
+                    <span className="rounded-full bg-[var(--cms-success-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-success-text)]">
+                      Нове
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 text-lg font-semibold text-[var(--cms-text)]">
+                  {report.title || "Без назви"}
+                </div>
+
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--cms-text-muted)]">
+                  {report.description || "Опис не додано."}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--cms-text-soft)]">
+                  <span>{formatDate(report.reportDate)}</span>
+                  <span>·</span>
+                  <span>
+                    {report.periodType === "past"
+                      ? report.year ?? "Рік не вказано"
+                      : getMonthLabel(report.month)}
+                  </span>
+                  <span>·</span>
+                  <span>{report.pdf ? report.pdf.originalName ?? "PDF додано" : "PDF не додано"}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish"}
+        title="Опублікувати звіт?"
+        description="Після підтвердження звіт стане доступним мешканцям на публічній сторінці."
+        confirmLabel="Підтвердити"
+        tone="publish"
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void submitReport("publish");
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "archive"}
+        title="Перемістити звіт в архів?"
+        description="Звіт буде прихований з основного списку, але залишиться доступним в архіві CMS."
+        confirmLabel="В архів"
+        tone="warning"
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void submitReport("archive");
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "restore"}
+        title="Відновити звіт?"
+        description="Звіт повернеться у чернетки, після чого його можна буде повторно опублікувати."
+        confirmLabel="Відновити"
+        tone="warning"
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void submitReport("restore");
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete"}
+        title="Видалити звіт?"
+        description="Цю дію не можна буде скасувати. Повʼязаний PDF також буде відʼєднано."
+        confirmLabel="Видалити"
+        tone="destructive"
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void submitReport("delete");
+        }}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "delete_archive"}
         title="Видалити всі архівні звіти?"
-        description="Усі архівні звіти будуть безповоротно видалені разом із PDF файлами. Відновлення після цього неможливе."
-        confirmLabel="Видалити архів"
-        pendingLabel="Видаляємо архів..."
+        description="Архівні звіти та повʼязані PDF-файли будуть видалені з поточного списку."
+        confirmLabel="Видалити все"
         tone="destructive"
-        isPending={isDeletingArchive}
-        onCancel={() => {
-          if (!isPending) {
-            setConfirmAction(null);
-          }
-        }}
-        onConfirm={() => {
-          handleDeleteAllArchived();
-        }}
+        isPending={isPending}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => void handleDeleteAllArchived()}
       />
-
-      <div className={`${adminSurfaceClass} p-6`}>
-        <div className="mt-0">
-          {baseVisibleReports.length > 0 ? (
-            <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
-                  Пошук звіту
-                </span>
-                <input
-                  value={reportSearchQuery}
-                  onChange={(event) => setReportSearchQuery(event.target.value)}
-                  placeholder="Назва, опис, файл або рік"
-                  className={adminInputClass}
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
-                  Сортування
-                </span>
-                <select
-                  value={reportSortMode}
-                  onChange={(event) =>
-                    setReportSortMode(event.target.value as ReportSortMode)
-                  }
-                  className={adminInputClass}
-                >
-                  <option value="updated_desc">Спочатку оновлені</option>
-                  <option value="updated_asc">Спочатку старі оновлення</option>
-                  <option value="title_asc">Назва А–Я</option>
-                  <option value="title_desc">Назва Я–А</option>
-                  <option value="year_desc">Рік: нові зверху</option>
-                  <option value="year_asc">Рік: старі зверху</option>
-                </select>
-              </label>
-            </div>
-          ) : null}
-
-          {visibleReports.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm text-[var(--cms-text-muted)]">
-              {baseVisibleReports.length === 0
-                ? activeTab === "current"
-                  ? "Тут відображатимуться звіти поточного року після створення."
-                  : activeTab == "past"
-                    ? "Тут зберігатимуться звіти за минулі роки."
-                    : "Архівні звіти відображатимуться в цьому розділі."
-                : "За цим пошуком звітів не знайдено. Змініть запит або очистіть поле пошуку."}
-            </div>
-          ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
-              {visibleReports.map((report) => (
-                <button
-                  key={report.id}
-                  type="button"
-                  onClick={() => openEditMode(report)}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    selectedReportId === report.id && workspaceMode === "edit"
-                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
-                      : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                      {report.category}
-                    </span>
-
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${getStatusBadgeClasses(
-                        report.status,
-                      )}`}
-                    >
-                      {getStatusLabel(report.status)}
-                    </span>
-
-                    {report.isPinned ? (
-                      <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-danger-text)]">
-                        Важливий
-                      </span>
-                    ) : null}
-
-                    {report.isNew ? (
-                      <span className="inline-flex rounded-full border border-emerald-500/20 bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)]/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-success-text)]">
-                        Новий
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
-                    {report.title}
-                  </div>
-
-                  <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                    {report.description}
-                  </p>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
-                    <span>{formatDate(report.reportDate)}</span>
-                    {report.periodType === "current" ? (
-                      <span>{getMonthLabel(report.month)}</span>
-                    ) : (
-                      <span>{report.year ?? "Рік не вказано"}</span>
-                    )}
-                    {report.pdfFileName ? <span>{report.pdfFileName}</span> : null}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

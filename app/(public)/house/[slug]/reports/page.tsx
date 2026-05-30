@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
 import { houseReportsCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseReports } from "@/src/modules/houses/services/getPublishedHouseReports";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 
 type Props = {
@@ -12,38 +14,22 @@ type Props = {
   }>;
 };
 
-type PublicReport = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  reportDate: string;
-  periodType: "current" | "past";
-  month?: string;
-  year?: number;
-  isPinned?: boolean;
-  isNew?: boolean;
-  newUntil?: string | null;
-  status: "draft" | "active" | "archived";
-  pdfFileName?: string;
-  pdfPath?: string;
-};
 
 const MONTH_LABELS: Record<string, string> = houseReportsCopy.months;
 
 const MONTH_ORDER = [
-  "january",
-  "february",
-  "march",
-  "april",
-  "may",
-  "june",
-  "july",
-  "august",
-  "september",
-  "october",
-  "november",
-  "december",
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
 ];
 
 const MONTH_INDEX = new Map(
@@ -51,7 +37,22 @@ const MONTH_INDEX = new Map(
 );
 
 function getMonthLabel(value: string) {
-  return MONTH_LABELS[value] ?? value;
+  const numericMonthLabels: Record<string, string> = {
+    "01": "Січень",
+    "02": "Лютий",
+    "03": "Березень",
+    "04": "Квітень",
+    "05": "Травень",
+    "06": "Червень",
+    "07": "Липень",
+    "08": "Серпень",
+    "09": "Вересень",
+    "10": "Жовтень",
+    "11": "Листопад",
+    "12": "Грудень",
+  };
+
+  return numericMonthLabels[value] ?? MONTH_LABELS[value] ?? value;
 }
 
 function normalizeReportCategoryLabel(value: string | null | undefined) {
@@ -78,7 +79,9 @@ function isStillNew(value?: string | null) {
   return date.getTime() >= Date.now();
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | null) {
+  if (!value) return houseReportsCopy.date.empty;
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return houseReportsCopy.date.empty;
 
@@ -96,41 +99,34 @@ export default async function ReportsPage({
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
-  const { house, sections } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    notFound();
+  }
+
+  const { reports } = await getPublishedHouseReports(house.id);
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
 
-  const reportsSection = sections.find((item) => item.kind === "reports");
-
-  const reports = Array.isArray(reportsSection?.content?.reports)
-    ? (reportsSection.content.reports as PublicReport[])
-    : [];
-
-  const visibleReports = reports
-    .filter(
-      (item) =>
-        item.status !== "archived" &&
-        item.status !== "draft",
-    )
-    .sort((a, b) => {
-      const aDate = new Date(a.reportDate).getTime() || 0;
-      const bDate = new Date(b.reportDate).getTime() || 0;
-      return bDate - aDate;
-    });
+  const visibleReports = reports.slice().sort((a, b) => {
+    const aDate = new Date(a.reportDate ?? "").getTime() || 0;
+    const bDate = new Date(b.reportDate ?? "").getTime() || 0;
+    return bDate - aDate;
+  });
 
   const currentYear = new Date().getFullYear();
 
   const currentReports = visibleReports.filter(
     (item) =>
       item.periodType === "current" &&
-      new Date(item.reportDate).getFullYear() === currentYear,
+      new Date(item.reportDate ?? "").getFullYear() === currentYear,
   );
 
   const pastReports = visibleReports.filter((item) => item.periodType === "past");
 
 
-  function sortReportsForGrid(items: PublicReport[]) {
+  function sortReportsForGrid(items: typeof visibleReports) {
     return [...items].sort((left, right) => {
       const pinnedDiff =
         Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned));
@@ -139,8 +135,8 @@ export default async function ReportsPage({
         return pinnedDiff;
       }
 
-      const leftDate = new Date(left.reportDate).getTime() || 0;
-      const rightDate = new Date(right.reportDate).getTime() || 0;
+      const leftDate = new Date(left.reportDate ?? "").getTime() || 0;
+      const rightDate = new Date(right.reportDate ?? "").getTime() || 0;
 
       return rightDate - leftDate;
     });
@@ -341,7 +337,7 @@ export default async function ReportsPage({
                 >
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-[#E7DED3] px-3 py-1 text-xs font-medium">
-                      {normalizeReportCategoryLabel(report.category)}
+                      {normalizeReportCategoryLabel(report.categoryTitle)}
                     </span>
 
                     {report.isPinned ? (
@@ -370,8 +366,8 @@ export default async function ReportsPage({
                   </div>
 
                   <PublicReportPdfViewer
-                    filePath={report.pdfPath ?? ""}
-                    fileName={report.pdfFileName}
+                    filePath={report.pdf?.path ?? ""}
+                    fileName={report.pdf?.originalName ?? undefined}
                   />
                 </article>
               ))}

@@ -12,6 +12,7 @@ import { specialistsHandler } from "./specialists";
 import { planHandler } from "./plan";
 import { meetingsHandler } from "./meetings";
 import { debtorsHandler } from "./debtors";
+import { reportsHandler } from "./reports";
 
 let registered = false;
 
@@ -42,5 +43,6 @@ export function registerAllHandlers() {
   registerHandler(meetingsHandler);
   registerHandler(planHandler);
   registerHandler(requisitesHandler);
+  registerHandler(reportsHandler);
   registerHandler(specialistsHandler);
 }

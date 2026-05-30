@@ -15,12 +15,10 @@ import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseR
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
-import { getAdminHouseSectionById } from "@/src/modules/houses/services/getAdminHouseSectionById";
 import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
-import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
@@ -31,6 +29,7 @@ import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/get
 import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
+import { getAdminHouseReports } from "@/src/modules/houses/services/getAdminHouseReports";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -105,77 +104,6 @@ function normalizeAnnouncementForWorkspace(announcement: {
       publishedAt: announcement.published_at,
       lockVersion: announcement.lock_version,
     },
-  };
-}
-
-function getSectionContent(section: unknown): Record<string, unknown> {
-  if (
-    section &&
-    typeof section === "object" &&
-    "content" in section &&
-    section.content &&
-    typeof section.content === "object"
-  ) {
-    return section.content as Record<string, unknown>;
-  }
-
-  return {};
-}
-
-function normalizeReportItem(item: unknown) {
-  if (!item || typeof item !== "object") {
-    return null;
-  }
-
-  const record = item as Record<string, unknown>;
-
-  const id = typeof record.id === "string" ? record.id : "";
-  const title = typeof record.title === "string" ? record.title : "";
-  const description =
-    typeof record.description === "string" ? record.description : "";
-  const category = typeof record.category === "string" ? record.category : "";
-  const reportDate =
-    typeof record.reportDate === "string" ? record.reportDate : "";
-  const periodType: "current" | "past" =
-    record.periodType === "past" ? "past" : "current";
-  const status: "draft" | "active" | "archived" =
-    record.status === "archived"
-      ? "archived"
-      : record.status === "draft"
-        ? "draft"
-        : "active";
-
-  if (!id) {
-    return null;
-  }
-
-  return {
-    id,
-    title,
-    description,
-    category,
-    reportDate,
-    periodType,
-    month: typeof record.month === "string" ? record.month : undefined,
-    year: typeof record.year === "number" ? record.year : undefined,
-    isPinned: typeof record.isPinned === "boolean" ? record.isPinned : undefined,
-    isNew: typeof record.isNew === "boolean" ? record.isNew : undefined,
-    newUntil:
-      typeof record.newUntil === "string" || record.newUntil === null
-        ? record.newUntil
-        : undefined,
-    status,
-    pdfFileName:
-      typeof record.pdfFileName === "string" ? record.pdfFileName : undefined,
-    pdfPath: typeof record.pdfPath === "string" ? record.pdfPath : undefined,
-    createdAt:
-      typeof record.createdAt === "string" ? record.createdAt : undefined,
-    updatedAt:
-      typeof record.updatedAt === "string" ? record.updatedAt : undefined,
-    archivedAt:
-      typeof record.archivedAt === "string" || record.archivedAt === null
-        ? record.archivedAt
-        : undefined,
   };
 }
 
@@ -268,7 +196,6 @@ export default async function AdminHouseDetailPage({
     activeBlock === "announcements" ||
     activeBlock === "board" ||
     activeBlock === "specialists" ||
-    activeBlock === "reports" ||
     activeBlock === "debtors" ||
     activeBlock === "meetings";
 
@@ -282,7 +209,6 @@ export default async function AdminHouseDetailPage({
     activeBlock === "announcements" ||
     activeBlock === "board" ||
     activeBlock === "specialists" ||
-    activeBlock === "reports" ||
     activeBlock === "debtors" ||
     activeBlock === "meetings" ||
     activeBlock === "requisites";
@@ -323,26 +249,6 @@ export default async function AdminHouseDetailPage({
     activeBlock === "specialists"
       ? await getAdminHouseSpecialists({ houseId: house.id })
       : null;
-
-  const reportsSectionList =
-    homeSections.find((section) => section.kind === "reports") ?? null;
-
-  let reportsSection = null;
-
-  if (activeBlock === "reports" && homePage && !reportsSectionList) {
-    const ensuredReportsSectionId = await ensureHouseReportsSection({
-      housePageId: homePage.id,
-    });
-
-    reportsSection = await getAdminHouseSectionById(
-      ensuredReportsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "reports" && reportsSectionList) {
-    reportsSection = reportsSectionList;
-  } else if (activeBlock !== "reports") {
-    reportsSection = null;
-  }
 
   const planData =
     activeBlock === "plan"
@@ -394,13 +300,10 @@ export default async function AdminHouseDetailPage({
       ? await getHouseDocuments(house.id, { scope: "founding" })
       : [];
 
-  const reports =
-    activeBlock === "reports" &&
-    Array.isArray(getSectionContent(reportsSection).reports)
-      ? (getSectionContent(reportsSection).reports as unknown[])
-          .map(normalizeReportItem)
-          .filter((item): item is NonNullable<typeof item> => item !== null)
-      : [];
+  const reportsData =
+    activeBlock === "reports"
+      ? await getAdminHouseReports({ houseId: house.id })
+      : null;
 
   const debtorsApartments =
     activeBlock === "debtors"
@@ -547,28 +450,13 @@ export default async function AdminHouseDetailPage({
         )
       ) : null}
 
-      {activeBlock === "reports" ? (
-        reportsSection ? (
-          <HouseReportsWorkspace
-            readOnlyMode={!access.houseWorkspaces.reports.edit}
-            houseId={house.id}
-            houseSlug={house.slug}
-            sectionId={reportsSection.id}
-            sectionTitle={reportsSection.title}
-            sectionStatus={reportsSection.status}
-            reports={reports}
-            categoriesCatalog={
-              Array.isArray(getSectionContent(reportsSection).categoriesCatalog)
-                ? getSectionContent(reportsSection).categoriesCatalog as string[]
-                : []
-            }
-          />
-        ) : (
-          <HouseTechnicalPlaceholder
-            title="Звіти будинку"
-            description="Секцію звітів поки не створено для цього будинку. Наступним кроком додамо безпечну ініціалізацію секції, якщо її немає."
-          />
-        )
+      {activeBlock === "reports" && reportsData ? (
+        <HouseReportsWorkspace
+          readOnlyMode={!access.houseWorkspaces.reports.edit}
+          houseId={house.id}
+          reports={reportsData.reports}
+          categories={reportsData.categories}
+        />
       ) : null}
 
       {activeBlock === "information" ? (
