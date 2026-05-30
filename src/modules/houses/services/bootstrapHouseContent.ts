@@ -1,4 +1,6 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { registerAllHandlers } from "@/src/modules/content-engine/v2/handlers";
+import { getAllHandlers } from "@/src/modules/content-engine/v2/registry";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 
 type BootstrapHouseContentParams = {
@@ -42,6 +44,25 @@ export async function bootstrapHouseContent({
 
   if (houseHeroError) {
     throw new Error(`Failed to create default house hero: ${houseHeroError.message}`);
+  }
+
+  registerAllHandlers();
+
+  for (const handler of getAllHandlers()) {
+    if (!handler.onBootstrap) {
+      continue;
+    }
+
+    const result = await handler.onBootstrap({
+      supabase,
+      houseId,
+      houseSlug,
+      houseName,
+    });
+
+    if (!result.ok) {
+      throw new Error(`Bootstrap ${handler.key}: ${result.error}`);
+    }
   }
 
   const { data: existingHero, error: heroLookupError } = await supabase
