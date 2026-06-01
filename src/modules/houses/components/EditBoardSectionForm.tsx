@@ -222,7 +222,6 @@ function mapSavedMember(member: AdminHouseBoardMember): BoardRoleItem {
 
 export function EditBoardSectionForm({
   houseId,
-  houseSlug: _houseSlug,
   board,
   readOnlyMode,
 }: Props) {

@@ -22,6 +22,16 @@ import type {
   HouseReportPeriodType,
 } from "@/src/modules/houses/services/getAdminHouseReports";
 
+function createClientUploadId(prefix: string) {
+  const randomId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : "upload";
+
+  return `${prefix}-${randomId}`;
+}
+
+
 type Props = {
   readOnlyMode?: boolean;
   houseId: string;
@@ -391,7 +401,7 @@ export function HouseReportsWorkspace({
 
     const supabase = createSupabaseBrowserClient();
     const fileExt = selectedPdf.name.split(".").pop() ?? "pdf";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const fileName = `${createClientUploadId("report")}.${fileExt}`;
     const filePath = `${houseId}/reports/${targetId}/${fileName}`;
 
     const { error } = await supabase.storage
@@ -503,7 +513,7 @@ export function HouseReportsWorkspace({
         return;
       }
 
-      const uploadTargetId = selectedReport?.id ?? `new-${Date.now()}`;
+      const uploadTargetId = selectedReport?.id ?? createClientUploadId("new");
       const uploadedPdf = await uploadSelectedPdf(uploadTargetId);
 
       if (workspaceMode === "create") {

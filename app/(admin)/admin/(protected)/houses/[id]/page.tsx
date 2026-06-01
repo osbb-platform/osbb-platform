@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
-import { EditHeroSectionForm } from "@/src/modules/houses/components/EditHeroSectionForm";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
@@ -15,15 +14,12 @@ import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseR
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
-import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
 import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
-import { getAdminHouseHero } from "@/src/modules/houses/services/getAdminHouseHero";
-import { getAdminHouseHomeWidgets } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
@@ -205,19 +201,6 @@ export default async function AdminHouseDetailPage({
     homePage = pages.find((page) => page.slug === "home") ?? null;
   }
 
-  const needsHomeSectionsForBlock =
-    activeBlock === "announcements" ||
-    activeBlock === "board" ||
-    activeBlock === "specialists" ||
-    activeBlock === "debtors" ||
-    activeBlock === "meetings" ||
-    activeBlock === "requisites";
-
-  let homeSections =
-    needsHomeSectionsForBlock && homePage
-      ? await getAdminHouseSections(homePage.id)
-      : [];
-
   const validAnnouncementSections =
     activeBlock === "announcements"
       ? (await getAdminHouseAnnouncements({ houseId: house.id })).map(
@@ -265,23 +248,9 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHouseMeetings({ houseId: house.id })
       : null;
 
-  const hero =
-    activeBlock === "hero"
-      ? await getAdminHouseHero({
-          houseId: house.id,
-          houseName: house.name,
-          publicDescription: house.public_description,
-        })
-      : null;
-
   const requisites =
     activeBlock === "requisites"
       ? await getAdminHouseRequisites({ houseId: house.id })
-      : null;
-
-  const homeWidgets =
-    activeBlock === "registry"
-      ? await getAdminHouseHomeWidgets(house.id)
       : null;
 
   const specialistRequests =

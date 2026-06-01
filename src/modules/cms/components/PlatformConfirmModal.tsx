@@ -64,16 +64,16 @@ function getToneClasses(tone: PlatformConfirmTone) {
   };
 }
 
-function getToneIcon(tone: PlatformConfirmTone) {
+function renderToneIcon(tone: PlatformConfirmTone) {
   if (tone === "destructive" || tone === "warning") {
-    return AlertTriangleIcon;
+    return <AlertTriangleIcon className="h-5 w-5" />;
   }
 
   if (tone === "publish") {
-    return CheckCircleIcon;
+    return <CheckCircleIcon className="h-5 w-5" />;
   }
 
-  return InfoCircleIcon;
+  return <InfoCircleIcon className="h-5 w-5" />;
 }
 
 export function PlatformConfirmModal({
@@ -113,7 +113,6 @@ export function PlatformConfirmModal({
   }
 
   const toneClasses = getToneClasses(tone);
-  const ToneIcon = getToneIcon(tone);
 
   return (
     <div
@@ -138,7 +137,7 @@ export function PlatformConfirmModal({
             className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-lg font-semibold ${toneClasses.icon}`}
             aria-hidden="true"
           >
-            <ToneIcon className="h-5 w-5" />
+            {renderToneIcon(tone)}
           </div>
 
           <div className="min-w-0 flex-1">

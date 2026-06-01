@@ -1015,7 +1015,7 @@ export async function updateHouseSection(
     }
   }
 
-  let nextSectionStatus = status || "draft";
+  const nextSectionStatus = status || "draft";
 
   const { error: updateError } = await supabase
     .from("house_sections")

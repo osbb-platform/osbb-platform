@@ -237,7 +237,6 @@ function taskPayload(task: PlanTask) {
 
 export function HousePlanWorkspace({
   houseId,
-  houseSlug,
   plan,
   canChangeWorkflowStatus,
 }: Props) {

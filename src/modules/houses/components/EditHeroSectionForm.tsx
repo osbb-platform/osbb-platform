@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseHeroSnapshot } from "@/src/modules/houses/services/getAdminHouseHero";
@@ -54,11 +54,6 @@ export function EditHeroSectionForm({
 
   const [snapshot, setSnapshot] = useState<HeroSnapshot>(initialSnapshot);
   const [lockVersion, setLockVersion] = useState(hero.lockVersion);
-
-  useEffect(() => {
-    setSnapshot(initialSnapshot);
-    setLockVersion(hero.lockVersion);
-  }, [hero.lockVersion, initialSnapshot]);
 
   const isDirty =
     JSON.stringify(snapshot) !== JSON.stringify(initialSnapshot);

@@ -58,14 +58,6 @@ type AnnouncementLevel = "danger" | "warning" | "info";
 type PlanTaskStatus = "draft" | "planned" | "in_progress" | "completed" | "archived";
 type PlanTaskPriority = "high" | "medium" | "low";
 type PlanTaskDateMode = "deadline" | "range";
-type MeetingLifecycleStatus =
-  | "draft"
-  | "scheduled"
-  | "active"
-  | "review"
-  | "completed"
-  | "archived";
-
 type PlanTask = {
   id: string;
   title: string;
@@ -82,39 +74,7 @@ type PlanTask = {
   archivedAt: string | null;
 };
 
-type MeetingQuestion = {
-  id: string;
-  title: string;
-  description: string;
-  decisionDraft: string;
-  votesFor?: number;
-  votesAgainst?: number;
-  votesAbstained?: number;
-  totalApartmentsVoted?: number;
-  approvalOutcome: "approved" | "rejected" | "pending";
-};
 
-type MeetingItem = {
-  id: string;
-  title: string;
-  shortDescription: string;
-  meetingDateTime: string;
-  location: string;
-  status: MeetingLifecycleStatus;
-  protocolPdf?: string;
-  protocolDocumentId?: string;
-  questions: MeetingQuestion[];
-};
-
-type DebtorItem = {
-  apartmentId: string;
-  apartmentLabel: string;
-  accountNumber: string;
-  ownerName: string;
-  area: number | null;
-  amount: string;
-  days: string;
-};
 
 type GetPublicHouseHomeDashboardParams = {
   house: HouseRecord;
@@ -248,49 +208,6 @@ function normalizeAmount(value: unknown) {
   return Number.isFinite(normalized) ? normalized : 0;
 }
 
-function normalizePlanTasks(value: unknown): PlanTask[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const raw = item as Record<string, unknown>;
-      const now = new Date(Date.now() - index * 1000).toISOString();
-
-      return {
-        id: asString(raw.id) || `plan-${index}`,
-        title: asString(raw.title),
-        description: asString(raw.description),
-        status:
-          raw.status === "planned" ||
-          raw.status === "in_progress" ||
-          raw.status === "completed" ||
-          raw.status === "archived"
-            ? raw.status
-            : "draft",
-        priority:
-          raw.priority === "high" ||
-          raw.priority === "medium" ||
-          raw.priority === "low"
-            ? raw.priority
-            : "medium",
-        dateMode: raw.dateMode === "range" ? "range" : "deadline",
-        deadlineAt: asString(raw.deadlineAt) || null,
-        startDate: asString(raw.startDate) || null,
-        endDate: asString(raw.endDate) || null,
-        contractor: asString(raw.contractor) || null,
-        createdAt: asString(raw.createdAt) || now,
-        updatedAt: asString(raw.updatedAt) || now,
-        archivedAt: asString(raw.archivedAt) || null,
-      } satisfies PlanTask;
-    })
-    .filter((item): item is PlanTask => item !== null && Boolean(item.title));
-}
 
 function getPriorityOrder(priority: PlanTaskPriority) {
   if (priority === "high") return 0;
@@ -336,76 +253,7 @@ function sortPlanTasks(tasks: PlanTask[]) {
   });
 }
 
-function normalizeMeetings(value: unknown): MeetingItem[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
 
-  return value.reduce<MeetingItem[]>((acc, item, index) => {
-    if (!item || typeof item !== "object") {
-      return acc;
-    }
-
-    const raw = item as Record<string, unknown>;
-    const normalized: MeetingItem = {
-      id: asString(raw.id) || `meeting-${index}`,
-      title: asString(raw.title),
-      shortDescription: asString(raw.shortDescription),
-      meetingDateTime: asString(raw.meetingDateTime),
-      location: asString(raw.location),
-      status:
-        raw.status === "scheduled" ||
-        raw.status === "active" ||
-        raw.status === "review" ||
-        raw.status === "completed" ||
-        raw.status === "archived"
-          ? raw.status
-          : "draft",
-      protocolPdf: asString(raw.protocolPdf) || undefined,
-      protocolDocumentId: asString(raw.protocolDocumentId) || undefined,
-      questions: Array.isArray(raw.questions)
-        ? (raw.questions as MeetingQuestion[])
-        : [],
-    };
-
-    if (!normalized.title) {
-      return acc;
-    }
-
-    acc.push(normalized);
-    return acc;
-  }, []);
-}
-
-function normalizeDebtorItems(value: unknown): DebtorItem[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const raw = item as Record<string, unknown>;
-
-      return {
-        apartmentId: asString(raw.apartmentId),
-        apartmentLabel: asString(raw.apartmentLabel),
-        accountNumber: asString(raw.accountNumber),
-        ownerName: asString(raw.ownerName),
-        area:
-          typeof raw.area === "number" && Number.isFinite(raw.area)
-            ? raw.area
-            : null,
-        amount: asString(raw.amount),
-        days: asString(raw.days),
-      } satisfies DebtorItem;
-    })
-    .filter((item): item is DebtorItem => Boolean(item?.apartmentId))
-    .filter((item) => normalizeAmount(item.amount) > 0);
-}
 
 function buildAnnouncementsWidget(
   slug: string,

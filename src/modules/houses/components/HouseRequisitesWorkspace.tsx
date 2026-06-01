@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseRequisitesSnapshot } from "@/src/modules/houses/services/getAdminHouseRequisites";
@@ -94,11 +94,6 @@ export function HouseRequisitesWorkspace({
   const [snapshot, setSnapshot] = useState<RequisitesSnapshot>(initialSnapshot);
   const [lockVersion, setLockVersion] = useState(requisites.lockVersion);
   const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    setSnapshot(initialSnapshot);
-    setLockVersion(requisites.lockVersion);
-  }, [initialSnapshot, requisites.lockVersion]);
 
   const normalizedIban = useMemo(
     () => normalizeIban(snapshot.iban),

@@ -94,7 +94,7 @@ export function useToast() {
 
   if (!context) {
     return {
-      toast: (_toast: ToastInput) => {},
+      toast: () => {},
     };
   }
 

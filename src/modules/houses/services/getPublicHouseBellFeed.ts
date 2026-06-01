@@ -76,15 +76,6 @@ function getMeetingBellTimestamp(item: {
 }
 
 
-function getPlanBellTimestamp(
-  item: Record<string, unknown>,
-): number {
-  return Math.max(
-    toTimestamp(item.updatedAt),
-    toTimestamp(item.archivedAt),
-    toTimestamp(item.createdAt),
-  );
-}
 
 function getSpecialistBellTimestamp(
   item: Record<string, unknown>,

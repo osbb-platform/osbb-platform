@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
@@ -40,11 +40,6 @@ export function EditInformationFaqForm({
   }, [faq.items]);
 
   const [items, setItems] = useState(initialItems);
-
-  useEffect(() => {
-    setItems(initialItems);
-    setLocalError(null);
-  }, [initialItems]);
 
   function updateItem(index: number, field: "question" | "answer", value: string) {
     setItems((prev) =>

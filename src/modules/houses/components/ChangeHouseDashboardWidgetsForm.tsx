@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type {
@@ -94,11 +94,6 @@ export function ChangeHouseDashboardWidgetsForm({
   const [widgets, setWidgets] = useState<Widget[]>(ensureAtLeastOne(initialSnapshot));
   const [lockVersion, setLockVersion] = useState(initialLockVersion);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setWidgets(ensureAtLeastOne(initialSnapshot));
-    setLockVersion(initialLockVersion);
-  }, [initialLockVersion, initialSnapshot]);
 
   function addWidget() {
     if (widgets.length >= 6 || readOnlyMode) return;

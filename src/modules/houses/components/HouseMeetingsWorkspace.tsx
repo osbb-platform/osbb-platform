@@ -11,7 +11,6 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
 type MeetingLifecycleStatus =
   | "draft"
   | "scheduled"
@@ -368,7 +367,6 @@ function recalculateMeetingQuestionResults(
 
 export function HouseMeetingsWorkspace({
   houseId,
-  houseSlug,
   hasApartments,
   apartments,
   meetings: meetingsSnapshot,
