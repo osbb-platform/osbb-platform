@@ -27,16 +27,16 @@ export default async function AdminTasksPage() {
     <div className="space-y-5">
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold text-[var(--cms-text-primary)]">
+          <h1 className="text-2xl font-semibold text-[var(--cms-text)]">
             Управління задачами
           </h1>
 
-          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--cms-text-secondary)]">
+          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--cms-text-muted)]">
             DEMO
           </span>
         </div>
 
-        <p className="mt-3 text-sm leading-6 text-[var(--cms-text-secondary)]">
+        <p className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
           Розділ уже доступний для роботи та проходить фінальне доопрацювання першої production-версії.
         </p>
       </div>

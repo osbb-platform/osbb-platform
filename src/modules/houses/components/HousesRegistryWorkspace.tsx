@@ -310,10 +310,10 @@ function HouseEditorCard({
       />
 
       {isAnnouncementOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div className="text-sm font-medium text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] p-4 backdrop-blur-sm">
+          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--cms-border-primary)] px-5 py-4">
+              <div className="text-sm font-medium text-[var(--cms-text)]">
                 Оголошення для мешканців
               </div>
 
@@ -329,7 +329,7 @@ function HouseEditorCard({
                 <button
                   type="button"
                   onClick={() => setIsAnnouncementOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 hover:bg-slate-100"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--cms-border-primary)] text-lg text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-secondary)]"
                 >
                   ×
                 </button>
@@ -432,7 +432,7 @@ function ArchivedHouseRestoreCard({
 
               {house.district ? (
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-medium text-white"
+                  className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}

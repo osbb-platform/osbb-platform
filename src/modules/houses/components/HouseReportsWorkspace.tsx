@@ -959,7 +959,7 @@ export function HouseReportsWorkspace({
                   type="file"
                   accept="application/pdf,.pdf"
                   onChange={handleReportPdfChange}
-                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                 />
               </label>
 
@@ -1052,7 +1052,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-red-500/15 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -1065,7 +1065,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -1099,7 +1099,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-red-500/15 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Видалити
                   </button>

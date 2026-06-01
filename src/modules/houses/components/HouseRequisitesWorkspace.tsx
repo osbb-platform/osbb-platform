@@ -260,7 +260,7 @@ export function HouseRequisitesWorkspace({
                   value={snapshot.iban}
                   onChange={(e) => updateField("iban", normalizeIban(e.target.value))}
                   placeholder="UA123456789012345678901234567"
-                  className={`w-full rounded-2xl border px-4 py-3 text-white ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-[var(--cms-text)] ${
                     ibanValid
                       ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text)]"
                       : "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)]"

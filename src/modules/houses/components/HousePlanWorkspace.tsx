@@ -989,7 +989,7 @@ export function HousePlanWorkspace({
                 ) : null}
               </div>
 
-              {pdfError ? <div className="mt-2 text-xs text-red-400">{pdfError}</div> : null}
+              {pdfError ? <div role="alert" className="mt-2 text-xs text-[var(--cms-danger-text)]">{pdfError}</div> : null}
 
               {selectedPdfFiles.length > 0 ? (
                 <div className="mt-4 space-y-2">
@@ -1060,7 +1060,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("publish")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                     </button>
@@ -1112,7 +1112,7 @@ export function HousePlanWorkspace({
 
             const priorityClasses =
               task.priority === "high"
-                ? "border-red-500/20 bg-red-500/15 text-[var(--cms-danger-text)]"
+                ? "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
                 : task.priority === "medium"
                   ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                   : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";

@@ -53,11 +53,11 @@ export function AdminThemeSwitch() {
   return (
     <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 md:col-span-2">
       <div className="mb-3">
-        <h3 className="text-lg font-semibold text-[var(--cms-text-primary)]">
+        <h3 className="text-lg font-semibold text-[var(--cms-text)]">
           Налаштування теми
         </h3>
 
-        <p className="mt-2 text-sm text-[var(--cms-text-secondary)]">
+        <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
           Оберіть режим відображення робочої зони платформи.
         </p>
       </div>

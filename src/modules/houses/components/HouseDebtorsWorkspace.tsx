@@ -741,8 +741,8 @@ export function HouseDebtorsWorkspace({
                 paymentBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : hasPaymentUrl && !isPaymentUrlValid
-                    ? "bg-amber-500/20 text-[var(--cms-warning-text)]"
-                    : "bg-red-500/20 text-[var(--cms-danger-text)]"
+                    ? "bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                    : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
               }`}>
                 {paymentBlockReady
                   ? "Блок оплати заповнено"
@@ -854,7 +854,7 @@ export function HouseDebtorsWorkspace({
                 <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   {payment.note || "Опис блоку оплати з’явиться тут."}
                 </div>
-                <div className="mt-4 inline-flex rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950">
+                <div className="mt-4 inline-flex rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)]">
                   {payment.buttonLabel || "Оплатити"}
                 </div>
               </div>
@@ -912,7 +912,7 @@ export function HouseDebtorsWorkspace({
               <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                 calculatorBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                  : "bg-red-500/20 text-[var(--cms-danger-text)]"
+                  : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
               }`}>
                 {calculatorBlockReady ? "Калькулятор збережено" : "Калькулятор не збережено"}
               </div>
@@ -1232,7 +1232,7 @@ export function HouseDebtorsWorkspace({
                           <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.accountNumber}</td>
                           <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.ownerName}</td>
                           <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{formatArea(row.area)}</td>
-                          <td className="px-4 py-3 text-sm font-medium text-white">{row.amount}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-[var(--cms-text)]">{row.amount}</td>
                           <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.days || "—"}</td>
                         </tr>
                       ))}

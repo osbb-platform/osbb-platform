@@ -250,7 +250,7 @@ export function HouseRegistryCard({
 
                 {house.district ? (
                   <span
-                    className="rounded-full px-3 py-1 text-xs font-medium text-white"
+                    className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
                     style={{ backgroundColor: house.district.theme_color }}
                   >
                     {house.district.name}
@@ -309,7 +309,7 @@ export function HouseRegistryCard({
   >
     <MessageIcon />
     {localUnreadCount > 0 ? (
-      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
         {localUnreadCount > 9 ? "9+" : localUnreadCount}
       </span>
     ) : null}
@@ -538,6 +538,7 @@ export function HouseRegistryCard({
                 type="button"
                 onClick={() => setIsTariffOpen(false)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                aria-label="Закрити панель налаштування віджетів"
               >
                 ×
               </button>

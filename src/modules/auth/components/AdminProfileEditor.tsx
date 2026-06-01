@@ -129,11 +129,11 @@ export function AdminProfileEditor({
   }
 
   const editableInputClass = isEditing
-    ? "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
-    : "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text-primary)] outline-none transition";
+    ? "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+    : "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text)] outline-none transition";
 
   const readonlyInputClass =
-    "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text-secondary)] outline-none transition";
+    "w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-lg font-medium text-[var(--cms-text-muted)] outline-none transition";
 
   const access = getResolvedAccess(currentRole as typeof ROLES[keyof typeof ROLES] | null);
   const allowedSections = [
@@ -181,11 +181,11 @@ export function AdminProfileEditor({
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-4xl">
-            <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               Мій профіль
             </h1>
 
-            <p className="mt-3 text-base leading-7 text-[var(--cms-text-secondary)]">
+            <p className="mt-3 text-base leading-7 text-[var(--cms-text-muted)]">
               Тут зібрані ваші дані для роботи в CMS, рівень доступу та
               доступні робочі розділи.
             </p>
@@ -195,7 +195,7 @@ export function AdminProfileEditor({
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <div className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+              <div className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                 Рівень: {getRoleLabel(currentRole)}
               </div>
             </div>
@@ -227,7 +227,7 @@ export function AdminProfileEditor({
       <form ref={formRef} action={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">Ім&apos;я</label>
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">Ім&apos;я</label>
             <input
               type="text"
               name="fullName"
@@ -238,7 +238,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">Email</label>
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">Email</label>
             <input
               type="text"
               value={currentEmail || "Не вказано"}
@@ -248,7 +248,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">
               Рівень доступу
             </label>
             <input
@@ -260,7 +260,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">Статус</label>
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">Статус</label>
             <input
               type="text"
               value={getStatusLabel(currentStatus)}
@@ -270,7 +270,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 md:col-span-2">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">
               Доступні розділи CMS
             </label>
 
@@ -278,7 +278,7 @@ export function AdminProfileEditor({
               {allowedSections.map((section) => (
                 <div
                   key={section}
-                  className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-3 py-2 text-sm text-[var(--cms-text-secondary)]"
+                  className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-3 py-2 text-sm text-[var(--cms-text-muted)]"
                 >
                   {section}
                 </div>
@@ -287,7 +287,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 md:col-span-2">
-            <label className="mb-3 block text-sm text-[var(--cms-text-secondary)]">
+            <label className="mb-3 block text-sm text-[var(--cms-text-muted)]">
               Посада
             </label>
             <input
@@ -328,7 +328,7 @@ export function AdminProfileEditor({
             <button
               type="button"
               onClick={handleCancel}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text-primary)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text)]"
             >
               Скасувати
             </button>
@@ -340,15 +340,15 @@ export function AdminProfileEditor({
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+              <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                 Доступи будинків
               </div>
 
-              <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text-primary)]">
+              <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
                 Поточні коди доступу
               </h2>
 
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--cms-text-secondary)]">
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--cms-text-muted)]">
                 Актуальний список будинків платформи та їхніх поточних кодів доступу для
                 входу мешканців.
               </p>
@@ -358,7 +358,7 @@ export function AdminProfileEditor({
               <select
                 value={selectedDistrictId}
                 onChange={(event) => setSelectedDistrictId(event.target.value)}
-                className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 <option value="">Усі райони</option>
                 {districtOptions.map((district) => (
@@ -382,7 +382,7 @@ export function AdminProfileEditor({
                   className="flex flex-col gap-3 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 md:flex-row md:items-center md:justify-between"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-[var(--cms-text-primary)]">
+                    <div className="text-sm font-semibold text-[var(--cms-text)]">
                       {house.name}
                     </div>
                     <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
@@ -391,7 +391,7 @@ export function AdminProfileEditor({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2 text-sm font-medium tracking-[0.2em] text-[var(--cms-text-primary)]">
+                    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2 text-sm font-medium tracking-[0.2em] text-[var(--cms-text)]">
                       {house.currentAccessCode ?? "Не задано"}
                     </div>
 
@@ -401,7 +401,7 @@ export function AdminProfileEditor({
                         handleCopy(house.id, house.currentAccessCode)
                       }
                       disabled={!house.currentAccessCode}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-primary)] transition hover:bg-[var(--cms-bg-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label={`Скопіювати код доступу будинку ${house.name}`}
                       title={
                         copiedHouseId === house.id
@@ -415,7 +415,7 @@ export function AdminProfileEditor({
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-secondary)]">
+              <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-muted)]">
                 Будинки поки не знайдені.
               </div>
             )}

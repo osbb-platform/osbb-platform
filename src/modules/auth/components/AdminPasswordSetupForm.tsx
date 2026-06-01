@@ -167,52 +167,52 @@ export function AdminPasswordSetupForm({
       : "Введіть новий пароль для входу.";
 
   return (
-    <div className="w-full rounded-[32px] border border-white/10 bg-[#09162f] p-6 shadow-sm">
-      <div className="mb-6 inline-flex rounded-full bg-white/8 px-4 py-2 text-sm text-white/80 sm:text-lg">
+    <div className="w-full rounded-[32px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-sm">
+      <div className="mb-6 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm text-[var(--cms-text-muted)] sm:text-lg">
         {mode === "complete-registration"
           ? "Створення пароля"
           : "Відновлення доступу"}
       </div>
 
-      <h1 className="mb-4 text-4xl font-semibold text-white sm:text-6xl">
+      <h1 className="mb-4 text-4xl font-semibold text-[var(--cms-text)] sm:text-6xl">
         {title}
       </h1>
 
-      <p className="mb-8 max-w-md text-lg leading-8 text-[#94A3B8]  sm:leading-10">
+      <p className="mb-8 max-w-md text-lg leading-8 text-[var(--cms-text-muted)] sm:leading-10">
         {description}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         <div>
-          <label className="mb-3 block text-lg text-white sm:text-xl">
+          <label className="mb-3 block text-lg text-[var(--cms-text)] sm:text-xl">
             Пароль
           </label>
           <input
             type="password" autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-4 py-3 text-base text-white outline-none "
+            className="w-full rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)] disabled:opacity-60"
             placeholder="Не менше 8 символів"
             disabled={status !== "ready"}
           />
         </div>
 
         <div>
-          <label className="mb-3 block text-lg text-white sm:text-xl">
+          <label className="mb-3 block text-lg text-[var(--cms-text)] sm:text-xl">
             Підтвердіть пароль
           </label>
           <input
             type="password" autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[#22345A] bg-[#020817] px-4 py-3 text-base text-white outline-none "
+            className="w-full rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)] disabled:opacity-60"
             placeholder="Повторіть пароль"
             disabled={status !== "ready"}
           />
         </div>
 
         {error ? (
-          <div className="rounded-3xl border border-red-500 bg-red-500/10 px-6 py-4 text-lg text-red-300 ">
+          <div role="alert" className="rounded-3xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-6 py-4 text-lg text-[var(--cms-danger-text)]">
             {error}
           </div>
         ) : null}
@@ -220,7 +220,7 @@ export function AdminPasswordSetupForm({
         <button
           type="submit"
           disabled={status !== "ready"}
-          className="rounded-3xl bg-white px-5 py-3 text-base font-medium text-[#0B1120] disabled:opacity-50 "
+          className="rounded-3xl bg-[var(--cms-primary)] px-5 py-3 text-base font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-50"
         >
           Зберегти пароль
         </button>

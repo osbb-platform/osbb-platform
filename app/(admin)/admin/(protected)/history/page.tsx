@@ -123,8 +123,8 @@ function getRetentionMessage(tab: PlatformHistoryTab) {
 
 function getSourceBadgeClasses(sourceType: "cms" | "house_portal") {
   return sourceType === "house_portal"
-    ? "border-emerald-800 bg-emerald-950/60 text-emerald-200"
-    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]";
+    ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]";
 }
 
 
@@ -313,15 +313,15 @@ export default async function AdminHistoryPage({
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
           Історія
         </div>
 
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
           Історія
         </h1>
 
-        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-secondary)]">
+        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
           Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
         </p>
       </div>
@@ -356,7 +356,7 @@ export default async function AdminHistoryPage({
         </div>
 
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             {tab === "all"
               ? "Усі події"
               : tab === "cms"
@@ -364,17 +364,17 @@ export default async function AdminHistoryPage({
                 : "Події будинків"}
           </h2>
 
-          <div className="text-sm text-[var(--cms-text-secondary)]">
+          <div className="text-sm text-[var(--cms-text-muted)]">
             Записів: {result.totalCount}
           </div>
         </div>
 
         {result.items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-6 py-8">
-            <div className="text-lg font-semibold text-[var(--cms-text-primary)]">
+            <div className="text-lg font-semibold text-[var(--cms-text)]">
               {emptyState.title}
             </div>
-            <div className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-secondary)]">
+            <div className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
               {emptyState.description}
             </div>
           </div>
@@ -426,7 +426,7 @@ export default async function AdminHistoryPage({
                       </span>
                     </div>
 
-                    <div className="text-[var(--cms-text-secondary)]">
+                    <div className="text-[var(--cms-text-muted)]">
                       {formatDate(item.created_at)}
                     </div>
 
@@ -442,7 +442,7 @@ export default async function AdminHistoryPage({
                       </span>
                     </div>
 
-                    <div className="text-[var(--cms-text-secondary)]">
+                    <div className="text-[var(--cms-text-muted)]">
                       <div>{item.entity_label ?? "Об’єкт не вказано"}</div>
                       <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
                         {houseText}
@@ -452,15 +452,15 @@ export default async function AdminHistoryPage({
                       </div>
                     </div>
 
-                    <div className="text-[var(--cms-text-primary)]">
+                    <div className="text-[var(--cms-text)]">
                       {String(item.main_section_label ?? "—")}
                     </div>
 
-                    <div className="text-[var(--cms-text-secondary)]">
+                    <div className="text-[var(--cms-text-muted)]">
                       {String(item.sub_section_label ?? "—")}
                     </div>
 
-                    <div className="text-[var(--cms-text-secondary)]">{actorText}</div>
+                    <div className="text-[var(--cms-text-muted)]">{actorText}</div>
                   </div>
                 );
               })}
@@ -477,7 +477,7 @@ export default async function AdminHistoryPage({
               })}`}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
                 result.page > 1
-                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
                   : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
               }`}
             >
@@ -502,7 +502,7 @@ export default async function AdminHistoryPage({
                     className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm font-medium transition ${
                       isActive
                         ? "bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
-                        : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                        : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
                     }`}
                   >
                     {pageNumber}
@@ -520,7 +520,7 @@ export default async function AdminHistoryPage({
               })}`}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
                 result.page < result.totalPages
-                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
                   : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
               }`}
             >

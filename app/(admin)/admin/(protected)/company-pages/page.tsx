@@ -39,15 +39,15 @@ export default async function AdminCompanyPagesPage() {
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               Сайт компании
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               Управление главной страницей
             </h1>
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-secondary)]">
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
               Здесь собраны обращения с главной страницы и базовая статистика поиска домов.
             </p>
           </div>
@@ -56,12 +56,12 @@ export default async function AdminCompanyPagesPage() {
             <Link
               href="/"
               target="_blank"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]"
             >
               <EyeIcon />
             </Link>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-success-text)]">
               Заявки: {requests.length}
             </div>
 
@@ -69,7 +69,7 @@ export default async function AdminCompanyPagesPage() {
               Новые: {unreadRequestsCount}
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               Поиски: {searchStats.totalSearches}
             </div>
           </div>
@@ -78,22 +78,22 @@ export default async function AdminCompanyPagesPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-          <div className="text-sm text-[var(--cms-text-secondary)]">Всего поисков</div>
-          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text-primary)]">
+          <div className="text-sm text-[var(--cms-text-muted)]">Всего поисков</div>
+          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text)]">
             {searchStats.totalSearches}
           </div>
         </div>
 
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-          <div className="text-sm text-[var(--cms-text-secondary)]">Без результатов</div>
-          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text-primary)]">
+          <div className="text-sm text-[var(--cms-text-muted)]">Без результатов</div>
+          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text)]">
             {searchStats.noResults}
           </div>
         </div>
 
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-          <div className="text-sm text-[var(--cms-text-secondary)]">Клики “Перейти в кабинет”</div>
-          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text-primary)]">
+          <div className="text-sm text-[var(--cms-text-muted)]">Клики “Перейти в кабинет”</div>
+          <div className="mt-2 text-3xl font-semibold text-[var(--cms-text)]">
             {searchStats.resultClicks}
           </div>
         </div>
@@ -101,13 +101,13 @@ export default async function AdminCompanyPagesPage() {
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-          <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             Популярные поисковые запросы
           </h2>
 
           <div className="mt-6 grid gap-3">
             {searchStats.topQueries.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] px-4 py-4 text-[var(--cms-text-secondary)]">
+              <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] px-4 py-4 text-[var(--cms-text-muted)]">
                 Пока нет данных для статистики.
               </div>
             ) : (
@@ -116,8 +116,8 @@ export default async function AdminCompanyPagesPage() {
                   key={item.query}
                   className="flex items-center justify-between rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3"
                 >
-                  <div className="font-medium text-[var(--cms-text-primary)]">{item.query}</div>
-                  <div className="text-sm text-[var(--cms-text-secondary)]">{item.total}</div>
+                  <div className="font-medium text-[var(--cms-text)]">{item.query}</div>
+                  <div className="text-sm text-[var(--cms-text-muted)]">{item.total}</div>
                 </div>
               ))
             )}
@@ -125,7 +125,7 @@ export default async function AdminCompanyPagesPage() {
         </div>
 
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-          <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             Заявки на подключение домов
           </h2>
 

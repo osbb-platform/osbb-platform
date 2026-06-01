@@ -125,7 +125,7 @@ export function EditInformationFaqForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass}>
+        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
           ×
         </button>
       </div>

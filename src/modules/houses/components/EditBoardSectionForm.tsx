@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type {
   AdminHouseBoard,
   AdminHouseBoardMember,
@@ -244,6 +245,8 @@ export function EditBoardSectionForm({
 
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<BoardDraft | null>(null);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const chairman = roles.find((item) => item.status === "chairman") ?? null;
   const viceChairman =
@@ -275,11 +278,15 @@ export function EditBoardSectionForm({
   function closeWorkspace() {
     setWorkspaceMode("idle");
     setDraft(null);
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
   }
 
   function openCreateMode() {
     if (readOnlyMode) return;
 
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
     setWorkspaceMode("create");
     setDraft(createEmptyDraft(getDefaultStatusByTab(activeTab)));
   }
@@ -290,6 +297,8 @@ export function EditBoardSectionForm({
     const role = roles.find((item) => item.id === roleId);
     if (!role) return;
 
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
     setWorkspaceMode("edit");
     setDraft(toDraft(role));
   }
@@ -320,12 +329,12 @@ export function EditBoardSectionForm({
     const trimmedDescription = draft.description.trim();
 
     if (!trimmedName) {
-      window.alert("Вкажіть ім’я.");
+      setWorkspaceError("Вкажіть ім’я.");
       return;
     }
 
     if (draft.status === "chairman" && chairman && chairman.id !== draft.id) {
-      window.alert(
+      setWorkspaceError(
         "Голову правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку голови правління.",
       );
       return;
@@ -336,11 +345,13 @@ export function EditBoardSectionForm({
       viceChairman &&
       viceChairman.id !== draft.id
     ) {
-      window.alert(
+      setWorkspaceError(
         "Заступника голови правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку заступника голови правління.",
       );
       return;
     }
+
+    setWorkspaceError(null);
 
     const normalizedRole = {
       id: draft.id,
@@ -417,13 +428,10 @@ export function EditBoardSectionForm({
       return;
     }
 
-    const confirmed = window.confirm("Видалити цю роль?");
-    if (!confirmed) {
-      return;
-    }
-
     const existing = roles.find((item) => item.id === draft.id);
     if (!existing) {
+      setWorkspaceError("Не вдалося знайти роль для видалення.");
+      setIsDeleteConfirmOpen(false);
       return;
     }
 
@@ -607,6 +615,15 @@ export function EditBoardSectionForm({
               </button>
             </div>
 
+            {workspaceError ?? lastError ? (
+              <div
+                role="alert"
+                className="mb-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+              >
+                {workspaceError ?? lastError}
+              </div>
+            ) : null}
+
             <div className="grid gap-6">
               <div className="grid gap-4">
                 <div>
@@ -720,7 +737,7 @@ export function EditBoardSectionForm({
                   {workspaceMode === "edit" ? (
                     <button
                       type="button"
-                      onClick={handleDeleteDraftRole}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                       className={[adminDangerButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ")}
                     >
                       Видалити
@@ -768,7 +785,7 @@ export function EditBoardSectionForm({
                     </div>
 
                     {role.description ? (
-                      <div className="mt-3 text-sm leading-6 text-slate-500">
+                      <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                         {role.description.length > 140
                           ? `${role.description.slice(0, 140).trim()}…`
                           : role.description}
@@ -791,6 +808,22 @@ export function EditBoardSectionForm({
           </div>
         ) : null}
       </form>
+      <PlatformConfirmModal
+        open={isDeleteConfirmOpen}
+        tone="destructive"
+        title="Видалити роль?"
+        description="Цю дію не можна буде скасувати."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        isPending={isPending}
+        onConfirm={handleDeleteDraftRole}
+        onCancel={() => {
+          if (!isPending) {
+            setIsDeleteConfirmOpen(false);
+          }
+        }}
+      />
+
     </div>
   );
 }

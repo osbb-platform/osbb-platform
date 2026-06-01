@@ -160,7 +160,7 @@ export function CreateInformationPostInlineForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass}>
+        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму створення повідомлення">
           ×
         </button>
       </div>

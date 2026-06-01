@@ -100,7 +100,7 @@ function getLifecycleClasses(lifecycle: HouseDocumentLifecycle) {
     return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
   }
 
-  return "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)]";
+  return "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)]";
 }
 
 function formatDate(value: string | null) {
@@ -175,7 +175,7 @@ export function HouseDocumentsWorkspace({
   canDelete = true,
   embedded = false,
 }: HouseDocumentsWorkspaceProps) {
-  const { dispatch, isPending } = useAdminContentCommand();
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
@@ -810,7 +810,7 @@ export function HouseDocumentsWorkspace({
                     setFileError(null);
                     setSelectedFile(file);
                   }}
-                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                 />
 
                 <p className="mt-2 text-xs text-[var(--cms-text-soft)]">
@@ -818,7 +818,7 @@ export function HouseDocumentsWorkspace({
                 </p>
 
                 {fileError ? (
-                  <div className="mt-2 text-xs text-red-400">{fileError}</div>
+                  <div role="alert" className="mt-2 text-xs text-[var(--cms-danger-text)]">{fileError}</div>
                 ) : null}
 
                 {selectedFile ? (
@@ -947,11 +947,11 @@ export function HouseDocumentsWorkspace({
                         setSelectedFile(file);
                         setRemoveAttachment(false);
                       }}
-                      className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                      className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                     />
 
                     {fileError ? (
-                      <div className="mt-2 text-xs text-red-400">{fileError}</div>
+                      <div role="alert" className="mt-2 text-xs text-[var(--cms-danger-text)]">{fileError}</div>
                     ) : null}
 
                     {selectedFile ? (
@@ -965,9 +965,12 @@ export function HouseDocumentsWorkspace({
               </div>
             ) : null}
 
-            {actionError ? (
-              <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-                {actionError}
+            {actionError ?? lastError ? (
+              <div
+                role="alert"
+                className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+              >
+                {actionError ?? lastError}
               </div>
             ) : null}
 
@@ -1001,7 +1004,7 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -1092,7 +1095,7 @@ export function HouseDocumentsWorkspace({
                         </div>
 
                         {isSelected ? (
-                          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white">
+                          <span className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                             Відкрито у формі
                           </span>
                         ) : null}

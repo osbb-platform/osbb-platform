@@ -52,7 +52,7 @@ export default async function AdminEmployeesPage({
       />
 
       {employees.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/50 p-6 text-slate-400">
+        <div className="rounded-3xl border border-dashed border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-6 text-[var(--cms-text-muted)]">
           За поточними фільтрами співробітників не знайдено.
         </div>
       ) : (

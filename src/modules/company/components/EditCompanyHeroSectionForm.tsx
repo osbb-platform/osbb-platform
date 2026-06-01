@@ -42,25 +42,25 @@ export function EditCompanyHeroSectionForm({
       <input type="hidden" name="companyPageId" value={companyPageId} />
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
           Назва секції
         </label>
         <input
           name="title"
           type="text"
           defaultValue={section.title ?? ""}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
           Статус
         </label>
         <select
           name="status"
           defaultValue={section.status}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
         >
           <option value="draft">Чернетка</option>
           <option value="in_review">На модерації</option>
@@ -70,38 +70,38 @@ export function EditCompanyHeroSectionForm({
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
           Заголовок
         </label>
         <input
           name="headline"
           type="text"
           defaultValue={headline}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
           Підзаголовок
         </label>
         <textarea
           name="subheadline"
           defaultValue={subheadline}
           rows={4}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
       <div className="md:col-span-2">
-        <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+        <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
           Текст CTA
         </label>
         <input
           name="ctaLabel"
           type="text"
           defaultValue={ctaLabel}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 

@@ -6,6 +6,10 @@ import {
   createPlatformTask,
   type CreatePlatformTaskState,
 } from "@/src/modules/tasks/actions/createPlatformTask";
+import {
+  adminButtonDisabledClass,
+  adminPrimaryButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type TaskAssigneeOption = {
   id: string;
@@ -201,7 +205,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
+                  className={[adminPrimaryButtonClass, adminButtonDisabledClass].join(" ")}
                 >
                   {isPending ? "Створюємо..." : "Створити задачу"}
                 </button>

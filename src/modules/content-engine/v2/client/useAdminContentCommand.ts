@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { dispatchAdminCommand } from "@/src/modules/content-engine/v2/dispatch";
 import { useToast } from "@/src/shared/ui/toast/ToastProvider";
+import { errorMessages } from "@/src/modules/content-engine/v2/client/errorMessages";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
 
 type DispatchOptions = {
@@ -42,7 +43,7 @@ export function useAdminContentCommand() {
           toast({
             tone: "error",
             title: options.errorPrefix ?? "Помилка",
-            description: result.error,
+            description: result.code ? (errorMessages[result.code] ?? result.error) : result.error,
           });
           resolve(null);
           return;

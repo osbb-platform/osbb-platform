@@ -1,3 +1,4 @@
+// Canonical CMS tokens are defined in app/globals.css; do not introduce parallel CMS token names.
 export const COMPANY_THEME = {
   primary: "#f97316",
   secondary: "#ef4444",

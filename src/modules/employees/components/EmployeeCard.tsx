@@ -66,11 +66,11 @@ export function EmployeeCard({ currentUserId,
     <article className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--cms-text-primary)]">
+          <h3 className="text-lg font-semibold text-[var(--cms-text)]">
             {employeeLabel}
           </h3>
 
-          <p className="mt-1 text-sm text-[var(--cms-text-secondary)]">
+          <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
             {employee.email ?? "Email з’явиться після активації профілю"}
           </p>
 
@@ -80,11 +80,11 @@ export function EmployeeCard({ currentUserId,
         </div>
 
         <div className="flex flex-wrap items-start gap-2">
-          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
             {getRoleLabel(employee.role)}
           </span>
 
-          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
             {getStatusLabel(employee.status)}
           </span>
         </div>
@@ -95,7 +95,7 @@ export function EmployeeCard({ currentUserId,
           <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Створено
           </div>
-          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text)]">
             {formatDate(employee.createdAt)}
           </div>
         </div>
@@ -104,7 +104,7 @@ export function EmployeeCard({ currentUserId,
           <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Запрошення
           </div>
-          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text)]">
             {formatDate(employee.lastInviteSentAt ?? employee.invitedAt)}
           </div>
         </div>
@@ -113,7 +113,7 @@ export function EmployeeCard({ currentUserId,
           <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Активація
           </div>
-          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text)]">
             {formatDate(employee.activatedAt)}
           </div>
         </div>
@@ -122,7 +122,7 @@ export function EmployeeCard({ currentUserId,
           <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
             Стан
           </div>
-          <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
+          <div className="mt-2 text-sm font-medium text-[var(--cms-text)]">
             {employee.isActive ? "У робочому списку" : "Вимкнено"}
           </div>
         </div>

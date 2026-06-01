@@ -31,6 +31,9 @@ export const adminSelectClass = adminInputClass;
 export const adminIconButtonClass =
   "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]";
 
+export const adminButtonDisabledClass =
+  "disabled:cursor-not-allowed disabled:opacity-60";
+
 export const adminPrimaryButtonClass =
   "inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90";
 
@@ -55,8 +58,20 @@ export const adminBadgeBaseClass =
 export const adminTabBaseClass =
   "inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition";
 
+export const adminTabActiveClass =
+  "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]";
+
+export const adminTabInactiveClass =
+  "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]";
+
 export const adminTabCountBaseClass =
   "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold";
+
+export const adminTabCountActiveClass =
+  "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]";
+
+export const adminTabCountInactiveClass =
+  "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]";
 
 export const adminOverlayClass =
   "bg-[var(--cms-overlay)] backdrop-blur-sm";

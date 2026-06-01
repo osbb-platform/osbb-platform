@@ -29,17 +29,33 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+const TOAST_DURATION_MS: Record<ToastTone, number> = {
+  success: 4000,
+  info: 4000,
+  error: 6000,
+};
+
+const toastToneClass: Record<ToastTone, string> = {
+  success:
+    "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]",
+  error:
+    "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]",
+  info:
+    "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)]",
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Toast[]>([]);
 
   const toast = useCallback((input: ToastInput) => {
+    const tone = input.tone ?? "info";
     const id = Date.now() + Math.random();
 
     setItems((prev) => [
       ...prev,
       {
         id,
-        tone: input.tone ?? "info",
+        tone,
         title: input.title,
         description: input.description,
       },
@@ -47,7 +63,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     window.setTimeout(() => {
       setItems((prev) => prev.filter((item) => item.id !== id));
-    }, 4000);
+    }, TOAST_DURATION_MS[tone]);
   }, []);
 
   return (
@@ -58,14 +74,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {items.map((item) => (
           <div
             key={item.id}
-            className={`rounded-2xl px-4 py-3 text-sm shadow-xl ${
-              item.tone === "error"
-                ? "bg-red-600 text-white"
-                : item.tone === "success"
-                  ? "bg-emerald-600 text-white"
-                  : "bg-slate-800 text-white"
-            }`}
-            role="status"
+            className={`rounded-2xl border px-4 py-3 text-sm shadow-xl ${toastToneClass[item.tone]}`}
+            role={item.tone === "error" ? "alert" : "status"}
+            aria-live={item.tone === "error" ? "assertive" : "polite"}
           >
             <div className="font-semibold">{item.title}</div>
             {item.description ? (

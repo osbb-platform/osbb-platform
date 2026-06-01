@@ -6,10 +6,22 @@ import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getRoleLabel } from "@/src/shared/constants/roles/roles.constants";
 import type { ResolvedRoleAccess } from "@/src/shared/permissions/rbac.types";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
+import type { ComponentType, SVGProps } from "react";
+import {
+  BuildingIcon,
+  CompanySiteIcon,
+  DashboardIcon,
+  DoorIcon,
+  HistoryIcon,
+  MapPinIcon,
+  TaskListIcon,
+  UsersIcon,
+} from "@/src/shared/ui/icons/AdminInlineIcons";
 
 type NavigationItem = {
   href: string;
   label: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   visible?: boolean;
   badgeCount?: number;
 };
@@ -39,42 +51,50 @@ export function AdminSidebar({
     {
       href: ROUTES.admin.dashboard,
       label: "Панель керування",
+      icon: DashboardIcon,
       visible: access.topLevel.dashboard,
     },
     {
       href: ROUTES.admin.districts,
       label: "Райони",
+      icon: MapPinIcon,
       visible: access.topLevel.districts,
     },
     {
       href: ROUTES.admin.houses,
       label: "Будинки",
+      icon: BuildingIcon,
       visible: access.topLevel.houses,
     },
     {
       href: ROUTES.admin.apartments,
       label: "Квартири",
+      icon: DoorIcon,
       visible: access.topLevel.apartments,
     },
     {
       href: ROUTES.admin.tasks,
       label: "Задачі",
+      icon: TaskListIcon,
       visible: access.topLevel.tasks,
       badgeCount: activeTasksCount,
     },
     {
       href: ROUTES.admin.history,
       label: "Історія",
+      icon: HistoryIcon,
       visible: access.topLevel.history,
     },
     {
       href: ROUTES.admin.employees,
       label: "Співробітники",
+      icon: UsersIcon,
       visible: access.topLevel.employees,
     },
     {
       href: ROUTES.admin.companyPages,
       label: "Сайт компанії",
+      icon: CompanySiteIcon,
       visible: access.topLevel.companyPages,
     },
   ];
@@ -87,11 +107,11 @@ export function AdminSidebar({
     <aside className="w-full border-b border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-bg)] lg:flex lg:h-screen lg:w-72 lg:flex-col lg:border-b-0 lg:border-r">
       <div className="flex h-full min-h-0 flex-col">
         <div className="shrink-0 border-b border-[var(--cms-border-primary)] px-6 py-6">
-          <h2 className="mt-4 text-xl font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="mt-4 text-xl font-semibold text-[var(--cms-text)]">
             OSBB Platform
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-[var(--cms-text-secondary)]">
+          <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
             Панель керування керуючої компанії
           </p>
         </div>
@@ -103,6 +123,8 @@ export function AdminSidebar({
               .map((item) => {
                 const isActive = isItemActive(pathname, item.href);
 
+                const Icon = item.icon;
+
                 return (
                   <Link
                     key={item.href}
@@ -110,19 +132,20 @@ export function AdminSidebar({
                     aria-current={isActive ? "page" : undefined}
                     className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "border border-amber-500/40 bg-[rgba(217,119,6,0.12)] text-white shadow-[inset_0_1px_0_rgba(251,191,36,0.18)]"
-                        : "text-[var(--cms-text-secondary)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text-primary)]"
+                        ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                        : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)]"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span>{item.label}</span>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="truncate">{item.label}</span>
 
                       {item.href === ROUTES.admin.tasks ? (
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
                             isActive
-                              ? "bg-white/15 text-white"
-                              : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]"
+                              ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                              : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]"
                           }`}
                         >
                           DEMO
@@ -134,8 +157,8 @@ export function AdminSidebar({
                       <span
                         className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                           isActive
-                            ? "bg-white/15 text-white"
-                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-primary)]"
+                            ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
                         }`}
                       >
                         {item.badgeCount > 99 ? "99+" : item.badgeCount}
@@ -157,15 +180,15 @@ export function AdminSidebar({
                 : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] hover:bg-[var(--cms-sidebar-hover)]"
             }`}
           >
-            <div className="mt-3 text-sm font-medium text-[var(--cms-text-primary)]">
+            <div className="mt-3 text-sm font-medium text-[var(--cms-text)]">
               {currentUser.fullName ?? currentUser.email ?? "Не вказано"}
             </div>
 
-            <div className="mt-1 text-sm text-[var(--cms-text-secondary)]">
+            <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
               {currentUser.email ?? "Електронну пошту не вказано"}
             </div>
 
-            <div className="mt-3 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+            <div className="mt-3 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               {getRoleLabel(currentUser.role)}
             </div>
           </Link>

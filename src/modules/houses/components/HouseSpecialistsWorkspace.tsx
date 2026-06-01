@@ -143,6 +143,7 @@ export function HouseSpecialistsWorkspace({
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -189,15 +190,18 @@ export function HouseSpecialistsWorkspace({
     setWorkspaceMode("idle");
     setDraft(null);
     setConfirmAction(null);
+    setWorkspaceError(null);
   }
 
   function openCreateMode() {
+    setWorkspaceError(null);
     setActiveTab("draft");
     setWorkspaceMode("create");
     setDraft(createEmptyDraft(nextSortOrder));
   }
 
   function openEditMode(item: HouseSpecialistSnapshot) {
+    setWorkspaceError(null);
     setWorkspaceMode("edit");
     setDraft(toDraft(item));
   }
@@ -255,20 +259,22 @@ export function HouseSpecialistsWorkspace({
     const phones = normalizePhones(draft.phones);
 
     if (!title) {
-      window.alert("Вкажіть ім’я та прізвище або назву компанії.");
+      setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
       return;
     }
 
     if (!category) {
-      window.alert("Оберіть категорію спеціаліста.");
+      setWorkspaceError("Оберіть категорію спеціаліста.");
       return;
     }
 
     const hasInvalidPhone = phones.some((phone) => !isValidPhone(phone));
     if (hasInvalidPhone) {
-      window.alert("Введіть коректний номер телефону.");
+      setWorkspaceError("Введіть коректний номер телефону.");
       return;
     }
+
+    setWorkspaceError(null);
 
     const payload = {
       title,
@@ -295,7 +301,7 @@ export function HouseSpecialistsWorkspace({
     }
 
     if (!draft.id || typeof draft.lockVersion !== "number") {
-      window.alert("Не вдалося визначити картку спеціаліста для оновлення.");
+      setWorkspaceError("Не вдалося визначити картку спеціаліста для оновлення.");
       return;
     }
 
@@ -568,6 +574,15 @@ export function HouseSpecialistsWorkspace({
               ×
             </button>
           </div>
+
+          {workspaceError ?? lastError ? (
+            <div
+              role="alert"
+              className="mb-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+            >
+              {workspaceError ?? lastError}
+            </div>
+          ) : null}
 
           <div className="grid gap-5">
             <div>

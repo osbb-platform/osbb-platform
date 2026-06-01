@@ -25,7 +25,7 @@ export function CreateAnnouncementInlineForm({
   housePageId,
   onClose,
 }: CreateAnnouncementInlineFormProps) {
-  const { dispatch } = useAdminContentCommand();
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -115,12 +115,19 @@ export function CreateAnnouncementInlineForm({
           />
         </div>
 
+        {lastError ? (
+          <p role="alert" className="text-sm text-[var(--cms-danger-text)]">
+            {lastError}
+          </p>
+        ) : null}
+
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl"].join(" ")}
+            disabled={isPending}
+            className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
           >
-            Зберегти
+            {isPending ? "Зберігаємо..." : "Зберегти"}
           </button>
         </div>
       </form>

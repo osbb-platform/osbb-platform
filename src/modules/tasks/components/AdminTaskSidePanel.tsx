@@ -16,6 +16,7 @@ import { deletePlatformTask } from "@/src/modules/tasks/actions/deletePlatformTa
 import { restorePlatformTask } from "@/src/modules/tasks/actions/restorePlatformTask";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { adminButtonDisabledClass } from "@/src/shared/ui/admin/adminStyles";
 import type { AdminTaskBoardItem } from "@/src/modules/tasks/types/tasks.types";
 
 type AdminTaskSidePanelProps = {
@@ -54,8 +55,7 @@ function SaveTaskButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
-    >
+      className={["inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
       {pending ? "Зберігаємо..." : "Зберегти"}
     </button>
   );
@@ -77,8 +77,7 @@ function CommentSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
-    >
+      className={["inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
       {pending ? "Додаємо..." : "Додати коментар"}
     </button>
   );
@@ -125,10 +124,10 @@ function DetailRow({
 }) {
   return (
     <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4">
-      <div className="text-xs uppercase tracking-wide text-[var(--cms-text-secondary)]">
+      <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
         {label}
       </div>
-      <div className="mt-2 text-sm font-medium text-[var(--cms-text-primary)]">
+      <div className="mt-2 text-sm font-medium text-[var(--cms-text)]">
         {value}
       </div>
     </div>
@@ -220,7 +219,7 @@ export function AdminTaskSidePanel({
 
               <h2
                 id="task-panel-title"
-                className="mt-4 text-xl font-semibold leading-7 text-[var(--cms-text-primary)]"
+                className="mt-4 text-xl font-semibold leading-7 text-[var(--cms-text)]"
               >
                 {task.title}
               </h2>
@@ -229,7 +228,7 @@ export function AdminTaskSidePanel({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]"
               aria-label="Закрити"
             >
               ×
@@ -264,7 +263,7 @@ export function AdminTaskSidePanel({
                     "inline-flex items-center rounded-full px-5 py-3 text-sm font-medium transition",
                     isActive
                       ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                      : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-secondary)] hover:bg-[var(--cms-bg-tertiary)]",
+                      : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-tertiary)]",
                   ].join(" ")}
                 >
                   {tab.label}
@@ -280,7 +279,7 @@ export function AdminTaskSidePanel({
 
               <div className="space-y-4 pb-32">
                 <label className="block">
-                  <span className="text-sm font-medium text-[var(--cms-text-primary)]">
+                  <span className="text-sm font-medium text-[var(--cms-text)]">
                     Назва задачі
                   </span>
                   <input
@@ -292,7 +291,7 @@ export function AdminTaskSidePanel({
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-medium text-[var(--cms-text-primary)]">
+                  <span className="text-sm font-medium text-[var(--cms-text)]">
                     Опис
                   </span>
                   <textarea
@@ -364,13 +363,13 @@ export function AdminTaskSidePanel({
 
                   {task.taskType === "manual" ? (
                     <label className="block rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4">
-                      <span className="text-xs uppercase tracking-wide text-[var(--cms-text-secondary)]">
+                      <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                         Будинок
                       </span>
                       <select
                         name="houseId"
                         defaultValue={task.primaryHouseId ?? ""}
-                        className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text-primary)]"
+                        className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text)]"
                       >
                         <option value="">Без будинку</option>
                         {houses.map((house) => (
@@ -431,13 +430,13 @@ export function AdminTaskSidePanel({
                 <input type="hidden" name="taskId" value={task.id} />
 
                 <label className="block">
-                  <span className="text-sm font-medium text-[var(--cms-text-primary)]">
+                  <span className="text-sm font-medium text-[var(--cms-text)]">
                     Новий коментар
                   </span>
                   <textarea
                     name="content"
                     rows={3}
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
                     placeholder="Напишіть короткий коментар по задачі"
                   />
                 </label>
@@ -467,20 +466,20 @@ export function AdminTaskSidePanel({
                     className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="text-sm font-semibold text-[var(--cms-text-primary)]">
+                      <div className="text-sm font-semibold text-[var(--cms-text)]">
                         {comment.authorName ?? "Система"}
                       </div>
-                      <div className="text-xs text-[var(--cms-text-secondary)]">
+                      <div className="text-xs text-[var(--cms-text-muted)]">
                         {formatDateTime(comment.createdAt)}
                       </div>
                     </div>
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--cms-text-secondary)]">
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--cms-text-muted)]">
                       {comment.content}
                     </p>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-secondary)]">
+                <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-muted)]">
                   Коментарів поки немає.
                 </div>
               )}
@@ -491,7 +490,7 @@ export function AdminTaskSidePanel({
           {activeTab === "history" ? (
             <div className="overflow-hidden rounded-2xl border border-[var(--cms-border-primary)]">
               <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="bg-[var(--cms-bg-secondary)] text-xs uppercase tracking-wide text-[var(--cms-text-secondary)]">
+                <thead className="bg-[var(--cms-bg-secondary)] text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                   <tr>
                     <th className="px-4 py-3">Дата</th>
                     <th className="px-4 py-3">Дія</th>
@@ -504,19 +503,19 @@ export function AdminTaskSidePanel({
                   {task.events.length ? (
                     task.events.map((event) => (
                       <tr key={event.id} className="bg-[var(--cms-bg-primary)]">
-                        <td className="px-4 py-3 text-[var(--cms-text-secondary)]">
+                        <td className="px-4 py-3 text-[var(--cms-text-muted)]">
                           {formatDateTime(event.createdAt)}
                         </td>
-                        <td className="px-4 py-3 font-medium text-[var(--cms-text-primary)]">
+                        <td className="px-4 py-3 font-medium text-[var(--cms-text)]">
                           {event.actionLabel}
                         </td>
-                        <td className="px-4 py-3 text-[var(--cms-text-secondary)]">
+                        <td className="px-4 py-3 text-[var(--cms-text-muted)]">
                           {event.actorName ?? "Система"}
                         </td>
-                        <td className="px-4 py-3 text-[var(--cms-text-secondary)]">
+                        <td className="px-4 py-3 text-[var(--cms-text-muted)]">
                           {event.beforeValue ?? "—"}
                         </td>
-                        <td className="px-4 py-3 text-[var(--cms-text-primary)]">
+                        <td className="px-4 py-3 text-[var(--cms-text)]">
                           {event.afterValue ?? "—"}
                         </td>
                       </tr>
@@ -525,7 +524,7 @@ export function AdminTaskSidePanel({
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-6 text-center text-[var(--cms-text-secondary)]"
+                        className="px-4 py-6 text-center text-[var(--cms-text-muted)]"
                       >
                         Історії поки немає.
                       </td>

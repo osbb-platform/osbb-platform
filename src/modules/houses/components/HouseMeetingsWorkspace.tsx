@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { AdminHouseMeetingsSnapshot } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import {
   adminInputClass,
@@ -20,6 +21,7 @@ type MeetingLifecycleStatus =
   | "archived";
 
 type WorkspaceMode = "idle" | "create" | "edit";
+type ConfirmAction = "delete" | "publish" | null;
 
 type MeetingQuestion = {
   id: string;
@@ -390,6 +392,8 @@ export function HouseMeetingsWorkspace({
   const [manualVoteAnswers, setManualVoteAnswers] = useState<
     Record<string, ManualVoteChoice>
   >({});
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const counters = useMemo(
     () => ({
@@ -438,12 +442,14 @@ export function HouseMeetingsWorkspace({
 
   function openCreateMode() {
     if (!hasApartments) {
-      window.alert(
+      setWorkspaceError(
         "Спочатку заповніть розділ «Квартири» для цього будинку. Без списку квартир неможливо створити збори та запустити голосування.",
       );
       return;
     }
 
+    setWorkspaceError(null);
+    setConfirmAction(null);
     setMode("create");
     setSelectedMeetingId(null);
     setDraft(createEmptyMeeting());
@@ -463,6 +469,8 @@ export function HouseMeetingsWorkspace({
   }
 
   function closeWorkspace() {
+    setWorkspaceError(null);
+    setConfirmAction(null);
     setMode("idle");
     setSelectedMeetingId(null);
     setDraft(createEmptyMeeting());
@@ -765,7 +773,7 @@ export function HouseMeetingsWorkspace({
           draft.status !== "draft" &&
           draft.status !== "archived" ? (
             <label className="mt-4 block">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Статус після збереження
               </span>
               <select
@@ -814,7 +822,7 @@ export function HouseMeetingsWorkspace({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                   Дата зборів
                 </span>
                 <input
@@ -827,7 +835,7 @@ export function HouseMeetingsWorkspace({
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                   Час зборів
                 </span>
                 <input
@@ -904,7 +912,7 @@ export function HouseMeetingsWorkspace({
                             }
                             className={`rounded-xl border px-3 py-2 text-xs transition ${
                               manualVoteAnswers[question.id] === value
-                                ? "border-[var(--cms-border-strong)] bg-white text-slate-950"
+                                ? "border-[var(--cms-border-strong)] bg-[var(--cms-primary)] text-[var(--cms-primary-contrast)]"
                                 : "border-[var(--cms-border)] text-[var(--cms-text-muted)]"
                             }`}
                           >
@@ -923,7 +931,7 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartmentVote || !isComplete) {
-                        window.alert("Заповніть квартиру та всі відповіді.");
+                        setWorkspaceError("Заповніть квартиру та всі відповіді.");
                         return;
                       }
 
@@ -932,9 +940,11 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartment) {
-                        window.alert("Оберіть квартиру зі списку.");
+                        setWorkspaceError("Оберіть квартиру зі списку.");
                         return;
                       }
+
+                      setWorkspaceError(null);
 
                       const nextVote: ManualVoteEntry = {
                         apartmentId: selectedApartment.id,
@@ -1005,7 +1015,7 @@ export function HouseMeetingsWorkspace({
                       setManualVoteAnswers({});
                     }}
                     disabled={isPending}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] disabled:opacity-60"
+                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Зберегти голос квартири
                   </button>
@@ -1053,7 +1063,7 @@ export function HouseMeetingsWorkspace({
                                 ),
                               )
                             }
-                            className="text-sm text-rose-400"
+                            className="text-sm text-[var(--cms-danger-text)]"
                           >
                             🗑
                           </button>
@@ -1067,7 +1077,7 @@ export function HouseMeetingsWorkspace({
 
             {draft.status !== "review" && draft.status !== "completed" ? (
               <div className="border-t border-[var(--cms-border)] pt-4">
-              <div className="mb-3 text-sm font-semibold text-white">
+              <div className="mb-3 text-sm font-semibold text-[var(--cms-text)]">
                 Порядок денний / питання
               </div>
 
@@ -1198,7 +1208,7 @@ export function HouseMeetingsWorkspace({
                         draft.questions.length <= 1 ||
                         isPending
                       }
-                      className="mt-3 text-xs text-rose-400 disabled:opacity-40"
+                      className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
                     >
                       Видалити питання
                     </button>
@@ -1222,15 +1232,8 @@ export function HouseMeetingsWorkspace({
                 {mode === "edit" && draft.status === "draft" ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (
-                        selectedMeetingId &&
-                        window.confirm("Видалити чернетку зборів без можливості відновлення?")
-                      ) {
-                        deleteMeetingFromRegistry(selectedMeetingId);
-                      }
-                    }}
-                    className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)]"
+                    onClick={() => setConfirmAction("delete")}
+                    className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                   >
                     Видалити
                   </button>
@@ -1251,15 +1254,9 @@ export function HouseMeetingsWorkspace({
                 {mode === "edit" && draft.status === "draft" ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm("Підтвердити збори та перемістити їх в активні?")) {
-                        if (selectedMeetingId) {
-                          publishMeetingFromRegistry(selectedMeetingId);
-                        }
-                      }
-                    }}
+                    onClick={() => setConfirmAction("publish")}
                     disabled={isPending}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] disabled:opacity-60"
+                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Підтвердити
                   </button>
@@ -1276,7 +1273,7 @@ export function HouseMeetingsWorkspace({
                       }
                     }}
                     disabled={isPending}
-                    className="rounded-2xl border border-amber-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] disabled:opacity-60"
+                    className="rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Архівувати
                   </button>
@@ -1335,9 +1332,54 @@ export function HouseMeetingsWorkspace({
         )}
       </div>
 
-      {lastError ? (
-        <div className="mt-4 text-sm text-red-400">{lastError}</div>
+      {workspaceError ?? lastError ? (
+        <div
+          role="alert"
+          className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+        >
+          {workspaceError ?? lastError}
+        </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete"}
+        tone="destructive"
+        title="Видалити чернетку зборів?"
+        description="Чернетку буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        isPending={isPending}
+        onConfirm={() => {
+          if (selectedMeetingId) {
+            deleteMeetingFromRegistry(selectedMeetingId);
+          }
+        }}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish"}
+        tone="publish"
+        title="Підтвердити збори?"
+        description="Збори буде переміщено з чернеток до активних."
+        confirmLabel="Підтвердити"
+        pendingLabel="Підтверджуємо..."
+        isPending={isPending}
+        onConfirm={() => {
+          if (selectedMeetingId) {
+            publishMeetingFromRegistry(selectedMeetingId);
+          }
+        }}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -90,8 +90,8 @@ function getLevelLabel(level: string) {
 }
 
 function getLevelDotClasses(level: string) {
-  if (level === "danger") return "bg-red-400";
-  if (level === "warning") return "bg-amber-400";
+  if (level === "danger") return "bg-[var(--cms-danger-text)]";
+  if (level === "warning") return "bg-[var(--cms-warning-text)]";
   return "bg-[#85e874]";
 }
 
