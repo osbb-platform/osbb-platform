@@ -56,7 +56,7 @@ function KpiTile({
     slate: {
       valueClass: "text-[var(--cms-text)]",
       hintClass: "text-[var(--cms-text-muted)]",
-      badgeClass: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]",
+      badgeClass: "border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]",
     },
     amber: {
       valueClass: "text-[var(--cms-warning-text)]",
@@ -78,7 +78,7 @@ function KpiTile({
   const styles = accentMap[accent];
 
   return (
-    <div className="flex min-h-[200px] flex-col rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-5 text-center">
+    <div className="flex min-h-[200px] flex-col rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-center">
       <div className="flex justify-center">
         <div className={`inline-flex min-h-[30px] max-w-[160px] items-center justify-center rounded-full border px-2 py-0.5 text-[10px] font-medium leading-4 ${styles.badgeClass}`}>
           {label}
@@ -100,7 +100,7 @@ function KpiTile({
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-muted)]">
+    <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text-muted)]">
       {text}
     </div>
   );
@@ -111,8 +111,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+      <section className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+        <div className="inline-flex rounded-full border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
           Центр керування
         </div>
 
@@ -178,7 +178,7 @@ export default async function AdminDashboardPage() {
               {dashboard.quickLinks.map((item, index) => (
                 <div
                   key={`${item.id}-${index}`}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -194,7 +194,7 @@ export default async function AdminDashboardPage() {
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                   >
                     Перейти
                   </Link>
@@ -217,7 +217,7 @@ export default async function AdminDashboardPage() {
               {dashboard.publications.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -264,7 +264,7 @@ export default async function AdminDashboardPage() {
               {dashboard.reviewQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -280,7 +280,7 @@ export default async function AdminDashboardPage() {
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                   >
                     Відкрити
                   </Link>
@@ -303,7 +303,7 @@ export default async function AdminDashboardPage() {
               {dashboard.problematicHouses.map((item) => (
                 <div
                   key={item.houseId}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
                 >
                   <div>
                     <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -326,7 +326,7 @@ export default async function AdminDashboardPage() {
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                   >
                     Перейти
                   </Link>
@@ -349,7 +349,7 @@ export default async function AdminDashboardPage() {
               {dashboard.apartmentSetup.map((item) => (
                 <div
                   key={item.houseId}
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
                 >
                   <div className="text-sm font-medium text-[var(--cms-text)]">
                     {item.houseName}
@@ -357,7 +357,7 @@ export default async function AdminDashboardPage() {
 
                   <Link
                     href={item.href}
-                    className="shrink-0 rounded-xl border border-[var(--cms-border-primary)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
+                    className="shrink-0 rounded-xl border border-[var(--cms-border)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                   >
                     До квартир
                   </Link>
@@ -399,7 +399,7 @@ export default async function AdminDashboardPage() {
           <div className="mt-4">
             <Link
               href="/admin/houses"
-              className="inline-flex items-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex items-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
             >
               Відкрити список будинків
             </Link>

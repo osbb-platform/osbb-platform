@@ -165,7 +165,7 @@ export function AdminSidebar({
             aria-current={isProfileActive ? "page" : undefined}
             className={`block rounded-3xl border p-5 transition-all duration-200 ${
               isProfileActive
-                ? "border-[var(--cms-border-secondary)] bg-[var(--cms-sidebar-card)] shadow-[0_1px_0_rgba(255,255,255,0.55)]"
+                ? "border-[var(--cms-border-secondary)] bg-[var(--cms-sidebar-card)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
                 : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] hover:bg-[var(--cms-sidebar-hover)]"
             }`}
           >
