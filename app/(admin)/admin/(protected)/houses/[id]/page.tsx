@@ -70,7 +70,7 @@ function normalizeBlock(value: string | undefined) {
 function normalizeSectionForWorkspace<T extends {
   id: string;
   title: string | null;
-  status?: "draft" | "in_review" | "published" | "archived";
+  status?: "draft" | "published" | "archived";
   content?: Record<string, unknown>;
 }>(section: T) {
   return {

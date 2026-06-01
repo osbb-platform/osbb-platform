@@ -30,10 +30,6 @@ export default async function AdminTasksPage() {
           <h1 className="text-2xl font-semibold text-[var(--cms-text)]">
             Управління задачами
           </h1>
-
-          <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--cms-text-muted)]">
-            DEMO
-          </span>
         </div>
 
         <p className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">

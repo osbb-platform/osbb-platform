@@ -140,17 +140,6 @@ export function AdminSidebar({
                       <Icon className="h-5 w-5 shrink-0" />
                       <span className="truncate">{item.label}</span>
 
-                      {item.href === ROUTES.admin.tasks ? (
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
-                            isActive
-                              ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                              : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]"
-                          }`}
-                        >
-                          DEMO
-                        </span>
-                      ) : null}
                     </div>
 
                     {typeof item.badgeCount === "number" && item.badgeCount > 0 ? (
