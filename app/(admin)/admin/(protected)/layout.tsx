@@ -27,7 +27,7 @@ export default async function ProtectedAdminLayout({
 
   return (
     <ToastProvider>
-      <IdleLockProvider>
+      <IdleLockProvider userEmail={currentUser.email}>
         <AdminShell
           currentUser={currentUser}
           access={access}

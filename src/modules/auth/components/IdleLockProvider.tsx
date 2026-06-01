@@ -5,12 +5,26 @@ import {
   useEffect,
   useRef,
   useState,
+  type FormEvent,
   type ReactNode,
 } from "react";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
+import {
+  adminBodyClass,
+  adminButtonDisabledClass,
+  adminInputClass,
+  adminModalSurfaceClass,
+  adminOverlayClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminSectionTitleClass,
+  adminTextLabelClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { useToast } from "@/src/shared/ui/toast/ToastProvider";
 
 type IdleLockProviderProps = {
   children: ReactNode;
+  userEmail: string | null;
 };
 
 type IdleSessionEvent =
@@ -24,6 +38,10 @@ type IdleSessionEvent =
     }
   | {
       type: "lock";
+      timestamp: number;
+    }
+  | {
+      type: "unlock";
       timestamp: number;
     };
 
@@ -49,7 +67,8 @@ function parseSessionEvent(value: string | null): IdleSessionEvent | null {
     if (
       parsed.type !== "activity" &&
       parsed.type !== "warning" &&
-      parsed.type !== "lock"
+      parsed.type !== "lock" &&
+      parsed.type !== "unlock"
     ) {
       return null;
     }
@@ -64,9 +83,15 @@ function parseSessionEvent(value: string | null): IdleSessionEvent | null {
   }
 }
 
-export function IdleLockProvider({ children }: IdleLockProviderProps) {
+export function IdleLockProvider({
+  children,
+  userEmail,
+}: IdleLockProviderProps) {
   const { toast } = useToast();
   const [isLocked, setIsLocked] = useState(false);
+  const [password, setPassword] = useState("");
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   const channelRef = useRef<BroadcastChannel | null>(null);
   const warningTimerRef = useRef<number | null>(null);
@@ -150,6 +175,25 @@ export function IdleLockProvider({ children }: IdleLockProviderProps) {
     }, IDLE_TIMEOUT_MS);
   }, [clearTimers, lockSession, publishEvent, toast]);
 
+  const unlockSession = useCallback(
+    (shouldBroadcast = true) => {
+      isLockedRef.current = false;
+      setIsLocked(false);
+      setPassword("");
+      setUnlockError(null);
+      setIsUnlocking(false);
+      scheduleTimers();
+
+      if (shouldBroadcast) {
+        publishEvent({
+          type: "unlock",
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [publishEvent, scheduleTimers],
+  );
+
   const registerActivity = useCallback(
     (shouldBroadcast = true) => {
       if (isLockedRef.current) {
@@ -197,10 +241,53 @@ export function IdleLockProvider({ children }: IdleLockProviderProps) {
 
       if (event.type === "lock") {
         lockSession(false);
+        return;
+      }
+
+      if (event.type === "unlock") {
+        unlockSession(false);
       }
     },
-    [lockSession, registerActivity, toast],
+    [lockSession, registerActivity, toast, unlockSession],
   );
+
+  async function handleUnlockSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!userEmail || !password.trim()) {
+      setUnlockError("Введіть пароль, щоб розблокувати адмінку.");
+      return;
+    }
+
+    setIsUnlocking(true);
+    setUnlockError(null);
+
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: userEmail,
+      password,
+    });
+
+    if (error) {
+      setIsUnlocking(false);
+      setUnlockError("Пароль не підійшов. Спробуйте ще раз.");
+      return;
+    }
+
+    unlockSession(true);
+
+    toast({
+      tone: "success",
+      title: "Сесію розблоковано",
+      description: "Можна продовжувати роботу в адмінці.",
+    });
+  }
+
+  async function handleLogout() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    window.location.assign("/admin/login");
+  }
 
   useEffect(() => {
     isLockedRef.current = isLocked;
@@ -267,6 +354,77 @@ export function IdleLockProvider({ children }: IdleLockProviderProps) {
   return (
     <div data-admin-idle-locked={isLocked ? "true" : "false"}>
       {children}
+
+      {isLocked ? (
+        <div
+          className={`fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 ${adminOverlayClass}`}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-idle-lock-title"
+            className={`w-full max-w-md ${adminModalSurfaceClass} p-6`}
+          >
+            <div>
+              <h2 id="admin-idle-lock-title" className={adminSectionTitleClass}>
+                Сесію заблоковано
+              </h2>
+              <p className={`mt-2 ${adminBodyClass}`}>
+                Через неактивність ми тимчасово заблокували адмінку. Введіть
+                пароль, щоб продовжити роботу.
+              </p>
+            </div>
+
+            <form onSubmit={handleUnlockSubmit} className="mt-6 space-y-4">
+              <div>
+                <label htmlFor="idle-lock-password" className={`mb-2 block ${adminTextLabelClass}`}>
+                  Пароль
+                </label>
+                <input
+                  id="idle-lock-password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className={adminInputClass}
+                  autoComplete="current-password"
+                  autoFocus
+                  disabled={isUnlocking}
+                />
+              </div>
+
+              {unlockError ? (
+                <div
+                  role="alert"
+                  className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+                >
+                  {unlockError}
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={adminSecondaryButtonClass}
+                  disabled={isUnlocking}
+                >
+                  Вийти
+                </button>
+
+                <button
+                  type="submit"
+                  className={`${adminPrimaryButtonClass} ${adminButtonDisabledClass}`}
+                  disabled={isUnlocking}
+                  aria-disabled={isUnlocking}
+                >
+                  {isUnlocking ? "Перевіряємо..." : "Розблокувати"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
