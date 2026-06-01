@@ -63,6 +63,7 @@ select {
   --cms-text-muted: #94a3b8;
   --cms-accent-primary: #f97316;
   --cms-accent-foreground: #ffffff;
+  --cms-ring: var(--cms-accent-primary);
   --cms-text-soft: #64748b;
 
   --cms-pill-bg: #1e293b;
@@ -117,6 +118,7 @@ html[data-admin-theme="light"] .cms-theme-root {
   --cms-text-muted: #475569;
   --cms-accent-primary: #f97316;
   --cms-accent-foreground: #ffffff;
+  --cms-ring: var(--cms-accent-primary);
   --cms-text-soft: #64748b;
 
   --cms-pill-bg: #e2e8f0;

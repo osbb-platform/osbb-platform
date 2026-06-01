@@ -102,8 +102,14 @@ export function EditHeroSectionForm({
     );
   }
 
+  const isSubmitDisabled = readOnlyMode || isPending || !isDirty;
+
   return (
-    <form onSubmit={handleSubmit} className={`space-y-6 ${adminSurfaceClass} p-6`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`space-y-6 ${adminSurfaceClass} p-6`}
+      aria-busy={isPending}
+    >
       <div>
         <h2 className={adminSectionTitleClass}>Hero секція</h2>
         <p className={`mt-2 ${adminBodyClass}`}>
@@ -176,7 +182,8 @@ export function EditHeroSectionForm({
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
-          disabled={readOnlyMode || isPending || !isDirty}
+          disabled={isSubmitDisabled}
+          aria-disabled={isSubmitDisabled}
           className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Зберігаємо..." : "Зберегти hero секцію"}

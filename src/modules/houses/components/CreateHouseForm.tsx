@@ -85,7 +85,11 @@ export function CreateHouseForm({
   }, [previewUrl]);
 
   return (
-    <form action={formAction} className="grid gap-4 md:grid-cols-2">
+    <form
+      action={formAction}
+      className="grid gap-4 md:grid-cols-2"
+      aria-busy={isPending}
+    >
       <div>
         <label className={`mb-2 block ${adminTextLabelClass}`}>
           Назва будинку
@@ -294,6 +298,7 @@ export function CreateHouseForm({
         <button
           type="submit"
           disabled={isPending}
+          aria-disabled={isPending}
           className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
           {isPending ? "Створюємо..." : "Створити будинок"}
