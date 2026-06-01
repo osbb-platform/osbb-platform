@@ -21,7 +21,11 @@ export const getPublicHouseDocumentsFeed = cache(async (
     .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error(`Failed to load public house documents feed: ${error.message}`);
+    console.error("Failed to load public house documents feed:", {
+      houseId,
+      message: error.message,
+    });
+    return [];
   }
 
   return (data ?? []) as PublicHouseDocumentFeedItem[];

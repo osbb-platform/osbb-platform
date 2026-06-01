@@ -49,9 +49,11 @@ export const getPublicHouseFoundingDocuments = cache(async (
     .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error(
-      `Failed to load public house founding documents: ${error.message}`,
-    );
+    console.error("Failed to load public house founding documents:", {
+      houseId,
+      message: error.message,
+    });
+    return [];
   }
 
   const documents = (data ?? []) as unknown as DocumentRow[];
@@ -69,9 +71,11 @@ export const getPublicHouseFoundingDocuments = cache(async (
     .in("entity_id", documentIds);
 
   if (filesError) {
-    throw new Error(
-      `Failed to load public house founding document files: ${filesError.message}`,
-    );
+    console.error("Failed to load public house founding document files:", {
+      houseId,
+      message: filesError.message,
+    });
+    return [];
   }
 
   const filesByDocumentId = new Map(

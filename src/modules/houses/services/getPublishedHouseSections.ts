@@ -15,7 +15,11 @@ export const getPublishedHouseSections = cache(async (
     .order("sort_order", { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to load published house sections: ${error.message}`);
+    console.error("Failed to load published house sections:", {
+      housePageId,
+      message: error.message,
+    });
+    return [];
   }
 
   return (data ?? []) as HouseSectionRecord[];

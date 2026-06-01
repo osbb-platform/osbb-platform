@@ -100,6 +100,7 @@ export async function getPublicHouseBellFeed({
 }: {
   houseId: string;
 }): Promise<PublicHouseBellFeed> {
+  try {
   const items: PublicHouseBellItem[] = [];
 
   const [homePage, informationPage, reportsPage] = await Promise.all([
@@ -359,4 +360,16 @@ export async function getPublicHouseBellFeed({
     total: items.length,
     items: sorted,
   };
+
+  } catch (error) {
+    console.error("Failed to build public house bell feed:", {
+      houseId,
+      error,
+    });
+
+    return {
+      total: 0,
+      items: [],
+    };
+  }
 }

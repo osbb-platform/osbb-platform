@@ -18,7 +18,11 @@ export const validateHouseSession = cache(async ({
   });
 
   if (error) {
-    throw new Error(`Failed to validate house session: ${error.message}`);
+    console.error("Failed to validate house session:", {
+      slug,
+      message: error.message,
+    });
+    return false;
   }
 
   return Boolean(data);

@@ -766,9 +766,34 @@ function pickTopAlert(
   };
 }
 
+function buildFallbackPublicHouseHomeDashboard(
+  house: HouseRecord,
+): PublicHouseHomeDashboard {
+  const slug = house.slug;
+
+  return {
+    heroContent: {
+      headline: houseSystemCopy.homeDashboard.hero.headlineFallback,
+      subheadline: houseSystemCopy.homeDashboard.hero.subheadlineFallback,
+    },
+    statusStrip: [],
+    topAlert: null,
+    widgets: [
+      buildAnnouncementsWidget(slug, []),
+      buildPlanWidget(slug, []),
+      buildMeetingsWidget(slug, []),
+      buildDebtorsWidget(slug, {
+        updatedAt: null,
+        activeItems: [],
+      }),
+    ],
+  };
+}
+
 export async function getPublicHouseHomeDashboard({
   house,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
+  try {
   const houseId = house.id;
   const slug = house.slug;
 
@@ -851,4 +876,14 @@ export async function getPublicHouseHomeDashboard({
       buildDebtorsWidget(slug, houseDebtors),
     ],
   };
+
+  } catch (error) {
+    console.error("Failed to build public house home dashboard:", {
+      houseId: house.id,
+      slug: house.slug,
+      error,
+    });
+
+    return buildFallbackPublicHouseHomeDashboard(house);
+  }
 }
