@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditHeroSectionForm } from "@/src/modules/houses/components/EditHeroSectionForm";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
-import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
+import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -380,16 +380,6 @@ export default async function AdminHouseDetailPage({
           </div>
 
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
-            <div className="w-full xl:w-[320px]">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                Розділ будинку
-              </div>
-              <HouseBlockSelector
-                houseId={house.id}
-                activeBlock={activeBlock}
-              />
-            </div>
-
             <div className="flex w-full flex-wrap items-center justify-end gap-3">
               <Link
                 href={publicPreviewHref}
@@ -425,6 +415,10 @@ export default async function AdminHouseDetailPage({
         </div>
       </div>
 
+      <HouseBlockNavigationFrame
+        houseId={house.id}
+        activeBlock={activeBlock}
+      >
       {activeBlock === "announcements" ? (
         <HouseAnnouncementsWorkspace
           houseId={house.id}
@@ -549,6 +543,7 @@ export default async function AdminHouseDetailPage({
         />
       ) : null}
 
+      </HouseBlockNavigationFrame>
     </div>
   );
 }

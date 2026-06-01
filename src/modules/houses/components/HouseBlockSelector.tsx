@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 
 type HouseBlockSelectorProps = {
   houseId: string;
   activeBlock: string;
+  onPendingBlockChange?: (block: string | null) => void;
 };
 
-const houseNavigationBlocks = [
+export const houseNavigationBlocks = [
   { value: "hero", label: "Hero" },
   { value: "announcements", label: "Оголошення" },
   { value: "reports", label: "Звіти" },
@@ -23,9 +23,17 @@ const houseNavigationBlocks = [
   { value: "founding-documents", label: "Установчі документи" },
 ] as const;
 
+export function getHouseBlockLabel(value: string) {
+  return (
+    houseNavigationBlocks.find((block) => block.value === value)?.label ??
+    "розділ"
+  );
+}
+
 export function HouseBlockSelector({
   houseId,
   activeBlock,
+  onPendingBlockChange,
 }: HouseBlockSelectorProps) {
   const router = useRouter();
   const [selectedBlock, setSelectedBlock] = useState(activeBlock);
@@ -35,21 +43,21 @@ export function HouseBlockSelector({
     setSelectedBlock(activeBlock);
   }, [activeBlock]);
 
-  const activeLabel = useMemo(() => {
-    return (
-      houseNavigationBlocks.find((block) => block.value === selectedBlock)
-        ?.label ?? "розділ"
-    );
-  }, [selectedBlock]);
+  useEffect(() => {
+    if (!isPending) {
+      onPendingBlockChange?.(null);
+    }
+  }, [isPending, onPendingBlockChange]);
 
   return (
-    <div className="relative">
+    <div>
       <select
         value={selectedBlock}
         disabled={isPending}
         onChange={(event) => {
           const nextBlock = event.target.value;
           setSelectedBlock(nextBlock);
+          onPendingBlockChange?.(nextBlock);
 
           startTransition(() => {
             router.push(`/admin/houses/${houseId}?block=${nextBlock}`);
@@ -63,13 +71,6 @@ export function HouseBlockSelector({
           </option>
         ))}
       </select>
-
-      <PlatformSectionLoader
-        active={isPending}
-        delayMs={280}
-        label={`Відкриваємо розділ «${activeLabel}»...`}
-        className="rounded-2xl"
-      />
     </div>
   );
 }
