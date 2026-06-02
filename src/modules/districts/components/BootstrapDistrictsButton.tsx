@@ -41,7 +41,7 @@ export function BootstrapDistrictsButton() {
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-emerald-600 disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-foreground)] transition hover:opacity-90 disabled:opacity-60"
       >
         {isPending ? "Створюємо райони..." : "Створити 7 районів замовника"}
       </button>
