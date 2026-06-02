@@ -40,7 +40,7 @@ export type HousePageRecord = {
   house_id: string;
   slug: string;
   title: string;
-  status: "draft" | "in_review" | "published" | "archived";
+  status: "draft" | "published" | "archived";
 };
 
 export type HouseSectionRecord = {
@@ -63,6 +63,6 @@ export type HouseSectionRecord = {
     | "custom";
   title: string | null;
   sort_order: number;
-  status: "draft" | "in_review" | "published" | "archived";
+  status: "draft" | "published" | "archived";
   content: Record<string, unknown>;
 };

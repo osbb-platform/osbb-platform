@@ -20,7 +20,7 @@ type EditAnnouncementSectionFormProps = {
   section: {
     id: string;
     title: string | null;
-    status: "draft" | "in_review" | "published" | "archived";
+    status: "draft" | "published" | "archived";
     content: Record<string, unknown>;
   };
   onClose?: () => void;
@@ -79,7 +79,7 @@ export function EditAnnouncementSectionForm({
   const updatedAt = formatDateTime(section.content.updatedAt);
 
   const isDraftLike =
-    section.status === "draft" || section.status === "in_review";
+    section.status === "draft";
   const isPublished = section.status === "published";
   const isArchived = section.status === "archived";
 

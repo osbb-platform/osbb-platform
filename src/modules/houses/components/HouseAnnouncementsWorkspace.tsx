@@ -20,7 +20,7 @@ import {
 type AnnouncementItem = {
   id: string;
   title: string | null;
-  status: "draft" | "in_review" | "published" | "archived";
+  status: "draft" | "published" | "archived";
   content: Record<string, unknown>;
 };
 
@@ -69,7 +69,6 @@ function formatDateTime(value: unknown) {
 
 function getStatusLabel(status: AnnouncementItem["status"]) {
   if (status === "published") return "Опубліковано";
-  if (status === "in_review") return "Чернетка";
   if (status === "archived") return "Архів";
   return "Чернетка";
 }
@@ -78,7 +77,6 @@ function getStatusTone(
   status: AnnouncementItem["status"],
 ): "success" | "warning" | "neutral" | "info" {
   if (status === "published") return "success";
-  if (status === "in_review") return "warning";
   if (status === "archived") return "neutral";
   return "info";
 }
@@ -143,7 +141,7 @@ export function HouseAnnouncementsWorkspace({
 
   const moderationAnnouncements = sortedSections.filter(
     (section) =>
-      section.status === "draft" || section.status === "in_review",
+      section.status === "draft",
   );
 
   const archivedAnnouncements = sortedSections.filter(

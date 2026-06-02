@@ -6,7 +6,7 @@ export type AdminHousePageListItem = {
   house_id: string;
   slug: string;
   title: string;
-  status: "draft" | "in_review" | "published" | "archived";
+  status: "draft" | "published" | "archived";
   created_at: string;
   updated_at: string | null;
 };
