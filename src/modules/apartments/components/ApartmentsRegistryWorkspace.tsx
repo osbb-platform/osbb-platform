@@ -127,7 +127,7 @@ function SortableHeader({
       onClick={() => onToggle(sortKey)}
       className={
         isActive
-          ? "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white"
+          ? "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-primary-foreground)]"
           : "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)] transition hover:text-[var(--cms-text)]"
       }
     >
