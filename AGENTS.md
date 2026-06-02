@@ -111,3 +111,22 @@ Existing legacy actions may use local state shapes such as `{ error: string | nu
 - Keep changes small and reversible.
 - After meaningful changes run `npm run lint` and `npm run build`.
 - Do not commit automatically unless the user explicitly asks. The user may want to test dev first.
+
+## Architecture 2.0 rules
+
+Architecture 2.0 is the current house-content architecture.
+
+Do NOT:
+
+- create new ad-hoc server actions for house content that bypass content-engine v2 handlers;
+- read `house_*` content tables directly from UI components;
+- build new live runtime flows on `house_sections`;
+- build new live runtime flows on `house_pages`;
+- build new live runtime flows on `content_versions`;
+- build new house content history on `platform_change_history`;
+- import from `src/legacy-v1` in live `app`, `src/modules`, or `src/shared` code.
+
+Use v2/domain services for public house runtime and content-engine v2 handlers for mutations.
+
+Remaining `house_pages` references are compatibility/page-shell and archived-house cleanup helpers only.
+
