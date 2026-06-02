@@ -4,13 +4,11 @@ import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getP
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
-import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
-import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
-import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
-import type {
-  HouseRecord,
-  HouseSectionRecord,
-} from "@/src/shared/types/entities/house.types";
+import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
+import type { HouseRecord } from "@/src/shared/types/entities/house.types";
+import type { PublishedHouseAnnouncement } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 
 type HomeWidgetKind = "announcements" | "plan" | "meetings" | "debtors";
 
@@ -82,16 +80,8 @@ type GetPublicHouseHomeDashboardParams = {
 
 const CTA_LABEL = houseSystemCopy.cta.open;
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
 function asString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function asBoolean(value: unknown) {
-  return value === true;
 }
 
 function normalizeAnnouncementLevel(value: unknown): AnnouncementLevel {
@@ -113,13 +103,6 @@ function getTime(value: unknown) {
   return parseDate(value)?.getTime() ?? 0;
 }
 
-function getSortTimestamp(content: Record<string, unknown>) {
-  return Math.max(
-    getTime(content.publishedAt),
-    getTime(content.updatedAt),
-    getTime(content.createdAt),
-  );
-}
 
 function formatDate(value: unknown) {
   const date = parseDate(value);
@@ -257,15 +240,18 @@ function sortPlanTasks(tasks: PlanTask[]) {
 
 function buildAnnouncementsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  announcements: PublishedHouseAnnouncement[],
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/announcements`;
 
-  const sortedSections = [...sections].sort((left, right) => {
-    return getSortTimestamp(asRecord(right.content)) - getSortTimestamp(asRecord(left.content));
+  const sortedAnnouncements = [...announcements].sort((left, right) => {
+    return (
+      Math.max(getTime(right.published_at), getTime(right.updated_at)) -
+      Math.max(getTime(left.published_at), getTime(left.updated_at))
+    );
   });
 
-  if (sortedSections.length === 0) {
+  if (sortedAnnouncements.length === 0) {
     return {
       kind: "announcements",
       title: houseSystemCopy.homeDashboard.announcements.title,
@@ -281,14 +267,10 @@ function buildAnnouncementsWidget(
   }
 
   const importantAnnouncement =
-    sortedSections.find((section) => {
-      const content = asRecord(section.content);
-      return normalizeAnnouncementLevel(content.level) === "danger";
-    }) ?? null;
+    sortedAnnouncements.find((announcement) => announcement.level === "danger") ?? null;
 
-  const featured = importantAnnouncement ?? sortedSections[0];
-  const content = asRecord(featured.content);
-  const level = normalizeAnnouncementLevel(content.level);
+  const featured = importantAnnouncement ?? sortedAnnouncements[0];
+  const level = normalizeAnnouncementLevel(featured.level);
 
   const levelLabel =
     level === "danger"
@@ -304,14 +286,14 @@ function buildAnnouncementsWidget(
     ctaLabel: CTA_LABEL,
     isPlaceholder: false,
     badge: levelLabel,
-    freshnessLabel: getRelativeFreshnessLabel(content.publishedAt),
-    headline: asString(content.title) || featured.title || houseSystemCopy.homeDashboard.common.announcement,
+    freshnessLabel: getRelativeFreshnessLabel(featured.published_at),
+    headline: featured.title || houseSystemCopy.homeDashboard.common.announcement,
     description:
-      truncateText(content.body, 140) ||
+      truncateText(featured.body, 140) ||
       houseSystemCopy.homeDashboard.announcements.fallbackDescription,
     meta: [
-      `${houseSystemCopy.homeDashboard.announcements.published}: ${formatDate(content.publishedAt)}`,
-      `${houseSystemCopy.homeDashboard.announcements.totalPublished}: ${sortedSections.length}`,
+      `${houseSystemCopy.homeDashboard.announcements.published}: ${formatDate(featured.published_at)}`,
+      `${houseSystemCopy.homeDashboard.announcements.totalPublished}: ${sortedAnnouncements.length}`,
     ],
   };
 }
@@ -545,7 +527,7 @@ function buildDebtorsWidget(
 
 function pickTopAlert(
   slug: string,
-  informationSections: HouseSectionRecord[],
+  informationPosts: HouseInformationPostSnapshot[],
   meetings: Array<{
     title: string;
     shortDescription: string;
@@ -553,24 +535,24 @@ function pickTopAlert(
     status: string;
   }>,
 ): PublicHouseHomeAlert {
-  const informationCandidates = informationSections
-    .filter((section) => section.kind === "rich_text")
-    .map((section) => {
-      const content = asRecord(section.content);
+  const informationCandidates = informationPosts
+    .map((post) => {
+      const content = post.content;
 
       return {
         source: "information" as const,
-        priority: normalizeAnnouncementLevel(content.level) === "danger" ? 3 : normalizeAnnouncementLevel(content.level) === "warning" ? 2 : 1,
-        title: asString(content.headline) || section.title || houseSystemCopy.homeDashboard.common.importantInfo,
+        priority: content.isPinned ? 3 : 1,
+        title:
+          content.headline ||
+          post.title ||
+          houseSystemCopy.homeDashboard.common.importantInfo,
         description:
           truncateText(content.body, 180) ||
           houseSystemCopy.homeDashboard.common.openInfoSection,
         href: `/house/${slug}/information`,
-        badge: asBoolean(content.isPinned) ? houseSystemCopy.homeDashboard.common.important : null,
-        publishedAt: asString(content.publishedAt) || asString(content.updatedAt) || null,
-        isExpired:
-          parseDate(content.deadlineAt) !== null &&
-          (parseDate(content.deadlineAt)?.getTime() ?? 0) < Date.now(),
+        badge: content.isPinned ? houseSystemCopy.homeDashboard.common.important : null,
+        publishedAt: content.publishedAt || content.updatedAt || null,
+        isExpired: false,
       };
     })
     .filter((item) => !item.isExpired);
@@ -645,32 +627,28 @@ export async function getPublicHouseHomeDashboard({
   const houseId = house.id;
   const slug = house.slug;
 
-  const [homePage, informationPage] = await Promise.all([
-    getHouseHomePageByHouseId(houseId),
-    getHouseInformationPageByHouseId(houseId),
-  ]);
-
-  const [homeSections, informationSections, houseHero, housePlan, houseDebtors, houseMeetings] = await Promise.all([
-    homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
-    informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
+  const [
+    houseHero,
+    housePlan,
+    houseDebtors,
+    houseMeetings,
+    houseAnnouncements,
+    informationPosts,
+    homeWidgets,
+  ] = await Promise.all([
     getPublishedHouseHero(houseId),
     getPublishedHousePlan(houseId),
     getPublishedHouseDebtors(houseId),
     getPublishedHouseMeetings(houseId),
+    getPublishedHouseAnnouncements(houseId),
+    getPublishedHouseInformationPosts(houseId),
+    getPublishedHouseHomeWidgets(house.id),
   ]);
 
-  const heroSection = homeSections.find((section) => section.kind === "hero");
-  const legacyHeroContent = asRecord(heroSection?.content);
   const heroContent = {
-    headline: houseHero?.headline || asString(legacyHeroContent.headline),
-    subheadline: houseHero?.subheadline || asString(legacyHeroContent.subheadline),
+    headline: houseHero?.headline ?? "",
+    subheadline: houseHero?.subheadline ?? "",
   };
-
-  const announcementsSections = homeSections.filter(
-    (section) => section.kind === "announcements",
-  );
-
-  const homeWidgets = await getPublishedHouseHomeWidgets(house.id);
 
   const rawWidgets = homeWidgets?.statusWidgets ?? [];
 
@@ -696,9 +674,9 @@ export async function getPublicHouseHomeDashboard({
         houseSystemCopy.homeDashboard.hero.subheadlineFallback,
     },
     statusStrip: statusWidgets,
-    topAlert: pickTopAlert(slug, informationSections, houseMeetings.items),
+    topAlert: pickTopAlert(slug, informationPosts, houseMeetings.items),
     widgets: [
-      buildAnnouncementsWidget(slug, announcementsSections),
+      buildAnnouncementsWidget(slug, houseAnnouncements),
       buildPlanWidget(
         slug,
         housePlan.tasks.map((task) => ({

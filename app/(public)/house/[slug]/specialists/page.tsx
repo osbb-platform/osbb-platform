@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
 import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
@@ -135,7 +135,11 @@ export default async function SpecialistsPage({
       ? resolvedSearchParams.specialist
       : "";
 
-  const { house } = await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
   const specialistsData = await getPublishedHouseSpecialists(house.id);
 
   const districtColor = house.district?.theme_color ?? "#16a34a";

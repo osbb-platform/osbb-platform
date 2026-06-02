@@ -1,7 +1,10 @@
-import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
-import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
-import { getPublishedHousePage } from "@/src/modules/houses/services/getPublishedHousePage";
-import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
+import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
+import { getPublishedHouseFaq } from "@/src/modules/houses/services/getPublishedHouseFaq";
+import { getPublishedHouseReports } from "@/src/modules/houses/services/getPublishedHouseReports";
+import { getPublishedHouseBoard } from "@/src/modules/houses/services/getPublishedHouseBoard";
+import { getPublishedHouseRequisites } from "@/src/modules/houses/services/getPublishedHouseRequisites";
+import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
 import { getPublicHouseDocumentsFeed } from "@/src/modules/houses/services/getPublicHouseDocumentsFeed";
 import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
@@ -56,13 +59,6 @@ function formatDate(timestamp: number) {
   });
 }
 
-function extractContent(
-  value: unknown,
-): Record<string, unknown> {
-  return typeof value === "object" && value
-    ? (value as Record<string, unknown>)
-    : {};
-}
 
 
 function getMeetingBellTimestamp(item: {
@@ -77,14 +73,6 @@ function getMeetingBellTimestamp(item: {
 
 
 
-function getSpecialistBellTimestamp(
-  item: Record<string, unknown>,
-): number {
-  return Math.max(
-    toTimestamp(item.updatedAt),
-    toTimestamp(item.createdAt),
-  );
-}
 
 export async function getPublicHouseBellFeed({
   houseId,
@@ -94,110 +82,105 @@ export async function getPublicHouseBellFeed({
   try {
   const items: PublicHouseBellItem[] = [];
 
-  const [homePage, informationPage, reportsPage] = await Promise.all([
-    getHouseHomePageByHouseId(houseId),
-    getHouseInformationPageByHouseId(houseId),
-    getPublishedHousePage(houseId, "reports"),
+  const [
+    announcements,
+    informationPosts,
+    faq,
+    reportsData,
+    board,
+    requisites,
+    specialistsData,
+    documents,
+    housePlan,
+    houseDebtors,
+    houseMeetings,
+  ] = await Promise.all([
+    getPublishedHouseAnnouncements(houseId),
+    getPublishedHouseInformationPosts(houseId),
+    getPublishedHouseFaq(houseId),
+    getPublishedHouseReports(houseId),
+    getPublishedHouseBoard(houseId),
+    getPublishedHouseRequisites(houseId),
+    getPublishedHouseSpecialists(houseId),
+    getPublicHouseDocumentsFeed(houseId),
+    getPublishedHousePlan(houseId),
+    getPublishedHouseDebtors(houseId),
+    getPublishedHouseMeetings(houseId),
   ]);
 
-  const [homeSections, informationSections, reportSections, documents, housePlan, houseDebtors, houseMeetings] =
-    await Promise.all([
-      homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
-      informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
-      reportsPage ? getPublishedHouseSections(reportsPage.id) : Promise.resolve([]),
-      getPublicHouseDocumentsFeed(houseId),
-      getPublishedHousePlan(houseId),
-      getPublishedHouseDebtors(houseId),
-      getPublishedHouseMeetings(houseId),
-    ]);
+  const recentAnnouncements = announcements.filter((announcement) =>
+    isRecent(Math.max(toTimestamp(announcement.updated_at), toTimestamp(announcement.published_at))),
+  );
 
-  for (const section of homeSections) {
-    const content = extractContent(section.content);
+  if (recentAnnouncements.length > 0) {
+    const latest = Math.max(
+      ...recentAnnouncements.map((announcement) =>
+        Math.max(toTimestamp(announcement.updated_at), toTimestamp(announcement.published_at)),
+      ),
+    );
 
-    if (section.kind === "announcements") {
-      const timestamp = Math.max(
-        toTimestamp(content.updatedAt),
-        toTimestamp(content.publishedAt),
-        toTimestamp(content.createdAt),
-      );
+    items.push({
+      id: `${houseId}-announcements`,
+      section: "Оголошення",
+      text:
+        recentAnnouncements.length === 1
+          ? "Опубліковано нове оголошення"
+          : `Добавлено ${recentAnnouncements.length} новых объявлений`,
+      date: formatDate(latest),
+      timestamp: latest,
+      source: "announcements",
+    });
+  }
 
-      if (isRecent(timestamp)) {
-        items.push({
-          id: section.id,
-          section: "Оголошення",
-          text: "Опубліковано нове оголошення",
-          date: formatDate(timestamp),
-          timestamp,
-          source: "announcements",
-        });
-      }
-    }
+  const boardTimestamp = Math.max(
+    ...board.members.map((member) => toTimestamp(member.updatedAt)),
+    0,
+  );
 
+  if (board.members.length > 0 && isRecent(boardTimestamp)) {
+    items.push({
+      id: `${houseId}-board`,
+      section: "Правління",
+      text: "Оновлено склад правління",
+      date: formatDate(boardTimestamp),
+      timestamp: boardTimestamp,
+      source: "board",
+    });
+  }
 
-    if (section.kind === "contacts") {
-      const timestamp = Math.max(
-        toTimestamp(content.updatedAt),
-        toTimestamp(content.publishedAt),
-      );
+  const requisitesTimestamp = toTimestamp(requisites?.updatedAt);
 
-      if (isRecent(timestamp)) {
-        items.push({
-          id: `${section.id}-board`,
-          section: "Правління",
-          text: "Оновлено склад правління",
-          date: formatDate(timestamp),
-          timestamp,
-          source: "board",
-        });
-      }
-    }
+  if (requisites && isRecent(requisitesTimestamp)) {
+    items.push({
+      id: `${houseId}-requisites`,
+      section: "Реквізити",
+      text: "Оновлено реквізити",
+      date: formatDate(requisitesTimestamp),
+      timestamp: requisitesTimestamp,
+      source: "requisites",
+    });
+  }
 
-    if (section.kind === "requisites") {
-      const timestamp = Math.max(
-        toTimestamp(content.updatedAt),
-        toTimestamp(content.publishedAt),
-      );
+  const specialistTimestamps = specialistsData.specialists.map((specialist) =>
+    Math.max(
+      toTimestamp(specialist.content.updatedAt),
+      toTimestamp(specialist.content.publishedAt),
+      toTimestamp(specialist.content.createdAt),
+    ),
+  );
 
-      if (isRecent(timestamp)) {
-        items.push({
-          id: `${section.id}-req`,
-          section: "Реквізити",
-          text: "Оновлено реквізити",
-          date: formatDate(timestamp),
-          timestamp,
-          source: "requisites",
-        });
-      }
-    }
+  const specialistsTimestamp =
+    specialistTimestamps.length > 0 ? Math.max(...specialistTimestamps) : 0;
 
-    if (section.kind === "specialists") {
-      const specialistItems = Array.isArray(content.specialists)
-        ? (content.specialists as Array<Record<string, unknown>>)
-        : [];
-
-      const itemTimestamp =
-        specialistItems.length > 0
-          ? Math.max(...specialistItems.map(getSpecialistBellTimestamp))
-          : 0;
-
-      const timestamp = Math.max(
-        itemTimestamp,
-        toTimestamp(content.updatedAt),
-        toTimestamp(content.publishedAt),
-      );
-
-      if (isRecent(timestamp)) {
-        items.push({
-          id: `${section.id}-spec`,
-          section: "Спеціалісти",
-          text: "Оновлено список спеціалістів",
-          date: formatDate(timestamp),
-          timestamp,
-          source: "specialists",
-        });
-      }
-    }
-
+  if (specialistsData.specialists.length > 0 && isRecent(specialistsTimestamp)) {
+    items.push({
+      id: `${houseId}-specialists`,
+      section: "Спеціалісти",
+      text: "Оновлено список спеціалістів",
+      date: formatDate(specialistsTimestamp),
+      timestamp: specialistsTimestamp,
+      source: "specialists",
+    });
   }
 
   const recentMeetings = houseMeetings.items.filter((item) =>
@@ -269,56 +252,57 @@ export async function getPublicHouseBellFeed({
     });
   }
 
-  for (const section of informationSections) {
-    const content = extractContent(section.content);
-    const timestamp = Math.max(
-      toTimestamp(content.updatedAt),
-      toTimestamp(content.publishedAt),
-      toTimestamp(content.createdAt),
-    );
+  const informationTimestamps = [
+    ...informationPosts.map((post) =>
+      Math.max(
+        toTimestamp(post.content.updatedAt),
+        toTimestamp(post.content.publishedAt),
+        toTimestamp(post.content.createdAt),
+      ),
+    ),
+    faq ? Math.max(toTimestamp(faq.updatedAt), toTimestamp(faq.publishedAt)) : 0,
+  ].filter(isRecent);
 
-    if (!isRecent(timestamp)) continue;
+  if (informationTimestamps.length > 0) {
+    const latest = Math.max(...informationTimestamps);
 
     items.push({
-      id: section.id,
+      id: "information-feed",
       section: "Інформація",
       text:
-        section.kind === "faq"
-          ? "Оновлено FAQ"
-          : "Додано новий інформаційний матеріал",
-      date: formatDate(timestamp),
-      timestamp,
+        informationTimestamps.length === 1
+          ? "Додано новий інформаційний матеріал"
+          : `Добавлено ${informationTimestamps.length} новых информационных материалов`,
+      date: formatDate(latest),
+      timestamp: latest,
       source: "information",
     });
   }
 
-  if (reportSections.length > 0) {
-    const timestamps = reportSections
-      .map((section) => {
-        const content = extractContent(section.content);
-        return Math.max(
-          toTimestamp(content.updatedAt),
-          toTimestamp(content.publishedAt),
-          toTimestamp(content.createdAt),
-        );
-      })
-      .filter(isRecent);
+  const reportTimestamps = reportsData.reports
+    .map((report) =>
+      Math.max(
+        toTimestamp(report.updatedAt),
+        toTimestamp(report.publishedAt),
+        toTimestamp(report.reportDate),
+      ),
+    )
+    .filter(isRecent);
 
-    if (timestamps.length > 0) {
-      const latest = Math.max(...timestamps);
+  if (reportTimestamps.length > 0) {
+    const latest = Math.max(...reportTimestamps);
 
-      items.push({
-        id: "reports-feed",
-        section: "Звіти",
-        text:
-          timestamps.length === 1
-            ? "Додано новий звіт"
-            : `Добавлено ${timestamps.length} новых отчетов`,
-        date: formatDate(latest),
-        timestamp: latest,
-        source: "reports",
-      });
-    }
+    items.push({
+      id: "reports-feed",
+      section: "Звіти",
+      text:
+        reportTimestamps.length === 1
+          ? "Додано новий звіт"
+          : `Добавлено ${reportTimestamps.length} новых отчетов`,
+      date: formatDate(latest),
+      timestamp: latest,
+      source: "reports",
+    });
   }
 
   const recentDocuments = documents.filter((item) =>

@@ -20,6 +20,7 @@ export type PublishedHouseBoardMember = {
   officeHours: string;
   description: string;
   sortOrder: number;
+  updatedAt: string;
 };
 
 export type PublishedHouseBoard = {
@@ -41,6 +42,7 @@ type BoardMemberRow = {
   office_hours: string;
   description: string;
   sort_order: number;
+  updated_at: string;
 };
 
 function mapMember(row: BoardMemberRow): PublishedHouseBoardMember {
@@ -54,6 +56,7 @@ function mapMember(row: BoardMemberRow): PublishedHouseBoardMember {
     officeHours: row.office_hours,
     description: row.description,
     sortOrder: row.sort_order,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -72,7 +75,7 @@ export async function getPublishedHouseBoard(houseId: string): Promise<Published
 
   const { data: members, error: membersError } = await supabase
     .from("house_board_members")
-    .select("id, role_status, name, role, phone, email, office_hours, description, sort_order")
+    .select("id, role_status, name, role, phone, email, office_hours, description, sort_order, updated_at")
     .eq("house_id", houseId)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
@@ -94,7 +97,7 @@ export async function getChairmanForHouse(houseId: string) {
 
   const { data, error } = await supabase
     .from("house_board_members")
-    .select("id, role_status, name, role, phone, email, office_hours, description, sort_order")
+    .select("id, role_status, name, role, phone, email, office_hours, description, sort_order, updated_at")
     .eq("house_id", houseId)
     .eq("role_status", "chairman")
     .order("sort_order", { ascending: true })

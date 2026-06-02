@@ -1,6 +1,6 @@
 import { houseAnnouncementsCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
 
 type AnnouncementsPageProps = {
@@ -109,8 +109,11 @@ export default async function PublicHouseAnnouncementsPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const filter = normalizeFilter(resolvedSearchParams.filter);
 
-  const { house } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
 

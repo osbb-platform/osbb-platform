@@ -1,6 +1,6 @@
 import { houseMeetingsCopy, houseSystemCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
@@ -98,8 +98,11 @@ export default async function PublicMeetingsPage({
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
-  const { house } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
 
   const districtColor = house.district?.theme_color ?? "#0f172a";
   const apartments =
