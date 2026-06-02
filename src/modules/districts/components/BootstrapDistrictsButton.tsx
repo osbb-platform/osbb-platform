@@ -16,24 +16,24 @@ export function BootstrapDistrictsButton() {
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-        <div className="text-sm font-medium text-white">
+      <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
+        <div className="text-sm font-medium text-[var(--cms-text)]">
           Швидке створення базових районів
         </div>
-        <div className="mt-2 text-sm leading-6 text-slate-400">
+        <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
           Система створить 7 районів замовника з готовими slug і кольорами. Уже
           існуючі райони будуть пропущені без дублів.
         </div>
       </div>
 
       {state.error ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
       {state.success ? (
-        <div className="rounded-2xl border border-emerald-900 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {state.success}
         </div>
       ) : null}
@@ -41,7 +41,7 @@ export function BootstrapDistrictsButton() {
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-emerald-600 disabled:opacity-60"
       >
         {isPending ? "Створюємо райони..." : "Створити 7 районів замовника"}
       </button>
