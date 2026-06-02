@@ -378,13 +378,13 @@ export function ApartmentsRegistryWorkspace({
   return (
     <div className="space-y-6">
       {archiveState.error || archiveAllState.error ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {archiveState.error ?? archiveAllState.error}
         </div>
       ) : null}
 
       {archiveState.success || archiveAllState.success ? (
-        <div className="rounded-2xl border border-emerald-900 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {archiveState.success ?? archiveAllState.success}
         </div>
       ) : null}
@@ -559,7 +559,7 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: false })}
               className={
                 !archived
-                  ? "rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950"
+                  ? "rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-foreground)]"
                   : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
               }
             >
@@ -571,7 +571,7 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: true })}
               className={
                 archived
-                  ? "rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950"
+                  ? "rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-foreground)]"
                   : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
               }
             >
