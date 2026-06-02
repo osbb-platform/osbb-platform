@@ -89,6 +89,94 @@ Result:
 - Merged local architecture branches were deleted.
 - Unmerged hotfix/main branches were preserved for manual review.
 
+## Dobivka before prod
+
+### D1 — Verification gate
+
+Commit:
+
+- 8965606 Add release verification gate
+
+Result:
+
+- Added `typecheck` and `verify` scripts.
+- Added GitHub CI workflow for lint, typecheck, and build.
+- Local `npm run verify` passes.
+
+### D2 — Reports backfill
+
+Commit:
+
+- 6a8d7e5 Backfill legacy house reports
+
+Result:
+
+- Added idempotent `migrate_legacy_house_reports` migration.
+- Added local legacy inventory note.
+- Local database has no legacy `house_sections` rows, so local migration smoke inserts zero rows.
+- Migration is intentionally retained for stage/prod copies that may still contain legacy `kind='reports'` rows.
+
+### D3 — Server Actions body limit
+
+Status: blocked / no commit
+
+Result:
+
+- The requested top-level `serverActions.bodySizeLimit` placement is not accepted by installed `next@16.2.2`.
+- Build/typecheck fails with top-level `serverActions`.
+- The valid local configuration remains `experimental.serverActions.bodySizeLimit`.
+- This block is documented as a requirement mismatch, not a code change.
+
+### D4 — Client-side house cover upload
+
+Commit:
+
+- 54624da Move house cover uploads to client
+
+Result:
+
+- Removed `File` payload handling from house create/update server actions.
+- Removed server-side `.upload()` for house cover images.
+- Added client-side Supabase upload in create/edit house forms.
+- Server actions retain storage cleanup through `.remove()` for failed submits/replacements.
+
+### D5 — Runtime audit
+
+Commit:
+
+- 54e36fc Document architecture runtime audit
+
+Result:
+
+- Confirmed no direct `house_sections` runtime calls outside `src/legacy-v1`.
+- Confirmed no live imports from `src/legacy-v1`.
+- Confirmed public house routes use v2/domain services.
+- Documented remaining `house_pages` references as compatibility/page-shell and cleanup helpers.
+
+### D6 — Release readiness note
+
+Status: this document
+
+Result:
+
+- Consolidates release readiness state.
+- Confirms no production push/deploy was performed from this branch.
+- Confirms final gate command is `npm run verify`.
+
+## Release readiness
+
+Current status: ready for manual review with one documented D3 caveat.
+
+Required final local gate before merge/deploy:
+
+- `npm run verify`
+
+Known caveats:
+
+- `next@16.2.2` still prints `Experiments: serverActions` because this project only accepts `experimental.serverActions.bodySizeLimit`. Moving it to top-level `serverActions` breaks config validation and TypeScript.
+- Local Supabase migration history has pre-existing drift for old versions: `20260404`, `20260408`, `20260526`. D2 SQL was validated directly with `psql -f`. Resolve/confirm migration ledger separately before applying to shared environments.
+- No prod push/deploy is included in this release branch workflow.
+
 ## Remaining known legacy references
 
 ### house_pages
