@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createHouse } from "@/src/modules/houses/actions/createHouse";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { slugify } from "@/src/shared/utils/slug/slugify";
 import {
   adminInputClass,
@@ -9,6 +10,7 @@ import {
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { ACCEPTED_IMAGE_TYPES, validateSingleImageFile } from "@/src/shared/utils/validators/imageUpload";
 
 type CreateHouseFormProps = {
   districts: Array<{
@@ -29,7 +31,8 @@ const initialState = {
 
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 const DEFAULT_COMPANY_SLUG = "tov-bukhhalter-onlain";
-const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const HOUSE_COVER_BUCKET = "house-cover-images";
+const HOUSE_COVER_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024 * 1024) {
@@ -37,6 +40,53 @@ function formatFileSize(bytes: number) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+function sanitizeUploadFileName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120);
+}
+
+async function uploadHouseCoverImage(file: File) {
+  const validation = validateSingleImageFile(file, {
+    label: "Фото будинку",
+    maxSizeBytes: HOUSE_COVER_MAX_SIZE_BYTES,
+    maxSizeLabel: "5 МБ",
+  });
+
+  if (!validation.isValid) {
+    throw new Error(validation.error ?? "Фото будинку має бути JPG, PNG або WebP і не більше 5 МБ.");
+  }
+
+  const supabase = createSupabaseBrowserClient();
+  const fileExt = file.name.split(".").pop() || "jpg";
+  const safeFileName = sanitizeUploadFileName(file.name) || `cover.${fileExt}`;
+  const randomId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+  const filePath = `pending/${Date.now()}-${randomId}-${safeFileName}`;
+
+  const { error } = await supabase.storage
+    .from(HOUSE_COVER_BUCKET)
+    .upload(filePath, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+    });
+
+  if (error) {
+    throw new Error(`Не вдалося завантажити фото будинку: ${error.message}`);
+  }
+
+  return {
+    path: filePath,
+    originalName: file.name,
+  };
 }
 
 export function CreateHouseForm({
@@ -50,6 +100,8 @@ export function CreateHouseForm({
   const [name, setName] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const slugPreview = useMemo(() => {
@@ -84,11 +136,44 @@ export function CreateHouseForm({
     };
   }, [previewUrl]);
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setActionError(null);
+
+    try {
+      setIsUploadingCover(true);
+
+      const formData = new FormData(event.currentTarget);
+      formData.delete("coverImage");
+
+      if (selectedImage) {
+        const uploadedCover = await uploadHouseCoverImage(selectedImage);
+        formData.set("uploadedImagePath", uploadedCover.path);
+        formData.set("uploadedImageName", uploadedCover.originalName);
+      }
+
+      startTransition(() => {
+        formAction(formData);
+      });
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося завантажити фото будинку.",
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
+  }
+
+  const combinedError = actionError ?? state.error;
+  const isSubmitting = isPending || isUploadingCover;
+
   return (
     <form
-      action={formAction}
+      onSubmit={handleSubmit}
       className="grid gap-4 md:grid-cols-2"
-      aria-busy={isPending}
+      aria-busy={isSubmitting}
     >
       <div>
         <label className={`mb-2 block ${adminTextLabelClass}`}>
@@ -253,6 +338,23 @@ export function CreateHouseForm({
                       URL.revokeObjectURL(previewUrl);
                     }
 
+                    if (file) {
+                      const validation = validateSingleImageFile(file, {
+                        label: "Фото будинку",
+                        maxSizeBytes: HOUSE_COVER_MAX_SIZE_BYTES,
+                        maxSizeLabel: "5 МБ",
+                      });
+
+                      if (!validation.isValid) {
+                        setActionError(validation.error);
+                        setSelectedImage(null);
+                        setPreviewUrl(null);
+                        event.target.value = "";
+                        return;
+                      }
+                    }
+
+                    setActionError(null);
                     setSelectedImage(file);
                     setPreviewUrl(file ? URL.createObjectURL(file) : null);
                   }}
@@ -288,20 +390,20 @@ export function CreateHouseForm({
         </div>
       </div>
 
-      {state.error ? (
+      {combinedError ? (
         <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {state.error}
+          {combinedError}
         </div>
       ) : null}
 
       <div className="md:col-span-2">
         <button
           type="submit"
-          disabled={isPending}
-          aria-disabled={isPending}
+          disabled={isSubmitting}
+          aria-disabled={isSubmitting}
           className={`${adminPrimaryButtonClass} disabled:opacity-60`}
         >
-          {isPending ? "Створюємо..." : "Створити будинок"}
+          {isUploadingCover ? "Завантажуємо фото..." : isPending ? "Створюємо..." : "Створити будинок"}
         </button>
       </div>
     </form>

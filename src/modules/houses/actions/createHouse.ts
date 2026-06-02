@@ -13,26 +13,6 @@ type CreateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
-const MAX_COVER_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_COVER_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
-
-function sanitizeFileName(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9._-]/g, "");
-
-  return normalized || "house-cover-image";
-}
-
-function isFileLike(value: FormDataEntryValue | null): value is File {
-  return typeof File !== "undefined" && value instanceof File;
-}
 
 async function resolveUniqueHouseSlug(params: { baseSlug: string }) {
   const supabase = await createSupabaseServerClient();
@@ -66,13 +46,24 @@ export async function createHouse(
   _prevState: CreateHouseState,
   formData: FormData,
 ): Promise<CreateHouseState> {
+  const uploadedImagePath = String(formData.get("uploadedImagePath") ?? "").trim();
   const currentUser = await getCurrentAdminUser();
+  const supabase = await createSupabaseServerClient();
+
+  async function failWithCleanup(error: string): Promise<CreateHouseState> {
+    if (uploadedImagePath) {
+      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([uploadedImagePath]);
+    }
+
+    return { error };
+  }
+
   const accessError = assertRegistryActionAccess({
     role: currentUser?.role,
     area: "houses",
     action: "create",
   });
-  if (accessError) return { error: accessError.error };
+  if (accessError) return failWithCleanup(accessError.error ?? "Недостатньо прав для виконання дії.");
 
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
@@ -81,56 +72,35 @@ export async function createHouse(
   const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
-  const fileEntry = formData.get("coverImage");
-  const coverImage =
-    isFileLike(fileEntry) && fileEntry.size > 0 ? fileEntry : null;
 
   if (!name || !address) {
-    return { error: "Заповніть назву будинку та адресу." };
+    return failWithCleanup("Заповніть назву будинку та адресу.");
   }
 
   if (!districtId) {
-    return { error: "Оберіть район для будинку." };
+    return failWithCleanup("Оберіть район для будинку.");
   }
 
   if (!managementCompanyId) {
-    return { error: "Оберіть керуючу компанію для будинку." };
-  }
-
-
-  if (coverImage) {
-    if (!ALLOWED_COVER_IMAGE_TYPES.has(coverImage.type)) {
-      return {
-        error: "Для фото будинку дозволені лише JPG, PNG або WebP.",
-      };
-    }
-
-    if (coverImage.size > MAX_COVER_IMAGE_SIZE_BYTES) {
-      return {
-        error: "Фото будинку має бути не більше 5 МБ.",
-      };
-    }
+    return failWithCleanup("Оберіть керуючу компанію для будинку.");
   }
 
   const baseSlug = slugify(name);
 
   if (!baseSlug) {
-    return { error: "Не вдалося сформувати slug будинку." };
+    return failWithCleanup("Не вдалося сформувати slug будинку.");
   }
-
-  const supabase = await createSupabaseServerClient();
 
   let slug = baseSlug;
 
   try {
     slug = await resolveUniqueHouseSlug({ baseSlug });
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Не вдалося сформувати унікальний slug будинку.",
-    };
+    return failWithCleanup(
+      error instanceof Error
+        ? error.message
+        : "Не вдалося сформувати унікальний slug будинку.",
+    );
   }
 
   const defaultAccessCode = "123456";
@@ -146,6 +116,7 @@ export async function createHouse(
       osbb_name: osbbName || null,
       short_description: shortDescription || null,
       public_description: publicDescription || null,
+      cover_image_path: uploadedImagePath || null,
       is_active: true,
       current_access_code: defaultAccessCode,
     })
@@ -153,44 +124,7 @@ export async function createHouse(
     .single();
 
   if (insertError) {
-    return { error: `Помилка створення будинку: ${insertError.message}` };
-  }
-
-  if (coverImage) {
-    const safeFileName = sanitizeFileName(coverImage.name);
-    const coverImagePath = `${createdHouse.id}/${Date.now()}-${safeFileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(HOUSE_COVER_BUCKET)
-      .upload(coverImagePath, coverImage, {
-        upsert: true,
-        contentType: coverImage.type || undefined,
-      });
-
-    if (uploadError) {
-      await supabase.from("houses").delete().eq("id", createdHouse.id);
-
-      return {
-        error: `Будинок не створено: не вдалося завантажити фото будинку (${uploadError.message}).`,
-      };
-    }
-
-    const { error: coverUpdateError } = await supabase
-      .from("houses")
-      .update({
-        cover_image_path: coverImagePath,
-      })
-      .eq("id", createdHouse.id);
-
-
-    if (coverUpdateError) {
-      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePath]);
-      await supabase.from("houses").delete().eq("id", createdHouse.id);
-
-      return {
-        error: `Будинок не створено: не вдалося зберегти фото будинку (${coverUpdateError.message}).`,
-      };
-    }
+    return failWithCleanup(`Помилка створення будинку: ${insertError.message}`);
   }
 
   await bootstrapHouseContent({
@@ -235,7 +169,6 @@ export async function createHouse(
   revalidatePath("/admin/history");
   revalidatePath(`/house/${createdHouse.slug}`);
 
-  // 🔽 Генерация PDF объявления (асинхронно)
   try {
     const { generateHouseAnnouncementPdf } = await import(
       "@/src/modules/houses/services/generateHouseAnnouncementPdf"

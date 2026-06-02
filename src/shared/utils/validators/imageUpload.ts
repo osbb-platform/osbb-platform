@@ -4,6 +4,8 @@ export const MAX_IMAGE_FILE_SIZE_LABEL = "15 МБ";
 
 type ImageValidationOptions = {
   label?: string;
+  maxSizeBytes?: number;
+  maxSizeLabel?: string;
 };
 
 type ImageValidationResult = {
@@ -48,10 +50,11 @@ export function getImageSizeErrorMessage(
   options: ImageValidationOptions = {},
 ) {
   const label = getImageLabel(options);
+  const maxSizeLabel = options.maxSizeLabel?.trim() || MAX_IMAGE_FILE_SIZE_LABEL;
 
   return fileName
-    ? `Файл «${fileName}» занадто великий. ${label} має бути не більшим за ${MAX_IMAGE_FILE_SIZE_LABEL}.`
-    : `${label} має бути не більшим за ${MAX_IMAGE_FILE_SIZE_LABEL}.`;
+    ? `Файл «${fileName}» занадто великий. ${label} має бути не більшим за ${maxSizeLabel}.`
+    : `${label} має бути не більшим за ${maxSizeLabel}.`;
 }
 
 export function validateSingleImageFile(
@@ -72,7 +75,9 @@ export function validateSingleImageFile(
     };
   }
 
-  if (file.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+  const maxSizeBytes = options.maxSizeBytes ?? MAX_IMAGE_FILE_SIZE_BYTES;
+
+  if (file.size > maxSizeBytes) {
     return {
       isValid: false,
       error: getImageSizeErrorMessage(file.name, options),

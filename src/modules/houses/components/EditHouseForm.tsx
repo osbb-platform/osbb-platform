@@ -1,13 +1,15 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateHouse } from "@/src/modules/houses/actions/updateHouse";
+import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import {
   adminInputClass,
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { ACCEPTED_IMAGE_TYPES, validateSingleImageFile } from "@/src/shared/utils/validators/imageUpload";
 
 type EditHouseFormProps = {
   house: {
@@ -49,7 +51,56 @@ const initialState = {
 };
 
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
-const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const HOUSE_COVER_BUCKET = "house-cover-images";
+const HOUSE_COVER_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+function sanitizeUploadFileName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120);
+}
+
+async function uploadHouseCoverImage(file: File, houseId: string) {
+  const validation = validateSingleImageFile(file, {
+    label: "Фото будинку",
+    maxSizeBytes: HOUSE_COVER_MAX_SIZE_BYTES,
+    maxSizeLabel: "5 МБ",
+  });
+
+  if (!validation.isValid) {
+    throw new Error(validation.error ?? "Фото будинку має бути JPG, PNG або WebP і не більше 5 МБ.");
+  }
+
+  const supabase = createSupabaseBrowserClient();
+  const fileExt = file.name.split(".").pop() || "jpg";
+  const safeFileName = sanitizeUploadFileName(file.name) || `cover.${fileExt}`;
+  const randomId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+  const filePath = `${houseId}/${Date.now()}-${randomId}-${safeFileName}`;
+
+  const { error } = await supabase.storage
+    .from(HOUSE_COVER_BUCKET)
+    .upload(filePath, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+    });
+
+  if (error) {
+    throw new Error(`Не вдалося завантажити фото будинку: ${error.message}`);
+  }
+
+  return {
+    path: filePath,
+    originalName: file.name,
+  };
+}
+
 
 
 export function EditHouseForm({
@@ -70,6 +121,8 @@ export function EditHouseForm({
     house.cover_image_url ?? null,
   );
   const [removeCoverImage, setRemoveCoverImage] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const orderedDistricts = useMemo(() => {
@@ -95,8 +148,8 @@ export function EditHouseForm({
   }, [onSuccess, router, state.successMessage]);
 
   useEffect(() => {
-    onPendingChange?.(isPending);
-  }, [isPending, onPendingChange]);
+    onPendingChange?.(isPending || isUploadingCover);
+  }, [isPending, isUploadingCover, onPendingChange]);
 
   const syncPreviewToCurrentImage = () => {
     setPreviewUrl(removeCoverImage ? null : (house.cover_image_url ?? null));
@@ -110,8 +163,40 @@ export function EditHouseForm({
     };
   }, [previewUrl]);
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setActionError(null);
+
+    try {
+      setIsUploadingCover(true);
+
+      const formData = new FormData(event.currentTarget);
+      formData.delete("coverImage");
+
+      if (selectedImage) {
+        const uploadedCover = await uploadHouseCoverImage(selectedImage, house.id);
+        formData.set("uploadedImagePath", uploadedCover.path);
+        formData.set("uploadedImageName", uploadedCover.originalName);
+      }
+
+      startTransition(() => {
+        formAction(formData);
+      });
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося завантажити фото будинку.",
+      );
+    } finally {
+      setIsUploadingCover(false);
+    }
+  }
+
+  const combinedError = actionError ?? state.error;
+
   return (
-    <form id={formId} action={formAction} className="grid gap-4 md:grid-cols-2">
+    <form id={formId} onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
       <input type="hidden" name="id" value={house.id} />
       <input
         type="hidden"
@@ -278,6 +363,23 @@ export function EditHouseForm({
                       URL.revokeObjectURL(previewUrl);
                     }
 
+                    if (file) {
+                      const validation = validateSingleImageFile(file, {
+                        label: "Фото будинку",
+                        maxSizeBytes: HOUSE_COVER_MAX_SIZE_BYTES,
+                        maxSizeLabel: "5 МБ",
+                      });
+
+                      if (!validation.isValid) {
+                        setActionError(validation.error);
+                        setSelectedImage(null);
+                        syncPreviewToCurrentImage();
+                        event.target.value = "";
+                        return;
+                      }
+                    }
+
+                    setActionError(null);
                     setSelectedImage(file);
 
                     if (file) {
@@ -340,9 +442,9 @@ export function EditHouseForm({
         </div>
       </div>
 
-      {state.error ? (
+      {combinedError ? (
         <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {state.error}
+          {combinedError}
         </div>
       ) : null}
 
