@@ -15,8 +15,6 @@ import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseBy
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
-import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
-import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
@@ -173,33 +171,13 @@ export default async function AdminHouseDetailPage({
       "founding-documents": `${basePublicUrl}/founding-documents`,
     }[activeBlock] ?? basePublicUrl;
 
-  let pages = await getAdminHousePages(house.id);
-  let informationPage =
+  const pages = await getAdminHousePages(house.id);
+  const informationPage =
     activeBlock === "information"
       ? pages.find((page) => page.slug === "information") ?? null
       : null;
 
-  if (activeBlock === "information" && !informationPage) {
-    await ensureHouseInformationPage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-    informationPage =
-      pages.find((page) => page.slug === "information") ?? null;
-  }
-
-  let homePage = pages.find((page) => page.slug === "home") ?? null;
-
-  const needsHomePageForBlock =
-    activeBlock === "announcements" ||
-    activeBlock === "board" ||
-    activeBlock === "specialists" ||
-    activeBlock === "debtors" ||
-    activeBlock === "meetings";
-
-  if (needsHomePageForBlock && !homePage) {
-    await ensureHouseHomePage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-    homePage = pages.find((page) => page.slug === "home") ?? null;
-  }
+  const homePage = pages.find((page) => page.slug === "home") ?? null;
 
   const validAnnouncementSections =
     activeBlock === "announcements"
@@ -210,15 +188,6 @@ export default async function AdminHouseDetailPage({
 
   const board =
     activeBlock === "board" ? await getAdminHouseBoard(house.id) : null;
-
-  if (
-    activeBlock === "information" &&
-    !pages.find((page) => page.slug === "information")
-  ) {
-    await ensureHouseInformationPage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-  }
-
 
   const validInformationPostSections =
     activeBlock === "information"
