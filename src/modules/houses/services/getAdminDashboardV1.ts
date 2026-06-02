@@ -2,7 +2,6 @@ import { getPlatformChangeHistory } from "@/src/modules/history/services/getPlat
 import {
   getAdminActiveApartmentCountsByHouseIds,
   getAdminHousePagesByHouseIds,
-  getAdminHouseSectionsByPageIds,
 } from "@/src/modules/houses/services/getAdminDashboardBatchData";
 import { getAdminHouses } from "@/src/modules/houses/services/getAdminHouses";
 
@@ -68,8 +67,8 @@ type HouseAggregationRow = {
   hasDrafts: boolean;
   hasApartments: boolean;
   draftItems: AdminDashboardLinkItem[];
-  draftSectionCount: number;
-  publishedSectionCount: number;
+  draftPageCount: number;
+  publishedPageCount: number;
 };
 
 const MAX_FEED_ITEMS = 10;
@@ -84,16 +83,6 @@ function getHouseBlockHref(houseId: string, block?: string) {
   return `/admin/houses/${houseId}?block=${safeBlock}`;
 }
 
-function inferBlockFromSection(sectionKind: string) {
-  if (sectionKind === "announcements") return "announcements";
-  if (sectionKind === "contacts") return "board";
-  if (sectionKind === "specialists") return "specialists";
-  if (sectionKind === "faq" || sectionKind === "rich_text") {
-    return "information";
-  }
-
-  return "home";
-}
 
 function isRecent7d(value: string) {
   const timestamp = new Date(value).getTime();
@@ -133,9 +122,6 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     }),
   ]);
 
-  const pageIds = pages.map((page) => page.id);
-  const sections = await getAdminHouseSectionsByPageIds(pageIds);
-
   const pagesByHouseId = new Map<string, typeof pages>();
 
   for (const page of pages) {
@@ -144,25 +130,18 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     pagesByHouseId.set(page.house_id, bucket);
   }
 
-  const sectionsByPageId = new Map<string, typeof sections>();
-
-  for (const section of sections) {
-    const bucket = sectionsByPageId.get(section.house_page_id) ?? [];
-    bucket.push(section);
-    sectionsByPageId.set(section.house_page_id, bucket);
-  }
-
   const houseRows = houses.map((house): HouseAggregationRow => {
     const housePages = pagesByHouseId.get(house.id) ?? [];
 
     let hasDrafts = false;
-    let draftSectionCount = 0;
-    let publishedSectionCount = 0;
+    let draftPageCount = 0;
+    let publishedPageCount = 0;
     const draftItems: AdminDashboardLinkItem[] = [];
 
     for (const page of housePages) {
       if (page.status === "draft") {
         hasDrafts = true;
+        draftPageCount += 1;
 
         draftItems.push({
           id: page.id,
@@ -175,30 +154,8 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
         });
       }
 
-      const pageSections = sectionsByPageId.get(page.id) ?? [];
-
-      for (const section of pageSections) {
-        if (section.status === "draft") {
-          hasDrafts = true;
-          draftSectionCount += 1;
-
-          draftItems.push({
-            id: section.id,
-            houseId: house.id,
-            houseName: house.name,
-            section: section.kind,
-            title: section.title ?? "Без назви",
-            href: getHouseBlockHref(
-              house.id,
-              inferBlockFromSection(section.kind),
-            ),
-            updatedAt: section.updated_at ?? section.created_at,
-          });
-        }
-
-        if (section.status === "published") {
-          publishedSectionCount += 1;
-        }
+      if (page.status === "published") {
+        publishedPageCount += 1;
       }
     }
 
@@ -209,8 +166,8 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
       hasDrafts,
       hasApartments: (apartmentCounts.get(house.id) ?? 0) > 0,
       draftItems,
-      draftSectionCount,
-      publishedSectionCount,
+      draftPageCount,
+      publishedPageCount,
     };
   });
 
@@ -283,12 +240,12 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     }));
 
   const totalDraftSections = houseRows.reduce(
-    (sum, row) => sum + row.draftSectionCount,
+    (sum, row) => sum + row.draftPageCount,
     0,
   );
 
   const totalPublishedSections = houseRows.reduce(
-    (sum, row) => sum + row.publishedSectionCount,
+    (sum, row) => sum + row.publishedPageCount,
     0,
   );
 
@@ -311,7 +268,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
       totalPublishedSections,
       housesWithDrafts: houseRows.filter((row) => row.hasDrafts).length,
       housesWithPublishedContent: houseRows.filter(
-        (row) => row.publishedSectionCount > 0,
+        (row) => row.publishedPageCount > 0,
       ).length,
     },
     quickLinks: [
