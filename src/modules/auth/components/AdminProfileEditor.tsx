@@ -141,6 +141,7 @@ export function AdminProfileEditor({
     access.topLevel.districts && "Райони",
     access.topLevel.houses && "Будинки",
     access.topLevel.apartments && "Квартири",
+    access.topLevel.analytics && "Аналітика",
     access.topLevel.history && "Історія",
     access.topLevel.employees && "Співробітники",
     access.topLevel.companyPages && "Сайт компанії",

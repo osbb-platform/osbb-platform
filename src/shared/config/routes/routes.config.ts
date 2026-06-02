@@ -10,6 +10,7 @@ export const ROUTES = {
     houses: "/admin/houses",
     apartments: "/admin/apartments",
     tasks: "/admin/tasks",
+    analytics: "/admin/analytics",
     districts: "/admin/districts",
     history: "/admin/history",
     companyPages: "/admin/company-pages",

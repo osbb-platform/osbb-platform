@@ -368,6 +368,10 @@ export default async function ReportsPage({
                   <PublicReportPdfViewer
                     filePath={report.pdf?.path ?? ""}
                     fileName={report.pdf?.originalName ?? undefined}
+                    analyticsHouseId={house.id}
+                    analyticsHouseSlug={house.slug}
+                    analyticsEntityId={report.id}
+                    analyticsDocumentType="report"
                   />
                 </article>
               ))}

@@ -8,6 +8,7 @@ import type { ResolvedRoleAccess } from "@/src/shared/permissions/rbac.types";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import type { ComponentType, SVGProps } from "react";
 import {
+  AnalyticsIcon,
   BuildingIcon,
   CompanySiteIcon,
   DashboardIcon,
@@ -24,6 +25,7 @@ type NavigationItem = {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   visible?: boolean;
   badgeCount?: number;
+  badgeLabel?: string;
 };
 
 type AdminSidebarProps = {
@@ -78,6 +80,13 @@ export function AdminSidebar({
       icon: TaskListIcon,
       visible: access.topLevel.tasks,
       badgeCount: activeTasksCount,
+    },
+    {
+      href: ROUTES.admin.analytics,
+      label: "Аналітика",
+      icon: AnalyticsIcon,
+      visible: access.topLevel.analytics,
+      badgeLabel: "NEW",
     },
     {
       href: ROUTES.admin.history,
@@ -142,7 +151,17 @@ export function AdminSidebar({
 
                     </div>
 
-                    {typeof item.badgeCount === "number" && item.badgeCount > 0 ? (
+                    {item.badgeLabel ? (
+                      <span
+                        className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${
+                          isActive
+                            ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
+                        }`}
+                      >
+                        {item.badgeLabel}
+                      </span>
+                    ) : typeof item.badgeCount === "number" && item.badgeCount > 0 ? (
                       <span
                         className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                           isActive

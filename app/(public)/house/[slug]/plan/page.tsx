@@ -318,7 +318,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
                       </div>
                     ) : (
                       columnItems.map((task) => (
-                        <PublicPlanTaskViewer key={task.id} task={task} />
+                        <PublicPlanTaskViewer key={task.id} task={task} houseId={house.id} houseSlug={house.slug} />
                       ))
                     )}
                   </div>
@@ -392,7 +392,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
         <div className="mt-6 space-y-5">
           {visibleArchivedTasks.length > 0 ? (
             visibleArchivedTasks.map((task) => (
-              <PublicPlanTaskViewer key={task.id} task={task} />
+              <PublicPlanTaskViewer key={task.id} task={task} houseId={house.id} houseSlug={house.slug} />
             ))
           ) : (
             <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/60 p-4 text-sm text-[var(--muted)]">

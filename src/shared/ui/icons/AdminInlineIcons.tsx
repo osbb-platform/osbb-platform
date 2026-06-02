@@ -161,3 +161,15 @@ export function CompanySiteIcon(props: IconProps) {
     </svg>
   );
 }
+
+
+export function AnalyticsIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" {...props}>
+      <path d="M4 19V5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4 19h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7.5 15.5v-4M12 15.5V8M16.5 15.5v-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7.5 11.5 12 8l4.5 1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

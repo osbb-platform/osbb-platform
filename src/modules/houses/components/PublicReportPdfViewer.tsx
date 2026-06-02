@@ -8,12 +8,20 @@ type Props = {
   filePath: string;
   fileName?: string;
   bucket?: string;
+  analyticsHouseId?: string;
+  analyticsHouseSlug?: string;
+  analyticsEntityId?: string | null;
+  analyticsDocumentType?: string;
 };
 
 export function PublicReportPdfViewer({
   filePath,
   fileName,
   bucket = "house-reports",
+  analyticsHouseId,
+  analyticsHouseSlug,
+  analyticsEntityId,
+  analyticsDocumentType,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +35,42 @@ export function PublicReportPdfViewer({
     }
     return `/api/reports/view?${params.toString()}#toolbar=0&navpanes=0&scrollbar=0`;
   }, [bucket, fileName, filePath]);
+
+  function trackDocumentOpen() {
+    try {
+      if (!analyticsHouseId) {
+        return;
+      }
+
+      const payload = JSON.stringify({
+        houseId: analyticsHouseId,
+        eventType: "document_open",
+        entityId: analyticsEntityId ?? null,
+        metadata: {
+          source: "public_pdf_viewer",
+          houseSlug: analyticsHouseSlug ?? null,
+          documentType: analyticsDocumentType ?? bucket,
+        },
+      });
+
+      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("/api/analytics/track", blob);
+        return;
+      }
+
+      void fetch("/api/analytics/track", {
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        keepalive: true,
+      });
+    } catch (error) {
+      console.error("[analytics] Failed to track document open", error);
+    }
+  }
 
   if (!filePath.trim()) {
     return (
@@ -70,6 +114,7 @@ export function PublicReportPdfViewer({
     <>
       <PublicDocumentActionButton
         onClick={() => {
+          trackDocumentOpen();
           setLoadError(null);
           setIsLoading(true);
           setIsOpen(true);

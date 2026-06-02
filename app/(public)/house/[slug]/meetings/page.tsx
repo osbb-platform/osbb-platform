@@ -462,6 +462,10 @@ export default async function PublicMeetingsPage({
                 <PublicReportPdfViewer
                   filePath={meeting.protocolPdf}
                   fileName={`Протокол — ${meeting.title}`}
+                  analyticsHouseId={house.id}
+                  analyticsHouseSlug={house.slug}
+                  analyticsEntityId={meeting.protocolDocumentId ?? meeting.id}
+                  analyticsDocumentType="meeting_protocol"
                 />
               ) : null}
             </article>

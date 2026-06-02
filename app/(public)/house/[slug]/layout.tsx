@@ -6,6 +6,8 @@ import { HousePasswordGate } from "@/src/modules/houses/components/HousePassword
 import { PublicHouseBell } from "@/src/modules/houses/components/PublicHouseBell";
 import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFooter";
 import { PublicHouseNavigation } from "@/src/modules/houses/components/PublicHouseNavigation";
+import { PublicHouseAnalyticsTracker } from "@/src/modules/analytics/components/PublicHouseAnalyticsTracker";
+import { getOrCreateVisitorId } from "@/src/modules/analytics/utils/visitorId";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getChairmanForHouse } from "@/src/modules/houses/services/getPublishedHouseBoard";
@@ -34,6 +36,8 @@ export default async function PublicHouseLayout({
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
 
+  await getOrCreateVisitorId();
+
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(getHouseAccessCookieName(slug))?.value;
 
@@ -50,17 +54,20 @@ export default async function PublicHouseLayout({
 
   if (!hasAccess) {
     return (
-      <HousePasswordGate
-        initialLockedUntil={initialLockedUntil}
-        slug={slug}
-        houseName={house.name}
-        houseAddress={house.address}
-        shortDescription={house.short_description}
-        publicDescription={house.public_description}
-        houseCoverImageUrl={house.cover_image_url ?? null}
-        districtName={house.district?.name ?? null}
-        districtColor={districtColor}
-      />
+      <>
+        <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
+        <HousePasswordGate
+          initialLockedUntil={initialLockedUntil}
+          slug={slug}
+          houseName={house.name}
+          houseAddress={house.address}
+          shortDescription={house.short_description}
+          publicDescription={house.public_description}
+          houseCoverImageUrl={house.cover_image_url ?? null}
+          districtName={house.district?.name ?? null}
+          districtColor={districtColor}
+        />
+      </>
     );
   }
 
@@ -84,6 +91,8 @@ export default async function PublicHouseLayout({
 
   return (
     <main className="min-h-screen bg-[#F7F5F2] text-[var(--foreground)]">
+      <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
+
       <header className="sticky top-0 z-50 border-b border-[#E2D9CF] bg-[#F1ECE6]">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <Link
