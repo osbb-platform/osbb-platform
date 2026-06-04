@@ -78,16 +78,6 @@ function isStillNew(value?: string | null) {
   return date.getTime() >= Date.now();
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return houseReportsCopy.date.empty;
-
-  return date.toLocaleDateString(houseReportsCopy.date.locale, {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 export default async function ReportsPage({
   params,
@@ -364,10 +354,6 @@ export default async function ReportsPage({
                   <p className="mt-3 break-words text-sm leading-7 text-[#5B6B7C]">
                     {report.description}
                   </p>
-
-                  <div className="mt-4 text-sm text-[#5F5A54]">
-                    {formatDate(report.reportDate)}
-                  </div>
 
                   <PublicReportPdfViewer
                     filePath={report.pdfPath ?? ""}

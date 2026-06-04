@@ -30,23 +30,6 @@ function getSortTimestamp(content: Record<string, unknown>) {
   return 0;
 }
 
-function formatPublishedAt(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return houseInformationCopy.date.recent;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return houseInformationCopy.date.recent;
-  }
-
-  return date.toLocaleDateString(houseInformationCopy.date.locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
 
 export default async function InformationPage({
   params,

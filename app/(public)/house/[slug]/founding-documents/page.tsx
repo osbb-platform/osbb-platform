@@ -38,19 +38,6 @@ function getDocumentType(document: PublicHouseFoundingDocumentItem) {
   return document.document_type ?? "other";
 }
 
-function formatDate(value: string | null) {
-  if (!value) return "Дату не вказано";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 export default async function FoundingDocumentsPage({
   params,
@@ -169,10 +156,6 @@ export default async function FoundingDocumentsPage({
                   <p className="mt-3 break-words text-sm leading-7 text-[#5B6B7C]">
                     {document.description || "PDF документ доступний для перегляду."}
                   </p>
-
-                  <div className="mt-4 text-sm text-[#5F5A54]">
-                    {formatDate(document.updated_at || document.created_at)}
-                  </div>
 
                   <PublicReportPdfViewer
                     filePath={document.storage_path ?? ""}
