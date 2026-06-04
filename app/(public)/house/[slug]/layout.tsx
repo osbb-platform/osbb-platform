@@ -7,7 +7,6 @@ import { PublicHouseBell } from "@/src/modules/houses/components/PublicHouseBell
 import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFooter";
 import { PublicHouseNavigation } from "@/src/modules/houses/components/PublicHouseNavigation";
 import { PublicHouseAnalyticsTracker } from "@/src/modules/analytics/components/PublicHouseAnalyticsTracker";
-import { getOrCreateVisitorId } from "@/src/modules/analytics/utils/visitorId";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getChairmanForHouse } from "@/src/modules/houses/services/getPublishedHouseBoard";
@@ -35,8 +34,6 @@ export default async function PublicHouseLayout({
   }
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
-
-  await getOrCreateVisitorId();
 
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get(getHouseAccessCookieName(slug))?.value;

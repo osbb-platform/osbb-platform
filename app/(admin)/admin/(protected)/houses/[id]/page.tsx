@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { ArrowLeftIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
+import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -274,16 +276,19 @@ export default async function AdminHouseDetailPage({
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              Робоча панель керування розділами та контентом сайту будинку.
+              {house.address}
+              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                slug: {house.slug}
+                {house.slug}
               </span>
-              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                {house.is_active ? "Активний" : "Архів"}
-              </span>
+              {!house.is_active ? (
+                <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                  Архів
+                </span>
+              ) : null}
               {house.district ? (
                 <span
                   className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-text)]"
@@ -295,7 +300,6 @@ export default async function AdminHouseDetailPage({
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 Розділ: {
                   {
-                    hero: "Hero",
                     announcements: "Оголошення",
                     board: "Правління",
                     information: "Інформація",
@@ -309,11 +313,6 @@ export default async function AdminHouseDetailPage({
                   }[activeBlock]
                 }
               </span>
-            </div>
-
-            <div className="mt-4 text-sm text-[var(--cms-text-muted)]">
-              {house.address}
-              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
             </div>
           </div>
 
@@ -344,10 +343,19 @@ export default async function AdminHouseDetailPage({
 
               <Link
                 href="/admin/houses"
-                className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                aria-label="Назад до реєстру будинків"
+                title="Назад до реєстру"
               >
-                Назад до реєстру
+                <ArrowLeftIcon className="h-5 w-5" />
               </Link>
+            </div>
+
+            <div className="w-full min-w-[260px] xl:max-w-[360px]">
+              <HouseBlockSelector
+                houseId={house.id}
+                activeBlock={activeBlock}
+              />
             </div>
           </div>
         </div>
@@ -356,6 +364,7 @@ export default async function AdminHouseDetailPage({
       <HouseBlockNavigationFrame
         houseId={house.id}
         activeBlock={activeBlock}
+        hideSelector
       >
       {activeBlock === "announcements" ? (
         <HouseAnnouncementsWorkspace

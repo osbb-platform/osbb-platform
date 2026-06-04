@@ -1,11 +1,14 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+import { NextRequest, NextResponse } from "next/server";
 import { trackVisitorEvent } from "@/src/modules/analytics/ingest/trackVisitorEvent";
 import {
   VISITOR_EVENT_TYPES,
   type VisitorEventType,
 } from "@/src/modules/analytics/ingest/visitorEventTypes";
-import { HOUSE_VISITOR_COOKIE_NAME } from "@/src/modules/analytics/utils/visitorId";
+import {
+  HOUSE_VISITOR_COOKIE_MAX_AGE_SECONDS,
+  HOUSE_VISITOR_COOKIE_NAME,
+} from "@/src/modules/analytics/utils/visitorId";
 
 type AnalyticsTrackPayload = {
   houseId?: unknown;
@@ -33,7 +36,9 @@ function safeMetadata(value: unknown) {
   return value as Record<string, unknown>;
 }
 
-async function parsePayload(request: Request): Promise<AnalyticsTrackPayload | null> {
+async function parsePayload(
+  request: NextRequest,
+): Promise<AnalyticsTrackPayload | null> {
   try {
     return (await request.json()) as AnalyticsTrackPayload;
   } catch {
@@ -41,21 +46,38 @@ async function parsePayload(request: Request): Promise<AnalyticsTrackPayload | n
   }
 }
 
-export async function POST(request: Request) {
+function analyticsNoContent(sessionId?: string, shouldSetCookie = false) {
+  const response = new NextResponse(null, { status: 204 });
+
+  if (sessionId && shouldSetCookie) {
+    response.cookies.set(HOUSE_VISITOR_COOKIE_NAME, sessionId, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: HOUSE_VISITOR_COOKIE_MAX_AGE_SECONDS,
+    });
+  }
+
+  return response;
+}
+
+export async function POST(request: NextRequest) {
+  const cookieSessionId = request.cookies.get(HOUSE_VISITOR_COOKIE_NAME)?.value;
+  const sessionId = cookieSessionId || randomUUID();
+
   try {
     const payload = await parsePayload(request);
 
     if (!payload) {
-      return new NextResponse(null, { status: 204 });
+      return analyticsNoContent(sessionId, !cookieSessionId);
     }
 
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get(HOUSE_VISITOR_COOKIE_NAME)?.value ?? "";
     const houseId = optionalString(payload.houseId);
     const eventType = payload.eventType;
 
-    if (!sessionId || !houseId || !isVisitorEventType(eventType)) {
-      return new NextResponse(null, { status: 204 });
+    if (!houseId || !isVisitorEventType(eventType)) {
+      return analyticsNoContent(sessionId, !cookieSessionId);
     }
 
     await trackVisitorEvent({
@@ -66,9 +88,10 @@ export async function POST(request: Request) {
       entityId: optionalString(payload.entityId),
       metadata: safeMetadata(payload.metadata),
     });
+
+    return analyticsNoContent(sessionId, !cookieSessionId);
   } catch (error) {
     console.error("[analytics] Track route failed", error);
+    return analyticsNoContent(sessionId, !cookieSessionId);
   }
-
-  return new NextResponse(null, { status: 204 });
 }

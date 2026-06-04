@@ -380,22 +380,22 @@ export function AdminTasksKanban({
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
-              Задачі
-            </div>
-
-            <h1 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold text-[var(--cms-text)]">
               Управління задачами
             </h1>
 
-            <p className="mt-6 text-sm leading-6 text-[var(--cms-text-muted)]">
-              Активних задач, що потребують уваги: {activeIncompleteCount}
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--cms-text-muted)]">
+              Розділ уже доступний для роботи та проходить фінальне доопрацювання першої production-версії.
             </p>
+
+            <div className="mt-4 inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+              Активних задач, що потребують уваги: {activeIncompleteCount}
+            </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2">
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
             <CreateTaskModal assignees={assignees} houses={houses} />
 
             <button

@@ -70,16 +70,12 @@ function CreateEmployeeActionForm({
   const shouldShowForm = canCreateEmployees && isOpen && !state.success;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
-            Співробітники
-          </div>
-
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
             Реєстр співробітників
-          </h2>
+          </h1>
         </div>
 
         {canCreateEmployees ? (
@@ -198,7 +194,7 @@ function CreateEmployeeActionForm({
           </div>
         </form>
       ) : null}
-    </section>
+    </div>
   );
 }
 

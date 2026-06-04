@@ -268,7 +268,7 @@ export default async function AdminAnalyticsPage({
                   aria-current={isActive ? "page" : undefined}
                   className={`inline-flex items-center rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
                     isActive
-                      ? "border-[var(--cms-accent-primary)] bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
+                      ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
                       : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-tertiary)]"
                   }`}
                 >
@@ -346,7 +346,7 @@ export default async function AdminAnalyticsPage({
             <div className="flex items-end">
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-[var(--cms-accent-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--cms-accent-foreground)] transition hover:opacity-90"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-5 py-2.5 text-sm font-semibold text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)] transition hover:bg-[var(--cms-bg-secondary)]"
               >
                 Застосувати
               </button>
@@ -368,7 +368,7 @@ export default async function AdminAnalyticsPage({
                   href={href}
                   className={`inline-flex rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
                     isActive
-                      ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                      ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
                       : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-tertiary)] hover:text-[var(--cms-text)]"
                   }`}
                 >
@@ -484,7 +484,7 @@ export default async function AdminAnalyticsPage({
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-[var(--cms-bg-secondary)]">
                     <div
-                      className="h-full rounded-full bg-[var(--cms-accent-primary)]"
+                      className="h-full rounded-full bg-[var(--cms-border-secondary)]"
                       style={{ width: `${Math.max(section.share, 2)}%` }}
                     />
                   </div>

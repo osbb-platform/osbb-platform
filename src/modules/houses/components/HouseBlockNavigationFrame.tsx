@@ -8,12 +8,14 @@ type HouseBlockNavigationFrameProps = {
   houseId: string;
   activeBlock: string;
   children: ReactNode;
+  hideSelector?: boolean;
 };
 
 export function HouseBlockNavigationFrame({
   houseId,
   activeBlock,
   children,
+  hideSelector = false,
 }: HouseBlockNavigationFrameProps) {
   const [pendingBlock, setPendingBlock] = useState<string | null>(null);
   const isPending = pendingBlock !== null;
@@ -21,11 +23,13 @@ export function HouseBlockNavigationFrame({
 
   return (
     <div className="space-y-6">
-      <HouseBlockSelector
-        houseId={houseId}
-        activeBlock={activeBlock}
-        onPendingBlockChange={setPendingBlock}
-      />
+      {hideSelector ? null : (
+        <HouseBlockSelector
+          houseId={houseId}
+          activeBlock={activeBlock}
+          onPendingBlockChange={setPendingBlock}
+        />
+      )}
 
       <div className="relative min-h-[320px]">
         {children}

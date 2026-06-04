@@ -2,7 +2,7 @@ import { AdminForgotPasswordForm } from "@/src/modules/auth/components/AdminForg
 
 export default function AdminForgotPasswordPage() {
   return (
-    <main className="min-h-screen bg-[var(--cms-bg)] text-[var(--cms-text)]">
+    <main className="cms-theme-root min-h-screen bg-[var(--cms-bg)] text-[var(--cms-text)]">
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-8 shadow-sm">
           <div className="mb-4 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-sm font-medium text-[var(--cms-text-muted)]">

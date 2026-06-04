@@ -423,20 +423,6 @@ export function DistrictsRegistryWorkspace({
             <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
               Керування районами
             </h1>
-
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              Райони — базова структура платформи. Спочатку створюється район, потім
-              до нього прив’язуються будинки та вся CMS-логіка об’єкта.
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                Районів: {visibleDistricts.length}
-              </span>
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                Будинків у системі: {totalHousesCount}
-              </span>
-            </div>
           </div>
 
           <button
@@ -450,19 +436,13 @@ export function DistrictsRegistryWorkspace({
             Створити район
           </button>
         </div>
-      </div>
 
-      <div className={`${adminSurfaceClass} p-6`}>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--cms-text)]">Пошук по районах</h2>
-            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Швидкий пошук району за назвою або slug.
-            </p>
-          </div>
-
+        <div className="mt-5 flex flex-wrap gap-2">
           <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
-            Знайдено: {filteredDistricts.length}
+            Районів: {visibleDistricts.length}
+          </div>
+          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+            Будинків: {totalHousesCount}
           </div>
         </div>
 

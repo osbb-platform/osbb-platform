@@ -312,20 +312,6 @@ export default async function AdminHistoryPage({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-        <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
-          Історія
-        </div>
-
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
-          Історія
-        </h1>
-
-        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-          Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
-        </p>
-      </div>
-
       <HistoryToolbar
         tab={tab}
         sort={sort}

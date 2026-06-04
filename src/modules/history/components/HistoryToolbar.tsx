@@ -126,9 +126,17 @@ export function HistoryToolbar({
   }
 
   return (
-    <div className="sticky top-4 z-30 space-y-3">
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 backdrop-blur">
-        <div className="flex flex-wrap gap-2">
+    <div className="space-y-3">
+      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
+          Історія
+        </h1>
+
+        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
+          Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
+        </p>
+
+        <div className="mt-5 flex flex-wrap gap-2">
           {[
             { key: "all" as const, label: "Все" },
             { key: "cms" as const, label: "CMS" },
@@ -143,7 +151,7 @@ export function HistoryToolbar({
                 onClick={() => switchTab(item.key)}
                 className={`inline-flex items-center rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
                   isActive
-                    ? "border-[var(--cms-accent-primary)] bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
+                    ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
                     : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-tertiary)]"
                 }`}
               >

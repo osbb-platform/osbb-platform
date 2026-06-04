@@ -241,11 +241,7 @@ export function HouseRegistryCard({
 
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  slug: {house.slug}
-                </span>
-
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Активний
+                  {house.slug}
                 </span>
 
                 {house.district ? (
@@ -341,6 +337,10 @@ export function HouseRegistryCard({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-[var(--cms-text-soft)]">
+            Створено: {formatCreatedAt(house.created_at)}
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/admin/houses/${house.id}`}
@@ -348,10 +348,6 @@ export function HouseRegistryCard({
             >
               Керування будинком
             </Link>
-          </div>
-
-          <div className="text-sm text-[var(--cms-text-soft)]">
-            Створено: {formatCreatedAt(house.created_at)}
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { AdminLoginForm } from "@/src/modules/auth/components/AdminLoginForm";
 
 export default function AdminLoginPage() {
   return (
-    <main className="min-h-screen bg-[var(--cms-bg)] text-[var(--cms-text)]">
+    <main className="cms-theme-root min-h-screen bg-[var(--cms-bg)] text-[var(--cms-text)]">
       <section className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6 py-16">
         <div className="w-full rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-10 shadow-sm">
           <div className="mx-auto max-w-2xl text-center">

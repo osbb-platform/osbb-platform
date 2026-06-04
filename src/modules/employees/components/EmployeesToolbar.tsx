@@ -79,7 +79,7 @@ export function EmployeesToolbar({
   }
 
   return (
-    <div className="sticky top-0 z-10 rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]/95 p-4 backdrop-blur">
+    <div>
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
