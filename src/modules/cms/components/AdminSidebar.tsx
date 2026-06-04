@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getRoleLabel } from "@/src/shared/constants/roles/roles.constants";
 import type { ResolvedRoleAccess } from "@/src/shared/permissions/rbac.types";
@@ -35,6 +35,40 @@ type AdminSidebarProps = {
   activeTasksCount?: number;
 };
 
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "osbb-admin-sidebar-collapsed";
+
+function subscribeSidebarCollapse(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener("osbb-admin-sidebar-collapse-change", listener);
+
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener("osbb-admin-sidebar-collapse-change", listener);
+  };
+}
+
+function getSidebarCollapseSnapshot() {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function getSidebarCollapseServerSnapshot() {
+  return false;
+}
+
+function setSidebarCollapseValue(value: boolean) {
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(value));
+    window.dispatchEvent(new Event("osbb-admin-sidebar-collapse-change"));
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function isItemActive(pathname: string, href: string) {
   if (href === ROUTES.admin.dashboard) {
     return pathname === href;
@@ -43,36 +77,32 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+
+function getProfileInitials(currentUser: CurrentAdminUser) {
+  const source = currentUser.fullName?.trim() || currentUser.email?.trim() || "U";
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0]?.slice(0, 1) ?? ""}${parts[1]?.slice(0, 1) ?? ""}`.toUpperCase();
+  }
+
+  return source.slice(0, 2).toUpperCase();
+}
+
 export function AdminSidebar({
   currentUser,
   access,
   activeTasksCount = 0,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    try {
-      return localStorage.getItem("osbb-admin-sidebar-collapsed") === "true";
-    } catch {
-      return false;
-    }
-  });
+  const isCollapsed = useSyncExternalStore(
+    subscribeSidebarCollapse,
+    getSidebarCollapseSnapshot,
+    getSidebarCollapseServerSnapshot,
+  );
 
   function toggleSidebar() {
-    setIsCollapsed((current) => {
-      const next = !current;
-
-      try {
-        localStorage.setItem("osbb-admin-sidebar-collapsed", String(next));
-      } catch {
-        // Ignore storage errors.
-      }
-
-      return next;
-    });
+    setSidebarCollapseValue(!isCollapsed);
   }
 
   const navigation: NavigationItem[] = [
@@ -140,81 +170,52 @@ export function AdminSidebar({
 
   return (
     <aside
-      className={`w-full border-b border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-bg)] transition-[width] duration-300 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
+      className={`relative w-full border-b border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-bg)] transition-[width] duration-300 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
         isCollapsed ? "lg:w-24" : "lg:w-72"
       }`}
     >
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="absolute right-0 top-7 z-20 hidden h-9 w-9 translate-x-1/2 items-center justify-center rounded-xl border border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-card)] text-[var(--cms-text-muted)] shadow-sm transition hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)] lg:inline-flex"
+        aria-label={isCollapsed ? "Розгорнути бокову панель" : "Згорнути бокову панель"}
+        title={isCollapsed ? "Розгорнути панель" : "Згорнути панель"}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className={`h-4 w-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
+      </button>
+
       <div className="flex h-full min-h-0 flex-col">
         <div
           className={`shrink-0 border-b border-[var(--cms-border-primary)] py-5 ${
             isCollapsed ? "px-3" : "px-6"
           }`}
         >
-          {isCollapsed ? (
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-card)] text-sm font-black tracking-tight text-[var(--cms-text)]"
-                aria-label="OSBB Platform"
-                title="OSBB Platform"
-              >
-                OS
-              </div>
-
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)]"
-                aria-label="Розгорнути бокову панель"
-                title="Розгорнути панель"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5 rotate-180"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15 6l-6 6 6 6" />
-                </svg>
-              </button>
+          <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-card)] text-[var(--cms-text)]"
+              aria-label="OSBB Platform"
+              title="OSBB Platform"
+            >
+              <BuildingIcon className="h-6 w-6" />
             </div>
-          ) : (
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h2 className="text-xl font-semibold text-[var(--cms-text)]">
-                  OSBB Platform
-                </h2>
 
-                <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  Панель керування керуючої компанії
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)] lg:inline-flex"
-                aria-label="Згорнути бокову панель"
-                title="Згорнути панель"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15 6l-6 6 6 6" />
-                </svg>
-              </button>
-            </div>
-          )}
+            {isCollapsed ? null : (
+              <h2 className="min-w-0 truncate text-xl font-semibold text-[var(--cms-text)]">
+                OSBB Platform
+              </h2>
+            )}
+          </div>
         </div>
 
         <nav className={`min-h-0 flex-1 overflow-y-auto py-4 ${isCollapsed ? "px-3" : "px-4"}`}>
@@ -295,31 +296,21 @@ export function AdminSidebar({
               }`}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-sm font-bold uppercase text-[var(--cms-text)]">
-                {(currentUser.fullName ?? currentUser.email ?? "U").slice(0, 1)}
+                {getProfileInitials(currentUser)}
               </div>
 
               {isCollapsed ? null : (
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-[var(--cms-text)]">
+                  <div className="truncate text-sm font-semibold text-[var(--cms-text)]">
                     {currentUser.fullName ?? currentUser.email ?? "Не вказано"}
                   </div>
 
-                  <div className="mt-0.5 truncate text-xs text-[var(--cms-text-muted)]">
-                    {currentUser.email ?? "Електронну пошту не вказано"}
+                  <div className="mt-0.5 truncate text-xs font-medium text-[var(--cms-text-muted)]">
+                    {getRoleLabel(currentUser.role)}
                   </div>
                 </div>
               )}
             </div>
-
-            {isCollapsed ? (
-              <div className="mt-2 truncate text-[10px] font-medium text-[var(--cms-text-muted)]">
-                {getRoleLabel(currentUser.role)}
-              </div>
-            ) : (
-              <div className="mt-3 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
-                {getRoleLabel(currentUser.role)}
-              </div>
-            )}
           </Link>
         </div>
       </div>

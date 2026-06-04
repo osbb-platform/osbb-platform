@@ -2,6 +2,13 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  DownloadIcon,
+  PlusIcon,
+  TemplateIcon,
+  TrashIcon,
+  UploadIcon,
+} from "@/src/shared/ui/icons/AdminInlineIcons";
 import { ApartmentsImportPanel } from "@/src/modules/apartments/components/ApartmentsImportPanel";
 import { ApartmentsMiniBulkPanel } from "@/src/modules/apartments/components/ApartmentsMiniBulkPanel";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -24,7 +31,7 @@ import type {
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
+  adminIconButtonClass,
   adminSecondaryButtonClass,
   adminDangerButtonClass,
   adminSurfaceClass,
@@ -127,7 +134,7 @@ function SortableHeader({
       onClick={() => onToggle(sortKey)}
       className={
         isActive
-          ? "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-primary-foreground)]"
+          ? "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text)]"
           : "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)] transition hover:text-[var(--cms-text)]"
       }
     >
@@ -402,46 +409,64 @@ export function ApartmentsRegistryWorkspace({
             </div>
 
             {canMutateRegistry || canExport ? (
-              <div className="flex flex-wrap gap-3 xl:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsImportOpen(true)}
-                  className={adminPrimaryButtonClass}
-                >
-                  Завантажити
-                </button>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {canMutateRegistry ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsImportOpen(true)}
+                    className={adminIconButtonClass}
+                    aria-label="Завантажити квартири"
+                    title="Завантажити"
+                  >
+                    <UploadIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
 
-                <button
-                  type="button"
-                  onClick={handleExportRegistry}
-                  className={adminPrimaryButtonClass}
-                >
-                  Вивантажити
-                </button>
+                {canExport ? (
+                  <button
+                    type="button"
+                    onClick={handleExportRegistry}
+                    className={adminIconButtonClass}
+                    aria-label="Вивантажити реєстр квартир"
+                    title="Вивантажити"
+                  >
+                    <DownloadIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
 
-                <button
-                  type="button"
-                  onClick={handleDownloadTemplate}
-                  className={adminSecondaryButtonClass}
-                >
-                  Завантажити шаблон
-                </button>
+                {canMutateRegistry ? (
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className={adminIconButtonClass}
+                    aria-label="Завантажити шаблон імпорту"
+                    title="Завантажити шаблон"
+                  >
+                    <TemplateIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
 
-                <button
-                  type="button"
-                  onClick={() => setIsMiniBulkOpen(true)}
-                  className={adminSecondaryButtonClass}
-                >
-                  Додати
-                </button>
+                {canMutateRegistry ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsMiniBulkOpen(true)}
+                    className={adminIconButtonClass}
+                    aria-label="Додати квартиру вручну"
+                    title="Додати"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
 
-                {!archived ? (
+                {canMutateRegistry && !archived ? (
                   <button
                     type="button"
                     onClick={handleArchiveAll}
-                    className={adminDangerButtonClass}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cms-surface)]"
+                    aria-label="Очистити активний список квартир"
+                    title="Очистити"
                   >
-                    Очистити список
+                    <TrashIcon className="h-5 w-5" />
                   </button>
                 ) : null}
               </div>
@@ -559,8 +584,8 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: false })}
               className={
                 !archived
-                  ? "rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-foreground)]"
-                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
+                  ? "rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               }
             >
               Активні
@@ -571,8 +596,8 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: true })}
               className={
                 archived
-                  ? "rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-foreground)]"
-                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)]"
+                  ? "rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               }
             >
               Архів

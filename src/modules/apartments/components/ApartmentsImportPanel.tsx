@@ -158,7 +158,7 @@ export function ApartmentsImportPanel({
                     type="file"
                     accept=".csv,.xls,.xlsx"
                     onChange={handleFileChange}
-                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-foreground)]"
+                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-bg-tertiary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-text)]"
                   />
 
                   <div className="mt-2 text-xs text-[var(--cms-text-muted)]">

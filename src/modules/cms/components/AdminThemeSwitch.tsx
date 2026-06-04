@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -9,35 +9,65 @@ import {
 type AdminTheme = "dark" | "light";
 
 const STORAGE_KEY = "osbb-admin-theme";
+const THEME_CHANGE_EVENT = "osbb-admin-theme-change";
 
 function applyTheme(theme: AdminTheme) {
   if (theme === "light") {
     document.documentElement.setAttribute("data-admin-theme", "light");
+    document.documentElement.style.colorScheme = "light";
   } else {
     document.documentElement.removeAttribute("data-admin-theme");
+    document.documentElement.style.colorScheme = "dark";
   }
 }
 
-function getStoredTheme(): AdminTheme {
-  if (typeof window === "undefined") {
-    return "dark";
+function readStoredTheme(): AdminTheme {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "dark"
+      ? "dark"
+      : "light";
+  } catch {
+    return "light";
   }
+}
 
-  const value = window.localStorage.getItem(STORAGE_KEY);
-  return value === "light" ? "light" : "dark";
+function subscribeTheme(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener(THEME_CHANGE_EVENT, listener);
+
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener(THEME_CHANGE_EVENT, listener);
+  };
+}
+
+function getThemeSnapshot(): AdminTheme {
+  return readStoredTheme();
+}
+
+function getThemeServerSnapshot(): AdminTheme {
+  return "light";
+}
+
+function persistTheme(theme: AdminTheme) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, theme);
+    applyTheme(theme);
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
+  } catch {
+    applyTheme(theme);
+  }
 }
 
 export function AdminThemeSwitch() {
-  const [theme, setTheme] = useState<AdminTheme>(() => getStoredTheme());
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getThemeServerSnapshot,
+  );
 
   function handleThemeChange(nextTheme: AdminTheme) {
-    setTheme(nextTheme);
-    window.localStorage.setItem(STORAGE_KEY, nextTheme);
-    applyTheme(nextTheme);
+    persistTheme(nextTheme);
   }
 
   const lightButtonClass =
