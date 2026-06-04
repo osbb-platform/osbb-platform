@@ -319,7 +319,7 @@ function HouseEditorCard({
 
               <div className="flex items-center gap-2">
                 <a
-                  href={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&download=1&filename=${encodeURIComponent(`${house.slug}.pdf`)}`}
+                  href={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&download=1&filename=${encodeURIComponent(`${house.slug}.pdf`)}&v=pdf-hotfix-20260604`}
                   download={`${house.slug}.pdf`}
                   className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] shadow-sm transition hover:bg-[var(--cms-pill-bg)]"
                 >
@@ -337,7 +337,7 @@ function HouseEditorCard({
             </div>
 
             <iframe
-              src={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements`}
+              src={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&v=pdf-hotfix-20260604`}
               className="h-[calc(85vh-73px)] w-full"
             />
           </div>
