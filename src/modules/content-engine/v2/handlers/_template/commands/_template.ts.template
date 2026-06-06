@@ -1,0 +1,85 @@
+import type { CommandSpec } from "../../../types/handler";
+import { err, ok } from "../../../types/result";
+
+export type <DomainType>Payload = {
+  id?: string;
+  lockVersion?: number;
+};
+
+/**
+ * Template command for Architecture 2.0 content-engine v2 handlers.
+ *
+ * Replace placeholders, add domain-specific validation, perform DB writes
+ * inside execute(), and return ExecResult for the shared pipeline.
+ */
+export const <COMMAND_NAME>Command: CommandSpec = {
+  actionKey: "<WORKSPACE_ACTION_KEY>",
+  requiresLockCheck: true,
+
+  async validate(rawPayload) {
+    const payload = rawPayload as Partial<<DomainType>Payload>;
+
+    if (!payload.id) {
+      return err("Не передано ID запису.", "VALIDATION_FAILED");
+    }
+
+    if (typeof payload.lockVersion !== "number") {
+      return err("Не передано версію запису.", "VALIDATION_FAILED");
+    }
+
+    return ok(undefined);
+  },
+
+  async execute(rawPayload, ctx) {
+    const payload = rawPayload as <DomainType>Payload;
+
+    const { data: existing, error: existingError } = await ctx.supabase
+      .from("<TABLE_NAME>")
+      .select("*")
+      .eq("id", payload.id)
+      .eq("house_id", ctx.house.id)
+      .maybeSingle();
+
+    if (existingError) {
+      return err(existingError.message, "INTERNAL");
+    }
+
+    if (!existing) {
+      return err("Запис не знайдено.", "NOT_FOUND");
+    }
+
+    const now = new Date().toISOString();
+
+    const { data: updated, error } = await ctx.supabase
+      .from("<TABLE_NAME>")
+      .update({
+        updated_at: now,
+        lock_version: Number(payload.lockVersion) + 1,
+      })
+      .eq("id", payload.id)
+      .eq("house_id", ctx.house.id)
+      .eq("lock_version", payload.lockVersion)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      return err(error.message, "INTERNAL");
+    }
+
+    if (!updated) {
+      return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
+    }
+
+    return ok({
+      data: updated,
+      history: {
+        entityType: "<ENTITY_TYPE>",
+        entityId: String(payload.id),
+        action: "<HISTORY_ACTION>",
+        description: "Оновлено запис.",
+        beforeSnapshot: existing,
+        afterSnapshot: updated,
+      },
+    });
+  },
+};

@@ -22,29 +22,35 @@ export const adminBodyClass =
 export const adminMetaTextClass =
   "text-xs uppercase tracking-wide text-[var(--cms-text-soft)]";
 
+export const adminFocusRingClass =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cms-surface)]";
+
 export const adminInputClass =
-  "w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]";
+  `w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] ${adminFocusRingClass}`;
 
 export const adminTextareaClass = adminInputClass;
 export const adminSelectClass = adminInputClass;
 
 export const adminIconButtonClass =
-  "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]";
+  `inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] ${adminFocusRingClass}`;
+
+export const adminButtonDisabledClass =
+  "disabled:cursor-not-allowed disabled:opacity-60";
 
 export const adminPrimaryButtonClass =
-  "inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90";
+  `inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 ${adminFocusRingClass}`;
 
 export const adminSecondaryButtonClass =
-  "inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]";
+  `inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] ${adminFocusRingClass}`;
 
 export const adminDangerButtonClass =
-  "inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]";
+  `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] ${adminFocusRingClass}`;
 
 export const adminWarningButtonClass =
-  "inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
+  `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)] ${adminFocusRingClass}`;
 
 export const adminSuccessButtonClass =
-  "inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
+  `inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-medium transition hover:opacity-90 border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)] ${adminFocusRingClass}`;
 
 export const adminEmptyStateClass =
   "rounded-2xl border border-dashed border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-4 py-4 text-sm leading-6 text-[var(--cms-text-muted)]";
@@ -53,10 +59,22 @@ export const adminBadgeBaseClass =
   "inline-flex rounded-full px-2.5 py-1 text-xs font-medium";
 
 export const adminTabBaseClass =
-  "inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition";
+  `inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${adminFocusRingClass}`;
+
+export const adminTabActiveClass =
+  "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]";
+
+export const adminTabInactiveClass =
+  "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]";
 
 export const adminTabCountBaseClass =
   "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold";
+
+export const adminTabCountActiveClass =
+  "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]";
+
+export const adminTabCountInactiveClass =
+  "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]";
 
 export const adminOverlayClass =
   "bg-[var(--cms-overlay)] backdrop-blur-sm";

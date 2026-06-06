@@ -1,6 +1,7 @@
 import { houseAnnouncementsCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
 
 type AnnouncementsPageProps = {
   params: Promise<{ slug: string }>;
@@ -108,13 +109,26 @@ export default async function PublicHouseAnnouncementsPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const filter = normalizeFilter(resolvedSearchParams.filter);
 
-  const { house, sections } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
 
-  const allAnnouncements = sections
-    .filter((section) => section.kind === "announcements")
+  const allAnnouncements = (await getPublishedHouseAnnouncements(house.id))
+    .map((announcement) => ({
+      id: announcement.id,
+      title: announcement.title,
+      content: {
+        body: announcement.body,
+        level: announcement.level,
+        publishedAt: announcement.published_at,
+        updatedAt: announcement.updated_at,
+        createdAt: announcement.published_at ?? announcement.updated_at,
+      },
+    }))
     .sort((a, b) => {
       const aContent =
         typeof a.content === "object" && a.content

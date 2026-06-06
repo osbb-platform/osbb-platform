@@ -201,6 +201,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
       houses: true,
       apartments: true,
       tasks: true,
+      analytics: true,
       history: true,
       employees: true,
       companyPages: false,

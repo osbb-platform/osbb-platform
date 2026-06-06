@@ -14,6 +14,8 @@ const TOP_LEVEL_KEYS: CmsTopLevelSectionKey[] = [
   "districts",
   "houses",
   "apartments",
+  "tasks",
+  "analytics",
   "history",
   "employees",
   "companyPages",

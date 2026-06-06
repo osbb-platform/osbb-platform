@@ -4,6 +4,8 @@ import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { HOUSE_VISITOR_COOKIE_NAME } from "@/src/modules/analytics/utils/visitorId";
+import { trackVisitorEvent } from "@/src/modules/analytics/ingest/trackVisitorEvent";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
 
@@ -51,7 +53,17 @@ export async function loginToHouse(
 
 
   const supabase = await createSupabaseServerClient();
+  const visitorSessionId = cookieStore.get(HOUSE_VISITOR_COOKIE_NAME)?.value ?? "";
   const sessionToken = randomUUID();
+
+  const { data: houseForAnalytics } = await supabase
+    .from("houses")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  const analyticsHouseId =
+    typeof houseForAnalytics?.id === "string" ? houseForAnalytics.id : null;
 
   const { data, error } = await supabase.rpc("create_house_session", {
     target_house_slug: slug,
@@ -85,6 +97,18 @@ export async function loginToHouse(
 
       cookieStore.delete(attemptsCookieName);
 
+      if (analyticsHouseId && visitorSessionId) {
+        await trackVisitorEvent({
+          houseId: analyticsHouseId,
+          sessionId: visitorSessionId,
+          eventType: "password_fail",
+          metadata: {
+            source: "house_password_gate",
+            houseSlug: slug,
+          },
+        });
+      }
+
       return {
         error:
           "Для безопасности вход временно приостановлен на 5 минут.",
@@ -100,10 +124,37 @@ export async function loginToHouse(
       maxAge: 5 * 60,
     });
 
+    if (analyticsHouseId && visitorSessionId) {
+      await trackVisitorEvent({
+        houseId: analyticsHouseId,
+        sessionId: visitorSessionId,
+        eventType: "password_fail",
+        metadata: {
+          source: "house_password_gate",
+          houseSlug: slug,
+        },
+      });
+    }
+
     return {
       error: "Код не подошел. Попробуйте еще раз.",
       lockedUntil: null,
     };
+  }
+
+  if (visitorSessionId) {
+    await trackVisitorEvent({
+      houseId:
+        typeof result.house_id === "string"
+          ? result.house_id
+          : analyticsHouseId ?? "",
+      sessionId: visitorSessionId,
+      eventType: "password_success",
+      metadata: {
+        source: "house_password_gate",
+        houseSlug: slug,
+      },
+    });
   }
 
   await logPlatformChange({

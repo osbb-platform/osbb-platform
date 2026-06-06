@@ -6,8 +6,10 @@ import { HousePasswordGate } from "@/src/modules/houses/components/HousePassword
 import { PublicHouseBell } from "@/src/modules/houses/components/PublicHouseBell";
 import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFooter";
 import { PublicHouseNavigation } from "@/src/modules/houses/components/PublicHouseNavigation";
+import { PublicHouseAnalyticsTracker } from "@/src/modules/analytics/components/PublicHouseAnalyticsTracker";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getChairmanForHouse } from "@/src/modules/houses/services/getPublishedHouseBoard";
 import { getPublicHouseBellFeed } from "@/src/modules/houses/services/getPublicHouseBellFeed";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
@@ -49,44 +51,30 @@ export default async function PublicHouseLayout({
 
   if (!hasAccess) {
     return (
-      <HousePasswordGate
-        initialLockedUntil={initialLockedUntil}
-        slug={slug}
-        houseName={house.name}
-        houseAddress={house.address}
-        shortDescription={house.short_description}
-        publicDescription={house.public_description}
-        houseCoverImageUrl={house.cover_image_url ?? null}
-        districtName={house.district?.name ?? null}
-        districtColor={districtColor}
-      />
+      <>
+        <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
+        <HousePasswordGate
+          initialLockedUntil={initialLockedUntil}
+          slug={slug}
+          houseName={house.name}
+          houseAddress={house.address}
+          shortDescription={house.short_description}
+          publicDescription={house.public_description}
+          houseCoverImageUrl={house.cover_image_url ?? null}
+          districtName={house.district?.name ?? null}
+          districtColor={districtColor}
+        />
+      </>
     );
   }
 
-  const { getPublishedHomeSectionsBySlug } = await import("@/src/modules/houses/services/getPublishedHomeSectionsBySlug");
-
-  const { sections } = await getPublishedHomeSectionsBySlug(slug);
-
-  const boardSection = sections.find((s) => s.kind === "contacts");
-  const boardContent =
-    boardSection &&
-    typeof boardSection.content === "object" &&
-    boardSection.content
-      ? (boardSection.content as Record<string, unknown>)
-      : null;
-
-  const boardRoles = Array.isArray(boardContent?.roles)
-    ? (boardContent.roles as Array<Record<string, unknown>>)
-    : [];
-
-  const rawChairman =
-    boardRoles.find((role) => role.status === "chairman") ?? null;
+  const rawChairman = await getChairmanForHouse(house.id);
 
   const chairman = rawChairman
     ? {
-        name: String(rawChairman.name ?? "").trim(),
-        role: String(rawChairman.role ?? "").trim() || null,
-        phone: String(rawChairman.phone ?? "").trim() || null,
+        name: rawChairman.name.trim(),
+        role: rawChairman.role.trim() || null,
+        phone: rawChairman.phone.trim() || null,
       }
     : null;
 
@@ -100,6 +88,8 @@ export default async function PublicHouseLayout({
 
   return (
     <main className="min-h-screen bg-[#F7F5F2] text-[var(--foreground)]">
+      <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
+
       <header className="sticky top-0 z-50 border-b border-[#E2D9CF] bg-[#F1ECE6]">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <Link

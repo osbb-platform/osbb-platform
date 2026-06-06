@@ -12,27 +12,29 @@ export type UpdateHouseState = {
 };
 
 const HOUSE_COVER_BUCKET = "house-cover-images";
-function isSafeUpdateCoverImagePath(houseId: string, value: string) {
-  return (
-    value.length > 0 &&
-    value.startsWith(`${houseId}/`) &&
-    !value.includes("..") &&
-    !value.startsWith("/") &&
-    !value.endsWith("/")
-  );
-}
 
 export async function updateHouse(
   _prevState: UpdateHouseState,
   formData: FormData,
 ): Promise<UpdateHouseState> {
+  const uploadedImagePath = String(formData.get("uploadedImagePath") ?? "").trim();
   const currentUser = await getCurrentAdminUser();
+  const supabase = await createSupabaseServerClient();
+
+  async function failWithCleanup(error: string): Promise<UpdateHouseState> {
+    if (uploadedImagePath) {
+      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([uploadedImagePath]);
+    }
+
+    return { error, successMessage: null };
+  }
+
   const accessError = assertRegistryActionAccess({
     role: currentUser?.role,
     area: "houses",
     action: "edit",
   });
-  if (accessError) return { error: accessError.error, successMessage: null };
+  if (accessError) return failWithCleanup(accessError.error ?? "Недостатньо прав для виконання дії.");
 
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
@@ -44,37 +46,18 @@ export async function updateHouse(
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
   const removeCoverImage =
     String(formData.get("removeCoverImage") ?? "false") === "true";
-  const coverImagePath = String(formData.get("coverImagePath") ?? "").trim();
 
   if (!id || !name || !address) {
-    return {
-      error: "Заповніть обов’язкові поля: назва та адреса.",
-      successMessage: null,
-    };
+    return failWithCleanup("Заповніть обов’язкові поля: назва та адреса.");
   }
 
   if (!districtId) {
-    return {
-      error: "Оберіть район для будинку.",
-      successMessage: null,
-    };
+    return failWithCleanup("Оберіть район для будинку.");
   }
 
   if (!managementCompanyId) {
-    return {
-      error: "Оберіть керуючу компанію для будинку.",
-      successMessage: null,
-    };
+    return failWithCleanup("Оберіть керуючу компанію для будинку.");
   }
-
-  if (coverImagePath && !isSafeUpdateCoverImagePath(id, coverImagePath)) {
-    return {
-      error: "Некоректний шлях фото будинку.",
-      successMessage: null,
-    };
-  }
-
-  const supabase = await createSupabaseServerClient();
 
   const { data: existingHouse, error: existingHouseError } = await supabase
     .from("houses")
@@ -83,24 +66,15 @@ export async function updateHouse(
     .maybeSingle();
 
   if (existingHouseError) {
-    return {
-      error: `Помилка завантаження будинку: ${existingHouseError.message}`,
-      successMessage: null,
-    };
+    return failWithCleanup(`Помилка завантаження будинку: ${existingHouseError.message}`);
   }
 
   if (!existingHouse) {
-    return {
-      error: "Будинок не знайдено.",
-      successMessage: null,
-    };
+    return failWithCleanup("Будинок не знайдено.");
   }
 
   if (existingHouse.archived_at) {
-    return {
-      error: "Не можна редагувати архівний будинок. Спочатку відновіть його.",
-      successMessage: null,
-    };
+    return failWithCleanup("Не можна редагувати архівний будинок. Спочатку відновіть його.");
   }
 
   let nextCoverImagePath =
@@ -108,23 +82,20 @@ export async function updateHouse(
       ? existingHouse.cover_image_path
       : null;
 
-  if ((removeCoverImage || coverImagePath) && nextCoverImagePath) {
+  if ((removeCoverImage || uploadedImagePath) && nextCoverImagePath) {
     const { error: removeError } = await supabase.storage
       .from(HOUSE_COVER_BUCKET)
       .remove([nextCoverImagePath]);
 
     if (removeError) {
-      return {
-        error: `Не вдалося видалити поточне фото будинку: ${removeError.message}`,
-        successMessage: null,
-      };
+      return failWithCleanup(`Не вдалося видалити поточне фото будинку: ${removeError.message}`);
     }
 
     nextCoverImagePath = null;
   }
 
-  if (coverImagePath) {
-    nextCoverImagePath = coverImagePath;
+  if (uploadedImagePath) {
+    nextCoverImagePath = uploadedImagePath;
   }
 
   const { data: updatedHouse, error: updateError } = await supabase
@@ -144,17 +115,11 @@ export async function updateHouse(
     .maybeSingle();
 
   if (updateError) {
-    return {
-      error: `Помилка оновлення будинку: ${updateError.message}`,
-      successMessage: null,
-    };
+    return failWithCleanup(`Помилка оновлення будинку: ${updateError.message}`);
   }
 
   if (!updatedHouse) {
-    return {
-      error: "Будинок не було оновлено.",
-      successMessage: null,
-    };
+    return failWithCleanup("Будинок не було оновлено.");
   }
 
   if (currentUser) {
@@ -175,7 +140,6 @@ export async function updateHouse(
     });
   }
 
-  // 🔽 Генерация PDF объявления (асинхронно)
   try {
     const { generateHouseAnnouncementPdf } = await import(
       "@/src/modules/houses/services/generateHouseAnnouncementPdf"

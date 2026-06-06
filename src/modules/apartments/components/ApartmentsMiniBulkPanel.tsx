@@ -304,13 +304,13 @@ export function ApartmentsMiniBulkPanel({
                               placeholder="45,5"
                               className={
                                 areaInvalid
-                                  ? "w-full min-w-[120px] rounded-2xl border border-red-800 bg-red-950/20 px-3 py-2 text-sm text-white outline-none transition focus:border-red-600"
+                                  ? "w-full min-w-[120px] rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-2 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-danger-text)]"
                                   : `w-full min-w-[120px] ${adminInputClass}`
                               }
                             />
 
                             {areaInvalid ? (
-                              <div className="mt-2 text-xs text-red-300">
+                              <div className="mt-2 text-xs text-[var(--cms-danger-text)]">
                                 Допустимі лише числа, наприклад 45, 45.5 або 45,5
                               </div>
                             ) : null}
@@ -346,25 +346,25 @@ export function ApartmentsMiniBulkPanel({
             ) : null}
 
             {hasInvalidAreas ? (
-              <div className="mt-6 rounded-2xl border border-amber-900 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
+              <div className="mt-6 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
                 Виправте формат поля «Площа» у підсвічених рядках перед збереженням.
               </div>
             ) : null}
 
             {hasMissingRequiredRows ? (
-              <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+              <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                 Є рядки з незаповненими обов’язковими полями. Заповніть особовий рахунок, квартиру та власника або видаліть такий рядок.
               </div>
             ) : null}
 
             {state.error ? (
-              <div className="mt-6 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+              <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                 {state.error}
               </div>
             ) : null}
 
             {state.successMessage ? (
-              <div className="mt-6 rounded-2xl border border-emerald-900 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-300">
+              <div className="mt-6 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
                 {state.successMessage}
               </div>
             ) : null}

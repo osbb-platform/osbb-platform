@@ -32,16 +32,16 @@ export function AdminOnboardingModal({ onClose }: Props) {
         {/* Skip */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-sm text-[var(--cms-text-secondary)] hover:text-[var(--cms-text-primary)]"
+          className="absolute right-4 top-4 text-sm text-[var(--cms-text-muted)] hover:text-[var(--cms-text)]"
         >
           Пропустити
         </button>
 
-        <h2 className="text-xl font-semibold text-[var(--cms-text-primary)]">
+        <h2 className="text-xl font-semibold text-[var(--cms-text)]">
           {current.title}
         </h2>
 
-        <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[var(--cms-text-secondary)]">
+        <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[var(--cms-text-muted)]">
           {current.description}
         </p>
 
@@ -51,7 +51,7 @@ export function AdminOnboardingModal({ onClose }: Props) {
             <div
               key={i}
               className={`h-2 w-2 rounded-full ${
-                i === step ? "bg-white" : "bg-[var(--cms-bg-tertiary)]"
+                i === step ? "bg-[var(--cms-primary)]" : "bg-[var(--cms-bg-tertiary)]"
               }`}
             />
           ))}
@@ -62,14 +62,14 @@ export function AdminOnboardingModal({ onClose }: Props) {
           <button
             onClick={prev}
             disabled={step === 0}
-            className="text-sm text-[var(--cms-text-secondary)] disabled:opacity-30"
+            className="text-sm text-[var(--cms-text-muted)] disabled:opacity-30"
           >
             ← Назад
           </button>
 
           <button
             onClick={next}
-            className="rounded-2xl bg-white px-5 py-2 text-sm font-medium text-slate-950"
+            className="rounded-2xl bg-[var(--cms-primary)] px-5 py-2 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
           >
             {isLast ? "Перейти в дашборд" : "Далі →"}
           </button>

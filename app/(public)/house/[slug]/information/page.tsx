@@ -1,9 +1,9 @@
 import { houseInformationCopy } from "@/src/shared/publicCopy/house";
 import { notFound } from "next/navigation";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
-import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
-import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
 import { getPublicHouseInformationDocuments } from "@/src/modules/houses/services/getPublicHouseInformationDocuments";
+import { getPublishedHouseFaq } from "@/src/modules/houses/services/getPublishedHouseFaq";
+import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { PublicInformationSlider } from "@/src/modules/houses/components/PublicInformationSlider";
 import Link from "next/link";
@@ -14,21 +14,6 @@ type Props = {
     year?: string;
   }>;
 };
-
-function getSortTimestamp(content: Record<string, unknown>) {
-  const candidates = [content.publishedAt, content.updatedAt, content.createdAt];
-
-  for (const value of candidates) {
-    if (typeof value === "string" && value) {
-      const time = new Date(value).getTime();
-      if (!Number.isNaN(time)) {
-        return time;
-      }
-    }
-  }
-
-  return 0;
-}
 
 
 export default async function InformationPage({
@@ -45,37 +30,11 @@ export default async function InformationPage({
 
   const districtColor = house.district?.theme_color ?? "#22c55e";
 
-  const [informationPage, documents] = await Promise.all([
-    getHouseInformationPageByHouseId(house.id),
+  const [articles, documents, faq] = await Promise.all([
+    getPublishedHouseInformationPosts(house.id),
     getPublicHouseInformationDocuments(house.id),
+    getPublishedHouseFaq(house.id),
   ]);
-
-  const sections = informationPage
-    ? await getPublishedHouseSections(informationPage.id)
-    : [];
-
-  const articles = sections
-    .filter((section) => section.kind === "rich_text")
-    .sort((a, b) => {
-      const aContent =
-        typeof a.content === "object" && a.content
-          ? (a.content as Record<string, unknown>)
-          : {};
-      const bContent =
-        typeof b.content === "object" && b.content
-          ? (b.content as Record<string, unknown>)
-          : {};
-
-      const pinnedDiff =
-        Number(Boolean(bContent.isPinned)) -
-        Number(Boolean(aContent.isPinned));
-
-      if (pinnedDiff !== 0) {
-        return pinnedDiff;
-      }
-
-      return getSortTimestamp(bContent) - getSortTimestamp(aContent);
-    });
 
   const documentYearsWithContent = Array.from(
     new Set(
@@ -97,14 +56,7 @@ export default async function InformationPage({
     document.document_year ? String(document.document_year) === selectedDocumentYear : false,
   );
 
-  const faqSection = sections.find((section) => section.kind === "faq");
-  const faqItems =
-    faqSection &&
-    typeof faqSection.content === "object" &&
-    faqSection.content &&
-    Array.isArray((faqSection.content as Record<string, unknown>).items)
-      ? ((faqSection.content as Record<string, unknown>).items as Array<Record<string, unknown>>)
-      : [];
+  const faqItems = faq?.items ?? [];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -216,6 +168,10 @@ export default async function InformationPage({
                       filePath={document.storage_path || ""}
                       fileName={document.original_file_name || document.title}
                       bucket="house-documents"
+                      analyticsHouseId={house.id}
+                      analyticsHouseSlug={house.slug}
+                      analyticsEntityId={document.id}
+                      analyticsDocumentType="information_document"
                     />
                   </div>
                 ))}
@@ -241,10 +197,10 @@ export default async function InformationPage({
               className="group rounded-2xl border border-[#E4DBD1] bg-[#F9F6F2] px-5 py-4 transition-all duration-200 hover:border-[#D8CEC2] hover:bg-[#F5F1EB]"
             >
               <summary className="cursor-pointer list-none text-base font-semibold text-[#1F2A37]">
-                {String(item.question ?? houseInformationCopy.faq.questionFallback)}
+                {item.question || houseInformationCopy.faq.questionFallback}
               </summary>
               <div className="mt-4 rounded-xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm leading-7 text-[#42546A]">
-                {String(item.answer ?? "")}
+                {item.answer}
               </div>
             </details>
           ))}

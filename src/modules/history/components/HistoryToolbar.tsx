@@ -126,9 +126,17 @@ export function HistoryToolbar({
   }
 
   return (
-    <div className="sticky top-4 z-30 space-y-3">
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 backdrop-blur">
-        <div className="flex flex-wrap gap-2">
+    <div className="space-y-3">
+      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
+          Історія
+        </h1>
+
+        <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
+          Загальний журнал дій співробітників платформи та вхідних подій із сайтів будинків.
+        </p>
+
+        <div className="mt-5 flex flex-wrap gap-2">
           {[
             { key: "all" as const, label: "Все" },
             { key: "cms" as const, label: "CMS" },
@@ -143,8 +151,8 @@ export function HistoryToolbar({
                 onClick={() => switchTab(item.key)}
                 className={`inline-flex items-center rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
                   isActive
-                    ? "border-[var(--cms-accent-primary)] bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
-                    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-tertiary)]"
+                    ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-tertiary)]"
                 }`}
               >
                 {item.label}
@@ -157,14 +165,14 @@ export function HistoryToolbar({
       {tab === "cms" ? (
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 backdrop-blur">
           <div className="mb-3 flex items-start justify-between gap-4">
-            <div className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-secondary)]">
+            <div className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
               Фільтри журналу дій
             </div>
 
             <button
               type="button"
               onClick={resetCurrentTab}
-              className="text-sm text-[var(--cms-text-secondary)] underline decoration-[var(--cms-border-secondary)] underline-offset-4 transition hover:text-[var(--cms-text-primary)]"
+              className="text-sm text-[var(--cms-text-muted)] underline decoration-[var(--cms-border-secondary)] underline-offset-4 transition hover:text-[var(--cms-text)]"
             >
               Скинути
             </button>
@@ -172,7 +180,7 @@ export function HistoryToolbar({
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Співробітник
               </label>
               <select
@@ -182,7 +190,7 @@ export function HistoryToolbar({
                     actor: event.target.value || null,
                   })
                 }
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 <option value="">Усі співробітники</option>
                 {cmsActors.map((item) => (
@@ -194,7 +202,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Розділ CMS
               </label>
               <select
@@ -205,7 +213,7 @@ export function HistoryToolbar({
                     subSection: null,
                   })
                 }
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 <option value="">Усі розділи</option>
                 {cmsSections.map((section) => (
@@ -217,7 +225,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Підрозділ
               </label>
               <select
@@ -230,7 +238,7 @@ export function HistoryToolbar({
                 }
                 className={`w-full rounded-2xl border px-4 py-2.5 outline-none transition ${
                   hasCmsSubSections
-                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] focus:border-[var(--cms-border-secondary)]"
+                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] focus:border-[var(--cms-border-secondary)]"
                     : "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
                 }`}
               >
@@ -247,7 +255,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Період
               </label>
               <HistoryDateRangeFilter
@@ -263,7 +271,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Сортування
               </label>
               <select
@@ -273,7 +281,7 @@ export function HistoryToolbar({
                     sort: event.target.value,
                   })
                 }
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 <option value="date_desc">Спочатку нові</option>
                 <option value="date_asc">Спочатку старі</option>
@@ -286,14 +294,14 @@ export function HistoryToolbar({
       {tab === "incoming" ? (
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 backdrop-blur">
           <div className="mb-3 flex items-start justify-between gap-4">
-            <div className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-secondary)]">
+            <div className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
               Фільтри вхідних подій
             </div>
 
             <button
               type="button"
               onClick={resetCurrentTab}
-              className="text-sm text-[var(--cms-text-secondary)] underline decoration-[var(--cms-border-secondary)] underline-offset-4 transition hover:text-[var(--cms-text-primary)]"
+              className="text-sm text-[var(--cms-text-muted)] underline decoration-[var(--cms-border-secondary)] underline-offset-4 transition hover:text-[var(--cms-text)]"
             >
               Скинути
             </button>
@@ -301,7 +309,7 @@ export function HistoryToolbar({
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Район
               </label>
               <select
@@ -315,7 +323,7 @@ export function HistoryToolbar({
                     dateTo: null,
                   })
                 }
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 <option value="">Оберіть район</option>
                 {districts.map((district) => (
@@ -327,7 +335,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Будинок
               </label>
               <select
@@ -340,7 +348,7 @@ export function HistoryToolbar({
                 }
                 className={`w-full rounded-2xl border px-4 py-2.5 outline-none transition ${
                   incomingControlsEnabled
-                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] focus:border-[var(--cms-border-secondary)]"
+                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] focus:border-[var(--cms-border-secondary)]"
                     : "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
                 }`}
               >
@@ -354,7 +362,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Розділ сайту
               </label>
               <select
@@ -367,7 +375,7 @@ export function HistoryToolbar({
                 }
                 className={`w-full rounded-2xl border px-4 py-2.5 outline-none transition ${
                   incomingControlsEnabled
-                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] focus:border-[var(--cms-border-secondary)]"
+                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] focus:border-[var(--cms-border-secondary)]"
                     : "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
                 }`}
               >
@@ -381,7 +389,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Період
               </label>
               <HistoryDateRangeFilter
@@ -398,7 +406,7 @@ export function HistoryToolbar({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--cms-text)]">
                 Сортування
               </label>
               <select
@@ -411,7 +419,7 @@ export function HistoryToolbar({
                 }
                 className={`w-full rounded-2xl border px-4 py-2.5 outline-none transition ${
                   incomingControlsEnabled
-                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] focus:border-[var(--cms-border-secondary)]"
+                    ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] focus:border-[var(--cms-border-secondary)]"
                     : "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
                 }`}
               >

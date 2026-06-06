@@ -87,8 +87,8 @@ function DeleteEmployeeActionButton({
           <div
             className={
               flash.type === "success"
-                ? "text-xs text-emerald-300"
-                : "text-xs text-red-300"
+                ? "text-xs text-[var(--cms-success-text)]"
+                : "text-xs text-[var(--cms-danger-text)]"
             }
           >
             {flash.message}

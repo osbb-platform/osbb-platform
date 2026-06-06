@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  InfoCircleIcon,
+} from "@/src/shared/ui/icons/AdminInlineIcons";
+import { adminButtonDisabledClass } from "@/src/shared/ui/admin/adminStyles";
+
 import { useEffect } from "react";
 
 export type PlatformConfirmTone =
@@ -24,44 +31,49 @@ type PlatformConfirmModalProps = {
 function getToneClasses(tone: PlatformConfirmTone) {
   if (tone === "destructive") {
     return {
-      icon: "border-red-800 bg-red-950/60 text-red-300",
+      icon: "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]",
       confirmButton:
-        "border border-red-800 bg-red-950/70 text-red-200 hover:bg-red-950 disabled:opacity-60",
-      accent: "text-red-300",
+        ["border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] hover:opacity-90", adminButtonDisabledClass].join(" "),
+      accent: "text-[var(--cms-danger-text)]",
     };
   }
 
   if (tone === "warning") {
     return {
-      icon: "border-amber-700 bg-amber-950/60 text-amber-300",
+      icon: "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]",
       confirmButton:
-        "border border-amber-700 bg-amber-950/70 text-amber-200 hover:bg-amber-950 disabled:opacity-60",
-      accent: "text-amber-300",
+        ["border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)] hover:opacity-90", adminButtonDisabledClass].join(" "),
+      accent: "text-[var(--cms-warning-text)]",
     };
   }
 
   if (tone === "publish") {
     return {
-      icon: "border-emerald-700 bg-emerald-950/60 text-emerald-300",
+      icon: "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]",
       confirmButton:
-        "border border-emerald-700 bg-emerald-950/70 text-emerald-200 hover:bg-emerald-950 disabled:opacity-60",
-      accent: "text-emerald-300",
+        ["border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)] hover:opacity-90", adminButtonDisabledClass].join(" "),
+      accent: "text-[var(--cms-success-text)]",
     };
   }
 
   return {
-    icon: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]",
+    icon: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]",
     confirmButton:
-      "border border-slate-600 bg-white text-slate-950 hover:bg-slate-200 disabled:opacity-60",
-    accent: "text-[var(--cms-text-secondary)]",
+      ["border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-tertiary)]", adminButtonDisabledClass].join(" "),
+    accent: "text-[var(--cms-text-muted)]",
   };
 }
 
-function getToneGlyph(tone: PlatformConfirmTone) {
-  if (tone === "destructive") return "!";
-  if (tone === "warning") return "!";
-  if (tone === "publish") return "↑";
-  return "?";
+function renderToneIcon(tone: PlatformConfirmTone) {
+  if (tone === "destructive" || tone === "warning") {
+    return <AlertTriangleIcon className="h-5 w-5" />;
+  }
+
+  if (tone === "publish") {
+    return <CheckCircleIcon className="h-5 w-5" />;
+  }
+
+  return <InfoCircleIcon className="h-5 w-5" />;
 }
 
 export function PlatformConfirmModal({
@@ -101,7 +113,6 @@ export function PlatformConfirmModal({
   }
 
   const toneClasses = getToneClasses(tone);
-  const glyph = getToneGlyph(tone);
 
   return (
     <div
@@ -126,19 +137,19 @@ export function PlatformConfirmModal({
             className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-lg font-semibold ${toneClasses.icon}`}
             aria-hidden="true"
           >
-            {glyph}
+            {renderToneIcon(tone)}
           </div>
 
           <div className="min-w-0 flex-1">
             <h3
               id="platform-confirm-title"
-              className="text-lg font-semibold text-[var(--cms-text-primary)]"
+              className="text-lg font-semibold text-[var(--cms-text)]"
             >
               {title}
             </h3>
 
             {description ? (
-              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-secondary)]">
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                 {description}
               </p>
             ) : null}
@@ -150,7 +161,7 @@ export function PlatformConfirmModal({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)] disabled:opacity-60"
+            className={["inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-secondary)] hover:bg-[var(--cms-bg-tertiary)]", adminButtonDisabledClass].join(" ")}
           >
             {cancelLabel}
           </button>

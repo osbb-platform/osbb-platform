@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { ArrowLeftIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
+import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
 import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
@@ -13,18 +15,17 @@ import { HouseSpecialistsWorkspace } from "@/src/modules/houses/components/House
 import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseRequisitesWorkspace";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
-import { getAdminHouseSectionById } from "@/src/modules/houses/services/getAdminHouseSectionById";
-import { getAdminHouseSections } from "@/src/modules/houses/services/getAdminHouseSections";
+import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
-import { ensureHouseBoardSection } from "@/src/modules/houses/services/ensureHouseBoardSection";
-import { ensureHouseHomePage } from "@/src/modules/houses/services/ensureHouseHomePage";
-import { ensureHouseInformationPage } from "@/src/modules/houses/services/ensureHouseInformationPage";
-import { ensureHouseSpecialistsSection } from "@/src/modules/houses/services/ensureHouseSpecialistsSection";
-import { ensureHouseReportsSection } from "@/src/modules/houses/services/ensureHouseReportsSection";
-import { ensureHousePlanSection } from "@/src/modules/houses/services/ensureHousePlanSection";
-import { ensureHouseDebtorsSection } from "@/src/modules/houses/services/ensureHouseDebtorsSection";
-import { ensureHouseMeetingsSection } from "@/src/modules/houses/services/ensureHouseMeetingsSection";
-import { ensureHouseRequisitesSection } from "@/src/modules/houses/services/ensureHouseRequisitesSection";
+import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
+import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
+import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
+import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
+import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
+import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
+import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
+import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
+import { getAdminHouseReports } from "@/src/modules/houses/services/getAdminHouseReports";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -40,6 +41,7 @@ type AdminHouseDetailPageProps = {
 };
 
 const allowedBlocks = new Set([
+  "hero",
   "announcements",
   "board",
   "information",
@@ -64,7 +66,7 @@ function normalizeBlock(value: string | undefined) {
 function normalizeSectionForWorkspace<T extends {
   id: string;
   title: string | null;
-  status?: "draft" | "in_review" | "published" | "archived";
+  status?: "draft" | "published" | "archived";
   content?: Record<string, unknown>;
 }>(section: T) {
   return {
@@ -75,74 +77,29 @@ function normalizeSectionForWorkspace<T extends {
   };
 }
 
-function getSectionContent(section: unknown): Record<string, unknown> {
-  if (
-    section &&
-    typeof section === "object" &&
-    "content" in section &&
-    section.content &&
-    typeof section.content === "object"
-  ) {
-    return section.content as Record<string, unknown>;
-  }
-
-  return {};
-}
-
-function normalizeReportItem(item: unknown) {
-  if (!item || typeof item !== "object") {
-    return null;
-  }
-
-  const record = item as Record<string, unknown>;
-
-  const id = typeof record.id === "string" ? record.id : "";
-  const title = typeof record.title === "string" ? record.title : "";
-  const description =
-    typeof record.description === "string" ? record.description : "";
-  const category = typeof record.category === "string" ? record.category : "";
-  const reportDate =
-    typeof record.reportDate === "string" ? record.reportDate : "";
-  const periodType: "current" | "past" =
-    record.periodType === "past" ? "past" : "current";
-  const status: "draft" | "active" | "archived" =
-    record.status === "archived"
-      ? "archived"
-      : record.status === "draft"
-        ? "draft"
-        : "active";
-
-  if (!id) {
-    return null;
-  }
-
+function normalizeAnnouncementForWorkspace(announcement: {
+  id: string;
+  title: string;
+  body: string;
+  level: "info" | "warning" | "danger";
+  lifecycle_status: "draft" | "published" | "archived";
+  lock_version: number;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+}) {
   return {
-    id,
-    title,
-    description,
-    category,
-    reportDate,
-    periodType,
-    month: typeof record.month === "string" ? record.month : undefined,
-    year: typeof record.year === "number" ? record.year : undefined,
-    isPinned: typeof record.isPinned === "boolean" ? record.isPinned : undefined,
-    isNew: typeof record.isNew === "boolean" ? record.isNew : undefined,
-    newUntil:
-      typeof record.newUntil === "string" || record.newUntil === null
-        ? record.newUntil
-        : undefined,
-    status,
-    pdfFileName:
-      typeof record.pdfFileName === "string" ? record.pdfFileName : undefined,
-    pdfPath: typeof record.pdfPath === "string" ? record.pdfPath : undefined,
-    createdAt:
-      typeof record.createdAt === "string" ? record.createdAt : undefined,
-    updatedAt:
-      typeof record.updatedAt === "string" ? record.updatedAt : undefined,
-    archivedAt:
-      typeof record.archivedAt === "string" || record.archivedAt === null
-        ? record.archivedAt
-        : undefined,
+    id: announcement.id,
+    title: announcement.title,
+    status: announcement.lifecycle_status,
+    content: {
+      body: announcement.body,
+      level: announcement.level,
+      createdAt: announcement.created_at,
+      updatedAt: announcement.updated_at,
+      publishedAt: announcement.published_at,
+      lockVersion: announcement.lock_version,
+    },
   };
 }
 
@@ -203,6 +160,7 @@ export default async function AdminHouseDetailPage({
 
   const publicPreviewHref =
     {
+      hero: basePublicUrl,
       announcements: `${basePublicUrl}/announcements`,
       board: `${basePublicUrl}/board`,
       information: `${basePublicUrl}/information`,
@@ -215,217 +173,56 @@ export default async function AdminHouseDetailPage({
       "founding-documents": `${basePublicUrl}/founding-documents`,
     }[activeBlock] ?? basePublicUrl;
 
-  let pages = await getAdminHousePages(house.id);
-  let informationPage =
+  const pages = await getAdminHousePages(house.id);
+  const informationPage =
     activeBlock === "information"
       ? pages.find((page) => page.slug === "information") ?? null
       : null;
 
-  if (activeBlock === "information" && !informationPage) {
-    await ensureHouseInformationPage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-    informationPage =
-      pages.find((page) => page.slug === "information") ?? null;
-  }
-
-  let homePage = pages.find((page) => page.slug === "home") ?? null;
-
-  const needsHomePageForBlock =
-    activeBlock === "announcements" ||
-    activeBlock === "board" ||
-    activeBlock === "specialists" ||
-    activeBlock === "reports" ||
-    activeBlock === "debtors" ||
-    activeBlock === "plan" ||
-    activeBlock === "meetings";
-
-  if (needsHomePageForBlock && !homePage) {
-    await ensureHouseHomePage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-    homePage = pages.find((page) => page.slug === "home") ?? null;
-  }
-
-  const needsHomeSectionsForBlock =
-    activeBlock === "announcements" ||
-    activeBlock === "board" ||
-    activeBlock === "specialists" ||
-    activeBlock === "reports" ||
-    activeBlock === "debtors" ||
-    activeBlock === "plan" ||
-    activeBlock === "meetings" ||
-    activeBlock === "requisites";
-
-  let homeSections =
-    needsHomeSectionsForBlock && homePage
-      ? await getAdminHouseSections(homePage.id)
-      : [];
+  const homePage = pages.find((page) => page.slug === "home") ?? null;
 
   const validAnnouncementSections =
     activeBlock === "announcements"
-      ? homeSections.filter((section) => section.kind === "announcements")
+      ? (await getAdminHouseAnnouncements({ houseId: house.id })).map(
+          normalizeAnnouncementForWorkspace,
+        )
       : [];
 
-  const boardSectionList =
-    homeSections.find((section) => section.kind === "contacts") ?? null;
-
-  let boardSection = null;
-
-  if (activeBlock === "board" && homePage && !boardSectionList) {
-    const ensuredBoardSectionId = await ensureHouseBoardSection({
-      housePageId: homePage.id,
-      houseSlug: house.slug,
-    });
-
-    boardSection = await getAdminHouseSectionById(ensuredBoardSectionId);
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (boardSectionList) {
-    boardSection = boardSectionList;
-  }
-
-  if (
-    activeBlock === "information" &&
-    !pages.find((page) => page.slug === "information")
-  ) {
-    await ensureHouseInformationPage({ houseId: house.id });
-    pages = await getAdminHousePages(house.id);
-  }
-
-
-  const informationSections =
-    activeBlock === "information" && informationPage
-      ? await getAdminHouseSections(informationPage.id)
-      : [];
+  const board =
+    activeBlock === "board" ? await getAdminHouseBoard(house.id) : null;
 
   const validInformationPostSections =
     activeBlock === "information"
-      ? informationSections.filter((section) => section.kind === "rich_text")
+      ? await getAdminHouseInformationPosts({ houseId: house.id })
       : [];
 
-  const faqSections =
-    activeBlock === "information"
-      ? informationSections.filter((section) => section.kind === "faq")
-      : [];
+  const faq =
+    activeBlock === "information" ? await getAdminHouseFaq(house.id) : null;
 
-  const specialistsSectionList =
-    homeSections.find((section) => section.kind === "specialists") ?? null;
+  const specialistsData =
+    activeBlock === "specialists"
+      ? await getAdminHouseSpecialists({ houseId: house.id })
+      : null;
 
-  let specialistsSection = null;
+  const planData =
+    activeBlock === "plan"
+      ? await getAdminHousePlan({ houseId: house.id })
+      : null;
 
-  if (activeBlock === "specialists" && homePage && !specialistsSectionList) {
-    const ensuredSpecialistsSectionId = await ensureHouseSpecialistsSection({
-      housePageId: homePage.id,
-      houseSlug: house.slug,
-    });
+  const debtorsData =
+    activeBlock === "debtors"
+      ? await getAdminHouseDebtors({ houseId: house.id })
+      : null;
 
-    specialistsSection = await getAdminHouseSectionById(
-      ensuredSpecialistsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "specialists" && specialistsSectionList) {
-    specialistsSection = specialistsSectionList;
-  } else if (activeBlock !== "specialists") {
-    specialistsSection = null;
-  }
+  const meetingsData =
+    activeBlock === "meetings"
+      ? await getAdminHouseMeetings({ houseId: house.id })
+      : null;
 
-  const reportsSectionList =
-    homeSections.find((section) => section.kind === "reports") ?? null;
-
-  let reportsSection = null;
-
-  if (activeBlock === "reports" && homePage && !reportsSectionList) {
-    const ensuredReportsSectionId = await ensureHouseReportsSection({
-      housePageId: homePage.id,
-    });
-
-    reportsSection = await getAdminHouseSectionById(
-      ensuredReportsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "reports" && reportsSectionList) {
-    reportsSection = reportsSectionList;
-  } else if (activeBlock !== "reports") {
-    reportsSection = null;
-  }
-
-  const planSectionList =
-    homeSections.find((section) => section.kind === "plan") ?? null;
-
-  let planSection = null;
-
-  if (activeBlock === "plan" && homePage && !planSectionList) {
-    const ensuredPlanSectionId = await ensureHousePlanSection({
-      housePageId: homePage.id,
-    });
-
-    planSection = await getAdminHouseSectionById(
-      ensuredPlanSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "plan" && planSectionList) {
-    planSection = planSectionList;
-  } else if (activeBlock !== "plan") {
-    planSection = null;
-  }
-
-  const debtorsSectionList =
-    homeSections.find((section) => section.kind === "debtors") ?? null;
-
-  let debtorsSection = null;
-
-  if (activeBlock === "debtors" && homePage && !debtorsSectionList) {
-    const ensuredDebtorsSectionId = await ensureHouseDebtorsSection({
-      housePageId: homePage.id,
-    });
-
-    debtorsSection = await getAdminHouseSectionById(
-      ensuredDebtorsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "debtors" && debtorsSectionList) {
-    debtorsSection = debtorsSectionList;
-  } else if (activeBlock !== "debtors") {
-    debtorsSection = null;
-  }
-
-  const meetingsSectionList =
-    homeSections.find((section) => section.kind === "meetings") ?? null;
-
-  let meetingsSection = null;
-
-  if (activeBlock === "meetings" && homePage && !meetingsSectionList) {
-    const ensuredMeetingsSectionId = await ensureHouseMeetingsSection({
-      housePageId: homePage.id,
-    });
-
-    meetingsSection = await getAdminHouseSectionById(
-      ensuredMeetingsSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "meetings" && meetingsSectionList) {
-    meetingsSection = meetingsSectionList;
-  } else if (activeBlock !== "meetings") {
-    meetingsSection = null;
-  }
-
-  const requisitesSectionList =
-    homeSections.find((section) => section.kind === "requisites") ?? null;
-
-  let requisitesSection = null;
-
-  if (activeBlock === "requisites" && homePage && !requisitesSectionList) {
-    const ensuredRequisitesSectionId = await ensureHouseRequisitesSection({
-      housePageId: homePage.id,
-    });
-
-    requisitesSection = await getAdminHouseSectionById(
-      ensuredRequisitesSectionId,
-    );
-    homeSections = await getAdminHouseSections(homePage.id);
-  } else if (activeBlock === "requisites" && requisitesSectionList) {
-    requisitesSection = requisitesSectionList;
-  } else if (activeBlock !== "requisites") {
-    requisitesSection = null;
-  }
+  const requisites =
+    activeBlock === "requisites"
+      ? await getAdminHouseRequisites({ houseId: house.id })
+      : null;
 
   const specialistRequests =
     activeBlock === "specialists"
@@ -443,13 +240,10 @@ export default async function AdminHouseDetailPage({
       ? await getHouseDocuments(house.id, { scope: "founding" })
       : [];
 
-  const reports =
-    activeBlock === "reports" &&
-    Array.isArray(getSectionContent(reportsSection).reports)
-      ? (getSectionContent(reportsSection).reports as unknown[])
-          .map(normalizeReportItem)
-          .filter((item): item is NonNullable<typeof item> => item !== null)
-      : [];
+  const reportsData =
+    activeBlock === "reports"
+      ? await getAdminHouseReports({ houseId: house.id })
+      : null;
 
   const debtorsApartments =
     activeBlock === "debtors"
@@ -482,16 +276,19 @@ export default async function AdminHouseDetailPage({
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              Робоча панель керування розділами та контентом сайту будинку.
+              {house.address}
+              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                slug: {house.slug}
+                {house.slug}
               </span>
-              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                {house.is_active ? "Активний" : "Архів"}
-              </span>
+              {!house.is_active ? (
+                <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                  Архів
+                </span>
+              ) : null}
               {house.district ? (
                 <span
                   className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-text)]"
@@ -517,24 +314,9 @@ export default async function AdminHouseDetailPage({
                 }
               </span>
             </div>
-
-            <div className="mt-4 text-sm text-[var(--cms-text-muted)]">
-              {house.address}
-              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
-            </div>
           </div>
 
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
-            <div className="w-full xl:w-[320px]">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                Розділ будинку
-              </div>
-              <HouseBlockSelector
-                houseId={house.id}
-                activeBlock={activeBlock}
-              />
-            </div>
-
             <div className="flex w-full flex-wrap items-center justify-end gap-3">
               <Link
                 href={publicPreviewHref}
@@ -561,15 +343,29 @@ export default async function AdminHouseDetailPage({
 
               <Link
                 href="/admin/houses"
-                className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                aria-label="Назад до реєстру будинків"
+                title="Назад до реєстру"
               >
-                Назад до реєстру
+                <ArrowLeftIcon className="h-5 w-5" />
               </Link>
+            </div>
+
+            <div className="w-full min-w-[260px] xl:max-w-[360px]">
+              <HouseBlockSelector
+                houseId={house.id}
+                activeBlock={activeBlock}
+              />
             </div>
           </div>
         </div>
       </div>
 
+      <HouseBlockNavigationFrame
+        houseId={house.id}
+        activeBlock={activeBlock}
+        hideSelector
+      >
       {activeBlock === "announcements" ? (
         <HouseAnnouncementsWorkspace
           houseId={house.id}
@@ -580,48 +376,28 @@ export default async function AdminHouseDetailPage({
       ) : null}
 
       {activeBlock === "board" ? (
-        boardSection ? (
+        board ? (
           <EditBoardSectionForm
             readOnlyMode={!access.houseWorkspaces.board.edit}
             houseId={house.id}
             houseSlug={house.slug}
-            section={{
-              id: boardSection.id,
-              title: boardSection.title,
-              status: boardSection.status,
-              content: getSectionContent(boardSection),
-            }}
+            board={board}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="Правління"
-            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити наявність сторінки home і коректність ініціалізації будинку."
+            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити коректність ініціалізації будинку."
           />
         )
       ) : null}
 
-      {activeBlock === "reports" ? (
-        reportsSection ? (
-          <HouseReportsWorkspace
-            readOnlyMode={!access.houseWorkspaces.reports.edit}
-            houseId={house.id}
-            houseSlug={house.slug}
-            sectionId={reportsSection.id}
-            sectionTitle={reportsSection.title}
-            sectionStatus={reportsSection.status}
-            reports={reports}
-            categoriesCatalog={
-              Array.isArray(getSectionContent(reportsSection).categoriesCatalog)
-                ? getSectionContent(reportsSection).categoriesCatalog as string[]
-                : []
-            }
-          />
-        ) : (
-          <HouseTechnicalPlaceholder
-            title="Звіти будинку"
-            description="Секцію звітів поки не створено для цього будинку. Наступним кроком додамо безпечну ініціалізацію секції, якщо її немає."
-          />
-        )
+      {activeBlock === "reports" && reportsData ? (
+        <HouseReportsWorkspace
+          readOnlyMode={!access.houseWorkspaces.reports.edit}
+          houseId={house.id}
+          reports={reportsData.reports}
+          categories={reportsData.categories}
+        />
       ) : null}
 
       {activeBlock === "information" ? (
@@ -629,9 +405,9 @@ export default async function AdminHouseDetailPage({
           houseId={house.id}
           houseSlug={house.slug}
           housePageId={informationPage?.id ?? null}
-          posts={validInformationPostSections.map(normalizeSectionForWorkspace)}
+          posts={validInformationPostSections}
           documents={documents}
-          faqSections={faqSections.map(normalizeSectionForWorkspace)}
+          faq={faq}
         />
       ) : null}
 
@@ -654,42 +430,30 @@ export default async function AdminHouseDetailPage({
         <HouseDebtorsWorkspace
           houseId={house.id}
           houseSlug={house.slug}
+          exportTitle="Боржники"
           apartments={debtorsApartments}
-          section={
-            debtorsSection
-              ? {
-                  id: debtorsSection.id,
-                  title: debtorsSection.title,
-                  content: getSectionContent(debtorsSection),
-                }
-              : null
-          }
+          debtors={debtorsData}
         />
       ) : null}
 
       {activeBlock === "plan" ? (
-        planSection ? (
+        planData ? (
           <HousePlanWorkspace
             canChangeWorkflowStatus={access.houseWorkspaces.plan.changeWorkflowStatus}
             houseId={house.id}
             houseSlug={house.slug}
-            section={{
-              id: planSection.id,
-              title: planSection.title,
-              status: planSection.status,
-              content: getSectionContent(planSection),
-            }}
+            plan={planData}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="План робіт"
-            description="Не вдалося підготувати секцію плану робіт для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
+            description="Не вдалося завантажити план робіт для цього будинку. Потрібно перевірити таблицю house_plan_tasks."
           />
         )
       ) : null}
 
       {activeBlock === "meetings" ? (
-        meetingsSection ? (
+        meetingsData ? (
           <HouseMeetingsWorkspace
             canChangeWorkflowStatus={access.houseWorkspaces.meetings.changeWorkflowStatus}
             houseId={house.id}
@@ -700,59 +464,33 @@ export default async function AdminHouseDetailPage({
               apartmentLabel: apartment.apartment_label,
               ownerName: apartment.owner_name,
             }))}
-            section={{
-              id: meetingsSection.id,
-              title: meetingsSection.title,
-              status: meetingsSection.status,
-              content: getSectionContent(meetingsSection),
-            }}
+            meetings={meetingsData}
           />
         ) : (
           <HouseTechnicalPlaceholder
             title="Збори"
-            description="Не вдалося підготувати секцію зборів для цього будинку. Потрібно перевірити ініціалізацію сторінки home."
+            description="Не вдалося завантажити збори для цього будинку. Потрібно перевірити таблицю house_meetings."
           />
         )
       ) : null}
 
-      {activeBlock === "requisites" ? (
+      {activeBlock === "requisites" && requisites ? (
         <HouseRequisitesWorkspace
           readOnlyMode={!access.houseWorkspaces.requisites.edit}
           houseId={house.id}
-          houseSlug={house.slug}
-          section={
-            requisitesSection
-              ? {
-                  id: requisitesSection.id,
-                  title: requisitesSection.title,
-                  content: getSectionContent(requisitesSection),
-                }
-              : null
-          }
+          requisites={requisites}
         />
       ) : null}
 
-      {activeBlock === "specialists" ? (
-        specialistsSection ? (
-          <HouseSpecialistsWorkspace
-            houseId={house.id}
-            houseSlug={house.slug}
-            section={{
-              id: specialistsSection.id,
-              title: specialistsSection.title,
-              status: specialistsSection.status,
-              content: getSectionContent(specialistsSection),
-            }}
-            requests={specialistRequests}
-          />
-        ) : (
-          <HouseTechnicalPlaceholder
-            title="Спеціалісти"
-            description="Не вдалося підготувати секцію спеціалістів для цього будинку. Потрібно перевірити наявність сторінки home та коректність ініціалізації будинку."
-          />
-        )
+      {activeBlock === "specialists" && specialistsData ? (
+        <HouseSpecialistsWorkspace
+          houseId={house.id}
+          specialistsData={specialistsData}
+          requests={specialistRequests}
+        />
       ) : null}
 
+      </HouseBlockNavigationFrame>
     </div>
   );
 }

@@ -9,6 +9,14 @@ export type HouseDocumentCategory =
   | "contracts"
   | "resident_info";
 
+export type HouseDocumentLifecycle = "draft" | "published" | "archived";
+
+/**
+ * Temporary compatibility for HouseDocumentsWorkspace until Step D.
+ * In the new model:
+ * - archived is canonical
+ * - private is the legacy UI label for archive
+ */
 export type HouseDocumentVisibility =
   | "draft"
   | "private"
@@ -24,18 +32,32 @@ export type HouseDocumentType =
   | "contracts"
   | "other";
 
+type HouseDocumentFileRow = {
+  entity_id: string;
+  storage_bucket: string | null;
+  storage_path: string | null;
+  original_file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  uploaded_at: string | null;
+};
+
 export type HouseDocumentListItem = {
   id: string;
   house_id: string;
   title: string;
   category: HouseDocumentCategory;
+  lifecycle_status: HouseDocumentLifecycle;
   visibility_status: HouseDocumentVisibility;
   description: string | null;
   document_year: number | null;
   document_scope: HouseDocumentScope;
   document_type: HouseDocumentType | null;
+  lock_version: number;
   created_at: string;
   updated_at: string;
+  published_at: string | null;
+  archived_at: string | null;
   storage_bucket: string | null;
   storage_path: string | null;
   original_file_name: string | null;
@@ -45,6 +67,32 @@ export type HouseDocumentListItem = {
   attachment_status: "none" | "uploaded";
   signed_file_url: string | null;
 };
+
+function lifecycleToVisibility(
+  lifecycle: HouseDocumentLifecycle,
+): HouseDocumentVisibility {
+  return lifecycle === "archived" ? "private" : lifecycle;
+}
+
+async function createSignedUrl(params: {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  bucket: string | null;
+  path: string | null;
+}) {
+  if (!params.bucket || !params.path) {
+    return null;
+  }
+
+  const { data, error } = await params.supabase.storage
+    .from(params.bucket)
+    .createSignedUrl(params.path, 60 * 15);
+
+  if (error || !data?.signedUrl) {
+    return null;
+  }
+
+  return data.signedUrl;
+}
 
 export async function getHouseDocuments(
   houseId: string,
@@ -63,13 +111,16 @@ export async function getHouseDocuments(
           "house_id",
           "title",
           "category",
-          "visibility_status",
+          "lifecycle_status",
           "description",
           "document_year",
           "document_scope",
           "document_type",
+          "lock_version",
           "created_at",
           "updated_at",
+          "published_at",
+          "archived_at",
           "storage_bucket",
           "storage_path",
           "original_file_name",
@@ -117,38 +168,102 @@ export async function getHouseDocuments(
     return [];
   }
 
-  const documents = documentsData as unknown as Omit<
-    HouseDocumentListItem,
-    "signed_file_url"
-  >[];
+  const documentRows = documentsData as Array<
+    Omit<
+      HouseDocumentListItem,
+      | "visibility_status"
+      | "storage_bucket"
+      | "storage_path"
+      | "original_file_name"
+      | "mime_type"
+      | "file_size_bytes"
+      | "uploaded_at"
+      | "signed_file_url"
+    > & {
+      storage_bucket: string | null;
+      storage_path: string | null;
+      original_file_name: string | null;
+      mime_type: string | null;
+      file_size_bytes: number | null;
+      uploaded_at: string | null;
+    }
+  >;
+
+  const documentIds = documentRows.map((document) => document.id);
+
+  let filesByDocumentId = new Map<string, HouseDocumentFileRow>();
+
+  if (documentIds.length > 0) {
+    const { data: files, error: filesError } = await supabase
+      .from("house_content_files")
+      .select(
+        [
+          "entity_id",
+          "storage_bucket",
+          "storage_path",
+          "original_file_name",
+          "mime_type",
+          "size_bytes",
+          "uploaded_at",
+        ].join(", "),
+      )
+      .eq("entity_type", "house_document")
+      .eq("field_key", "pdf")
+      .in("entity_id", documentIds);
+
+    if (filesError) {
+      console.error("[admin.house.documents.files_load_failed]", {
+        houseId,
+        scope: options.scope ?? null,
+        error: filesError,
+      });
+    } else {
+      filesByDocumentId = new Map(
+        ((files ?? []) as unknown as HouseDocumentFileRow[]).map((file) => [
+          file.entity_id,
+          file,
+        ]),
+      );
+    }
+  }
 
   const documentsWithSignedUrls = await Promise.all(
-    documents.map(async (document) => {
-      if (
-        document.attachment_status !== "uploaded" ||
-        !document.storage_bucket ||
-        !document.storage_path
-      ) {
-        return {
-          ...document,
-          signed_file_url: null,
-        };
-      }
+    documentRows.map(async (document) => {
+      const trackedFile = filesByDocumentId.get(document.id);
 
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from(document.storage_bucket)
-        .createSignedUrl(document.storage_path, 60 * 15);
+      const storageBucket =
+        trackedFile?.storage_bucket ?? document.storage_bucket ?? null;
+      const storagePath =
+        trackedFile?.storage_path ?? document.storage_path ?? null;
+      const originalFileName =
+        trackedFile?.original_file_name ?? document.original_file_name ?? null;
+      const mimeType = trackedFile?.mime_type ?? document.mime_type ?? null;
+      const fileSizeBytes =
+        trackedFile?.size_bytes ?? document.file_size_bytes ?? null;
+      const uploadedAt = trackedFile?.uploaded_at ?? document.uploaded_at ?? null;
+      const attachmentStatus =
+        storageBucket && storagePath ? "uploaded" : document.attachment_status;
 
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        return {
-          ...document,
-          signed_file_url: null,
-        };
-      }
+      const signedFileUrl =
+        attachmentStatus === "uploaded"
+          ? await createSignedUrl({
+              supabase,
+              bucket: storageBucket,
+              path: storagePath,
+            })
+          : null;
 
       return {
         ...document,
-        signed_file_url: signedUrlData.signedUrl,
+        visibility_status: lifecycleToVisibility(document.lifecycle_status),
+        storage_bucket: storageBucket,
+        storage_path: storagePath,
+        original_file_name: originalFileName,
+        mime_type: mimeType,
+        file_size_bytes: fileSizeBytes,
+        uploaded_at: uploadedAt,
+        attachment_status: attachmentStatus,
+        signed_file_url: signedFileUrl,
       };
     }),
   );

@@ -1,7 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { useMemo, useState } from "react";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import type {
+  AdminHouseBoard,
+  AdminHouseBoardMember,
+} from "@/src/modules/houses/services/getAdminHouseBoard";
 import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -11,11 +16,6 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-const initialState = {
-  error: null,
-};
-
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
 type BoardRoleStatus =
   | "chairman"
   | "vice_chairman"
@@ -38,6 +38,7 @@ type BoardRoleItem = {
   officeHours: string;
   description: string;
   sortOrder: number;
+  lockVersion: number;
 };
 
 type BoardDraft = {
@@ -54,12 +55,7 @@ type Props = {
   readOnlyMode?: boolean;
   houseId: string;
   houseSlug: string;
-  section: {
-    id: string;
-    title: string | null;
-    status: SectionStatus;
-    content: Record<string, unknown>;
-  };
+  board: AdminHouseBoard;
 };
 
 const TAB_CONFIG: Array<{
@@ -171,106 +167,25 @@ function formatUkrainianPhone(value: string) {
   return result.trim();
 }
 
-function normalizeLegacyContent(content: Record<string, unknown>) {
-  const intro =
-    typeof content.intro === "string"
-      ? content.intro
-      : typeof content.message === "string"
-        ? content.message
-        : "";
-
-  const rolesFromNewStructure = Array.isArray(content.roles)
-    ? content.roles
-        .map((item, index) => {
-          if (!item || typeof item !== "object") {
-            return null;
-          }
-
-          const raw = item as Record<string, unknown>;
-          const status: BoardRoleStatus =
-            raw.status === "chairman" ||
-            raw.status === "vice_chairman" ||
-            raw.status === "member" ||
-            raw.status === "revision_commission"
-              ? raw.status
-              : "member";
-
-          return {
-            id:
-              typeof raw.id === "string" && raw.id.trim().length > 0
-                ? raw.id
-                : `role-${index + 1}`,
-            status,
-            name: String(raw.name ?? "").trim(),
-            role: String(raw.role ?? getRoleLabel(status)).trim(),
-            phone: String(raw.phone ?? "").trim(),
-            email: String(raw.email ?? "").trim(),
-            officeHours: String(raw.officeHours ?? "").trim(),
-            description: String(raw.description ?? "").trim(),
-            sortOrder:
-              typeof raw.sortOrder === "number" && Number.isFinite(raw.sortOrder)
-                ? raw.sortOrder
-                : index,
-          } satisfies BoardRoleItem;
-        })
-        .filter((item): item is BoardRoleItem => Boolean(item))
-    : [];
-
-  if (rolesFromNewStructure.length > 0) {
-    return {
-      intro,
-      roles: [...rolesFromNewStructure].sort(
-        (left, right) => left.sortOrder - right.sortOrder,
-      ),
-    };
-  }
-
-  const legacyChairman =
-    content.chairman && typeof content.chairman === "object"
-      ? (content.chairman as Record<string, unknown>)
-      : null;
-
-  const legacyMembers = Array.isArray(content.members)
-    ? content.members
-        .map((item) =>
-          item && typeof item === "object"
-            ? (item as Record<string, unknown>)
-            : null,
-        )
-        .filter((item): item is Record<string, unknown> => Boolean(item))
-    : [];
-
-  const roles: BoardRoleItem[] = [];
-
-  if (legacyChairman) {
-    roles.push({
-      id: "legacy-chairman",
-      status: "chairman",
-      name: String(legacyChairman.name ?? "").trim(),
-      role: "Голова правління",
-      phone: String(legacyChairman.phone ?? "").trim(),
-      email: String(legacyChairman.email ?? "").trim(),
-      officeHours: String(legacyChairman.officeHours ?? "").trim(),
-      description: String(legacyChairman.description ?? "").trim(),
-      sortOrder: 0,
-    });
-  }
-
-  legacyMembers.forEach((member, index) => {
-    roles.push({
-      id: `legacy-member-${index + 1}`,
-      status: "member",
-      name: String(member.name ?? "").trim(),
-      role: "Члени правління",
-      phone: String(member.phone ?? "").trim(),
-      email: String(member.email ?? "").trim(),
-      officeHours: String(member.officeHours ?? "").trim(),
-      description: String(member.description ?? "").trim(),
-      sortOrder: roles.length + index,
-    });
-  });
-
-  return { intro, roles };
+function normalizeBoardData(board: AdminHouseBoard) {
+  return {
+    intro: board.intro.intro,
+    introLockVersion: board.intro.lockVersion,
+    roles: board.members
+      .map((member) => ({
+        id: member.id,
+        status: member.roleStatus,
+        name: member.name.trim(),
+        role: member.role.trim() || getRoleLabel(member.roleStatus),
+        phone: member.phone.trim(),
+        email: member.email.trim(),
+        officeHours: member.officeHours.trim(),
+        description: member.description.trim(),
+        sortOrder: member.sortOrder,
+        lockVersion: member.lockVersion,
+      }) satisfies BoardRoleItem)
+      .sort((left, right) => left.sortOrder - right.sortOrder),
+  };
 }
 
 function toDraft(role: BoardRoleItem): BoardDraft {
@@ -290,23 +205,38 @@ function buildRolePreview(role: BoardRoleItem) {
   return parts.length > 0 ? parts.join(" • ") : "Контакти не вказані";
 }
 
+function mapSavedMember(member: AdminHouseBoardMember): BoardRoleItem {
+  return {
+    id: member.id,
+    status: member.roleStatus,
+    name: member.name,
+    role: member.role || getRoleLabel(member.roleStatus),
+    phone: member.phone,
+    email: member.email,
+    officeHours: member.officeHours,
+    description: member.description,
+    sortOrder: member.sortOrder,
+    lockVersion: member.lockVersion,
+  };
+}
+
 export function EditBoardSectionForm({
   houseId,
-  houseSlug,
-  section,
+  board,
+  readOnlyMode,
 }: Props) {
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const initialBoardData = useMemo(
-    () => normalizeLegacyContent(section.content),
-    [section.content],
+    () => normalizeBoardData(board),
+    [board],
   );
 
   const [intro, setIntro] = useState(initialBoardData.intro);
   const [savedIntro, setSavedIntro] = useState(initialBoardData.intro);
+  const [introLockVersion, setIntroLockVersion] = useState(
+    initialBoardData.introLockVersion,
+  );
   const [isEditingIntro, setIsEditingIntro] = useState(false);
 
   const [roles, setRoles] = useState<BoardRoleItem[]>(initialBoardData.roles);
@@ -314,11 +244,8 @@ export function EditBoardSectionForm({
 
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<BoardDraft | null>(null);
-
-  const [submitNonce, setSubmitNonce] = useState(0);
-  const [pendingIntroSave, setPendingIntroSave] = useState(false);
-
-  const formRef = useRef<HTMLFormElement>(null);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const chairman = roles.find((item) => item.status === "chairman") ?? null;
   const viceChairman =
@@ -347,36 +274,30 @@ export function EditBoardSectionForm({
 
   const introDirty = intro !== savedIntro;
 
-  useEffect(() => {
-    if (submitNonce > 0 && formRef.current) {
-      formRef.current.requestSubmit();
-    }
-  }, [submitNonce]);
-
-  function triggerSubmit() {
-    if (pendingIntroSave) {
-      setSavedIntro(intro);
-      setIsEditingIntro(false);
-      setPendingIntroSave(false);
-    }
-
-    setSubmitNonce((prev) => prev + 1);
-  }
-
   function closeWorkspace() {
     setWorkspaceMode("idle");
     setDraft(null);
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
   }
 
   function openCreateMode() {
+    if (readOnlyMode) return;
+
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
     setWorkspaceMode("create");
     setDraft(createEmptyDraft(getDefaultStatusByTab(activeTab)));
   }
 
   function openEditMode(roleId: string) {
+    if (readOnlyMode) return;
+
     const role = roles.find((item) => item.id === roleId);
     if (!role) return;
 
+    setWorkspaceError(null);
+    setIsDeleteConfirmOpen(false);
     setWorkspaceMode("edit");
     setDraft(toDraft(role));
   }
@@ -395,18 +316,8 @@ export function EditBoardSectionForm({
     });
   }
 
-  function persistRoles(nextRoles: BoardRoleItem[]) {
-    setRoles(
-      nextRoles.map((item, index) => ({
-        ...item,
-        sortOrder: index,
-      })),
-    );
-    triggerSubmit();
-  }
-
-  function handleSaveDraft() {
-    if (!draft) {
+  async function handleSaveDraft() {
+    if (!draft || readOnlyMode) {
       return;
     }
 
@@ -417,12 +328,12 @@ export function EditBoardSectionForm({
     const trimmedDescription = draft.description.trim();
 
     if (!trimmedName) {
-      window.alert("Вкажіть ім’я.");
+      setWorkspaceError("Вкажіть ім’я.");
       return;
     }
 
     if (draft.status === "chairman" && chairman && chairman.id !== draft.id) {
-      window.alert(
+      setWorkspaceError(
         "Голову правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку голови правління.",
       );
       return;
@@ -433,13 +344,15 @@ export function EditBoardSectionForm({
       viceChairman &&
       viceChairman.id !== draft.id
     ) {
-      window.alert(
+      setWorkspaceError(
         "Заступника голови правління вже призначено. Щоб додати нового, спочатку видаліть поточну картку заступника голови правління.",
       );
       return;
     }
 
-    const normalizedRole: BoardRoleItem = {
+    setWorkspaceError(null);
+
+    const normalizedRole = {
       id: draft.id,
       status: draft.status,
       name: trimmedName,
@@ -451,72 +364,128 @@ export function EditBoardSectionForm({
       sortOrder: 0,
     };
 
-    const existingIndex = roles.findIndex((item) => item.id === draft.id);
+    const existing = roles.find((item) => item.id === draft.id);
 
-    let nextRoles: BoardRoleItem[];
-    if (existingIndex >= 0) {
-      nextRoles = roles.map((item) =>
-        item.id === normalizedRole.id
-          ? { ...normalizedRole, sortOrder: item.sortOrder }
-          : item,
+    if (existing) {
+      await dispatch<AdminHouseBoardMember>(
+        {
+          type: "board_members.update",
+          houseId,
+          payload: {
+            id: existing.id,
+            lockVersion: existing.lockVersion,
+            roleStatus: normalizedRole.status,
+            name: normalizedRole.name,
+            role: normalizedRole.role,
+            phone: normalizedRole.phone,
+            email: normalizedRole.email,
+            officeHours: normalizedRole.officeHours,
+            description: normalizedRole.description,
+            sortOrder: existing.sortOrder,
+          },
+        },
+        {
+          onSuccess(data) {
+            const saved = mapSavedMember(data as AdminHouseBoardMember);
+            setRoles((prev) =>
+              prev.map((item) => (item.id === saved.id ? saved : item)),
+            );
+            closeWorkspace();
+          },
+        },
       );
-    } else {
-      nextRoles = [...roles, { ...normalizedRole, sortOrder: roles.length }];
-    }
-
-    closeWorkspace();
-    persistRoles(nextRoles);
-  }
-
-  function handleDeleteDraftRole() {
-    if (!draft || workspaceMode !== "edit") {
       return;
     }
 
-    const confirmed = window.confirm("Видалити цю роль?");
-    if (!confirmed) {
+    await dispatch<AdminHouseBoardMember>(
+      {
+        type: "board_members.create",
+        houseId,
+        payload: {
+          roleStatus: normalizedRole.status,
+          name: normalizedRole.name,
+          role: normalizedRole.role,
+          phone: normalizedRole.phone,
+          email: normalizedRole.email,
+          officeHours: normalizedRole.officeHours,
+          description: normalizedRole.description,
+          sortOrder: roles.length,
+        },
+      },
+      {
+        onSuccess(data) {
+          const saved = mapSavedMember(data as AdminHouseBoardMember);
+          setRoles((prev) => [...prev, saved]);
+          closeWorkspace();
+        },
+      },
+    );
+  }
+
+  async function handleDeleteDraftRole() {
+    if (!draft || workspaceMode !== "edit" || readOnlyMode) {
       return;
     }
 
-    const nextRoles = roles.filter((item) => item.id !== draft.id);
-    closeWorkspace();
-    persistRoles(nextRoles);
-  }
-
-  function handleSaveIntro() {
-    if (!introDirty || !formRef.current) {
+    const existing = roles.find((item) => item.id === draft.id);
+    if (!existing) {
+      setWorkspaceError("Не вдалося знайти роль для видалення.");
+      setIsDeleteConfirmOpen(false);
       return;
     }
 
-    setPendingIntroSave(true);
-    setSavedIntro(intro);
-    setIsEditingIntro(false);
-    setPendingIntroSave(false);
-    formRef.current.requestSubmit();
+    await dispatch<AdminHouseBoardMember>(
+      {
+        type: "board_members.delete",
+        houseId,
+        payload: {
+          id: existing.id,
+          lockVersion: existing.lockVersion,
+        },
+      },
+      {
+        onSuccess() {
+          setRoles((prev) => prev.filter((item) => item.id !== existing.id));
+          closeWorkspace();
+        },
+      },
+    );
   }
 
-  const serializedBoardPayload = JSON.stringify({
-    intro: intro.trim(),
-    roles: roles.map((item, index) => ({
-      ...item,
-      role: item.role || getRoleLabel(item.status),
-      sortOrder: index,
-    })),
-  });
+  async function handleSaveIntro() {
+    if (!introDirty || readOnlyMode) {
+      return;
+    }
+
+    await dispatch<{ intro: string; lockVersion: number }>(
+      {
+        type: "board_intro.save",
+        houseId,
+        payload: {
+          lockVersion: introLockVersion,
+          intro,
+        },
+      },
+      {
+        onSuccess(data) {
+          const saved = data as { intro: string; lockVersion: number };
+          setIntro(saved.intro);
+          setSavedIntro(saved.intro);
+          setIntroLockVersion(saved.lockVersion);
+          setIsEditingIntro(false);
+        },
+      },
+    );
+  }
 
   const activeTabConfig = TAB_CONFIG.find((item) => item.key === activeTab);
 
   return (
     <div className="space-y-6">
-      <form ref={formRef} action={formAction} className="space-y-6">
-        <input type="hidden" name="sectionId" value={section.id} />
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="kind" value="contacts" />
-        <input type="hidden" name="title" value={section.title ?? "Правління"} />
-        <input type="hidden" name="status" value={section.status} />
-        <input type="hidden" name="boardPayload" value={serializedBoardPayload} />
-
+      <form
+        onSubmit={(event) => event.preventDefault()}
+        className="space-y-6"
+      >
         <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -645,6 +614,15 @@ export function EditBoardSectionForm({
               </button>
             </div>
 
+            {workspaceError ?? lastError ? (
+              <div
+                role="alert"
+                className="mb-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+              >
+                {workspaceError ?? lastError}
+              </div>
+            ) : null}
+
             <div className="grid gap-6">
               <div className="grid gap-4">
                 <div>
@@ -758,7 +736,7 @@ export function EditBoardSectionForm({
                   {workspaceMode === "edit" ? (
                     <button
                       type="button"
-                      onClick={handleDeleteDraftRole}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                       className={[adminDangerButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ")}
                     >
                       Видалити
@@ -806,7 +784,7 @@ export function EditBoardSectionForm({
                     </div>
 
                     {role.description ? (
-                      <div className="mt-3 text-sm leading-6 text-slate-500">
+                      <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                         {role.description.length > 140
                           ? `${role.description.slice(0, 140).trim()}…`
                           : role.description}
@@ -823,12 +801,28 @@ export function EditBoardSectionForm({
           </div>
         </div>
 
-        {state.error ? (
+        {lastError ? (
           <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {state.error}
+            {lastError}
           </div>
         ) : null}
       </form>
+      <PlatformConfirmModal
+        open={isDeleteConfirmOpen}
+        tone="destructive"
+        title="Видалити роль?"
+        description="Цю дію не можна буде скасувати."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        isPending={isPending}
+        onConfirm={handleDeleteDraftRole}
+        onCancel={() => {
+          if (!isPending) {
+            setIsDeleteConfirmOpen(false);
+          }
+        }}
+      />
+
     </div>
   );
 }

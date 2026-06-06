@@ -1,0 +1,23 @@
+import type { ContentHandler } from "../../types/handler";
+
+import { <COMMAND_NAME>Command } from "./commands/_template";
+
+/**
+ * Template handler for Architecture 2.0 content-engine v2.
+ *
+ * Copy this directory to handlers/<HANDLER_KEY>/, replace all placeholders,
+ * add domain types, add real commands, then register the handler in
+ * handlers/index.ts.
+ */
+export const <HANDLER_KEY>Handler: ContentHandler = {
+  key: "<HANDLER_KEY>",
+  workspace: "<WORKSPACE_KEY>",
+
+  commands: {
+    <COMMAND_NAME>: <COMMAND_NAME>Command,
+  },
+
+  publicRevalidatePaths(houseSlug) {
+    return [`/house/${houseSlug}`, `/house/${houseSlug}/<PUBLIC_SECTION_SLUG>`];
+  },
+};

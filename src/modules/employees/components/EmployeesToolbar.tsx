@@ -79,7 +79,7 @@ export function EmployeesToolbar({
   }
 
   return (
-    <div className="sticky top-0 z-10 rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]/95 p-4 backdrop-blur">
+    <div>
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
@@ -90,7 +90,7 @@ export function EmployeesToolbar({
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder="Ім’я, email, посада"
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           />
         </div>
 
@@ -101,7 +101,7 @@ export function EmployeesToolbar({
           <select
             value={roleValue}
             onChange={(event) => setRoleValue(event.target.value)}
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           >
             <option value="">Усі ролі</option>
             <option value="admin">Admin</option>
@@ -116,7 +116,7 @@ export function EmployeesToolbar({
           <select
             value={statusValue}
             onChange={(event) => setStatusValue(event.target.value)}
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           >
             <option value="">Усі статуси</option>
             <option value="invited">Запрошено</option>
@@ -132,7 +132,7 @@ export function EmployeesToolbar({
           type="button"
           onClick={handleReset}
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text-primary)] disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text)] disabled:opacity-60"
         >
           Скинути
         </button>

@@ -9,12 +9,8 @@ import {
   adminSuccessButtonClass,
   adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { updateHouseAnnouncementSection } from "@/src/modules/houses/actions/updateHouseAnnouncementSection";
-import { deleteHouseSection } from "@/src/modules/houses/actions/deleteHouseSection";
-import { archiveHouseAnnouncementSection } from "@/src/modules/houses/actions/archiveHouseAnnouncementSection";
-import { publishHouseAnnouncementSection } from "@/src/modules/houses/actions/publishHouseAnnouncementSection";
+import { FormEvent, useRef, useState } from "react";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 type EditAnnouncementSectionFormProps = {
@@ -24,16 +20,11 @@ type EditAnnouncementSectionFormProps = {
   section: {
     id: string;
     title: string | null;
-    status: "draft" | "in_review" | "published" | "archived";
+    status: "draft" | "published" | "archived";
     content: Record<string, unknown>;
   };
   onClose?: () => void;
 };
-
-const initialState = {
-  error: null,
-};
-
 
 function formatDateTime(value: unknown) {
   if (typeof value !== "string" || !value) {
@@ -68,9 +59,8 @@ export function EditAnnouncementSectionForm({
   section,
   onClose,
 }: EditAnnouncementSectionFormProps) {
-  const router = useRouter();
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
-  const hasSubmittedRef = useRef(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAction, setPendingAction] = useState<
@@ -79,13 +69,6 @@ export function EditAnnouncementSectionForm({
   const [confirmAction, setConfirmAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
-  const [isMutating, startTransition] = useTransition();
-
-  const [state, formAction, isPending] = useActionState(
-    updateHouseAnnouncementSection,
-    initialState,
-  );
-
   const body =
     typeof section.content.body === "string" ? section.content.body : "";
 
@@ -96,7 +79,7 @@ export function EditAnnouncementSectionForm({
   const updatedAt = formatDateTime(section.content.updatedAt);
 
   const isDraftLike =
-    section.status === "draft" || section.status === "in_review";
+    section.status === "draft";
   const isPublished = section.status === "published";
   const isArchived = section.status === "archived";
 
@@ -110,85 +93,91 @@ export function EditAnnouncementSectionForm({
     return new FormData(formElement);
   }
 
-  function validateAnnouncementFormData(formData: FormData) {
-    const title = String(formData.get("title") ?? "").trim();
-    const body = String(formData.get("body") ?? "").trim();
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-    if (!title) {
-      return "Заповніть заголовок оголошення.";
+    setIsSaving(true);
+    setActionError(null);
+
+    try {
+      const formData = buildFormData();
+
+      await dispatch(
+        {
+          type: "announcements.update",
+          houseId,
+          payload: {
+            id: section.id,
+            lockVersion:
+              typeof section.content.lockVersion === "number"
+                ? section.content.lockVersion
+                : 1,
+            title: String(formData.get("title") ?? ""),
+            body: String(formData.get("body") ?? ""),
+            level: String(formData.get("level") ?? "info"),
+          },
+        },
+        {
+          onSuccess: () => onClose?.(),
+          onError: setActionError,
+        },
+      );
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося зберегти оголошення.",
+      );
+    } finally {
+      setIsSaving(false);
     }
-
-    if (!body) {
-      return "Заповніть текст оголошення.";
-    }
-
-    return null;
   }
 
-  function runMutation(
-    kind: "publish" | "archive" | "delete",
-    action: (formData: FormData) => Promise<{ error: string | null }>,
-  ) {
+  async function runMutation(kind: "publish" | "archive" | "delete") {
     setActionError(null);
     setPendingAction(kind);
 
-    startTransition(async () => {
-      try {
-        const formData = buildFormData();
-        const validationError =
-          kind === "delete" ? null : validateAnnouncementFormData(formData);
+    const commandType =
+      kind === "publish"
+        ? "announcements.publish"
+        : kind === "archive"
+          ? "announcements.archive"
+          : "announcements.delete";
 
-        if (validationError) {
-          setActionError(validationError);
-          return;
-        }
-
-        const result = await action(formData);
-
-        if (result.error) {
-          setActionError(result.error);
-          return;
-        }
-
-        onClose?.();
-        router.refresh();
-      } catch (error) {
-        setActionError(
-          error instanceof Error
-            ? error.message
-            : "Не вдалося виконати дію.",
-        );
-      } finally {
-        setPendingAction(null);
-      }
-    });
+    try {
+      await dispatch(
+        {
+          type: commandType,
+          houseId,
+          payload: {
+            id: section.id,
+            lockVersion:
+              typeof section.content.lockVersion === "number"
+                ? section.content.lockVersion
+                : 1,
+          },
+        },
+        {
+          onSuccess: () => onClose?.(),
+          onError: setActionError,
+        },
+      );
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося виконати дію.",
+      );
+    } finally {
+      setPendingAction(null);
+    }
   }
 
-  useEffect(() => {
-    if (!hasSubmittedRef.current) {
-      return;
-    }
+  void houseSlug;
+  void housePageId;
 
-    if (state.error !== null) {
-      setIsSaving(false);
-      hasSubmittedRef.current = false;
-      return;
-    }
-
-    if (!isPending && state.error === null) {
-      const timeoutId = window.setTimeout(() => {
-        router.refresh();
-        onClose?.();
-        hasSubmittedRef.current = false;
-        setIsSaving(false);
-      }, 400);
-
-      return () => window.clearTimeout(timeoutId);
-    }
-  }, [isPending, state.error, router, onClose]);
-
-  const combinedError = state.error ?? actionError;
-  const buttonsDisabled = isPending || isMutating;
+  const combinedError = actionError ?? lastError;
+  const buttonsDisabled = isPending || pendingAction !== null;
 
   return (
     <div className="space-y-4">
@@ -233,14 +222,7 @@ export function EditAnnouncementSectionForm({
         </div>
       </div>
 
-      <form ref={formRef} action={formAction} className="grid gap-4">
-        <input type="hidden" name="sectionId" value={section.id} />
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="housePageId" value={housePageId ?? ""} />
-        <input type="hidden" name="kind" value="announcements" />
-        <input type="hidden" name="status" value={section.status} />
-
+      <form ref={formRef} onSubmit={handleSave} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення
@@ -294,34 +276,7 @@ export function EditAnnouncementSectionForm({
                 disabled={buttonsDisabled || isSaving}
                 onClick={() => {
                   setActionError(null);
-
-                  try {
-                    const formData = buildFormData();
-                    const validationError = validateAnnouncementFormData(formData);
-
-                    if (validationError) {
-                      setActionError(validationError);
-                      setIsSaving(false);
-                      hasSubmittedRef.current = false;
-                      return;
-                    }
-                  } catch (error) {
-                    setActionError(
-                      error instanceof Error
-                        ? error.message
-                        : "Не вдалося перевірити форму оголошення.",
-                    );
-                    setIsSaving(false);
-                    hasSubmittedRef.current = false;
-                    return;
-                  }
-
-                  hasSubmittedRef.current = true;
-                  setIsSaving(true);
-
-                  requestAnimationFrame(() => {
-                    formRef.current?.requestSubmit();
-                  });
+                  formRef.current?.requestSubmit();
                 }}
                 className={`${adminPrimaryButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl ${
                   isSaving ? "cursor-wait opacity-90" : ""
@@ -395,15 +350,15 @@ export function EditAnnouncementSectionForm({
         confirmLabel="Видалити оголошення"
         pendingLabel="Видаляємо..."
         tone="destructive"
-        isPending={pendingAction === "delete" && isMutating}
+        isPending={pendingAction === "delete"}
         onCancel={() => {
-          if (!isMutating) {
+          if (!pendingAction) {
             setConfirmAction(null);
           }
         }}
         onConfirm={() => {
           setConfirmAction(null);
-          runMutation("delete", deleteHouseSection);
+          void runMutation("delete");
         }}
       />
 
@@ -414,15 +369,15 @@ export function EditAnnouncementSectionForm({
         confirmLabel="Підтвердити публікацію"
         pendingLabel="Підтверджуємо..."
         tone="publish"
-        isPending={pendingAction === "publish" && isMutating}
+        isPending={pendingAction === "publish"}
         onCancel={() => {
-          if (!isMutating) {
+          if (!pendingAction) {
             setConfirmAction(null);
           }
         }}
         onConfirm={() => {
           setConfirmAction(null);
-          runMutation("publish", publishHouseAnnouncementSection);
+          void runMutation("publish");
         }}
       />
 
@@ -433,15 +388,15 @@ export function EditAnnouncementSectionForm({
         confirmLabel="Архівувати оголошення"
         pendingLabel="Архівуємо..."
         tone="warning"
-        isPending={pendingAction === "archive" && isMutating}
+        isPending={pendingAction === "archive"}
         onCancel={() => {
-          if (!isMutating) {
+          if (!pendingAction) {
             setConfirmAction(null);
           }
         }}
         onConfirm={() => {
           setConfirmAction(null);
-          runMutation("archive", archiveHouseAnnouncementSection);
+          void runMutation("archive");
         }}
       />
     </div>

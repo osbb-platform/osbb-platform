@@ -108,7 +108,17 @@ function getDateSticker(task: PlanTask) {
     : "Кінцевий термін не вказано";
 }
 
-export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
+type PublicPlanTaskViewerProps = {
+  task: PlanTask;
+  houseId?: string;
+  houseSlug?: string;
+};
+
+export function PublicPlanTaskViewer({
+  task,
+  houseId,
+  houseSlug,
+}: PublicPlanTaskViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -264,6 +274,10 @@ export function PublicPlanTaskViewer({ task }: { task: PlanTask }) {
                             filePath={filePath}
                             fileName={`Документ ${index + 1}`}
                             bucket="house-plan-documents"
+                            analyticsHouseId={houseId}
+                            analyticsHouseSlug={houseSlug}
+                            analyticsEntityId={document.id || task.id}
+                            analyticsDocumentType="plan_document"
                           />
                         </div>
                       ) : null;

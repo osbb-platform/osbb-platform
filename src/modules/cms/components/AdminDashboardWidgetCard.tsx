@@ -23,10 +23,10 @@ export function AdminDashboardWidgetCard({
       className={`flex h-full min-h-[260px] flex-col rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 ${className}`}
     >
       <div className="mb-4 shrink-0">
-        <h2 className="text-base font-semibold text-[var(--cms-text-primary)]">{title}</h2>
+        <h2 className="text-base font-semibold text-[var(--cms-text)]">{title}</h2>
 
         {subtitle ? (
-          <p className="mt-1 text-sm leading-6 text-[var(--cms-text-secondary)]">
+          <p className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
             {subtitle}
           </p>
         ) : null}

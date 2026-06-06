@@ -59,11 +59,11 @@ export function ChangeHouseTariffForm({
       </div>
 
       {state.error && (
-        <div className="text-red-400 text-sm">{state.error}</div>
+        <div role="alert" className="text-sm text-[var(--cms-danger-text)]">{state.error}</div>
       )}
 
       {state.successMessage && (
-        <div className="text-green-400 text-sm">{state.successMessage}</div>
+        <div role="status" className="text-sm text-[var(--cms-success-text)]">{state.successMessage}</div>
       )}
 
       <button

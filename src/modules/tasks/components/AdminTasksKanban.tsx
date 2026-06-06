@@ -10,11 +10,11 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useDraggable } from "@dnd-kit/core";
-import { useRouter } from "next/navigation";
 import { CSS } from "@dnd-kit/utilities";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import { updatePlatformTaskStatus } from "@/src/modules/tasks/actions/updatePlatformTaskStatus";
 import { AdminTaskSidePanel } from "@/src/modules/tasks/components/AdminTaskSidePanel";
+import { useToast } from "@/src/shared/ui/toast/ToastProvider";
 import { CreateTaskModal } from "@/src/modules/tasks/components/CreateTaskModal";
 import type {
   AdminTaskBoardItem,
@@ -150,7 +150,7 @@ function TaskColumn({
     >
       <div className="mb-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="text-sm font-semibold text-[var(--cms-text)]">
             {label}
           </h2>
 
@@ -164,7 +164,7 @@ function TaskColumn({
         ))}
 
         {tasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm leading-6 text-[var(--cms-text-secondary)]">
+          <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm leading-6 text-[var(--cms-text-muted)]">
             У цій колонці поки немає задач.
           </div>
         ) : null}
@@ -216,7 +216,7 @@ function TaskCard({
           {...listeners}
           {...attributes}
           onClick={(event) => event.stopPropagation()}
-          className="inline-flex h-8 min-w-8 cursor-grab items-center justify-center rounded-xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-2 text-xs font-semibold text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-tertiary)] active:cursor-grabbing"
+          className="inline-flex h-8 min-w-8 cursor-grab items-center justify-center rounded-xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-2 text-xs font-semibold text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)] active:cursor-grabbing"
           aria-label="Перетягнути задачу"
           title="Перетягнути"
         >
@@ -228,39 +228,39 @@ function TaskCard({
         ) : null}
       </div>
 
-      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-[var(--cms-text-primary)]">
+      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-[var(--cms-text)]">
         {task.title}
       </h3>
 
-      <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--cms-text-secondary)]">
+      <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--cms-text-muted)]">
         {task.description || "Опис не додано"}
       </p>
 
-      <div className="mt-auto space-y-2 pt-3 text-xs text-[var(--cms-text-secondary)]">
+      <div className="mt-auto space-y-2 pt-3 text-xs text-[var(--cms-text-muted)]">
         <div className="flex items-center justify-between gap-3">
           <span>Будинок</span>
-          <span className="max-w-32 truncate text-[var(--cms-text-primary)]">
+          <span className="max-w-32 truncate text-[var(--cms-text)]">
             {houseLabel}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <span>Виконавець</span>
-          <span className="max-w-32 truncate text-[var(--cms-text-primary)]">
+          <span className="max-w-32 truncate text-[var(--cms-text)]">
             {task.assignedToName ?? "Не призначено"}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <span>Пріоритет</span>
-          <span className="text-[var(--cms-text-primary)]">
+          <span className="text-[var(--cms-text)]">
             {getPriorityLabel(task.priority)}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <span>Дедлайн</span>
-          <span className="text-[var(--cms-text-primary)]">
+          <span className="text-[var(--cms-text)]">
             {formatDate(task.deadlineAt)}
           </span>
         </div>
@@ -274,7 +274,6 @@ export function AdminTasksKanban({
   assignees,
   houses,
 }: AdminTasksKanbanProps) {
-  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [tasks, setTasks] = useState(initialTasks);
   const [view, setView] = useState<"board" | "archive">("board");
@@ -282,6 +281,7 @@ export function AdminTasksKanban({
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const { toast } = useToast();
   const [, startTransition] = useTransition();
   useEffect(() => {
     setIsMounted(true);
@@ -364,7 +364,11 @@ export function AdminTasksKanban({
 
       if (result.error) {
         setTasks(previousTasks);
-        window.alert(result.error);
+        toast({
+          tone: "error",
+          title: "Не вдалося оновити статус задачі",
+          description: result.error,
+        });
       }
     });
   }
@@ -376,28 +380,28 @@ export function AdminTasksKanban({
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
-              Задачі
-            </div>
-
-            <h1 className="mt-4 text-2xl font-semibold text-[var(--cms-text-primary)]">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold text-[var(--cms-text)]">
               Управління задачами
             </h1>
 
-            <p className="mt-6 text-sm leading-6 text-[var(--cms-text-secondary)]">
-              Активних задач, що потребують уваги: {activeIncompleteCount}
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--cms-text-muted)]">
+              Розділ уже доступний для роботи та проходить фінальне доопрацювання першої production-версії.
             </p>
+
+            <div className="mt-4 inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+              Активних задач, що потребують уваги: {activeIncompleteCount}
+            </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2">
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
             <CreateTaskModal assignees={assignees} houses={houses} />
 
             <button
               type="button"
               onClick={() => setView((current) => current === "board" ? "archive" : "board")}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]"
             >
               {view === "board" ? "Архів" : "Назад до задач"}
             </button>
@@ -407,10 +411,10 @@ export function AdminTasksKanban({
 
       <div className="space-y-4 rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--cms-text-primary)]">
+          <h2 className="text-lg font-semibold text-[var(--cms-text)]">
             {view === "board" ? "Фільтри задач" : "Архів задач"}
           </h2>
-          <p className="mt-1 text-sm text-[var(--cms-text-secondary)]">
+          <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
             {view === "board"
               ? "Відфільтруйте задачі за типом, виконавцем або пріоритетом."
               : "Архівні задачі показані окремим списком без перетягування."}

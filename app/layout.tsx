@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "OSBB Platform",
   description: "Платформа управляющей компании для сети домов",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
 };
 
@@ -19,22 +18,29 @@ const themeInitScript = `
   try {
     var theme = window.localStorage.getItem("osbb-admin-theme");
 
-    if (theme === "light") {
-      document.documentElement.setAttribute("data-admin-theme", "light");
-    } else {
+    if (theme === "dark") {
       document.documentElement.removeAttribute("data-admin-theme");
+      document.documentElement.style.colorScheme = "dark";
+      return;
     }
-  } catch (e) {}
+
+    document.documentElement.setAttribute("data-admin-theme", "light");
+    document.documentElement.style.colorScheme = "light";
+  } catch (e) {
+    document.documentElement.setAttribute("data-admin-theme", "light");
+    document.documentElement.style.colorScheme = "light";
+  }
 })();
 `;
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="uk" suppressHydrationWarning>
+    <html lang="uk" data-admin-theme="light" suppressHydrationWarning>
       <head>
-        <Script id="admin-theme-init" strategy="beforeInteractive">
-          {themeInitScript}
-        </Script>
+        <script
+          id="admin-theme-init"
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
       </head>
 
       <body>{children}</body>

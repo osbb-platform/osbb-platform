@@ -17,21 +17,21 @@ function getToneClasses(tone: PlatformSectionLoaderTone) {
   if (tone === "success") {
     return {
       badge:
-        "border-emerald-700/60 bg-emerald-950/80 text-emerald-200",
-      dot: "bg-emerald-400",
+        "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]",
+      dot: "bg-[var(--cms-success-text)]",
     };
   }
 
   if (tone === "error") {
     return {
-      badge: "border-red-800/60 bg-red-950/80 text-red-200",
-      dot: "bg-red-400",
+      badge: "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]",
+      dot: "bg-[var(--cms-danger-text)]",
     };
   }
 
   return {
-    badge: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text-primary)]",
-    dot: "bg-[var(--cms-text-primary)]",
+    badge: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)]",
+    dot: "bg-[var(--cms-text)]",
   };
 }
 
@@ -88,7 +88,7 @@ export function PlatformSectionLoader({
         <div className="min-w-0">
           <div>{label}</div>
           {message ? (
-            <div className="mt-1 text-xs font-normal text-[var(--cms-text-secondary)]">
+            <div className="mt-1 text-xs font-normal text-[var(--cms-text-muted)]">
               {message}
             </div>
           ) : null}

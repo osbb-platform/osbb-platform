@@ -1,22 +1,28 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
+import type {
+  AdminHouseSpecialistsSnapshot,
+  HouseSpecialistSnapshot,
+  HouseSpecialistsCategorySnapshot,
+} from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import {
+  adminDangerButtonClass,
   adminInputClass,
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminSuccessButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
-import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 
-const initialState = {
-  error: null,
-};
-
-const SPECIALIST_CATEGORIES = [
+const DEFAULT_SPECIALIST_CATEGORIES = [
   "Сантехнік",
   "Електрик",
   "Аварійна служба",
@@ -24,71 +30,53 @@ const SPECIALIST_CATEGORIES = [
   "Керуюча компанія",
 ] as const;
 
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
-type SpecialistStatus = "active" | "draft" | "archived";
-type WorkspaceTab = "active" | "draft" | "archive";
+type WorkspaceTab = "published" | "draft" | "archived";
 type WorkspaceMode = "idle" | "create" | "edit";
-
-type SpecialistItem = {
-  id: string;
-  title: string;
-  categories: string[];
-  phone: string;
-  phones: string[];
-  officeHours: string;
-  isPinned: boolean;
-  status: SpecialistStatus;
-  createdAt: string;
-  updatedAt: string;
-  archivedAt: string | null;
-};
+type ConfirmAction = "delete" | "publish" | "archive" | "restore" | null;
 
 type SpecialistDraft = {
-  id: string;
+  id: string | null;
+  lockVersion: number | null;
   title: string;
-  categories: string[];
-  phone: string;
+  category: string;
   phones: string[];
-  officeHours: string;
-  isPinned: boolean;
-  status: SpecialistStatus;
+  email: string;
+  description: string;
+  sortOrder: number;
+  status: WorkspaceTab;
 };
 
 type Props = {
   houseId: string;
-  houseSlug: string;
-  section: {
-    id: string;
-    title: string | null;
-    status: SectionStatus;
-    content: Record<string, unknown>;
-  };
+  specialistsData: AdminHouseSpecialistsSnapshot;
   requests: HouseSpecialistContactRequestRecord[];
 };
 
-function createSpecialistId() {
-  return `specialist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+function createEmptyDraft(sortOrder: number): SpecialistDraft {
+  return {
+    id: null,
+    lockVersion: null,
+    title: "",
+    category: "",
+    phones: [""],
+    email: "",
+    description: "",
+    sortOrder,
+    status: "draft",
+  };
 }
 
 function formatPhoneMask(value: string) {
   const input = value.trim();
 
-  if (!input) {
-    return "";
-  }
+  if (!input) return "";
 
   const hasPlus = input.startsWith("+");
   const digits = input.replace(/\D/g, "");
 
-  if (!digits) {
-    return "";
-  }
+  if (!digits) return "";
 
-  if (hasPlus) {
-    return `+${digits.slice(0, 15)}`;
-  }
-
-  return digits.slice(0, 15);
+  return hasPlus ? `+${digits.slice(0, 15)}` : digits.slice(0, 15);
 }
 
 function isValidPhone(value: string) {
@@ -96,484 +84,385 @@ function isValidPhone(value: string) {
   return digits.length >= 5 && digits.length <= 15;
 }
 
-function normalizeSpecialistPhones(value: Record<string, unknown>) {
-  const phonesFromArray = Array.isArray(value.phones)
-    ? value.phones
-        .map((phone) => formatPhoneMask(String(phone ?? "")))
-        .filter(Boolean)
-    : [];
-
-  const legacyPhone = formatPhoneMask(String(value.phone ?? ""));
-
-  return phonesFromArray.length > 0
-    ? phonesFromArray.filter((phone, index, array) => array.indexOf(phone) === index)
-    : legacyPhone
-      ? [legacyPhone]
-      : [];
-}
-
-function createEmptyDraft(): SpecialistDraft {
-  return {
-    id: createSpecialistId(),
-    title: "",
-    categories: [],
-    phone: "",
-    phones: [""],
-    officeHours: "",
-    isPinned: false,
-    status: "draft",
-  };
-}
-
-function normalizeCategories(value: unknown) {
-  const legacyCategoryMap: Record<string, string> = {
-    "Сантехник": "Сантехнік",
-    "Электрик": "Електрик",
-    "Аварийная служба": "Аварійна служба",
-    "Прибирання / обслуговування": "Прибирання / обслуговування",
-    "Управляющая компания": "Керуюча компанія",
-  };
-
-  if (!Array.isArray(value)) {
-    return [] as string[];
-  }
-
+function normalizePhones(value: string[]) {
   return value
-    .map((item) => legacyCategoryMap[String(item ?? "").trim()] ?? String(item ?? "").trim())
+    .map((phone) => formatPhoneMask(phone))
     .filter(Boolean)
-    .filter((item, index, array) => array.indexOf(item) === index);
+    .filter((phone, index, array) => array.indexOf(phone) === index);
 }
 
-function normalizeLegacySpecialists(
-  content: Record<string, unknown>,
-): SpecialistItem[] {
-  if (Array.isArray(content.specialists)) {
-    return (content.specialists as Array<Record<string, unknown>>)
-      .map((item, index) => {
-        const title = String(item.title ?? item.label ?? "").trim();
-        const categories = normalizeCategories(item.categories);
-        const category =
-          categories.length > 0
-            ? categories
-            : typeof item.category === "string" && item.category.trim()
-              ? [item.category.trim()]
-              : [];
-
-        const createdAt =
-          typeof item.createdAt === "string" && item.createdAt
-            ? item.createdAt
-            : new Date(Date.now() - index * 1000).toISOString();
-
-        const updatedAt =
-          typeof item.updatedAt === "string" && item.updatedAt
-            ? item.updatedAt
-            : createdAt;
-
-        const status =
-          item.status === "active" ||
-          item.status === "draft" ||
-          item.status === "archived"
-            ? item.status
-            : "draft";
-
-        const phones = normalizeSpecialistPhones(item);
-
-        return {
-          id:
-            typeof item.id === "string" && item.id.trim()
-              ? item.id.trim()
-              : createSpecialistId(),
-          title,
-          categories: category,
-          phone: phones[0] ?? "",
-          phones,
-          officeHours: String(item.officeHours ?? "").trim(),
-          isPinned: Boolean(item.isPinned),
-          status,
-          createdAt,
-          updatedAt,
-          archivedAt:
-            typeof item.archivedAt === "string" && item.archivedAt
-              ? item.archivedAt
-              : null,
-        } satisfies SpecialistItem;
-      })
-      .filter((item) => item.title || item.categories.length > 0 || item.phones.length > 0);
-  }
-
-  const legacyCategories = Array.isArray(content.categories)
-    ? (content.categories as Array<Record<string, unknown>>)
-    : [];
-
-  return legacyCategories.flatMap((category, categoryIndex) => {
-    const categoryName = String(category.name ?? "").trim();
-    const items = Array.isArray(category.items)
-      ? (category.items as Array<Record<string, unknown>>)
-      : [];
-
-    return items
-      .map((item, itemIndex) => {
-        const title = String(item.label ?? "").trim();
-        const createdAt = new Date(
-          Date.now() - (categoryIndex * 100 + itemIndex) * 1000,
-        ).toISOString();
-
-        return {
-          id: createSpecialistId(),
-          title,
-          categories: categoryName ? [categoryName] : [],
-          phone: "",
-          phones: [],
-          officeHours: "",
-          isPinned: false,
-          status: "active" as const,
-          createdAt,
-          updatedAt: createdAt,
-          archivedAt: null,
-        };
-      })
-      .filter((item) => item.title);
-  });
+function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
+  return {
+    id: item.id,
+    lockVersion: item.lockVersion,
+    title: item.content.title,
+    category: item.content.category,
+    phones: item.content.phones.length > 0 ? item.content.phones : [""],
+    email: item.content.email,
+    description: item.content.description,
+    sortOrder: item.content.sortOrder,
+    status: item.status,
+  };
 }
 
-function getSortTime(item: SpecialistItem) {
-  const time = new Date(item.createdAt).getTime();
-  return Number.isNaN(time) ? 0 : time;
+function getStatusLabel(status: WorkspaceTab) {
+  if (status === "published") return "Активна";
+  if (status === "archived") return "Архів";
+  return "Чернетка";
 }
 
-function sortSpecialists(items: SpecialistItem[]) {
+function sortSpecialists(items: HouseSpecialistSnapshot[]) {
   return [...items].sort((left, right) => {
-    if (left.isPinned !== right.isPinned) {
-      return Number(right.isPinned) - Number(left.isPinned);
-    }
+    const sortDiff = left.content.sortOrder - right.content.sortOrder;
+    if (sortDiff !== 0) return sortDiff;
 
-    const timeDiff = getSortTime(right) - getSortTime(left);
-    if (timeDiff !== 0) {
-      return timeDiff;
+    const rightTime = new Date(right.content.updatedAt).getTime();
+    const leftTime = new Date(left.content.updatedAt).getTime();
+
+    if (!Number.isNaN(rightTime) && !Number.isNaN(leftTime) && rightTime !== leftTime) {
+      return rightTime - leftTime;
     }
 
     return left.title.localeCompare(right.title, "uk");
   });
 }
 
-function getStatusLabel(status: SpecialistStatus) {
-  if (status === "active") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
+function normalizeCategoryTitle(value: string) {
+  return value.trim();
 }
 
 export function HouseSpecialistsWorkspace({
   houseId,
-  houseSlug,
-  section,
+  specialistsData,
+  requests,
 }: Props) {
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const initialSpecialists = useMemo(
-    () => sortSpecialists(normalizeLegacySpecialists(section.content)),
-    [section.content],
-  );
-
-  const [specialists, setSpecialists] =
-    useState<SpecialistItem[]>(initialSpecialists);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("published");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
-  const [confirmAction, setConfirmAction] = useState<
-    "delete" | "publish" | "archive" | null
-  >(null);
-  const [submitNonce, setSubmitNonce] = useState(0);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
 
-  const formRef = useRef<HTMLFormElement>(null);
+  const categories = useMemo(() => {
+    const fromCatalog = specialistsData.categories
+      .map((category) => category.title)
+      .filter(Boolean);
 
-  useEffect(() => {
-    if (submitNonce > 0 && formRef.current) {
-      formRef.current.requestSubmit();
-    }
-  }, [submitNonce]);
+    const fromItems = specialistsData.specialists
+      .map((item) => item.content.category)
+      .filter(Boolean);
 
-  const activeItems = useMemo(
-    () => sortSpecialists(specialists.filter((item) => item.status === "active")),
-    [specialists],
+    return [...DEFAULT_SPECIALIST_CATEGORIES, ...fromCatalog, ...fromItems]
+      .filter((title, index, array) => array.indexOf(title) === index);
+  }, [specialistsData.categories, specialistsData.specialists]);
+
+  const publishedItems = useMemo(
+    () => sortSpecialists(specialistsData.specialists.filter((item) => item.status === "published")),
+    [specialistsData.specialists],
   );
 
   const draftItems = useMemo(
-    () => sortSpecialists(specialists.filter((item) => item.status === "draft")),
-    [specialists],
+    () => sortSpecialists(specialistsData.specialists.filter((item) => item.status === "draft")),
+    [specialistsData.specialists],
   );
 
   const archivedItems = useMemo(
-    () =>
-      sortSpecialists(specialists.filter((item) => item.status === "archived")),
-    [specialists],
+    () => sortSpecialists(specialistsData.specialists.filter((item) => item.status === "archived")),
+    [specialistsData.specialists],
   );
 
   const visibleSpecialists =
-    activeTab === "active"
-      ? activeItems
+    activeTab === "published"
+      ? publishedItems
       : activeTab === "draft"
         ? draftItems
         : archivedItems;
 
-  const serializedPayload = JSON.stringify({
-    categoriesCatalog: [...SPECIALIST_CATEGORIES],
-    specialists: specialists.map((item) => ({
-      id: item.id,
-      title: item.title,
-      categories: item.categories,
-      phone: item.phones[0] ?? item.phone,
-      phones: item.phones,
-      officeHours: item.officeHours,
-      isPinned: item.isPinned,
-      status: item.status,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      archivedAt: item.archivedAt,
-    })),
-    updatedAt: new Date().toISOString(),
-  });
-
-  function triggerSubmit() {
-    setSubmitNonce((prev) => prev + 1);
-  }
+  const nextSortOrder =
+    specialistsData.specialists.reduce(
+      (max, item) => Math.max(max, item.content.sortOrder),
+      -1,
+    ) + 1;
 
   function closeWorkspace() {
     setWorkspaceMode("idle");
     setDraft(null);
+    setConfirmAction(null);
+    setWorkspaceError(null);
   }
 
   function openCreateMode() {
+    setWorkspaceError(null);
     setActiveTab("draft");
     setWorkspaceMode("create");
-    setDraft(createEmptyDraft());
+    setDraft(createEmptyDraft(nextSortOrder));
   }
 
-  function openEditMode(itemId: string) {
-    const item = specialists.find((specialist) => specialist.id === itemId);
-    if (!item) return;
-
+  function openEditMode(item: HouseSpecialistSnapshot) {
+    setWorkspaceError(null);
     setWorkspaceMode("edit");
-    setDraft({
-      id: item.id,
-      title: item.title,
-      categories: item.categories,
-      phone: item.phones[0] ?? item.phone,
-      phones: item.phones,
-      officeHours: item.officeHours,
-      isPinned: item.isPinned,
-      status: item.status,
-    });
+    setDraft(toDraft(item));
   }
 
-  function persistItems(nextItems: SpecialistItem[]) {
-    setSpecialists(sortSpecialists(nextItems));
-    triggerSubmit();
-  }
-
-  function handleDraftChange(
+  function updateDraft(
     field: keyof SpecialistDraft,
-    value: string | boolean | string[],
+    value: string | number | string[],
   ) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        [field]: value,
-      };
-    });
+    setDraft((current) => (current ? { ...current, [field]: value } : current));
   }
 
   function handleDraftPhoneChange(index: number, value: string) {
-    setDraft((prev) => {
-      if (!prev) return prev;
+    setDraft((current) => {
+      if (!current) return current;
 
-      const nextPhones = [...prev.phones];
+      const nextPhones = [...current.phones];
       nextPhones[index] = formatPhoneMask(value);
 
       return {
-        ...prev,
-        phone: nextPhones.find(Boolean) ?? "",
+        ...current,
         phones: nextPhones,
       };
     });
   }
 
   function addDraftPhone() {
-    setDraft((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        phones: [...prev.phones, ""],
-      };
-    });
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            phones: [...current.phones, ""],
+          }
+        : current,
+    );
   }
 
   function removeDraftPhone(index: number) {
-    setDraft((prev) => {
-      if (!prev) return prev;
+    setDraft((current) => {
+      if (!current) return current;
 
-      const nextPhones = prev.phones.filter((_, phoneIndex) => phoneIndex !== index);
+      const nextPhones = current.phones.filter((_, phoneIndex) => phoneIndex !== index);
 
       return {
-        ...prev,
-        phone: nextPhones.find(Boolean) ?? "",
+        ...current,
         phones: nextPhones.length > 0 ? nextPhones : [""],
       };
     });
   }
 
-  function handleCategoryToggle(category: string) {
-    setDraft((prev) => {
-      if (!prev) return prev;
+  async function saveDraft() {
+    if (!draft) return;
 
-      const hasCategory = prev.categories.includes(category);
+    const title = draft.title.trim();
+    const category = draft.category.trim();
+    const phones = normalizePhones(draft.phones);
 
-      return {
-        ...prev,
-        categories: hasCategory
-          ? prev.categories.filter((item) => item !== category)
-          : [...prev.categories, category],
-      };
+    if (!title) {
+      setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
+      return;
+    }
+
+    if (!category) {
+      setWorkspaceError("Оберіть категорію спеціаліста.");
+      return;
+    }
+
+    const hasInvalidPhone = phones.some((phone) => !isValidPhone(phone));
+    if (hasInvalidPhone) {
+      setWorkspaceError("Введіть коректний номер телефону.");
+      return;
+    }
+
+    setWorkspaceError(null);
+
+    const payload = {
+      title,
+      category,
+      phones,
+      email: draft.email.trim(),
+      description: draft.description.trim(),
+      sortOrder: draft.sortOrder,
+    };
+
+    if (workspaceMode === "create") {
+      const created = await dispatch({
+        type: "specialists.create",
+        houseId,
+        payload,
+      });
+
+      if (created) {
+        closeWorkspace();
+        setActiveTab("draft");
+      }
+
+      return;
+    }
+
+    if (!draft.id || typeof draft.lockVersion !== "number") {
+      setWorkspaceError("Не вдалося визначити картку спеціаліста для оновлення.");
+      return;
+    }
+
+    const updated = await dispatch({
+      type: "specialists.update",
+      houseId,
+      payload: {
+        ...payload,
+        id: draft.id,
+        lockVersion: draft.lockVersion,
+      },
+    });
+
+    if (updated) {
+      closeWorkspace();
+    }
+  }
+
+  async function runLifecycleCommand(action: Exclude<ConfirmAction, null>) {
+    if (!draft?.id || typeof draft.lockVersion !== "number") return;
+
+    const commandType =
+      action === "publish"
+        ? "specialists.publish"
+        : action === "archive"
+          ? "specialists.archive"
+          : action === "restore"
+            ? "specialists.restore"
+            : "specialists.delete";
+
+    const result = await dispatch({
+      type: commandType,
+      houseId,
+      payload: {
+        id: draft.id,
+        lockVersion: draft.lockVersion,
+      },
+    });
+
+    if (result) {
+      closeWorkspace();
+
+      if (action === "publish") setActiveTab("published");
+      if (action === "archive") setActiveTab("archived");
+      if (action === "restore") setActiveTab("draft");
+    }
+  }
+
+  async function saveCategories(nextCategories: HouseSpecialistsCategorySnapshot[]) {
+    await dispatch({
+      type: "specialists.categoriesUpsert",
+      houseId,
+      payload: {
+        categories: nextCategories.map((category, index) => ({
+          id: category.id,
+          title: category.title,
+          sortOrder: index,
+        })),
+      },
     });
   }
 
-  function handleSaveDraft() {
-    if (!draft) return;
+  async function addCategory() {
+    const title = normalizeCategoryTitle(categoryDraft);
 
-    const trimmedTitle = draft.title.trim();
-    const normalizedPhones = draft.phones
-      .map((phone) => formatPhoneMask(phone))
-      .filter(Boolean)
-      .filter((phone, index, array) => array.indexOf(phone) === index);
-    const trimmedPhone = normalizedPhones[0] ?? "";
-    const trimmedOfficeHours = draft.officeHours.trim();
-    const normalizedCategories = draft.categories.filter(Boolean);
+    if (!title) return;
 
-    if (!trimmedTitle) {
-      window.alert("Вкажіть ім’я та прізвище або назву компанії.");
-      return;
-    }
-
-    if (normalizedCategories.length === 0) {
-      window.alert("Оберіть хоча б одну категорію.");
-      return;
-    }
-
-    const hasInvalidPhone = normalizedPhones.some((phone) => !isValidPhone(phone));
-
-    if (hasInvalidPhone) {
-      window.alert("Введіть коректний номер телефону.");
-      return;
-    }
-
-    const now = new Date().toISOString();
-    const existingItem = specialists.find((item) => item.id === draft.id);
-
-    const nextItem: SpecialistItem = {
-      id: draft.id,
-      title: trimmedTitle,
-      categories: normalizedCategories,
-      phone: trimmedPhone,
-      phones: normalizedPhones,
-      officeHours: trimmedOfficeHours,
-      isPinned: draft.isPinned,
-      status: existingItem?.status ?? "draft",
-      createdAt: existingItem?.createdAt ?? now,
-      updatedAt: now,
-      archivedAt: existingItem?.archivedAt ?? null,
-    };
-
-    const nextItems = existingItem
-      ? specialists.map((item) => (item.id === draft.id ? nextItem : item))
-      : [...specialists, nextItem];
-
-    closeWorkspace();
-    persistItems(nextItems);
-  }
-
-  function handleConfirmItem(itemId: string) {
-    const nextItems = specialists.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            status: "active" as const,
-            archivedAt: null,
-            updatedAt: new Date().toISOString(),
-          }
-        : item,
+    const exists = specialistsData.categories.some(
+      (category) => category.title.toLowerCase() === title.toLowerCase(),
     );
 
-    closeWorkspace();
-    persistItems(nextItems);
+    if (exists) {
+      setCategoryDraft("");
+      return;
+    }
+
+    await dispatch({
+      type: "specialists.categoriesUpsert",
+      houseId,
+      payload: {
+        categories: [
+          ...specialistsData.categories.map((category, index) => ({
+            id: category.id,
+            title: category.title,
+            sortOrder: index,
+          })),
+          {
+            title,
+            sortOrder: specialistsData.categories.length,
+          },
+        ],
+      },
+    });
+
+    setCategoryDraft("");
   }
 
-  function handleArchiveItem(itemId: string) {
-    const nextItems = specialists.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            status: "archived" as const,
-            archivedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-        : item,
+  async function removeCategory(categoryId: string) {
+    const nextCategories = specialistsData.categories.filter(
+      (category) => category.id !== categoryId,
     );
 
-    closeWorkspace();
-    persistItems(nextItems);
+    await saveCategories(nextCategories);
   }
-
-  function handleDeleteItem(itemId: string) {
-    const target = specialists.find((item) => item.id === itemId);
-    if (!target) return;
-
-    const nextItems = specialists.filter((item) => item.id !== itemId);
-    closeWorkspace();
-    persistItems(nextItems);
-  }
-
 
   return (
     <div className="relative space-y-6">
-      <PlatformSectionLoader active={isPending} delayMs={280} label="Оновлюємо картки спеціалістів..." className="rounded-3xl" />
-      <form ref={formRef} action={formAction} className="space-y-6">
-        <input type="hidden" name="sectionId" value={section.id} />
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="kind" value="specialists" />
-        <input type="hidden" name="title" value={section.title ?? "Спеціалісти"} />
-        <input type="hidden" name="status" value={section.status} />
-        <input type="hidden" name="specialistsPayload" value={serializedPayload} />
+      <PlatformSectionLoader
+        active={isPending}
+        delayMs={280}
+        label="Оновлюємо картки спеціалістів..."
+        className="rounded-3xl"
+      />
 
-        <div className={`${adminSurfaceClass} p-6`}>
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Спеціалісти</h2>
-                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                  Керування картками спеціалістів і публікацією карток на сайт будинку.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={openCreateMode}
-                className={adminPrimaryButtonClass}
-              >
-                Створити спеціаліста
-              </button>
+      <div className={`${adminSurfaceClass} p-6`}>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-[var(--cms-text)]">
+                Спеціалісти
+              </h2>
+              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                Керування окремими картками спеціалістів, статусами публікації та каталогом категорій.
+              </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={openCreateMode}
+              className={adminPrimaryButtonClass}
+            >
+              Створити спеціаліста
+            </button>
+          </div>
+
+          <div className="grid gap-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text)] md:grid-cols-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
+                Активні заявки
+              </div>
+              <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
+                Категорії
+              </div>
+              <div className="mt-1 text-2xl font-semibold">{specialistsData.categories.length}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
+                Всього карток
+              </div>
+              <div className="mt-1 text-2xl font-semibold">{specialistsData.specialists.length}</div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
             {[
-              ["active", "Активні", activeItems.length],
+              ["published", "Активні", publishedItems.length],
               ["draft", "Чернетки", draftItems.length],
-              ["archive", "Архів", archivedItems.length],
+              ["archived", "Архів", archivedItems.length],
             ].map(([key, label, count]) => {
               const isActive = activeTab === key;
 
@@ -604,313 +493,381 @@ export function HouseSpecialistsWorkspace({
                 </button>
               );
             })}
-            </div>
           </div>
         </div>
+      </div>
 
-        {workspaceMode !== "idle" && draft ? (
-          <div className={`${adminSurfaceClass} p-6`}>
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <div className="text-lg font-semibold text-[var(--cms-text)]">
-                  {workspaceMode === "create"
-                    ? "Новий спеціаліст"
-                    : "Редагування спеціаліста"}
-                </div>
-                <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  Картка зберігається всередину секції та одразу потрапляє в чернетки.
-                </div>
-              </div>
+      <div className={`${adminSurfaceClass} p-6`}>
+        <div className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
+              Каталог категорій
+            </h3>
+            <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
+              Категорії використовуються для фільтрів і вибору в картці спеціаліста.
+            </p>
+          </div>
 
-              <button
-                type="button"
-                onClick={closeWorkspace}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                aria-label="Закрити форму"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="grid gap-6">
-              <div className="grid gap-4">
-                <div>
-                  <label className={`mb-2 block ${adminTextLabelClass}`}>
-                    Ім’я та прізвище / Компанія
-                  </label>
-                  <input
-                    value={draft.title}
-                    onChange={(event) =>
-                      handleDraftChange("title", event.target.value)
-                    }
-                    className={adminInputClass}
-                    placeholder="Наприклад: Іван Петренко або Аварком сервіс"
-                  />
-                </div>
-
-                <div>
-                  <label className={`mb-2 block ${adminTextLabelClass}`}>
-                    Категорії
-                  </label>
-
-                  <div className="flex flex-wrap gap-2">
-                    {SPECIALIST_CATEGORIES.map((category) => {
-                      const isSelected = draft.categories.includes(category);
-
-                      return (
-                        <button
-                          key={category}
-                          type="button"
-                          onClick={() => handleCategoryToggle(category)}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                            isSelected
-                              ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                              : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                          }`}
-                        >
-                          {category}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className={`mb-2 block ${adminTextLabelClass}`}>
-                    Телефони
-                  </label>
-
-                  <div className="grid gap-2">
-                    {draft.phones.map((phone, index) => (
-                      <div key={`phone-${index}`} className="flex gap-2">
-                        <input
-                          value={phone}
-                          onChange={(event) =>
-                            handleDraftPhoneChange(index, event.target.value)
-                          }
-                          className={adminInputClass}
-                          placeholder="+380 67 123 45 67 або 0800 00 00 00"
-                        />
-
-                        {draft.phones.length > 1 ? (
-                          <button
-                            type="button"
-                            onClick={() => removeDraftPhone(index)}
-                            className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                          >
-                            Видалити
-                          </button>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-
+          <div className="flex flex-wrap gap-2">
+            {specialistsData.categories.length > 0 ? (
+              specialistsData.categories.map((category) => (
+                <span
+                  key={category.id}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                >
+                  {category.title}
                   <button
                     type="button"
-                    onClick={addDraftPhone}
-                    className="mt-3 inline-flex items-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                    onClick={() => removeCategory(category.id)}
+                    className="text-[var(--cms-danger-text)]"
+                    aria-label={`Видалити категорію ${category.title}`}
                   >
-                    + Додати ще телефон
+                    ×
                   </button>
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-[var(--cms-text-muted)]">
+                Каталог поки порожній. Можна додати першу категорію нижче.
+              </span>
+            )}
+          </div>
 
-                  <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
-                    Якщо хоча б один телефон заповнений, на сайті будинку буде кнопка «Подзвонити».
-                    Якщо ні — кнопка «Залишити заявку».
-                  </div>
-                </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              value={categoryDraft}
+              onChange={(event) => setCategoryDraft(event.target.value)}
+              className={adminInputClass}
+              placeholder="Нова категорія"
+            />
+            <button
+              type="button"
+              onClick={addCategory}
+              className={adminSecondaryButtonClass}
+            >
+              Додати категорію
+            </button>
+          </div>
+        </div>
+      </div>
 
-                <div>
-                  <label className={`mb-2 block ${adminTextLabelClass}`}>
-                    Години прийому
-                  </label>
-                  <input
-                    value={draft.officeHours}
-                    onChange={(event) =>
-                      handleDraftChange("officeHours", event.target.value)
-                    }
-                    className={adminInputClass}
-                    placeholder="Пн–Пт, 09:00–18:00"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
-                    <input
-                      type="checkbox"
-                      checked={draft.isPinned}
-                      onChange={(event) =>
-                        handleDraftChange("isPinned", event.target.checked)
-                      }
-                    />
-                    Закріпити зверху
-                  </label>
-                </div>
+      {workspaceMode !== "idle" && draft ? (
+        <div className={`${adminSurfaceClass} p-6`}>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <div className="text-lg font-semibold text-[var(--cms-text)]">
+                {workspaceMode === "create"
+                  ? "Новий спеціаліст"
+                  : "Редагування спеціаліста"}
               </div>
+              <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+                Нова картка зберігається як чернетка. Публікація виконується окремою командою.
+              </div>
+            </div>
 
-              <div className="overflow-x-auto border-t border-[var(--cms-border)] pt-5">
-                <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-                  <div className="flex flex-nowrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleSaveDraft}
-                      className={adminPrimaryButtonClass}
-                    >
-                      Зберегти
-                    </button>
+            <button
+              type="button"
+              onClick={closeWorkspace}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              aria-label="Закрити форму"
+            >
+              ×
+            </button>
+          </div>
 
-                    {workspaceMode === "edit" &&
-                    (draft.status === "draft" || draft.status === "archived") ? (
+          {workspaceError ?? lastError ? (
+            <div
+              role="alert"
+              className="mb-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+            >
+              {workspaceError ?? lastError}
+            </div>
+          ) : null}
+
+          <div className="grid gap-5">
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Ім’я та прізвище / Компанія
+              </label>
+              <input
+                value={draft.title}
+                onChange={(event) => updateDraft("title", event.target.value)}
+                className={adminInputClass}
+                placeholder="Наприклад: Іван Петренко або Аварком сервіс"
+              />
+            </div>
+
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Категорія
+              </label>
+              <select
+                value={draft.category}
+                onChange={(event) => updateDraft("category", event.target.value)}
+                className={adminInputClass}
+              >
+                <option value="">Оберіть категорію</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Телефони
+              </label>
+
+              <div className="grid gap-2">
+                {draft.phones.map((phone, index) => (
+                  <div key={`phone-${index}`} className="flex gap-2">
+                    <input
+                      value={phone}
+                      onChange={(event) =>
+                        handleDraftPhoneChange(index, event.target.value)
+                      }
+                      className={adminInputClass}
+                      placeholder="+380 67 123 45 67 або 0800 00 00 00"
+                    />
+
+                    {draft.phones.length > 1 ? (
                       <button
                         type="button"
-                        onClick={() => setConfirmAction("delete")}
-                        className="inline-flex items-center justify-center rounded-3xl border border-[var(--cms-danger-border)] px-8 py-4 text-base font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                        onClick={() => removeDraftPhone(index)}
+                        className={adminSecondaryButtonClass}
                       >
                         Видалити
                       </button>
                     ) : null}
                   </div>
+                ))}
+              </div>
 
-                  {workspaceMode === "edit" && draft.status === "draft" ? (
-                    <div className="flex shrink-0 items-center">
-                      <button
-                        type="button"
-                        onClick={() => setConfirmAction("publish")}
-                        className="inline-flex items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-8 py-4 text-base font-medium text-white transition hover:opacity-90"
-                      >
-                        Підтвердити
-                      </button>
-                    </div>
-                  ) : null}
+              <button
+                type="button"
+                onClick={addDraftPhone}
+                className="mt-3 inline-flex items-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              >
+                + Додати ще телефон
+              </button>
 
-                  {workspaceMode === "edit" && draft.status === "active" ? (
-                    <div className="flex shrink-0 items-center">
-                      <button
-                        type="button"
-                        onClick={() => setConfirmAction("archive")}
-                        className="inline-flex items-center justify-center rounded-3xl border border-[var(--cms-warning-border)] px-8 py-4 text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90"
-                      >
-                        Архівувати
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>            </div>
-          </div>
-        ) : null}
-        <div className={`${adminSurfaceClass} p-6`}>
-            <div className="grid gap-4 md:grid-cols-2">
-              {visibleSpecialists.length > 0 ? (
-                visibleSpecialists.map((item) => (
+              <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
+                Якщо телефони не вказані, на сайті будинку буде кнопка «Залишити заявку».
+              </div>
+            </div>
+
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Email
+              </label>
+              <input
+                value={draft.email}
+                onChange={(event) => updateDraft("email", event.target.value)}
+                className={adminInputClass}
+                placeholder="specialist@example.com"
+              />
+            </div>
+
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Опис / графік / примітки
+              </label>
+              <textarea
+                value={draft.description}
+                onChange={(event) => updateDraft("description", event.target.value)}
+                className={`${adminInputClass} min-h-[120px]`}
+                placeholder="Опишіть, коли звертатися до спеціаліста, графік прийому або додаткові умови."
+              />
+            </div>
+
+            <div>
+              <label className={`mb-2 block ${adminTextLabelClass}`}>
+                Порядок сортування
+              </label>
+              <input
+                type="number"
+                value={draft.sortOrder}
+                onChange={(event) =>
+                  updateDraft("sortOrder", Number.parseInt(event.target.value, 10) || 0)
+                }
+                className={adminInputClass}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cms-border)] pt-5">
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={saveDraft}
+                  className={adminPrimaryButtonClass}
+                  disabled={isPending}
+                >
+                  Зберегти
+                </button>
+
+                <button
+                  type="button"
+                  onClick={closeWorkspace}
+                  className={adminSecondaryButtonClass}
+                  disabled={isPending}
+                >
+                  Скасувати
+                </button>
+
+                {workspaceMode === "edit" ? (
                   <button
-                    key={item.id}
                     type="button"
-                    onClick={() => openEditMode(item.id)}
-                    className="block w-full rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-3.5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
+                    onClick={() => setConfirmAction("delete")}
+                    className={adminDangerButtonClass}
+                    disabled={isPending}
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-3 flex flex-wrap items-center gap-2">
-                          <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                            {getStatusLabel(item.status)}
-                          </span>
-
-                          {item.isPinned ? (
-                            <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
-                              Закріплено зверху
-                            </span>
-                          ) : null}
-
-                          {item.categories.map((category) => (
-                            <span
-                              key={`${item.id}-${category}`}
-                              className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]"
-                            >
-                              {category}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="text-lg font-semibold text-[var(--cms-text)]">
-                          {item.title || "Без назви"}
-                        </div>
-
-                        <div className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--cms-text)] sm:grid-cols-[140px_1fr]">
-                          <div className="text-[var(--cms-text-soft)]">Телефон</div>
-                          <div>
-                            {item.phones.length > 0
-                              ? item.phones.join(", ")
-                              : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
-                          </div>
-
-                          <div className="text-[var(--cms-text-soft)]">Години зв’язку</div>
-                          <div>{item.officeHours || "Години прийому не вказані"}</div>
-                        </div>
-                      </div>
-
-                    </div>
+                    Видалити
                   </button>
-                ))
-              ) : (
-                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-                  {activeTab === "active"
-                    ? "Поки немає опублікованих спеціалістів. Створіть першу картку та підтвердьте публікацію."
-                    : activeTab === "draft"
-                      ? "Збережені чернетки спеціалістів з’являтимуться тут після створення або редагування."
-                      : "Архів поки порожній. Зняті з публікації картки спеціалістів відображатимуться тут."}
-                </div>
-              )}
+                ) : null}
+              </div>
+
+              {workspaceMode === "edit" && draft.status === "draft" ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("publish")}
+                  className={adminSuccessButtonClass}
+                  disabled={isPending}
+                >
+                  Опублікувати
+                </button>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.status === "published" ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("archive")}
+                  className={adminWarningButtonClass}
+                  disabled={isPending}
+                >
+                  Архівувати
+                </button>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.status === "archived" ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("restore")}
+                  className={adminSecondaryButtonClass}
+                  disabled={isPending}
+                >
+                  Відновити в чернетки
+                </button>
+              ) : null}
             </div>
           </div>
+        </div>
+      ) : null}
 
-        {state.error ? (
-          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {state.error}
-          </div>
-        ) : null}
+      <div className={`${adminSurfaceClass} p-6`}>
+        <div className="grid gap-4 md:grid-cols-2">
+          {visibleSpecialists.length > 0 ? (
+            visibleSpecialists.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => openEditMode(item)}
+                className="block w-full rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
+              >
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+                    {getStatusLabel(item.status)}
+                  </span>
 
-      
-        <PlatformConfirmModal
-          open={confirmAction === "delete"}
-          title="Видалити картку спеціаліста?"
-          description="Картку буде видалено з розділу спеціалістів без можливості відновлення."
-          confirmLabel="Видалити"
-          cancelLabel="Скасувати"
-          tone="destructive"
-          onCancel={() => setConfirmAction(null)}
-          onConfirm={() => {
-            if (draft) handleDeleteItem(draft.id);
-            setConfirmAction(null);
-          }}
-        />
+                  {item.content.category ? (
+                    <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+                      {item.content.category}
+                    </span>
+                  ) : null}
+                </div>
 
-        <PlatformConfirmModal
-          open={confirmAction === "publish"}
-          title="Підтвердити картку спеціаліста?"
-          description="Після підтвердження картка з’явиться в активних спеціалістах на сайті будинку."
-          confirmLabel="Підтвердити"
-          cancelLabel="Скасувати"
-          tone="publish"
-          onCancel={() => setConfirmAction(null)}
-          onConfirm={() => {
-            if (draft) handleConfirmItem(draft.id);
-            setConfirmAction(null);
-          }}
-        />
+                <div className="text-lg font-semibold text-[var(--cms-text)]">
+                  {item.title || "Без назви"}
+                </div>
 
-        <PlatformConfirmModal
-          open={confirmAction === "archive"}
-          title="Архівувати картку?"
-          description="Картку буде знято з публікації та переміщено в архів."
-          confirmLabel="Архівувати"
-          cancelLabel="Скасувати"
-          tone="warning"
-          onCancel={() => setConfirmAction(null)}
-          onConfirm={() => {
-            if (draft) handleArchiveItem(draft.id);
-            setConfirmAction(null);
-          }}
-        />
-</form>
+                <div className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--cms-text)] sm:grid-cols-[140px_1fr]">
+                  <div className="text-[var(--cms-text-soft)]">Телефон</div>
+                  <div>
+                    {item.content.phones.length > 0
+                      ? item.content.phones.join(", ")
+                      : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
+                  </div>
+
+                  <div className="text-[var(--cms-text-soft)]">Email</div>
+                  <div>{item.content.email || "Email не вказано"}</div>
+
+                  <div className="text-[var(--cms-text-soft)]">Опис</div>
+                  <div>{item.content.description || "Опис не вказано"}</div>
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+              {activeTab === "published"
+                ? "Поки немає опублікованих спеціалістів. Створіть першу картку та опублікуйте її."
+                : activeTab === "draft"
+                  ? "Чернетки спеціалістів з’являтимуться тут після створення або відновлення з архіву."
+                  : "Архів поки порожній. Зняті з публікації картки спеціалістів відображатимуться тут."}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {lastError ? (
+        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          {lastError}
+        </div>
+      ) : null}
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete"}
+        title="Видалити картку спеціаліста?"
+        description="Картку буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        cancelLabel="Скасувати"
+        tone="destructive"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => runLifecycleCommand("delete")}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish"}
+        title="Опублікувати картку спеціаліста?"
+        description="Після публікації картка з’явиться на сайті будинку."
+        confirmLabel="Опублікувати"
+        cancelLabel="Скасувати"
+        tone="publish"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => runLifecycleCommand("publish")}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "archive"}
+        title="Архівувати картку?"
+        description="Картку буде знято з публікації та переміщено в архів."
+        confirmLabel="Архівувати"
+        cancelLabel="Скасувати"
+        tone="warning"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => runLifecycleCommand("archive")}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "restore"}
+        title="Відновити картку?"
+        description="Картку буде повернуто в чернетки для подальшого редагування."
+        confirmLabel="Відновити"
+        cancelLabel="Скасувати"
+        tone="publish"
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => runLifecycleCommand("restore")}
+      />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { HOUSE_VISITOR_COOKIE_NAME } from "@/src/modules/analytics/utils/visitorId";
+import { trackVisitorEvent } from "@/src/modules/analytics/ingest/trackVisitorEvent";
 import { ensureSpecialistRequestTask } from "@/src/modules/tasks/services/ensureSpecialistRequestTask";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
@@ -51,6 +53,7 @@ export async function createSpecialistContactRequest(
   const cookieStore = await cookies();
   const sessionToken =
     cookieStore.get(getHouseAccessCookieName(houseSlug))?.value ?? "";
+  const visitorSessionId = cookieStore.get(HOUSE_VISITOR_COOKIE_NAME)?.value ?? "";
 
   const hasAccess = sessionToken
     ? await validateHouseSession({
@@ -101,6 +104,19 @@ export async function createSpecialistContactRequest(
     requesterName,
     apartment,
   });
+
+  if (visitorSessionId) {
+    await trackVisitorEvent({
+      houseId,
+      sessionId: visitorSessionId,
+      eventType: "contact_request_submitted",
+      entityId: specialistId || null,
+      metadata: {
+        source: "specialist_contact_request",
+        houseSlug,
+      },
+    });
+  }
 
   await logPlatformChange({
     actorAdminId: null,

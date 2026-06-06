@@ -50,7 +50,7 @@ export function CompanyRequestsCarousel({ requests }: Props) {
 
   if (!activeItem) {
     return (
-      <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-6 text-[var(--cms-text-secondary)]">
+      <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-6 text-[var(--cms-text-muted)]">
         Заявок пока нет.
       </div>
     );
@@ -62,7 +62,7 @@ export function CompanyRequestsCarousel({ requests }: Props) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="text-lg font-semibold text-[var(--cms-text-primary)] sm:text-xl">
+              <div className="text-lg font-semibold text-[var(--cms-text)] sm:text-xl">
                 {activeItem.house_name}
               </div>
 
@@ -70,30 +70,30 @@ export function CompanyRequestsCarousel({ requests }: Props) {
                 className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                   activeItem.status === "new"
                     ? "border border-orange-300 bg-orange-50 text-orange-700"
-                    : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-secondary)]"
+                    : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]"
                 }`}
               >
                 {activeItem.status === "new" ? "Новая" : "Просмотрена"}
               </span>
             </div>
 
-            <div className="mt-3 text-sm text-[var(--cms-text-secondary)]">
+            <div className="mt-3 text-sm text-[var(--cms-text-muted)]">
               {activeItem.address}
             </div>
 
             {activeItem.osbb_name ? (
-              <div className="mt-2 text-sm text-[var(--cms-text-secondary)]">
+              <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 ОСББ: {activeItem.osbb_name}
               </div>
             ) : null}
 
-            <div className="mt-3 text-sm text-[var(--cms-text-secondary)]">
+            <div className="mt-3 text-sm text-[var(--cms-text-muted)]">
               Контакт: {activeItem.requester_name} · {activeItem.requester_email}
               {activeItem.requester_phone ? ` · ${activeItem.requester_phone}` : ""}
             </div>
 
             {activeItem.comment ? (
-              <div className="mt-4 rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3 text-sm leading-6 text-[var(--cms-text-secondary)]">
+              <div className="mt-4 rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                 {activeItem.comment}
               </div>
             ) : null}
@@ -110,12 +110,12 @@ export function CompanyRequestsCarousel({ requests }: Props) {
             onClick={handlePrev}
             disabled={!canGoPrev}
             aria-label="Предыдущая заявка"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 text-base font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
           >
             ←
           </button>
 
-          <div className="min-w-[72px] text-center text-sm text-amber-700">
+          <div className="min-w-[72px] text-center text-sm text-[var(--cms-warning-text)]">
             {safeIndex + 1} из {visibleItems.length}
           </div>
 
@@ -124,7 +124,7 @@ export function CompanyRequestsCarousel({ requests }: Props) {
             onClick={handleNext}
             disabled={!canGoNext}
             aria-label="Следующая заявка"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 text-base font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
           >
             →
           </button>

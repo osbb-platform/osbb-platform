@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local audit / temporary artifacts
+/audit/
+audit_run.sh
+/tmp/
+supabase/.branches/
+supabase/.temp/
+*.zip

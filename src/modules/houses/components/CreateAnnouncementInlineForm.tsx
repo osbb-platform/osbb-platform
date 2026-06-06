@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import {
-  createHouseAnnouncementSection,
-  type CreateHouseAnnouncementSectionState,
-} from "@/src/modules/houses/actions/createHouseAnnouncementSection";
+import { FormEvent } from "react";
+
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
   adminBodyClass,
   adminIconButtonClass,
@@ -27,31 +25,31 @@ export function CreateAnnouncementInlineForm({
   housePageId,
   onClose,
 }: CreateAnnouncementInlineFormProps) {
-  const initialState: CreateHouseAnnouncementSectionState = { error: null };
-  const [state, formAction, isPending] = useActionState(
-    createHouseAnnouncementSection,
-    initialState,
-  );
-  const [clientError, setClientError] = useState<string | null>(null);
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  async function handleSubmit(formData: FormData) {
-    setClientError(null);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-    const title = String(formData.get("title") ?? "").trim();
-    const body = String(formData.get("body") ?? "").trim();
+    const formData = new FormData(event.currentTarget);
 
-    if (!title) {
-      setClientError("Заповніть заголовок оголошення.");
-      return;
-    }
-
-    if (!body) {
-      setClientError("Заповніть текст оголошення.");
-      return;
-    }
-
-    await formAction(formData);
+    await dispatch(
+      {
+        type: "announcements.create",
+        houseId,
+        payload: {
+          title: String(formData.get("title") ?? ""),
+          body: String(formData.get("body") ?? ""),
+          level: String(formData.get("level") ?? "info"),
+        },
+      },
+      {
+        onSuccess: () => onClose?.(),
+      },
+    );
   }
+
+  void houseSlug;
+  void housePageId;
 
   return (
     <div className={[adminInsetSurfaceClass, adminInsetPaddingClass].join(" ")}>
@@ -77,11 +75,7 @@ export function CreateAnnouncementInlineForm({
         ) : null}
       </div>
 
-      <form action={handleSubmit} className="grid gap-4">
-        <input type="hidden" name="houseId" value={houseId} />
-        <input type="hidden" name="houseSlug" value={houseSlug} />
-        <input type="hidden" name="housePageId" value={housePageId} />
-
+      <form onSubmit={handleSubmit} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення
@@ -121,10 +115,10 @@ export function CreateAnnouncementInlineForm({
           />
         </div>
 
-        {clientError || state.error ? (
-          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {clientError ?? state.error}
-          </div>
+        {lastError ? (
+          <p role="alert" className="text-sm text-[var(--cms-danger-text)]">
+            {lastError}
+          </p>
         ) : null}
 
         <div className="flex flex-wrap gap-3">

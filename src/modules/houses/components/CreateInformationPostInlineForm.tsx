@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createHouseInformationSection } from "@/src/modules/houses/actions/createHouseInformationSection";
+import { FormEvent, useEffect, useRef, useState } from "react";
+
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
 
@@ -13,40 +13,14 @@ import {
   adminInsetSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
-const initialState = { error: null };
-
-const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const INFORMATION_IMAGE_BUCKET = "house-information-images";
 const MAX_COVER_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
-const INFORMATION_IMAGES_BUCKET = "house-information-images";
-
-function sanitizeCoverFileName(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9._-]/g, "");
-
-  return normalized || "information-cover-image";
-}
-
-function buildInformationCoverImagePath(params: {
-  houseId: string;
-  sectionId: string;
-  file: File;
-}) {
-  const safeFileName = sanitizeCoverFileName(params.file.name);
-  return `${params.houseId}/${params.sectionId}/${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2)}-${safeFileName}`;
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(0)} КБ`;
-  }
-
-  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
-}
+const ALLOWED_COVER_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "image/webp",
+]);
 
 type Props = {
   houseId: string;
@@ -55,37 +29,30 @@ type Props = {
   onClose: () => void;
 };
 
+function sanitizeFileName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120);
+}
+
 export function CreateInformationPostInlineForm({
   houseId,
   houseSlug,
   housePageId,
   onClose,
 }: Props) {
-  const router = useRouter();
-  const [state, formAction, isPending] = useActionState(
-    createHouseInformationSection,
-    initialState,
-  );
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const [body, setBody] = useState("");
   const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
-  const [coverImageError, setCoverImageError] = useState<string | null>(null);
-  const [uploadedCoverImagePath, setUploadedCoverImagePath] = useState("");
-  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPinned, setIsPinned] = useState(false);
-  const hasSubmittedRef = useRef(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (!hasSubmittedRef.current) return;
-
-    if (!isPending && state.error === null) {
-      router.refresh();
-      onClose();
-      hasSubmittedRef.current = false;
-    }
-  }, [isPending, state.error, router, onClose]);
 
   useEffect(() => {
     return () => {
@@ -95,29 +62,93 @@ export function CreateInformationPostInlineForm({
     };
   }, [previewUrl]);
 
+  async function uploadCoverImage(file: File) {
+    if (!ALLOWED_COVER_IMAGE_TYPES.has(file.type)) {
+      throw new Error("Обкладинка має бути JPG, PNG або WebP.");
+    }
+
+    if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
+      throw new Error("Обкладинка має бути не більшою за 15 МБ.");
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const fileExt = file.name.split(".").pop() || "jpg";
+    const safeFileName = sanitizeFileName(file.name) || `cover.${fileExt}`;
+    const filePath = `${houseId}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}-${safeFileName}`;
+
+    const { error } = await supabase.storage
+      .from(INFORMATION_IMAGE_BUCKET)
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type || undefined,
+      });
+
+    if (error) {
+      throw new Error(`Не вдалося завантажити обкладинку: ${error.message}`);
+    }
+
+    return {
+      bucket: INFORMATION_IMAGE_BUCKET,
+      path: filePath,
+      originalName: file.name,
+      mimeType: file.type || null,
+      size: file.size,
+    };
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setActionError(null);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const coverImage = selectedCoverImage
+        ? await uploadCoverImage(selectedCoverImage)
+        : null;
+
+      const result = await dispatch(
+        {
+          type: "information_posts.create",
+          houseId,
+          payload: {
+            headline: String(formData.get("headline") ?? ""),
+            category: String(formData.get("category") ?? INFORMATION_CATEGORIES[0]),
+            body: String(formData.get("body") ?? ""),
+            isPinned,
+            coverImage,
+          },
+        },
+        {
+          onSuccess: () => onClose(),
+          onError: setActionError,
+        },
+      );
+
+      if (!result && coverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage.from(coverImage.bucket).remove([coverImage.path]);
+      }
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося створити інформаційний матеріал.",
+      );
+    }
+  }
+
+  void houseSlug;
+  void housePageId;
+
+  const combinedError = actionError ?? lastError;
+
   return (
     <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (isUploadingCoverImage) {
-          event.preventDefault();
-          setCoverImageError("Дочекайтеся завершення завантаження обкладинки.");
-          return;
-        }
-
-        if (selectedCoverImage && !uploadedCoverImagePath) {
-          event.preventDefault();
-          setCoverImageError("Обкладинка ще не завантажена. Оберіть файл повторно.");
-        }
-      }}
+      onSubmit={handleSubmit}
       className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
     >
-      <input type="hidden" name="houseId" value={houseId} />
-      <input type="hidden" name="houseSlug" value={houseSlug} />
-      <input type="hidden" name="housePageId" value={housePageId ?? ""} />
-      <input type="hidden" name="isPinned" value={isPinned ? "true" : "false"} />
-      <input type="hidden" name="coverImagePath" value={uploadedCoverImagePath} />
-
       {/* HEADER */}
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
@@ -129,7 +160,7 @@ export function CreateInformationPostInlineForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass}>
+        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму створення повідомлення">
           ×
         </button>
       </div>
@@ -196,88 +227,16 @@ export function CreateInformationPostInlineForm({
                 Обрати файл
               </button>
 
-              {coverImageError ? (
-                <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-xs text-[var(--cms-danger-text)]">
-                  {coverImageError}
-                </div>
-              ) : null}
-
-              {selectedCoverImage ? (
-                <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
-                  {selectedCoverImage.name} · {formatFileSize(selectedCoverImage.size)}
-                  {isUploadingCoverImage ? " · Завантажуємо..." : uploadedCoverImagePath ? " · Завантажено" : ""}
-                </div>
-              ) : null}
-
               <input
                 ref={fileInputRef}
+                name="coverImage"
                 type="file"
-                accept={ACCEPTED_IMAGE_TYPES}
                 hidden
-                onChange={async (event) => {
+                accept="image/jpeg,image/png,image/jpg,image/webp"
+                onChange={(event) => {
                   const file = event.target.files?.[0] ?? null;
-
-                  if (previewUrl?.startsWith("blob:")) {
-                    URL.revokeObjectURL(previewUrl);
-                  }
-
-                  setUploadedCoverImagePath("");
-
-                  if (!file) {
-                    setSelectedCoverImage(null);
-                    setCoverImageError(null);
-                    setPreviewUrl(null);
-                    return;
-                  }
-
-                  if (!ACCEPTED_IMAGE_TYPES.split(",").includes(file.type)) {
-                    event.target.value = "";
-                    setSelectedCoverImage(null);
-                    setCoverImageError("Для обкладинки дозволені лише JPG, PNG або WebP.");
-                    setPreviewUrl(null);
-                    return;
-                  }
-
-                  if (file.size > MAX_COVER_IMAGE_SIZE_BYTES) {
-                    event.target.value = "";
-                    setSelectedCoverImage(null);
-                    setCoverImageError("Обкладинка повідомлення має бути не більшою за 15 МБ.");
-                    setPreviewUrl(null);
-                    return;
-                  }
-
-                  const nextPreviewUrl = URL.createObjectURL(file);
                   setSelectedCoverImage(file);
-                  setPreviewUrl(nextPreviewUrl);
-                  setCoverImageError(null);
-                  setIsUploadingCoverImage(true);
-
-                  const uploadPath = buildInformationCoverImagePath({
-                    houseId,
-                    sectionId: `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                    file,
-                  });
-                  const supabase = createSupabaseBrowserClient();
-                  const { error } = await supabase.storage
-                    .from(INFORMATION_IMAGES_BUCKET)
-                    .upload(uploadPath, file, {
-                      upsert: false,
-                      contentType: file.type || undefined,
-                    });
-
-                  setIsUploadingCoverImage(false);
-
-                  if (error) {
-                    event.target.value = "";
-                    setSelectedCoverImage(null);
-                    setUploadedCoverImagePath("");
-                    setCoverImageError(`Не вдалося завантажити обкладинку: ${error.message}`);
-                    setPreviewUrl(null);
-                    URL.revokeObjectURL(nextPreviewUrl);
-                    return;
-                  }
-
-                  setUploadedCoverImagePath(uploadPath);
+                  setPreviewUrl(file ? URL.createObjectURL(file) : null);
                 }}
               />
             </div>
@@ -310,32 +269,31 @@ export function CreateInformationPostInlineForm({
             name="body"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            maxLength={512}
+            maxLength={256}
             rows={6}
             className={adminInputClass}
             required
           />
           <div className="text-xs text-[var(--cms-text-muted)]">
-            {body.length}/512
+            {body.length}/256
           </div>
         </div>
       </div>
 
-      {state.error && (
+      {combinedError ? (
         <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {state.error}
+          {combinedError}
         </div>
-      )}
+      ) : null}
 
       {/* ACTIONS */}
       <div className="mt-6 flex gap-3">
         <button
           type="submit"
-          disabled={isPending || isUploadingCoverImage}
-          onClick={() => (hasSubmittedRef.current = true)}
-          className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+          disabled={isPending}
+          className={adminPrimaryButtonClass}
         >
-          {isUploadingCoverImage ? "Завантажуємо обкладинку..." : isPending ? "Створюємо..." : "Створити"}
+          {isPending ? "Створюємо..." : "Створити"}
         </button>
 
         <button

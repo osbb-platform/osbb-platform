@@ -17,7 +17,12 @@ export const getPublishedHousePage = cache(async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to load published house page: ${error.message}`);
+    console.error("Failed to load published house page:", {
+      houseId,
+      slug,
+      message: error.message,
+    });
+    return null;
   }
 
   if (!data) {

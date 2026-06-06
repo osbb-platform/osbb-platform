@@ -1,9 +1,12 @@
-import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
+import type React from "react";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
-import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
+
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
+import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
+import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,125 +16,20 @@ type Props = {
 type SpecialistCard = {
   id: string;
   title: string;
-  categories: string[];
-  phone: string;
+  category: string;
   phones: string[];
-  officeHours: string;
-  isPinned: boolean;
-  status: "active" | "draft" | "archived";
+  email: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const DEFAULT_CATEGORIES = [
-  "Сантехнік",
-  "Електрик",
-  "Аварійна служба",
-  "Прибирання / обслуговування",
-  "Керуюча компанія",
-] as const;
-
-function normalizeSpecialistPhones(value: Record<string, unknown>) {
-  const phonesFromArray = Array.isArray(value.phones)
-    ? value.phones
-        .map((phone) => String(phone ?? "").trim())
-        .filter(Boolean)
-    : [];
-
-  const legacyPhone = String(value.phone ?? "").trim();
-
-  return (phonesFromArray.length > 0
-    ? phonesFromArray
-    : legacyPhone
-      ? [legacyPhone]
-      : []
-  ).filter((phone, index, array) => array.indexOf(phone) === index);
-}
-
-function normalizeSpecialists(content: Record<string, unknown>) {
-  if (Array.isArray(content.specialists)) {
-    return (content.specialists as Array<Record<string, unknown>>)
-      .map((item, index) => {
-        const title = String(item.title ?? item.label ?? "").trim();
-        const categories = Array.isArray(item.categories)
-          ? item.categories
-              .map((entry) => String(entry ?? "").trim())
-              .filter(Boolean)
-          : typeof item.category === "string" && item.category.trim()
-            ? [item.category.trim()]
-            : [];
-
-        const createdAt =
-          typeof item.createdAt === "string" && item.createdAt
-            ? item.createdAt
-            : new Date(Date.now() - index * 1000).toISOString();
-
-        const phones = normalizeSpecialistPhones(item);
-
-        return {
-          id:
-            typeof item.id === "string" && item.id.trim()
-              ? item.id.trim()
-              : `specialist-${index + 1}`,
-          title,
-          categories,
-          phone: phones[0] ?? "",
-          phones,
-          officeHours: String(item.officeHours ?? "").trim(),
-          isPinned: Boolean(item.isPinned),
-          status: (
-            item.status === "active" ||
-            item.status === "draft" ||
-            item.status === "archived"
-              ? item.status
-              : "active"
-          ) as SpecialistCard["status"],
-          createdAt,
-        };
-      })
-      .filter((item) => item.title);
-  }
-
-  const legacyCategories = Array.isArray(content.categories)
-    ? (content.categories as Array<Record<string, unknown>>)
-    : [];
-
-  return legacyCategories.flatMap((category, categoryIndex) => {
-    const categoryName = String(category.name ?? "").trim();
-    const items = Array.isArray(category.items)
-      ? (category.items as Array<Record<string, unknown>>)
-      : [];
-
-    return items
-      .map((item, itemIndex) => ({
-        id: `legacy-${categoryIndex}-${itemIndex}`,
-        title: String(item.label ?? "").trim(),
-        categories: categoryName ? [categoryName] : [],
-        phone: "",
-        phones: [],
-        officeHours: "",
-        isPinned: false,
-        status: "active" as const,
-        createdAt: new Date(
-          Date.now() - (categoryIndex * 100 + itemIndex) * 1000,
-        ).toISOString(),
-      }))
-      .filter((item) => item.title);
-  });
-}
-
-function sortSpecialists(items: Array<SpecialistCard & { createdAt: string }>) {
+function sortSpecialists(items: SpecialistCard[]) {
   return [...items].sort((left, right) => {
-    if (left.isPinned !== right.isPinned) {
-      return Number(right.isPinned) - Number(left.isPinned);
-    }
+    const rightTime = new Date(right.updatedAt || right.createdAt).getTime();
+    const leftTime = new Date(left.updatedAt || left.createdAt).getTime();
 
-    const leftTime = new Date(left.createdAt).getTime();
-    const rightTime = new Date(right.createdAt).getTime();
-
-    if (
-      !Number.isNaN(leftTime) &&
-      !Number.isNaN(rightTime) &&
-      leftTime !== rightTime
-    ) {
+    if (!Number.isNaN(rightTime) && !Number.isNaN(leftTime) && rightTime !== leftTime) {
       return rightTime - leftTime;
     }
 
@@ -153,7 +51,9 @@ function ContactRow({
       <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-[#7A746B] sm:w-[112px]">
         {label}
       </div>
-      <div className="min-w-0 break-words text-sm leading-7 text-[#34465B]">{value}</div>
+      <div className="min-w-0 break-words text-sm leading-7 text-[#34465B]">
+        {value}
+      </div>
     </div>
   );
 }
@@ -170,20 +70,11 @@ function SpecialistCardView({
   return (
     <article className="w-full min-w-0 rounded-[30px] border border-[#E4DBD1] bg-[#F6F2EC] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
-        {item.isPinned ? (
-          <span className="inline-flex rounded-full border border-[#E7B6B2] bg-[#F7DFDC] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B42318]">
-            {houseSpecialistsCopy.card.primary}
+        {item.category ? (
+          <span className="inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F3A4F]">
+            {item.category}
           </span>
         ) : null}
-
-        {item.categories.map((category) => (
-          <span
-            key={`${item.id}-${category}`}
-            className="inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F3A4F]"
-          >
-            {category}
-          </span>
-        ))}
       </div>
 
       <h2 className="mt-5 break-words text-3xl font-semibold tracking-tight text-[#1F2A37]">
@@ -200,8 +91,12 @@ function SpecialistCardView({
           }
         />
         <ContactRow
+          label={houseSpecialistsCopy.form.email}
+          value={item.email}
+        />
+        <ContactRow
           label={houseSpecialistsCopy.card.hours}
-          value={item.officeHours || houseSpecialistsCopy.card.hoursEmpty}
+          value={item.description || houseSpecialistsCopy.card.hoursEmpty}
         />
       </div>
 
@@ -233,67 +128,75 @@ export default async function SpecialistsPage({
 }: Props) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const activeCategory = resolvedSearchParams.category ?? houseSpecialistsCopy.filters.all;
+  const activeCategory =
+    resolvedSearchParams.category ?? houseSpecialistsCopy.filters.all;
   const selectedSpecialistId =
     typeof resolvedSearchParams.specialist === "string"
       ? resolvedSearchParams.specialist
       : "";
 
-  const { house, sections } = await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
+  const specialistsData = await getPublishedHouseSpecialists(house.id);
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
   const apartmentOptions = await getPublicHouseApartmentOptions({
     houseId: house.id,
   });
 
-  const specialistsSection = sections.find(
-    (section) => section.kind === "specialists",
-  );
-
-  const content =
-    specialistsSection &&
-    typeof specialistsSection.content === "object" &&
-    specialistsSection.content
-      ? (specialistsSection.content as Record<string, unknown>)
-      : {};
-
-  const categoriesCatalog = Array.isArray(content.categoriesCatalog)
-    ? (content.categoriesCatalog as unknown[])
-        .map((item) => String(item ?? "").trim())
-        .filter(Boolean)
-    : [...DEFAULT_CATEGORIES];
-
   const activeSpecialists = sortSpecialists(
-    normalizeSpecialists(content).filter((item) => item.status === "active"),
+    specialistsData.specialists.map((item) => ({
+      id: item.id,
+      title: item.content.title,
+      category: item.content.category,
+      phones: item.content.phones,
+      email: item.content.email,
+      description: item.content.description,
+      createdAt: item.content.createdAt,
+      updatedAt: item.content.updatedAt,
+    })),
   );
 
-  const usedCategories = categoriesCatalog.filter((category) =>
-    activeSpecialists.some((item) => item.categories.includes(category)),
+  const categoryCatalog = specialistsData.categories
+    .map((category) => category.title)
+    .filter(Boolean);
+
+  const usedCategories = categoryCatalog.filter((category) =>
+    activeSpecialists.some((item) => item.category === category),
   );
+
+  const fallbackUsedCategories = activeSpecialists
+    .map((item) => item.category)
+    .filter(Boolean)
+    .filter((category, index, array) => array.indexOf(category) === index)
+    .filter((category) => !usedCategories.includes(category));
 
   const filterItems = [
-    { key: houseSpecialistsCopy.filters.all, label: houseSpecialistsCopy.filters.all, count: activeSpecialists.length },
-    ...usedCategories.map((category) => ({
+    {
+      key: houseSpecialistsCopy.filters.all,
+      label: houseSpecialistsCopy.filters.all,
+      count: activeSpecialists.length,
+    },
+    ...[...usedCategories, ...fallbackUsedCategories].map((category) => ({
       key: category,
       label: category,
-      count: activeSpecialists.filter((item) =>
-        item.categories.includes(category),
-      ).length,
+      count: activeSpecialists.filter((item) => item.category === category).length,
     })),
   ];
 
   const filteredSpecialists =
     activeCategory === houseSpecialistsCopy.filters.all
       ? activeSpecialists
-      : activeSpecialists.filter((item) =>
-          item.categories.includes(activeCategory),
-        );
+      : activeSpecialists.filter((item) => item.category === activeCategory);
 
   const selectedSpecialist = selectedSpecialistId
     ? activeSpecialists.find((item) => item.id === selectedSpecialistId) ?? null
     : null;
 
-  const canOpenModal = selectedSpecialist && !selectedSpecialist.phone;
+  const canOpenModal = selectedSpecialist && selectedSpecialist.phones.length === 0;
 
   return (
     <>
@@ -318,7 +221,7 @@ export default async function SpecialistsPage({
 
                     return (
                       <Link
-            prefetch={false}
+                        prefetch={false}
                         key={item.key}
                         href={`/house/${slug}/specialists?category=${encodeURIComponent(item.key)}`}
                         scroll={false}
@@ -328,7 +231,13 @@ export default async function SpecialistsPage({
                             : "border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] hover:bg-[#F0E9E1]"
                         }`}
                         style={
-                          isActive ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", borderColor: districtColor } as React.CSSProperties : undefined
+                          isActive
+                            ? ({
+                                "--tab-active-bg": `${districtColor}20`,
+                                "--tab-active-text": "#1F2A37",
+                                borderColor: districtColor,
+                              } as React.CSSProperties)
+                            : undefined
                         }
                       >
                         <span>{item.label}</span>
@@ -361,14 +270,14 @@ export default async function SpecialistsPage({
               ))}
             </div>
           ) : (
-            <div className="rounded-[24px] border border-dashed border-[#DDD4CA] bg-white p-4 text-sm text-center text-[#7A746B] shadow-sm sm:rounded-[32px] sm:p-8">
-              {houseSpecialistsCopy.page.title} скоро з’являться.
+            <div className="rounded-[24px] border border-dashed border-[#DDD4CA] bg-white p-4 text-center text-sm text-[#7A746B] shadow-sm sm:rounded-[32px] sm:p-8">
+              {houseSpecialistsCopy.page.empty}
             </div>
           )}
         </div>
       </section>
 
-      {canOpenModal ? (
+      {canOpenModal && selectedSpecialist ? (
         <>
           <Link
             prefetch={false}
@@ -378,8 +287,8 @@ export default async function SpecialistsPage({
             aria-label={houseSpecialistsCopy.page.closeModal}
           />
 
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-6">
-            <div className="w-full max-w-[720px] max-h-[85vh] overflow-y-auto rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:rounded-[32px]">
+          <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-6">
+            <div className="max-h-[85vh] w-full max-w-[720px] overflow-y-auto rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:rounded-[32px]">
               <div className="flex items-start justify-between gap-3 border-b border-[#E4DBD1] px-4 py-4 sm:px-7 sm:py-6">
                 <div>
                   <h2 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-3xl">
@@ -391,7 +300,7 @@ export default async function SpecialistsPage({
                 </div>
 
                 <Link
-            prefetch={false}
+                  prefetch={false}
                   href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
                   scroll={false}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] transition hover:bg-[#F0E9E1]"
@@ -407,7 +316,7 @@ export default async function SpecialistsPage({
                   houseName={house.name}
                   specialistId={selectedSpecialist.id}
                   specialistLabel={selectedSpecialist.title}
-                  category={selectedSpecialist.categories[0] ?? houseSpecialistsCopy.page.title}
+                  category={selectedSpecialist.category || houseSpecialistsCopy.page.title}
                   apartmentOptions={apartmentOptions}
                 />
               </div>

@@ -20,7 +20,7 @@ export function AdminLoginForm() {
       <div className="text-left">
         <label
           htmlFor="email"
-          className="mb-2 block text-base font-medium text-[var(--cms-text-primary)]"
+          className="mb-2 block text-base font-medium text-[var(--cms-text)]"
         >
           Електронна пошта
         </label>
@@ -30,7 +30,7 @@ export function AdminLoginForm() {
           name="email"
           type="email"
           placeholder="admin@company.ua"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           autoComplete="off"
         />
       </div>
@@ -38,7 +38,7 @@ export function AdminLoginForm() {
       <div className="text-left">
         <label
           htmlFor="password"
-          className="mb-2 block text-base font-medium text-[var(--cms-text-primary)]"
+          className="mb-2 block text-base font-medium text-[var(--cms-text)]"
         >
           Пароль
         </label>
@@ -48,13 +48,13 @@ export function AdminLoginForm() {
           name="password"
           type="password"
           placeholder="Введіть пароль"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
           autoComplete="new-password"
         />
       </div>
 
       {state.error ? (
-        <div className="rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300 text-left">
+        <div role="alert" className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-left text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
@@ -63,14 +63,14 @@ export function AdminLoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-white px-6 py-4 text-lg font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-60"
+          className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-6 py-4 text-lg font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
         >
           {isPending ? "Входимо..." : "Увійти"}
         </button>
 
         <Link
           href={ROUTES.admin.forgotPassword}
-          className="mt-3 text-base font-medium text-[var(--cms-text-secondary)] transition hover:text-[var(--cms-text-primary)]"
+          className="mt-3 text-base font-medium text-[var(--cms-text-muted)] transition hover:text-[var(--cms-text)]"
         >
           Забули пароль?
         </Link>

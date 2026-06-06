@@ -45,7 +45,11 @@ export const getHouseBySlug = cache(async (slug: string): Promise<HouseRecord | 
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to load house by slug: ${error.message}`);
+    console.error("Failed to load house by slug:", {
+      slug,
+      message: error.message,
+    });
+    return null;
   }
 
   if (!data) {

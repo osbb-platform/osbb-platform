@@ -158,7 +158,7 @@ export function ApartmentsImportPanel({
                     type="file"
                     accept=".csv,.xls,.xlsx"
                     onChange={handleFileChange}
-                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-950"
+                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-bg-tertiary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-text)]"
                   />
 
                   <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
@@ -183,20 +183,20 @@ export function ApartmentsImportPanel({
               ) : null}
 
               {parseError ? (
-                <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+                <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {parseError}
                 </div>
               ) : null}
 
               {state.error ? (
-                <div className="mt-4 rounded-2xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+                <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {state.error}
                 </div>
               ) : null}
 
               {previewRows.length > 0 ? (
                 <>
-                  <div className="mt-4 rounded-2xl border border-amber-900 bg-amber-950/30 px-4 py-2.5 text-sm text-amber-200">
+                  <div className="mt-4 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
                     Після підтвердження поточний активний список квартир обраного будинку буде переміщено в архів. У зборах, боржниках та інших розділах буде використовуватись тільки новий активний список.
                   </div>
 

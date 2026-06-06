@@ -15,13 +15,17 @@ export const getPublicHouseDocumentsFeed = cache(async (
     .from("house_documents")
     .select("id, updated_at")
     .eq("house_id", houseId)
-    .eq("visibility_status", "published")
+    .eq("lifecycle_status", "published")
     .eq("attachment_status", "uploaded")
     .order("updated_at", { ascending: false })
     .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error(`Failed to load public house documents feed: ${error.message}`);
+    console.error("Failed to load public house documents feed:", {
+      houseId,
+      message: error.message,
+    });
+    return [];
   }
 
   return (data ?? []) as PublicHouseDocumentFeedItem[];

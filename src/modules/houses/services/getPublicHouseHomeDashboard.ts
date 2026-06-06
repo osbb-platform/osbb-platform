@@ -1,11 +1,14 @@
 import { houseSystemCopy } from "@/src/shared/publicCopy/house";
-import { getHouseHomePageByHouseId } from "@/src/modules/houses/services/getHouseHomePageByHouseId";
-import { getHouseInformationPageByHouseId } from "@/src/modules/houses/services/getHouseInformationPageByHouseId";
-import { getPublishedHouseSections } from "@/src/modules/houses/services/getPublishedHouseSections";
-import type {
-  HouseRecord,
-  HouseSectionRecord,
-} from "@/src/shared/types/entities/house.types";
+import { getPublishedHouseHero } from "@/src/modules/houses/services/getPublishedHouseHero";
+import { getPublishedHouseHomeWidgets } from "@/src/modules/houses/services/getPublishedHouseHomeWidgets";
+import { getPublishedHousePlan } from "@/src/modules/houses/services/getPublishedHousePlan";
+import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
+import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
+import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
+import type { HouseRecord } from "@/src/shared/types/entities/house.types";
+import type { PublishedHouseAnnouncement } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 
 type HomeWidgetKind = "announcements" | "plan" | "meetings" | "debtors";
 
@@ -53,14 +56,6 @@ type AnnouncementLevel = "danger" | "warning" | "info";
 type PlanTaskStatus = "draft" | "planned" | "in_progress" | "completed" | "archived";
 type PlanTaskPriority = "high" | "medium" | "low";
 type PlanTaskDateMode = "deadline" | "range";
-type MeetingLifecycleStatus =
-  | "draft"
-  | "scheduled"
-  | "active"
-  | "review"
-  | "completed"
-  | "archived";
-
 type PlanTask = {
   id: string;
   title: string;
@@ -77,39 +72,7 @@ type PlanTask = {
   archivedAt: string | null;
 };
 
-type MeetingQuestion = {
-  id: string;
-  title: string;
-  description: string;
-  decisionDraft: string;
-  votesFor?: number;
-  votesAgainst?: number;
-  votesAbstained?: number;
-  totalApartmentsVoted?: number;
-  approvalOutcome: "approved" | "rejected" | "pending";
-};
 
-type MeetingItem = {
-  id: string;
-  title: string;
-  shortDescription: string;
-  meetingDateTime: string;
-  location: string;
-  status: MeetingLifecycleStatus;
-  protocolPdf?: string;
-  protocolDocumentId?: string;
-  questions: MeetingQuestion[];
-};
-
-type DebtorItem = {
-  apartmentId: string;
-  apartmentLabel: string;
-  accountNumber: string;
-  ownerName: string;
-  area: number | null;
-  amount: string;
-  days: string;
-};
 
 type GetPublicHouseHomeDashboardParams = {
   house: HouseRecord;
@@ -117,16 +80,8 @@ type GetPublicHouseHomeDashboardParams = {
 
 const CTA_LABEL = houseSystemCopy.cta.open;
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
 function asString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function asBoolean(value: unknown) {
-  return value === true;
 }
 
 function normalizeAnnouncementLevel(value: unknown): AnnouncementLevel {
@@ -148,13 +103,6 @@ function getTime(value: unknown) {
   return parseDate(value)?.getTime() ?? 0;
 }
 
-function getSortTimestamp(content: Record<string, unknown>) {
-  return Math.max(
-    getTime(content.publishedAt),
-    getTime(content.updatedAt),
-    getTime(content.createdAt),
-  );
-}
 
 function formatDate(value: unknown) {
   const date = parseDate(value);
@@ -243,49 +191,6 @@ function normalizeAmount(value: unknown) {
   return Number.isFinite(normalized) ? normalized : 0;
 }
 
-function normalizePlanTasks(value: unknown): PlanTask[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const raw = item as Record<string, unknown>;
-      const now = new Date(Date.now() - index * 1000).toISOString();
-
-      return {
-        id: asString(raw.id) || `plan-${index}`,
-        title: asString(raw.title),
-        description: asString(raw.description),
-        status:
-          raw.status === "planned" ||
-          raw.status === "in_progress" ||
-          raw.status === "completed" ||
-          raw.status === "archived"
-            ? raw.status
-            : "draft",
-        priority:
-          raw.priority === "high" ||
-          raw.priority === "medium" ||
-          raw.priority === "low"
-            ? raw.priority
-            : "medium",
-        dateMode: raw.dateMode === "range" ? "range" : "deadline",
-        deadlineAt: asString(raw.deadlineAt) || null,
-        startDate: asString(raw.startDate) || null,
-        endDate: asString(raw.endDate) || null,
-        contractor: asString(raw.contractor) || null,
-        createdAt: asString(raw.createdAt) || now,
-        updatedAt: asString(raw.updatedAt) || now,
-        archivedAt: asString(raw.archivedAt) || null,
-      } satisfies PlanTask;
-    })
-    .filter((item): item is PlanTask => item !== null && Boolean(item.title));
-}
 
 function getPriorityOrder(priority: PlanTaskPriority) {
   if (priority === "high") return 0;
@@ -331,88 +236,22 @@ function sortPlanTasks(tasks: PlanTask[]) {
   });
 }
 
-function normalizeMeetings(value: unknown): MeetingItem[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
 
-  return value.reduce<MeetingItem[]>((acc, item, index) => {
-    if (!item || typeof item !== "object") {
-      return acc;
-    }
-
-    const raw = item as Record<string, unknown>;
-    const normalized: MeetingItem = {
-      id: asString(raw.id) || `meeting-${index}`,
-      title: asString(raw.title),
-      shortDescription: asString(raw.shortDescription),
-      meetingDateTime: asString(raw.meetingDateTime),
-      location: asString(raw.location),
-      status:
-        raw.status === "scheduled" ||
-        raw.status === "active" ||
-        raw.status === "review" ||
-        raw.status === "completed" ||
-        raw.status === "archived"
-          ? raw.status
-          : "draft",
-      protocolPdf: asString(raw.protocolPdf) || undefined,
-      protocolDocumentId: asString(raw.protocolDocumentId) || undefined,
-      questions: Array.isArray(raw.questions)
-        ? (raw.questions as MeetingQuestion[])
-        : [],
-    };
-
-    if (!normalized.title) {
-      return acc;
-    }
-
-    acc.push(normalized);
-    return acc;
-  }, []);
-}
-
-function normalizeDebtorItems(value: unknown): DebtorItem[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const raw = item as Record<string, unknown>;
-
-      return {
-        apartmentId: asString(raw.apartmentId),
-        apartmentLabel: asString(raw.apartmentLabel),
-        accountNumber: asString(raw.accountNumber),
-        ownerName: asString(raw.ownerName),
-        area:
-          typeof raw.area === "number" && Number.isFinite(raw.area)
-            ? raw.area
-            : null,
-        amount: asString(raw.amount),
-        days: asString(raw.days),
-      } satisfies DebtorItem;
-    })
-    .filter((item): item is DebtorItem => Boolean(item?.apartmentId))
-    .filter((item) => normalizeAmount(item.amount) > 0);
-}
 
 function buildAnnouncementsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  announcements: PublishedHouseAnnouncement[],
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/announcements`;
 
-  const sortedSections = [...sections].sort((left, right) => {
-    return getSortTimestamp(asRecord(right.content)) - getSortTimestamp(asRecord(left.content));
+  const sortedAnnouncements = [...announcements].sort((left, right) => {
+    return (
+      Math.max(getTime(right.published_at), getTime(right.updated_at)) -
+      Math.max(getTime(left.published_at), getTime(left.updated_at))
+    );
   });
 
-  if (sortedSections.length === 0) {
+  if (sortedAnnouncements.length === 0) {
     return {
       kind: "announcements",
       title: houseSystemCopy.homeDashboard.announcements.title,
@@ -428,14 +267,10 @@ function buildAnnouncementsWidget(
   }
 
   const importantAnnouncement =
-    sortedSections.find((section) => {
-      const content = asRecord(section.content);
-      return normalizeAnnouncementLevel(content.level) === "danger";
-    }) ?? null;
+    sortedAnnouncements.find((announcement) => announcement.level === "danger") ?? null;
 
-  const featured = importantAnnouncement ?? sortedSections[0];
-  const content = asRecord(featured.content);
-  const level = normalizeAnnouncementLevel(content.level);
+  const featured = importantAnnouncement ?? sortedAnnouncements[0];
+  const level = normalizeAnnouncementLevel(featured.level);
 
   const levelLabel =
     level === "danger"
@@ -451,26 +286,25 @@ function buildAnnouncementsWidget(
     ctaLabel: CTA_LABEL,
     isPlaceholder: false,
     badge: levelLabel,
-    freshnessLabel: getRelativeFreshnessLabel(content.publishedAt),
-    headline: asString(content.title) || featured.title || houseSystemCopy.homeDashboard.common.announcement,
+    freshnessLabel: getRelativeFreshnessLabel(featured.published_at),
+    headline: featured.title || houseSystemCopy.homeDashboard.common.announcement,
     description:
-      truncateText(content.body, 140) ||
+      truncateText(featured.body, 140) ||
       houseSystemCopy.homeDashboard.announcements.fallbackDescription,
     meta: [
-      `${houseSystemCopy.homeDashboard.announcements.published}: ${formatDate(content.publishedAt)}`,
-      `${houseSystemCopy.homeDashboard.announcements.totalPublished}: ${sortedSections.length}`,
+      `${houseSystemCopy.homeDashboard.announcements.published}: ${formatDate(featured.published_at)}`,
+      `${houseSystemCopy.homeDashboard.announcements.totalPublished}: ${sortedAnnouncements.length}`,
     ],
   };
 }
 
 function buildPlanWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  tasks: PlanTask[],
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/plan`;
-  const planSection = sections[0];
 
-  if (!planSection) {
+  if (tasks.length === 0) {
     return {
       kind: "plan",
       title: houseSystemCopy.homeDashboard.plan.title,
@@ -484,9 +318,6 @@ function buildPlanWidget(
       meta: [],
     };
   }
-
-  const content = asRecord(planSection.content);
-  const tasks = normalizePlanTasks(content.items);
   const inProgress = sortPlanTasks(tasks.filter((task) => task.status === "in_progress"));
   const planned = sortPlanTasks(tasks.filter((task) => task.status === "planned"));
   const candidateWithDeadline = sortPlanTasks(
@@ -547,12 +378,19 @@ function buildPlanWidget(
 
 function buildMeetingsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  meetings: Array<{
+    id: string;
+    title: string;
+    shortDescription: string;
+    meetingDateTime: string;
+    status: string;
+    updatedAt: string;
+  }>,
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/meetings`;
-  const meetingsSection = sections[0];
+  const items = meetings.filter((item) => item.status !== "draft");
 
-  if (!meetingsSection) {
+  if (items.length === 0) {
     return {
       kind: "meetings",
       title: houseSystemCopy.homeDashboard.meetings.title,
@@ -566,9 +404,6 @@ function buildMeetingsWidget(
       meta: [],
     };
   }
-
-  const content = asRecord(meetingsSection.content);
-  const items = normalizeMeetings(content.items).filter((item) => item.status !== "draft");
 
   const activeMeeting = items.find((item) => item.status == "active") ?? null;
   const reviewMeeting = items.find((item) => item.status == "review") ?? null;
@@ -639,33 +474,20 @@ function buildMeetingsWidget(
 
 function buildDebtorsWidget(
   slug: string,
-  sections: HouseSectionRecord[],
+  debtors: {
+    updatedAt: string | null;
+    activeItems: Array<{
+      amount: string;
+    }>;
+  } | null,
 ): PublicHouseHomeWidget {
   const href = `/house/${slug}/debtors`;
-  const debtorsSection = sections[0];
 
-  if (!debtorsSection) {
-    return {
-      kind: "debtors",
-      title: houseSystemCopy.homeDashboard.debtors.title,
-      href,
-      ctaLabel: CTA_LABEL,
-      isPlaceholder: true,
-      badge: null,
-      freshnessLabel: null,
-      headline: houseSystemCopy.homeDashboard.common.comingSoon,
-      description: houseSystemCopy.homeDashboard.debtors.placeholderDescription,
-      meta: [],
-    };
-  }
-
-  const content = asRecord(debtorsSection.content);
   const hasPublishedSnapshot = Boolean(
-    asString(content.updatedAt) || Array.isArray(content.activeItems),
+    debtors && debtors.updatedAt && debtors.activeItems.length > 0,
   );
-  const items = normalizeDebtorItems(content.activeItems);
 
-  if (!hasPublishedSnapshot) {
+  if (!hasPublishedSnapshot || !debtors) {
     return {
       kind: "debtors",
       title: houseSystemCopy.homeDashboard.debtors.title,
@@ -680,6 +502,7 @@ function buildDebtorsWidget(
     };
   }
 
+  const items = debtors.activeItems;
   const totalDebt = items.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
 
   return {
@@ -698,56 +521,56 @@ function buildDebtorsWidget(
       items.length > 0
         ? `${houseSystemCopy.homeDashboard.debtors.totalDebt}: ${formatCurrency(totalDebt)} ₴`
         : houseSystemCopy.homeDashboard.debtors.noDebtsDescription,
-    meta: [`${houseSystemCopy.homeDashboard.debtors.actualDate}: ${formatDate(content.updatedAt)}`],
+    meta: [`${houseSystemCopy.homeDashboard.debtors.actualDate}: ${formatDate(debtors.updatedAt)}`],
   };
 }
 
 function pickTopAlert(
   slug: string,
-  informationSections: HouseSectionRecord[],
-  meetingsSections: HouseSectionRecord[],
+  informationPosts: HouseInformationPostSnapshot[],
+  meetings: Array<{
+    title: string;
+    shortDescription: string;
+    meetingDateTime: string;
+    status: string;
+  }>,
 ): PublicHouseHomeAlert {
-  const informationCandidates = informationSections
-    .filter((section) => section.kind === "rich_text")
-    .map((section) => {
-      const content = asRecord(section.content);
+  const informationCandidates = informationPosts
+    .map((post) => {
+      const content = post.content;
 
       return {
         source: "information" as const,
-        priority: normalizeAnnouncementLevel(content.level) === "danger" ? 3 : normalizeAnnouncementLevel(content.level) === "warning" ? 2 : 1,
-        title: asString(content.headline) || section.title || houseSystemCopy.homeDashboard.common.importantInfo,
+        priority: content.isPinned ? 3 : 1,
+        title:
+          content.headline ||
+          post.title ||
+          houseSystemCopy.homeDashboard.common.importantInfo,
         description:
           truncateText(content.body, 180) ||
           houseSystemCopy.homeDashboard.common.openInfoSection,
         href: `/house/${slug}/information`,
-        badge: asBoolean(content.isPinned) ? houseSystemCopy.homeDashboard.common.important : null,
-        publishedAt: asString(content.publishedAt) || asString(content.updatedAt) || null,
-        isExpired:
-          parseDate(content.deadlineAt) !== null &&
-          (parseDate(content.deadlineAt)?.getTime() ?? 0) < Date.now(),
+        badge: content.isPinned ? houseSystemCopy.homeDashboard.common.important : null,
+        publishedAt: content.publishedAt || content.updatedAt || null,
+        isExpired: false,
       };
     })
     .filter((item) => !item.isExpired);
 
-  const meetingCandidates = meetingsSections
-    .flatMap((section) => {
-      const items = normalizeMeetings(asRecord(section.content).items);
-
-      return items
-        .filter((item) => item.status === "active")
-        .map((item) => ({
-          source: "meetings" as const,
-          priority: 3,
-          title: asString(item.title) || houseSystemCopy.homeDashboard.common.activeVoting,
-          description:
-            truncateText(item.shortDescription, 180) ||
-            houseSystemCopy.homeDashboard.common.activeVotingDescription,
-          href: `/house/${slug}/meetings?mode=active`,
-          badge: houseSystemCopy.homeDashboard.common.voting,
-          publishedAt: asString(item.meetingDateTime) || null,
-          isExpired: false,
-        }));
-    });
+  const meetingCandidates = meetings
+    .filter((item) => item.status === "active")
+    .map((item) => ({
+      source: "meetings" as const,
+      priority: 3,
+      title: asString(item.title) || houseSystemCopy.homeDashboard.common.activeVoting,
+      description:
+        truncateText(item.shortDescription, 180) ||
+        houseSystemCopy.homeDashboard.common.activeVotingDescription,
+      href: `/house/${slug}/meetings?mode=active`,
+      badge: houseSystemCopy.homeDashboard.common.voting,
+      publishedAt: asString(item.meetingDateTime) || null,
+      isExpired: false,
+    }));
 
   const candidates = [...informationCandidates, ...meetingCandidates].sort((left, right) => {
     if (right.priority !== left.priority) {
@@ -773,43 +596,67 @@ function pickTopAlert(
   };
 }
 
+function buildFallbackPublicHouseHomeDashboard(
+  house: HouseRecord,
+): PublicHouseHomeDashboard {
+  const slug = house.slug;
+
+  return {
+    heroContent: {
+      headline: houseSystemCopy.homeDashboard.hero.headlineFallback,
+      subheadline: houseSystemCopy.homeDashboard.hero.subheadlineFallback,
+    },
+    statusStrip: [],
+    topAlert: null,
+    widgets: [
+      buildAnnouncementsWidget(slug, []),
+      buildPlanWidget(slug, []),
+      buildMeetingsWidget(slug, []),
+      buildDebtorsWidget(slug, {
+        updatedAt: null,
+        activeItems: [],
+      }),
+    ],
+  };
+}
+
 export async function getPublicHouseHomeDashboard({
   house,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
+  try {
   const houseId = house.id;
   const slug = house.slug;
 
-  const [homePage, informationPage] = await Promise.all([
-    getHouseHomePageByHouseId(houseId),
-    getHouseInformationPageByHouseId(houseId),
+  const [
+    houseHero,
+    housePlan,
+    houseDebtors,
+    houseMeetings,
+    houseAnnouncements,
+    informationPosts,
+    homeWidgets,
+  ] = await Promise.all([
+    getPublishedHouseHero(houseId),
+    getPublishedHousePlan(houseId),
+    getPublishedHouseDebtors(houseId),
+    getPublishedHouseMeetings(houseId),
+    getPublishedHouseAnnouncements(houseId),
+    getPublishedHouseInformationPosts(houseId),
+    getPublishedHouseHomeWidgets(house.id),
   ]);
 
-  const [homeSections, informationSections] = await Promise.all([
-    homePage ? getPublishedHouseSections(homePage.id) : Promise.resolve([]),
-    informationPage ? getPublishedHouseSections(informationPage.id) : Promise.resolve([]),
-  ]);
+  const heroContent = {
+    headline: houseHero?.headline ?? "",
+    subheadline: houseHero?.subheadline ?? "",
+  };
 
-  const heroSection = homeSections.find((section) => section.kind === "hero");
-  const heroContent = asRecord(heroSection?.content);
-
-  const announcementsSections = homeSections.filter(
-    (section) => section.kind === "announcements",
-  );
-
-  const planSections = homeSections.filter((section) => section.kind === "plan");
-  const meetingsSections = homeSections.filter((section) => section.kind === "meetings");
-  const debtorsSections = homeSections.filter((section) => section.kind === "debtors");
-  const dashboardSection = homeSections.find(
-    (section) => section.kind === "custom" && section.title === "Home widgets",
-  );
-
-  const dashboardContent = dashboardSection?.content ?? {};
-  const rawWidgets = Array.isArray(dashboardContent["statusWidgets"])
-    ? dashboardContent["statusWidgets"]
-    : [];
+  const rawWidgets = homeWidgets?.statusWidgets ?? [];
 
   const statusWidgets: PublicHouseHomeStatusItem[] = rawWidgets
-    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .filter(
+      (item): item is { id: string; label: string; value: string } =>
+        Boolean(item) && typeof item === "object",
+    )
     .map((item, index) => ({
       id: typeof item.id === "string" && item.id.trim() ? item.id : `widget-${index}`,
       label: String(item.label ?? "").slice(0, 30),
@@ -821,18 +668,48 @@ export async function getPublicHouseHomeDashboard({
   return {
     heroContent: {
       headline:
-        asString(heroContent.headline) || houseSystemCopy.homeDashboard.hero.headlineFallback,
+        heroContent.headline || houseSystemCopy.homeDashboard.hero.headlineFallback,
       subheadline:
-        asString(heroContent.subheadline) ||
+        heroContent.subheadline ||
         houseSystemCopy.homeDashboard.hero.subheadlineFallback,
     },
     statusStrip: statusWidgets,
-    topAlert: pickTopAlert(slug, informationSections, meetingsSections),
+    topAlert: pickTopAlert(slug, informationPosts, houseMeetings.items),
     widgets: [
-      buildAnnouncementsWidget(slug, announcementsSections),
-      buildPlanWidget(slug, planSections),
-      buildMeetingsWidget(slug, meetingsSections),
-      buildDebtorsWidget(slug, debtorsSections),
+      buildAnnouncementsWidget(slug, houseAnnouncements),
+      buildPlanWidget(
+        slug,
+        housePlan.tasks.map((task) => ({
+          id: task.id,
+          title: task.content.title,
+          description: task.content.description,
+          status: task.content.taskStatus,
+          priority: task.content.priority,
+          dateMode: task.content.dateMode,
+          deadlineAt: task.content.deadlineAt,
+          startDate: task.content.startDate,
+          endDate: task.content.endDate,
+          contractor: task.content.contractor,
+          images: [],
+          documents: [],
+          createdAt: task.content.createdAt,
+          updatedAt: task.content.updatedAt,
+          archivedAt: task.content.archivedAt,
+          archiveYear: task.content.archiveYear,
+        })),
+      ),
+      buildMeetingsWidget(slug, houseMeetings.items),
+      buildDebtorsWidget(slug, houseDebtors),
     ],
   };
+
+  } catch (error) {
+    console.error("Failed to build public house home dashboard:", {
+      houseId: house.id,
+      slug: house.slug,
+      error,
+    });
+
+    return buildFallbackPublicHouseHomeDashboard(house);
+  }
 }

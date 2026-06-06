@@ -1,4 +1,5 @@
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
 
@@ -156,22 +157,27 @@ export default async function DebtorsPage({
 
   const searchQuery = String(resolvedSearchParams.q ?? "").trim();
 
-  const { sections } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
 
-  const debtorsSection = sections.find((section) => section.kind === "debtors");
+  const debtors = house
+    ? await getPublishedHouseDebtors(house.id)
+    : null;
 
-  const content =
-    debtorsSection &&
-    typeof debtorsSection.content === "object" &&
-    debtorsSection.content
-      ? (debtorsSection.content as Record<string, unknown>)
-      : null;
+  const content = debtors
+    ? {
+        updatedAt: debtors.activeItems.length > 0 ? debtors.updatedAt : null,
+        payment: debtors.payment,
+        calculator: debtors.calculator,
+        activeItems: debtors.activeItems,
+      }
+    : null;
+
+  const hasPublishedItems = Boolean(debtors && debtors.activeItems.length > 0);
 
   const hasPublishedSnapshot = Boolean(
     content &&
       (typeof content.updatedAt === "string" ||
-        Array.isArray(content.activeItems)),
+        (Array.isArray(content.activeItems) && hasPublishedItems)),
   );
 
   const updatedAtLabel = formatUpdatedAt(content?.updatedAt);

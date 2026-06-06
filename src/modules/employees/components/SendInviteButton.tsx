@@ -56,7 +56,7 @@ function SendInviteActionButton({
       <button
         type="submit"
         disabled={disabled || isPending}
-        className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-primary)] transition hover:bg-[var(--cms-bg-secondary)] disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)] disabled:opacity-60"
       >
         {isPending ? "Надсилаємо..." : "Надіслати запрошення"}
       </button>
@@ -65,8 +65,8 @@ function SendInviteActionButton({
         <div
           className={
             flash.type === "success"
-              ? "text-xs text-emerald-300"
-              : "text-xs text-red-300"
+              ? "text-xs text-[var(--cms-success-text)]"
+              : "text-xs text-[var(--cms-danger-text)]"
           }
         >
           {flash.message}

@@ -2,10 +2,10 @@ import { AdminForgotPasswordForm } from "@/src/modules/auth/components/AdminForg
 
 export default function AdminForgotPasswordPage() {
   return (
-    <main className="min-h-screen bg-[var(--cms-bg-page)] text-[var(--cms-text-primary)]">
+    <main className="cms-theme-root min-h-screen bg-[var(--cms-bg)] text-[var(--cms-text)]">
       <section className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
         <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-8 shadow-sm">
-          <div className="mb-4 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-sm font-medium text-[var(--cms-text-secondary)]">
+          <div className="mb-4 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-sm font-medium text-[var(--cms-text-muted)]">
             Password recovery
           </div>
 
@@ -13,7 +13,7 @@ export default function AdminForgotPasswordPage() {
             Восстановление доступа
           </h1>
 
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--cms-text-secondary)]">
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--cms-text-muted)]">
             Укажите рабочий email сотрудника. Мы отправим ссылку для установки
             нового пароля.
           </p>

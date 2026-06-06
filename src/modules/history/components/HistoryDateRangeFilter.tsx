@@ -213,11 +213,11 @@ export function HistoryDateRangeFilter({
         className={`flex min-h-[56px] w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
           disabled
             ? "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
-            : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-primary)] hover:border-[var(--cms-border-secondary)]"
+            : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:border-[var(--cms-border-secondary)]"
         }`}
       >
         <span className="pr-3">{formatLabel(from, to)}</span>
-        <span className="shrink-0 text-[var(--cms-text-secondary)]">📅</span>
+        <span className="shrink-0 text-[var(--cms-text-muted)]">📅</span>
       </button>
 
       {isOpen && !disabled ? (
@@ -226,17 +226,22 @@ export function HistoryDateRangeFilter({
             <button
               type="button"
               onClick={() => setVisibleMonth((prev) => addMonths(prev, -1))}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--cms-border-primary)] text-[var(--cms-text-primary)] transition hover:bg-[var(--cms-bg-secondary)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--cms-border-primary)] text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
+              aria-label="Попередній місяць"
             >
               ‹
             </button>
 
-            <div className="text-sm font-medium capitalize text-[var(--cms-text-primary)]">
+            <div className="text-sm font-medium capitalize text-[var(--cms-text)]">
               {monthLabel}
             </div>
 
             <button
               type="button"
+              disabled={
+                visibleMonth.getFullYear() === today.getFullYear() &&
+                visibleMonth.getMonth() === today.getMonth()
+              }
               onClick={() => {
                 const next = addMonths(visibleMonth, 1);
                 if (
@@ -253,8 +258,9 @@ export function HistoryDateRangeFilter({
                 visibleMonth.getFullYear() === today.getFullYear() &&
                 visibleMonth.getMonth() === today.getMonth()
                   ? "cursor-not-allowed border-[var(--cms-border-primary)] text-[var(--cms-text-muted)]"
-                  : "border-[var(--cms-border-primary)] text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  : "border-[var(--cms-border-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
               }`}
+              aria-label="Наступний місяць"
             >
               ›
             </button>
@@ -283,11 +289,11 @@ export function HistoryDateRangeFilter({
                     day.disabled
                       ? "cursor-not-allowed text-[var(--cms-text-muted)]"
                       : isStart || isEnd
-                        ? "bg-white font-semibold text-slate-950"
+                        ? "bg-[var(--cms-primary)] font-semibold text-[var(--cms-primary-contrast)]"
                         : isInRange
-                          ? "bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-primary)]"
+                          ? "bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
                           : day.inCurrentMonth
-                            ? "text-[var(--cms-text-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                            ? "text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
                             : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-secondary)]"
                   }`}
                 >
@@ -301,7 +307,7 @@ export function HistoryDateRangeFilter({
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-primary)] transition hover:bg-[var(--cms-bg-secondary)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
             >
               Очистить
             </button>

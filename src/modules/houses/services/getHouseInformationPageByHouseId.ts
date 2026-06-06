@@ -21,7 +21,11 @@ export const getHouseInformationPageByHouseId = cache(async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to load house information page: ${error.message}`);
+    console.error("Failed to load house information page:", {
+      houseId,
+      message: error.message,
+    });
+    return null;
   }
 
   return data ?? null;

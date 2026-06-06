@@ -70,16 +70,12 @@ function CreateEmployeeActionForm({
   const shouldShowForm = canCreateEmployees && isOpen && !state.success;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
-            Співробітники
-          </div>
-
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
             Реєстр співробітників
-          </h2>
+          </h1>
         </div>
 
         {canCreateEmployees ? (
@@ -112,64 +108,64 @@ function CreateEmployeeActionForm({
           action={handleSubmit}
           className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6"
         >
-          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-secondary)]">
+          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
             Новий співробітник
           </div>
 
-          <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text-primary)]">
+          <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
             Створити профіль співробітника
           </h3>
 
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cms-text-secondary)]">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cms-text-muted)]">
             Новий співробітник завжди створюється у статусі «Запрошення надіслано». Активним він стане
             лише після завершення реєстрації за запрошенням.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Ім’я співробітника
               </label>
               <input
                 type="text"
                 name="fullName"
                 placeholder="Наприклад, Анна Коваль"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Email
               </label>
               <input
                 type="email"
                 name="email"
                 placeholder="employee@company.ua"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Посада
               </label>
               <input
                 type="text"
                 name="jobTitle"
                 placeholder="Наприклад, Контент-менеджер"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-[var(--cms-text-primary)]">
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Роль
               </label>
               <select
                 name="role"
                 defaultValue={ROLES.MANAGER}
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text-primary)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
               >
                 {canCreateAdmins ? (
                   <option value={ROLES.ADMIN}>Admin</option>
@@ -191,14 +187,14 @@ function CreateEmployeeActionForm({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-secondary)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text-primary)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text)]"
             >
               Скасувати
             </button>
           </div>
         </form>
       ) : null}
-    </section>
+    </div>
   );
 }
 

@@ -42,7 +42,7 @@ export function EditCompanyPageForm({ page }: EditCompanyPageFormProps) {
             className="mt-1 h-4 w-4"
           />
           <div>
-            <div className="text-sm font-medium text-[var(--cms-text-primary)]">
+            <div className="text-sm font-medium text-[var(--cms-text)]">
               Показывать страницу в footer navigation
             </div>
           </div>

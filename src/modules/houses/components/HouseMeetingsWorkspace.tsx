@@ -1,7 +1,9 @@
 "use client";
 
-import { startTransition, useActionState, useMemo, useState } from "react";
-import { updateHouseSection } from "@/src/modules/houses/actions/updateHouseSection";
+import { useMemo, useState } from "react";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import type { AdminHouseMeetingsSnapshot } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import {
   adminInputClass,
   adminPrimaryButtonClass,
@@ -9,7 +11,6 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-type SectionStatus = "draft" | "in_review" | "published" | "archived";
 type MeetingLifecycleStatus =
   | "draft"
   | "scheduled"
@@ -19,6 +20,7 @@ type MeetingLifecycleStatus =
   | "archived";
 
 type WorkspaceMode = "idle" | "create" | "edit";
+type ConfirmAction = "delete" | "publish" | null;
 
 type MeetingQuestion = {
   id: string;
@@ -54,6 +56,8 @@ type MeetingItem = {
   meetingDateTime: string;
   location: string;
   status: MeetingLifecycleStatus;
+  lifecycleStatus?: "draft" | "published" | "archived";
+  lockVersion: number;
   updatedAt: string;
   protocolPdf?: string;
   protocolDocumentId?: string;
@@ -71,15 +75,8 @@ type Props = {
     apartmentLabel: string;
     ownerName?: string;
   }>;
-  section: {
-    id: string;
-    title: string | null;
-    status: SectionStatus;
-    content: Record<string, unknown>;
-  };
+  meetings: AdminHouseMeetingsSnapshot;
 };
-
-const initialState = { error: null };
 
 type WorkspaceTab = "active" | "draft" | "archived";
 
@@ -129,16 +126,24 @@ function createEmptyMeeting(): MeetingItem {
     location: "",
     status: "draft",
     updatedAt: now,
+    lifecycleStatus: "draft",
+    lockVersion: 1,
     protocolPdf: "",
     protocolDocumentId: "",
     questions: [createQuestion(0)],
   };
 }
 
-function normalizeMeetings(content: Record<string, unknown>): MeetingItem[] {
-  const rawItems = Array.isArray(content.items) ? content.items : [];
+function normalizeMeetings(content: Record<string, unknown> | AdminHouseMeetingsSnapshot): MeetingItem[] {
+  const rawItems: unknown[] = Array.isArray(
+    (content as AdminHouseMeetingsSnapshot).items,
+  )
+    ? (content as AdminHouseMeetingsSnapshot).items
+    : Array.isArray((content as Record<string, unknown>).items)
+      ? ((content as Record<string, unknown>).items as unknown[])
+      : [];
 
-  return rawItems.map((item, index) => {
+  return rawItems.map((item: unknown, index: number) => {
     const raw = (item ?? {}) as Record<string, unknown>;
 
     const legacyStatus =
@@ -187,6 +192,14 @@ function normalizeMeetings(content: Record<string, unknown>): MeetingItem[] {
           ? legacyStatus
           : "draft"
       ) as MeetingLifecycleStatus,
+      lifecycleStatus:
+        raw.lifecycleStatus === "draft" ||
+        raw.lifecycleStatus === "published" ||
+        raw.lifecycleStatus === "archived"
+          ? raw.lifecycleStatus
+          : undefined,
+      lockVersion:
+        typeof raw.lockVersion === "number" ? raw.lockVersion : 1,
       updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
       protocolPdf: String(raw.protocolPdf ?? ""),
       protocolDocumentId: String(raw.protocolDocumentId ?? ""),
@@ -354,20 +367,16 @@ function recalculateMeetingQuestionResults(
 
 export function HouseMeetingsWorkspace({
   houseId,
-  houseSlug,
   hasApartments,
   apartments,
-  section,
+  meetings: meetingsSnapshot,
   canChangeWorkflowStatus,
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
-  const [state, formAction, isPending] = useActionState(
-    updateHouseSection,
-    initialState,
-  );
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const [meetings, setMeetings] = useState<MeetingItem[]>(
-    normalizeMeetings(section.content),
+    normalizeMeetings(meetingsSnapshot),
   );
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
@@ -381,6 +390,8 @@ export function HouseMeetingsWorkspace({
   const [manualVoteAnswers, setManualVoteAnswers] = useState<
     Record<string, ManualVoteChoice>
   >({});
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const counters = useMemo(
     () => ({
@@ -429,12 +440,14 @@ export function HouseMeetingsWorkspace({
 
   function openCreateMode() {
     if (!hasApartments) {
-      window.alert(
+      setWorkspaceError(
         "Спочатку заповніть розділ «Квартири» для цього будинку. Без списку квартир неможливо створити збори та запустити голосування.",
       );
       return;
     }
 
+    setWorkspaceError(null);
+    setConfirmAction(null);
     setMode("create");
     setSelectedMeetingId(null);
     setDraft(createEmptyMeeting());
@@ -454,6 +467,8 @@ export function HouseMeetingsWorkspace({
   }
 
   function closeWorkspace() {
+    setWorkspaceError(null);
+    setConfirmAction(null);
     setMode("idle");
     setSelectedMeetingId(null);
     setDraft(createEmptyMeeting());
@@ -516,47 +531,186 @@ export function HouseMeetingsWorkspace({
     );
   }
 
-  function persistMeetings(nextMeetings: MeetingItem[]) {
-    const payload = {
-      items: nextMeetings,
-      updatedAt: new Date().toISOString(),
-    };
-
-    startTransition(() => {
-      const formData = new FormData();
-      formData.set("houseId", houseId);
-      formData.set("houseSlug", houseSlug);
-      formData.set("sectionId", section.id);
-      formData.set("kind", "meetings");
-      formData.set("title", section.title ?? "Збори");
-      formData.set("status", section.status ?? "published");
-      formData.set("content", JSON.stringify(payload));
-      formAction(formData);
-    });
-  }
-
-  function saveDraftToRegistry(nextStatus?: MeetingLifecycleStatus) {
+  async function saveDraftToRegistry(nextStatus?: MeetingLifecycleStatus) {
     if (nextStatus && !workflowAccessGranted) return;
     const next = buildMeetingForSave(nextStatus);
+
+    const payload = {
+      title: next.title,
+      shortDescription: next.shortDescription,
+      meetingDateTime: next.meetingDateTime,
+      location: next.location,
+      status: next.status,
+      protocolPdf: next.protocolPdf,
+      protocolDocumentId: next.protocolDocumentId,
+      questions: next.questions,
+      manualVotes: next.manualVotes ?? [],
+    };
+
+    const saved = await dispatch<MeetingItem>(
+      {
+        type:
+          mode === "edit" && selectedMeetingId
+            ? "meetings.update"
+            : "meetings.create",
+        houseId,
+        payload:
+          mode === "edit" && selectedMeetingId
+            ? {
+                id: selectedMeetingId,
+                lockVersion: draft.lockVersion,
+                ...payload,
+              }
+            : payload,
+      },
+      { refreshOnSuccess: true },
+    );
+
+    if (!saved) return;
+
+    const savedRecord = saved as unknown as Record<string, unknown>;
+    const savedStatus = savedRecord.display_status;
+    const savedMeeting: MeetingItem = {
+      ...next,
+      id: String(savedRecord.id ?? next.id),
+      status:
+        savedStatus === "draft" ||
+        savedStatus === "scheduled" ||
+        savedStatus === "active" ||
+        savedStatus === "review" ||
+        savedStatus === "completed" ||
+        savedStatus === "archived"
+          ? savedStatus
+          : next.status,
+      lifecycleStatus:
+        savedRecord.lifecycle_status === "draft" ||
+        savedRecord.lifecycle_status === "published" ||
+        savedRecord.lifecycle_status === "archived"
+          ? savedRecord.lifecycle_status
+          : next.lifecycleStatus,
+      lockVersion:
+        typeof savedRecord.lock_version === "number"
+          ? savedRecord.lock_version
+          : next.lockVersion + 1,
+      updatedAt: String(savedRecord.updated_at ?? next.updatedAt),
+    };
 
     const nextMeetings =
       mode === "edit" && selectedMeetingId
         ? meetings.map((item) =>
-            item.id === selectedMeetingId ? next : item,
+            item.id === selectedMeetingId ? savedMeeting : item,
           )
-        : [next, ...meetings];
+        : [savedMeeting, ...meetings];
 
     setMeetings(nextMeetings);
-    persistMeetings(nextMeetings);
-    setActiveTab(next.status === "archived" ? "archived" : next.status === "draft" ? "draft" : "active");
+    setActiveTab(savedMeeting.status === "archived" ? "archived" : savedMeeting.status === "draft" ? "draft" : "active");
     closeWorkspace();
   }
 
-  function deleteMeetingFromRegistry(meetingId: string) {
+  async function deleteMeetingFromRegistry(meetingId: string) {
+    const current = meetings.find((item) => item.id === meetingId);
+    if (!current) return;
+
+    const deleted = await dispatch(
+      {
+        type: "meetings.delete",
+        houseId,
+        payload: {
+          id: meetingId,
+          lockVersion: current.lockVersion,
+        },
+      },
+      { refreshOnSuccess: true },
+    );
+
+    if (!deleted) return;
+
     const nextMeetings = meetings.filter((item) => item.id !== meetingId);
     setMeetings(nextMeetings);
-    persistMeetings(nextMeetings);
     setActiveTab("draft");
+    closeWorkspace();
+  }
+
+  async function publishMeetingFromRegistry(meetingId: string) {
+    if (!workflowAccessGranted) return;
+
+    const current = meetings.find((item) => item.id === meetingId);
+    if (!current) return;
+
+    const published = await dispatch(
+      {
+        type: "meetings.publish",
+        houseId,
+        payload: {
+          id: meetingId,
+          lockVersion: current.lockVersion,
+          status: "scheduled",
+        },
+      },
+      { refreshOnSuccess: true },
+    );
+
+    if (!published) return;
+
+    const publishedRecord = published as Record<string, unknown>;
+    const nextMeetings = meetings.map((item) =>
+      item.id === meetingId
+        ? {
+            ...item,
+            status: "scheduled" as MeetingLifecycleStatus,
+            lifecycleStatus: "published" as const,
+            lockVersion:
+              typeof publishedRecord.lock_version === "number"
+                ? publishedRecord.lock_version
+                : item.lockVersion + 1,
+            updatedAt: String(publishedRecord.updated_at ?? item.updatedAt),
+          }
+        : item,
+    );
+
+    setMeetings(nextMeetings);
+    setActiveTab("active");
+    closeWorkspace();
+  }
+
+  async function archiveMeetingFromRegistry(meetingId: string) {
+    if (!workflowAccessGranted) return;
+
+    const current = meetings.find((item) => item.id === meetingId);
+    if (!current) return;
+
+    const archived = await dispatch(
+      {
+        type: "meetings.archive",
+        houseId,
+        payload: {
+          id: meetingId,
+          lockVersion: current.lockVersion,
+        },
+      },
+      { refreshOnSuccess: true },
+    );
+
+    if (!archived) return;
+
+    const archivedRecord = archived as Record<string, unknown>;
+    const nextMeetings = meetings.map((item) =>
+      item.id === meetingId
+        ? {
+            ...item,
+            status: "archived" as MeetingLifecycleStatus,
+            lifecycleStatus: "archived" as const,
+            lockVersion:
+              typeof archivedRecord.lock_version === "number"
+                ? archivedRecord.lock_version
+                : item.lockVersion + 1,
+            updatedAt: String(archivedRecord.updated_at ?? item.updatedAt),
+          }
+        : item,
+    );
+
+    setMeetings(nextMeetings);
+    setActiveTab("archived");
     closeWorkspace();
   }
 
@@ -617,7 +771,7 @@ export function HouseMeetingsWorkspace({
           draft.status !== "draft" &&
           draft.status !== "archived" ? (
             <label className="mt-4 block">
-              <span className="mb-2 block text-sm font-medium text-white">
+              <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Статус після збереження
               </span>
               <select
@@ -666,7 +820,7 @@ export function HouseMeetingsWorkspace({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                   Дата зборів
                 </span>
                 <input
@@ -679,7 +833,7 @@ export function HouseMeetingsWorkspace({
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-white">
+                <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                   Час зборів
                 </span>
                 <input
@@ -756,7 +910,7 @@ export function HouseMeetingsWorkspace({
                             }
                             className={`rounded-xl border px-3 py-2 text-xs transition ${
                               manualVoteAnswers[question.id] === value
-                                ? "border-[var(--cms-border-strong)] bg-white text-slate-950"
+                                ? "border-[var(--cms-border-strong)] bg-[var(--cms-primary)] text-[var(--cms-primary-contrast)]"
                                 : "border-[var(--cms-border)] text-[var(--cms-text-muted)]"
                             }`}
                           >
@@ -769,13 +923,13 @@ export function HouseMeetingsWorkspace({
 
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       const isComplete = draft.questions.every(
                         (question) => manualVoteAnswers[question.id],
                       );
 
                       if (!selectedApartmentVote || !isComplete) {
-                        window.alert("Заповніть квартиру та всі відповіді.");
+                        setWorkspaceError("Заповніть квартиру та всі відповіді.");
                         return;
                       }
 
@@ -784,9 +938,11 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartment) {
-                        window.alert("Оберіть квартиру зі списку.");
+                        setWorkspaceError("Оберіть квартиру зі списку.");
                         return;
                       }
+
+                      setWorkspaceError(null);
 
                       const nextVote: ManualVoteEntry = {
                         apartmentId: selectedApartment.id,
@@ -798,20 +954,66 @@ export function HouseMeetingsWorkspace({
                         })),
                       };
 
+                      const recorded = await dispatch(
+                        {
+                          type: "meetings.recordManualVote",
+                          houseId,
+                          payload: {
+                            id: draft.id,
+                            lockVersion: draft.lockVersion,
+                            apartmentId: selectedApartment.id,
+                            answers: nextVote.answers,
+                          },
+                        },
+                        { refreshOnSuccess: true },
+                      );
+
+                      if (!recorded) return;
+
+                      const recordedSnapshot = recorded as Record<string, unknown>;
+                      const recordedMeeting = recordedSnapshot.meeting as
+                        | Record<string, unknown>
+                        | undefined;
+
+                      const nextLockVersion =
+                        typeof recordedMeeting?.lock_version === "number"
+                          ? recordedMeeting.lock_version
+                          : draft.lockVersion + 1;
+
                       setDraft((prev) =>
                         recalculateMeetingQuestionResults(
                           {
                             ...prev,
+                            lockVersion: nextLockVersion,
                             manualVotes: [...(prev.manualVotes ?? []), nextVote],
                           },
                           apartments.length,
                         ),
                       );
 
+                      setMeetings((prevMeetings) =>
+                        prevMeetings.map((meeting) =>
+                          meeting.id === draft.id
+                            ? recalculateMeetingQuestionResults(
+                                {
+                                  ...meeting,
+                                  lockVersion: nextLockVersion,
+                                  manualVotes: [
+                                    ...(meeting.manualVotes ?? []),
+                                    nextVote,
+                                  ],
+                                },
+                                apartments.length,
+                              )
+                            : meeting,
+                        ),
+                      );
+
                       setSelectedApartmentVote("");
                       setManualVoteAnswers({});
                     }}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)]"
+                    disabled={isPending}
+                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Зберегти голос квартири
                   </button>
@@ -859,7 +1061,7 @@ export function HouseMeetingsWorkspace({
                                 ),
                               )
                             }
-                            className="text-sm text-rose-400"
+                            className="text-sm text-[var(--cms-danger-text)]"
                           >
                             🗑
                           </button>
@@ -873,7 +1075,7 @@ export function HouseMeetingsWorkspace({
 
             {draft.status !== "review" && draft.status !== "completed" ? (
               <div className="border-t border-[var(--cms-border)] pt-4">
-              <div className="mb-3 text-sm font-semibold text-white">
+              <div className="mb-3 text-sm font-semibold text-[var(--cms-text)]">
                 Порядок денний / питання
               </div>
 
@@ -1004,7 +1206,7 @@ export function HouseMeetingsWorkspace({
                         draft.questions.length <= 1 ||
                         isPending
                       }
-                      className="mt-3 text-xs text-rose-400 disabled:opacity-40"
+                      className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
                     >
                       Видалити питання
                     </button>
@@ -1028,15 +1230,8 @@ export function HouseMeetingsWorkspace({
                 {mode === "edit" && draft.status === "draft" ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (
-                        selectedMeetingId &&
-                        window.confirm("Видалити чернетку зборів без можливості відновлення?")
-                      ) {
-                        deleteMeetingFromRegistry(selectedMeetingId);
-                      }
-                    }}
-                    className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)]"
+                    onClick={() => setConfirmAction("delete")}
+                    className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                   >
                     Видалити
                   </button>
@@ -1057,13 +1252,9 @@ export function HouseMeetingsWorkspace({
                 {mode === "edit" && draft.status === "draft" ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm("Підтвердити збори та перемістити їх в активні?")) {
-                        saveDraftToRegistry("scheduled");
-                      }
-                    }}
+                    onClick={() => setConfirmAction("publish")}
                     disabled={isPending}
-                    className="rounded-2xl border border-emerald-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] disabled:opacity-60"
+                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Підтвердити
                   </button>
@@ -1074,9 +1265,13 @@ export function HouseMeetingsWorkspace({
                 draft.status !== "archived" ? (
                   <button
                     type="button"
-                    onClick={() => saveDraftToRegistry("archived")}
+                    onClick={() => {
+                      if (selectedMeetingId) {
+                        archiveMeetingFromRegistry(selectedMeetingId);
+                      }
+                    }}
                     disabled={isPending}
-                    className="rounded-2xl border border-amber-500/30 px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] disabled:opacity-60"
+                    className="rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Архівувати
                   </button>
@@ -1135,9 +1330,54 @@ export function HouseMeetingsWorkspace({
         )}
       </div>
 
-      {state.error ? (
-        <div className="mt-4 text-sm text-red-400">{state.error}</div>
+      {workspaceError ?? lastError ? (
+        <div
+          role="alert"
+          className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+        >
+          {workspaceError ?? lastError}
+        </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete"}
+        tone="destructive"
+        title="Видалити чернетку зборів?"
+        description="Чернетку буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        isPending={isPending}
+        onConfirm={() => {
+          if (selectedMeetingId) {
+            deleteMeetingFromRegistry(selectedMeetingId);
+          }
+        }}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish"}
+        tone="publish"
+        title="Підтвердити збори?"
+        description="Збори буде переміщено з чернеток до активних."
+        confirmLabel="Підтвердити"
+        pendingLabel="Підтверджуємо..."
+        isPending={isPending}
+        onConfirm={() => {
+          if (selectedMeetingId) {
+            publishMeetingFromRegistry(selectedMeetingId);
+          }
+        }}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeHousePasswordForm } from "@/src/modules/houses/components/ChangeHousePasswordForm";
 import { ChangeHouseDashboardWidgetsForm } from "@/src/modules/houses/components/ChangeHouseDashboardWidgetsForm";
+import type { HouseHomeWidgetsSnapshot } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
@@ -57,6 +58,7 @@ type HouseRegistryCardProps = {
     }>;
   };
   currentUser: CurrentAdminUser;
+  homeWidgets?: HouseHomeWidgetsSnapshot;
   onOpenSettings: (house: HouseRegistryCardProps["house"]) => void;
 };
 
@@ -184,8 +186,16 @@ function getMessagePreview(item: HouseRegistryCardProps["house"]["message_items"
 export function HouseRegistryCard({
   house,
   currentUser,
+  homeWidgets,
   onOpenSettings,
 }: HouseRegistryCardProps) {
+  const dashboardWidgets = homeWidgets ?? {
+    id: "",
+    houseId: house.id,
+    statusWidgets: [],
+    lockVersion: 1,
+    updatedAt: "",
+  };
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isTariffOpen, setIsTariffOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -231,16 +241,12 @@ export function HouseRegistryCard({
 
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  slug: {house.slug}
-                </span>
-
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Активний
+                  {house.slug}
                 </span>
 
                 {house.district ? (
                   <span
-                    className="rounded-full px-3 py-1 text-xs font-medium text-white"
+                    className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
                     style={{ backgroundColor: house.district.theme_color }}
                   >
                     {house.district.name}
@@ -299,7 +305,7 @@ export function HouseRegistryCard({
   >
     <MessageIcon />
     {localUnreadCount > 0 ? (
-      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
         {localUnreadCount > 9 ? "9+" : localUnreadCount}
       </span>
     ) : null}
@@ -331,6 +337,10 @@ export function HouseRegistryCard({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-[var(--cms-text-soft)]">
+            Створено: {formatCreatedAt(house.created_at)}
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/admin/houses/${house.id}`}
@@ -338,10 +348,6 @@ export function HouseRegistryCard({
             >
               Керування будинком
             </Link>
-          </div>
-
-          <div className="text-sm text-[var(--cms-text-soft)]">
-            Створено: {formatCreatedAt(house.created_at)}
           </div>
         </div>
       </div>
@@ -528,6 +534,7 @@ export function HouseRegistryCard({
                 type="button"
                 onClick={() => setIsTariffOpen(false)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                aria-label="Закрити панель налаштування віджетів"
               >
                 ×
               </button>
@@ -535,10 +542,10 @@ export function HouseRegistryCard({
 
             <div className="flex-1 px-6 py-6">
               <ChangeHouseDashboardWidgetsForm
-                sectionId=""
                 houseId={house.id}
                 houseSlug={house.slug}
-                initialWidgets={[]}
+                initialWidgets={dashboardWidgets.statusWidgets}
+                initialLockVersion={dashboardWidgets.lockVersion}
               />
             </div>
           </div>

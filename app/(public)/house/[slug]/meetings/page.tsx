@@ -1,6 +1,7 @@
 import { houseMeetingsCopy, houseSystemCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
-import { getPublishedHomeSectionsBySlug } from "@/src/modules/houses/services/getPublishedHomeSectionsBySlug";
+import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
+import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
 
@@ -97,8 +98,11 @@ export default async function PublicMeetingsPage({
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
-  const { house, sections } =
-    await getPublishedHomeSectionsBySlug(slug);
+  const house = await getHouseBySlug(slug);
+
+  if (!house) {
+    return null;
+  }
 
   const districtColor = house.district?.theme_color ?? "#0f172a";
   const apartments =
@@ -107,22 +111,32 @@ export default async function PublicMeetingsPage({
       : [];
 
 
-  const meetingsSection = sections.find((section) => section.kind === "meetings");
+  const meetingsSnapshot = await getPublishedHouseMeetings(house.id);
 
-  const content =
-    meetingsSection &&
-    typeof meetingsSection.content === "object" &&
-    meetingsSection.content
-      ? (meetingsSection.content as Record<string, unknown>)
-      : {};
-
-  const items = Array.isArray(content.items)
-    ? (content.items as MeetingItem[])
-    : [];
-
-  const publicMeetings = items.filter(
-    (item) => item.status !== "draft",
-  );
+  const publicMeetings: MeetingItem[] = meetingsSnapshot.items
+    .filter((item) => item.status !== "draft")
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      shortDescription: item.shortDescription,
+      meetingDateTime: item.meetingDateTime,
+      location: item.location,
+      status: item.status,
+      protocolPdf: item.protocolPdf,
+      protocolDocumentId: item.protocolDocumentId,
+      manualVotes: item.manualVotes,
+      questions: item.questions.map((question) => ({
+        id: question.id,
+        title: question.title,
+        description: question.description,
+        decisionDraft: question.decisionDraft,
+        votesFor: question.votesFor,
+        votesAgainst: question.votesAgainst,
+        votesAbstained: question.votesAbstained,
+        totalApartmentsVoted: question.totalApartmentsVoted,
+        approvalOutcome: question.approvalOutcome,
+      })),
+    }));
 
   const scheduled = publicMeetings.filter((item) => item.status === "scheduled");
   const active = publicMeetings.filter((item) => item.status === "active");
@@ -448,6 +462,10 @@ export default async function PublicMeetingsPage({
                 <PublicReportPdfViewer
                   filePath={meeting.protocolPdf}
                   fileName={`Протокол — ${meeting.title}`}
+                  analyticsHouseId={house.id}
+                  analyticsHouseSlug={house.slug}
+                  analyticsEntityId={meeting.protocolDocumentId ?? meeting.id}
+                  analyticsDocumentType="meeting_protocol"
                 />
               ) : null}
             </article>
