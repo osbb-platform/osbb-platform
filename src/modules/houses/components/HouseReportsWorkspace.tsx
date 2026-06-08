@@ -169,6 +169,35 @@ function normalizeNewUntil(value: string | null, isNew: boolean) {
   return value?.trim() ? value : null;
 }
 
+type RawReportCommandResult = Partial<HouseReportSnapshot> & {
+  lock_version?: number;
+  period_type?: HouseReportPeriodType;
+  lifecycle_status?: HouseReportLifecycle;
+};
+
+function getReportResultLockVersion(
+  report: RawReportCommandResult | null,
+  fallback: number,
+) {
+  if (typeof report?.lockVersion === "number") return report.lockVersion;
+  if (typeof report?.lock_version === "number") return report.lock_version;
+  return fallback;
+}
+
+function getReportResultPeriodType(
+  report: RawReportCommandResult | null,
+  fallback: HouseReportPeriodType,
+) {
+  return report?.periodType ?? report?.period_type ?? fallback;
+}
+
+function getReportResultLifecycleStatus(
+  report: RawReportCommandResult | null,
+  fallback: HouseReportLifecycle,
+) {
+  return report?.lifecycleStatus ?? report?.lifecycle_status ?? fallback;
+}
+
 export function HouseReportsWorkspace({
   readOnlyMode = false,
   houseId,
@@ -535,14 +564,14 @@ export function HouseReportsWorkspace({
               houseId,
               payload: {
                 id: created.id,
-                lockVersion: created.lockVersion,
+                lockVersion: getReportResultLockVersion(created, 1),
               },
             },
             { onError: setActionError },
           );
 
           if (!published) return;
-          resetWorkspace(created.periodType === "past" ? "past" : "current");
+          resetWorkspace(getReportResultPeriodType(created, "current") === "past" ? "past" : "current");
           return;
         }
 
@@ -577,7 +606,7 @@ export function HouseReportsWorkspace({
             houseId,
             payload: {
               id: updated.id,
-              lockVersion: updated.lockVersion,
+              lockVersion: getReportResultLockVersion(updated, selectedReport.lockVersion + 1),
             },
           },
           { onError: setActionError },
@@ -587,7 +616,7 @@ export function HouseReportsWorkspace({
 
         resetWorkspace(
           intent === "publish"
-            ? updated.periodType === "past"
+            ? getReportResultPeriodType(updated, selectedReport.periodType) === "past"
               ? "past"
               : "current"
             : "archive",
@@ -596,11 +625,11 @@ export function HouseReportsWorkspace({
       }
 
       resetWorkspace(
-        updated.lifecycleStatus === "published"
-          ? updated.periodType === "past"
+        getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "published"
+          ? getReportResultPeriodType(updated, selectedReport.periodType) === "past"
             ? "past"
             : "current"
-          : updated.lifecycleStatus === "archived"
+          : getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "archived"
             ? "archive"
             : "draft",
       );
