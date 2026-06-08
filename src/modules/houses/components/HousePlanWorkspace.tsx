@@ -419,6 +419,15 @@ export function HousePlanWorkspace({
       return [];
     }
 
+    const pdfValidation = validateMultiplePdfFiles(selectedPdfFiles, {
+      maxCount: 2,
+    });
+
+    if (!pdfValidation.isValid) {
+      setPdfError(pdfValidation.error ?? "PDF не пройшов перевірку.");
+      return null;
+    }
+
     const supabase = createSupabaseBrowserClient();
     const uploadedFiles: UploadedPlanFile[] = [];
 
