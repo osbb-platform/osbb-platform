@@ -269,13 +269,13 @@ export function CreateInformationPostInlineForm({
             name="body"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            maxLength={256}
+            maxLength={512}
             rows={6}
             className={adminInputClass}
             required
           />
           <div className="text-xs text-[var(--cms-text-muted)]">
-            {body.length}/256
+            {body.length}/512
           </div>
         </div>
       </div>

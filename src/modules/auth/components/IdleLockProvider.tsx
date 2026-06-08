@@ -90,6 +90,7 @@ export function IdleLockProvider({
   const { toast } = useToast();
   const [isLocked, setIsLocked] = useState(false);
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
 
@@ -381,16 +382,58 @@ export function IdleLockProvider({
                 <label htmlFor="idle-lock-password" className={`mb-2 block ${adminTextLabelClass}`}>
                   Пароль
                 </label>
-                <input
-                  id="idle-lock-password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className={adminInputClass}
-                  autoComplete="current-password"
-                  autoFocus
-                  disabled={isUnlocking}
-                />
+                <div className="relative">
+                  <input
+                    id="idle-lock-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className={`${adminInputClass} pr-12`}
+                    autoComplete="current-password"
+                    autoFocus
+                    disabled={isUnlocking}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-surface-muted)] hover:text-[var(--cms-text)] disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={showPassword ? "Приховати пароль" : "Показати пароль"}
+                    aria-pressed={showPassword}
+                    disabled={isUnlocking}
+                  >
+                    {showPassword ? (
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 3l18 18" />
+                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                        <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c5 0 8.5 4 10 8a13.2 13.2 0 0 1-2.05 3.42" />
+                        <path d="M6.1 6.1C4.2 7.36 2.8 9.43 2 12c1.5 4 5 8 10 8a10.94 10.94 0 0 0 4.13-.8" />
+                      </svg>
+                    ) : (
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {unlockError ? (

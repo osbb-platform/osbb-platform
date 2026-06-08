@@ -376,14 +376,14 @@ export function EditInformationPostForm({
           <textarea
             name="body"
             value={body}
-            maxLength={256}
+            maxLength={512}
             rows={6}
             onChange={(e) => setBody(e.target.value)}
             className={adminInputClass}
             required
           />
           <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
-            {body.length}/256
+            {body.length}/512
           </div>
         </div>
 
