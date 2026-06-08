@@ -146,8 +146,7 @@ export function HouseInformationWorkspace({
             <button
               type="button"
               onClick={openCreatePost}
-              disabled={!housePageId}
-              className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+              className={adminPrimaryButtonClass}
             >
               Нова стаття
             </button>

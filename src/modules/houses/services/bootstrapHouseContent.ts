@@ -17,6 +17,34 @@ export async function bootstrapHouseContent({
 }: BootstrapHouseContentParams) {
   const supabase = createSupabaseAdminClient();
 
+  const legacyPages = [
+    {
+      slug: "home",
+      title: "Главная дома",
+    },
+    {
+      slug: "information",
+      title: "Информация",
+    },
+  ];
+
+  const { error: legacyPagesError } = await supabase.from("house_pages").upsert(
+    legacyPages.map((page) => ({
+      house_id: houseId,
+      slug: page.slug,
+      title: page.title,
+      status: "published",
+    })),
+    {
+      onConflict: "house_id,slug",
+      ignoreDuplicates: true,
+    },
+  );
+
+  if (legacyPagesError) {
+    throw new Error(`Failed to create legacy house pages: ${legacyPagesError.message}`);
+  }
+
   const heroContent = {
     headline: `Ласкаво просимо на сайт будинку ${houseName}`,
     subheadline:
