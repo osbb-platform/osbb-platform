@@ -127,12 +127,24 @@ export async function createHouse(
     return failWithCleanup(`Помилка створення будинку: ${insertError.message}`);
   }
 
-  await bootstrapHouseContent({
-    houseId: createdHouse.id,
-    houseName: createdHouse.name,
-    houseSlug: createdHouse.slug,
-    publicDescription: createdHouse.public_description,
-  });
+  try {
+    await bootstrapHouseContent({
+      houseId: createdHouse.id,
+      houseName: createdHouse.name,
+      houseSlug: createdHouse.slug,
+      publicDescription: createdHouse.public_description,
+    });
+  } catch (error) {
+    console.error("house bootstrap error:", error);
+
+    await supabase.from("houses").delete().eq("id", createdHouse.id);
+
+    return failWithCleanup(
+      error instanceof Error
+        ? `Будинок не створено: не вдалося ініціалізувати розділи будинку. ${error.message}`
+        : "Будинок не створено: не вдалося ініціалізувати розділи будинку.",
+    );
+  }
 
   const { error: accessUpsertError } = await supabase.rpc("upsert_house_access", {
     target_house_id: createdHouse.id,
@@ -140,9 +152,11 @@ export async function createHouse(
   });
 
   if (accessUpsertError) {
-    return {
-      error: `Будинок створено, але не вдалося ініціалізувати доступ: ${accessUpsertError.message}`,
-    };
+    await supabase.from("houses").delete().eq("id", createdHouse.id);
+
+    return failWithCleanup(
+      `Будинок не створено: не вдалося ініціалізувати доступ. ${accessUpsertError.message}`,
+    );
   }
 
   if (currentUser) {

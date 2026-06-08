@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { registerAllHandlers } from "@/src/modules/content-engine/v2/handlers";
 import { getAllHandlers } from "@/src/modules/content-engine/v2/registry";
 
@@ -15,7 +15,7 @@ export async function bootstrapHouseContent({
   houseSlug,
   publicDescription,
 }: BootstrapHouseContentParams) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   const heroContent = {
     headline: `Ласкаво просимо на сайт будинку ${houseName}`,
