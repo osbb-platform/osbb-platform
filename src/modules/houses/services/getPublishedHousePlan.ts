@@ -66,7 +66,7 @@ export const getPublishedHousePlan = cache(
       .from("house_plan_tasks")
       .select("*")
       .eq("house_id", houseId)
-      .eq("lifecycle_status", "published")
+      .in("lifecycle_status", ["published", "archived"])
       .order("sort_order", { ascending: true })
       .order("published_at", { ascending: false })
       .order("updated_at", { ascending: false });
