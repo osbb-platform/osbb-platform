@@ -238,15 +238,13 @@ export function HouseAnnouncementsWorkspace({
           </p>
         </div>
 
-        {housePageId ? (
-          <button
-            type="button"
-            onClick={openCreateMode}
-            className={[adminPrimaryButtonClass, "min-h-12 px-6"].join(" ")}
-          >
-            Нове оголошення
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={openCreateMode}
+          className={[adminPrimaryButtonClass, "min-h-12 px-6"].join(" ")}
+        >
+          Нове оголошення
+        </button>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
@@ -293,11 +291,11 @@ export function HouseAnnouncementsWorkspace({
       ) : null}
 
       <div className="mt-6">
-        {shouldRenderCreate && housePageId ? (
+        {shouldRenderCreate ? (
           <CreateAnnouncementInlineForm
             houseId={houseId}
             houseSlug={houseSlug}
-            housePageId={housePageId}
+            housePageId={housePageId ?? ""}
             onClose={closeWorkspace}
           />
         ) : null}
