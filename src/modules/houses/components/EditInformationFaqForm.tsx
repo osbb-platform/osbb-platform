@@ -135,15 +135,22 @@ export function EditInformationFaqForm({
       },
       {
         refreshOnSuccess: options.refreshOnSuccess ?? true,
-        successMessage: options.closeAfterSave ? "Збережено" : "FAQ збережено як чернетку",
+        successMessage: "FAQ збережено",
         onError(error) {
           setLocalError(error);
         },
         onSuccess(data) {
           const nextLockVersion = extractLockVersion(data, currentLockVersion + 1);
+          const nextStatus = extractStatus(data, currentStatus);
+
           setCurrentLockVersion(nextLockVersion);
-          setCurrentStatus("draft");
-          setSavedMessage("FAQ збережено як чернетку. Тепер його можна підтвердити.");
+          setCurrentStatus(nextStatus);
+          setSavedMessage(
+            nextStatus === "published"
+              ? "FAQ оновлено. Зміни залишаються опублікованими на сайті."
+              : "FAQ збережено як чернетку. Тепер його можна підтвердити.",
+          );
+
           if (options.closeAfterSave) {
             onClose();
           }
