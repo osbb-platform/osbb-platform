@@ -31,7 +31,7 @@ export const houseCopy = {
     information: "Інформація",
     requisites: "Реквізити",
     specialists: "Спеціалісти",
-    debtors: "Боржники",
+    debtors: "Нарахування та боржники",
     foundingDocuments: "Установчі документи",
     openMenu: "Відкрити меню розділів",
   },
@@ -213,7 +213,7 @@ export const houseSystemCopy = {
     },
 
     debtors: {
-      title: "Боржники",
+      title: "Нарахування та боржники",
       placeholderDescription: "Інформація про оплати скоро з’явиться.",
       noDebts: "Заборгованостей немає",
       noDebtsDescription:

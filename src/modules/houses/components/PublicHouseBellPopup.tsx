@@ -9,7 +9,7 @@ export function PublicHouseBellPopup({
   items,
 }: PublicHouseBellPopupProps) {
   return (
-    <div className="absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(calc(100vw-1rem),23rem)] overflow-hidden rounded-[24px] border border-[#DDD4CA] bg-[#FBF8F3] shadow-[0_20px_60px_rgba(28,24,19,0.14)] sm:top-[calc(100%+12px)] sm:w-[min(92vw,400px)] sm:rounded-[30px] sm:shadow-[0_24px_80px_rgba(28,24,19,0.16)]">
+    <div className="fixed left-1/2 top-24 z-[70] w-[calc(100vw-2rem)] max-w-[23rem] -translate-x-1/2 overflow-hidden rounded-[24px] border border-[#DDD4CA] bg-[#FBF8F3] shadow-[0_20px_60px_rgba(28,24,19,0.14)] sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+12px)] sm:w-[min(92vw,400px)] sm:max-w-none sm:translate-x-0 sm:rounded-[30px] sm:shadow-[0_24px_80px_rgba(28,24,19,0.16)]">
       <div className="border-b border-[#E7DED4] bg-[#F4EEE7] px-4 py-4 sm:px-5 sm:py-5">
         <div className="text-[13px] font-semibold uppercase tracking-[0.22em] text-[#5D6980]">
           {houseCopy.bell.title}

@@ -208,7 +208,7 @@ export default async function DebtorsPage({
     <section className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full min-w-0 rounded-[24px] border border-[#DDD4CA] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[32px] sm:p-8"><div className="min-w-0 text-center">
         <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
-          Боржники
+          Нарахування та боржники
         </h1>
 
         <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#7A746B]">

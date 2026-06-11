@@ -210,7 +210,7 @@ export async function getPublicHouseBellFeed({
   if (houseDebtors.activeItems.length > 0 && isRecent(debtorsTimestamp)) {
     items.push({
       id: `${houseId}-debtors`,
-      section: "Боржники",
+      section: "Нарахування та боржники",
       text: "Опубліковано новий список заборгованості",
       date: formatDate(debtorsTimestamp),
       timestamp: debtorsTimestamp,

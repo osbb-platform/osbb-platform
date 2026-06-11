@@ -13,7 +13,7 @@ export function PublicHouseDashboardStatusStrip({ items }: Props) {
     <section className="rounded-[32px] border border-[#DDD4CA] bg-[#EEE8E1] p-4 shadow-sm sm:p-5">
       <div className="mb-4 text-center">
         <h2 className="text-[24px] font-semibold tracking-tight text-[#1F2A37] sm:text-[28px]">
-          Актуальні тарифи будинку
+          Актуальний розмір внеску
         </h2>
       </div>
 
