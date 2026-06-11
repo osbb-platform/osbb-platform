@@ -29,6 +29,9 @@ export function EditInformationFaqForm({
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [currentLockVersion, setCurrentLockVersion] = useState(faq.lockVersion);
+  const [currentStatus, setCurrentStatus] = useState(faq.status);
 
   const initialItems = useMemo(() => {
     return faq.items.length
@@ -48,11 +51,13 @@ export function EditInformationFaqForm({
       ),
     );
     setLocalError(null);
+    setSavedMessage(null);
   }
 
   function addItem() {
     setItems((prev) => [...prev, { question: "", answer: "" }]);
     setLocalError(null);
+    setSavedMessage(null);
   }
 
   function removeItem(index: number) {
@@ -61,6 +66,128 @@ export function EditInformationFaqForm({
       return next.length ? next : [{ question: "", answer: "" }];
     });
     setLocalError(null);
+    setSavedMessage(null);
+  }
+
+  function normalizeLocalItems() {
+    return items
+      .map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question && item.answer);
+  }
+
+  function extractLockVersion(data: unknown, fallback: number) {
+    if (!data || typeof data !== "object") {
+      return fallback;
+    }
+
+    const record = data as Record<string, unknown>;
+    const nextLockVersion =
+      typeof record.lockVersion === "number"
+        ? record.lockVersion
+        : typeof record.lock_version === "number"
+          ? record.lock_version
+          : fallback;
+
+    return nextLockVersion;
+  }
+
+  function extractStatus(data: unknown, fallback: typeof currentStatus) {
+    if (!data || typeof data !== "object") {
+      return fallback;
+    }
+
+    const record = data as Record<string, unknown>;
+    const nextStatus =
+      typeof record.status === "string"
+        ? record.status
+        : typeof record.lifecycle_status === "string"
+          ? record.lifecycle_status
+          : fallback;
+
+    return nextStatus === "published" || nextStatus === "archived" || nextStatus === "draft"
+      ? nextStatus
+      : fallback;
+  }
+
+  async function saveFaqItems(options: { closeAfterSave?: boolean; refreshOnSuccess?: boolean } = {}) {
+    setLocalError(null);
+    setSavedMessage(null);
+
+    const normalizedItems = normalizeLocalItems();
+
+    if (normalizedItems.length < 1) {
+      const message = "Додайте щонайменше одне питання та відповідь.";
+      setLocalError(message);
+      return null;
+    }
+
+    const result = await dispatch(
+      {
+        type: "faq.replaceItems",
+        houseId,
+        payload: {
+          lockVersion: currentLockVersion,
+          items: normalizedItems,
+        },
+      },
+      {
+        refreshOnSuccess: options.refreshOnSuccess ?? true,
+        successMessage: options.closeAfterSave ? "Збережено" : "FAQ збережено як чернетку",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess(data) {
+          const nextLockVersion = extractLockVersion(data, currentLockVersion + 1);
+          setCurrentLockVersion(nextLockVersion);
+          setCurrentStatus("draft");
+          setSavedMessage("FAQ збережено як чернетку. Тепер його можна підтвердити.");
+          if (options.closeAfterSave) {
+            onClose();
+          }
+        },
+      },
+    );
+
+    return result;
+  }
+
+  async function publishFaq() {
+    setLocalError(null);
+    setSavedMessage(null);
+
+    const savedFaq = await saveFaqItems({
+      refreshOnSuccess: false,
+    });
+
+    if (!savedFaq) {
+      return;
+    }
+
+    const nextLockVersion = extractLockVersion(savedFaq, currentLockVersion + 1);
+
+    await dispatch(
+      {
+        type: "faq.publish",
+        houseId,
+        payload: {
+          lockVersion: nextLockVersion,
+        },
+      },
+      {
+        successMessage: "FAQ опубліковано",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess(data) {
+          setCurrentLockVersion(extractLockVersion(data, nextLockVersion + 1));
+          setCurrentStatus(extractStatus(data, "published"));
+          onClose();
+        },
+      },
+    );
   }
 
   async function runCommand(command: FaqCommand) {
@@ -69,11 +196,11 @@ export function EditInformationFaqForm({
     const payload =
       command === "replaceItems"
         ? {
-            lockVersion: faq.lockVersion,
+            lockVersion: currentLockVersion,
             items,
           }
         : {
-            lockVersion: faq.lockVersion,
+            lockVersion: currentLockVersion,
           };
 
     const result = await dispatch<HouseFaqSnapshot>(
@@ -98,10 +225,10 @@ export function EditInformationFaqForm({
   }
 
   const error = localError ?? lastError;
-  const isArchived = faq.status === "archived";
-  const canPublish = faq.status !== "published";
-  const canArchive = faq.status === "published";
-  const canRestore = faq.status === "archived";
+  const isArchived = currentStatus === "archived";
+  const canPublish = currentStatus !== "published";
+  const canArchive = currentStatus === "published";
+  const canRestore = currentStatus === "archived";
 
   return (
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
@@ -112,9 +239,9 @@ export function EditInformationFaqForm({
           </div>
           <div className="text-sm text-[var(--cms-text-muted)]">
             Додавайте запитання та відповіді. Статус:{" "}
-            {faq.status === "published"
+            {currentStatus === "published"
               ? "опубліковано"
-              : faq.status === "archived"
+              : currentStatus === "archived"
                 ? "архів"
                 : "чернетка"}
           </div>
@@ -176,6 +303,12 @@ export function EditInformationFaqForm({
         </button>
       </div>
 
+      {savedMessage ? (
+        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+          {savedMessage}
+        </div>
+      ) : null}
+
       {error ? (
         <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
@@ -187,7 +320,7 @@ export function EditInformationFaqForm({
           <button
             type="button"
             disabled={isPending || isArchived}
-            onClick={() => runCommand("replaceItems")}
+            onClick={() => saveFaqItems()}
             className={[
               adminPrimaryButtonClass,
               "disabled:cursor-not-allowed disabled:opacity-40",
@@ -233,7 +366,7 @@ export function EditInformationFaqForm({
             <button
               type="button"
               disabled={isPending || isArchived}
-              onClick={() => runCommand("publish")}
+              onClick={publishFaq}
               className={[
                 adminSuccessButtonClass,
                 "disabled:cursor-not-allowed disabled:opacity-40",
