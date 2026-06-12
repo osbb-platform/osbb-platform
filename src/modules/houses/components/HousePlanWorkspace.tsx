@@ -12,6 +12,7 @@ import {
   adminInputClass,
   adminPrimaryButtonClass,
   adminSurfaceClass,
+  adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type PlanTaskStatus =
@@ -1003,6 +1004,9 @@ export function HousePlanWorkspace({
 
             {workspaceMode === "edit" && draft.status === "draft" ? (
               <div>
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
+                  Статус після підтвердження
+                </label>
                 <select
                   value={draftPublishStatus}
                   onChange={(e) => setDraftPublishStatus(e.target.value as PublishablePlanTaskStatus)}
@@ -1016,16 +1020,30 @@ export function HousePlanWorkspace({
                   Цей статус буде застосовано після підтвердження та публікації завдання.
                 </div>
               </div>
-            ) : workspaceMode === "edit" && draft.status !== "draft" ? (
-              <select
-                value={draft.status}
-                onChange={(e) => updateStatus(e.target.value as PlanTaskStatus)}
-                className={adminInputClass}
-              >
-                {getStatusOptions().map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+            ) : workspaceMode === "edit" && draft.status !== "draft" && draft.status !== "archived" ? (
+              <div>
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
+                  Поточний статус виконання
+                </label>
+                <select
+                  value={draft.status}
+                  onChange={(e) => updateStatus(e.target.value as PlanTaskStatus)}
+                  disabled={!workflowAccessGranted || isPending}
+                  className={[
+                    adminInputClass,
+                    !workflowAccessGranted ? "cursor-not-allowed opacity-60" : "",
+                  ].join(" ")}
+                >
+                  {getStatusOptions().map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                  {workflowAccessGranted
+                    ? "Після збереження статус оновиться в CMS і на публічній сторінці плану."
+                    : "У цієї ролі немає прав змінювати статус виконання."}
+                </div>
+              </div>
             ) : null}
 
             <div className="overflow-x-auto">
