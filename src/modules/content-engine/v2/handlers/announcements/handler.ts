@@ -7,6 +7,7 @@ import { deleteAllArchivedCommand } from "./commands/deleteAllArchived";
 import { publishCommand } from "./commands/publish";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
+import { duplicateCommand } from "./commands/duplicate";
 
 export const announcementsHandler: ContentHandler = {
   key: "announcements",
@@ -20,6 +21,7 @@ export const announcementsHandler: ContentHandler = {
     restore: restoreCommand,
     delete: deleteCommand,
     deleteAllArchived: deleteAllArchivedCommand,
+    duplicate: duplicateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {
