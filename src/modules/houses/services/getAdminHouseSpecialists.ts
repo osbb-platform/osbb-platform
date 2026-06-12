@@ -5,6 +5,7 @@ import type {
   HouseSpecialist,
   HouseSpecialistCategory,
   HouseSpecialistLifecycle,
+  HouseSpecialistPhoneType,
 } from "@/src/modules/content-engine/v2/handlers/specialists";
 
 export type HouseSpecialistSnapshot = {
@@ -16,6 +17,7 @@ export type HouseSpecialistSnapshot = {
     title: string;
     category: string;
     phones: string[];
+    phoneTypes: HouseSpecialistPhoneType[];
     email: string;
     description: string;
     sortOrder: number;
@@ -49,9 +51,23 @@ function normalizePhones(value: unknown) {
     .filter((phone, index, array) => array.indexOf(phone) === index);
 }
 
+function normalizePhoneType(value: unknown): HouseSpecialistPhoneType {
+  return value === "landline" || value === "free" || value === "other"
+    ? value
+    : "mobile";
+}
+
+function normalizePhoneTypes(value: unknown, phones: string[]) {
+  const rawTypes = Array.isArray(value) ? value : [];
+
+  return phones.map((_, index) => normalizePhoneType(rawTypes[index]));
+}
+
 export function mapHouseSpecialist(
   specialist: HouseSpecialist,
 ): HouseSpecialistSnapshot {
+  const phones = normalizePhones(specialist.phones);
+
   return {
     id: specialist.id,
     title: specialist.title,
@@ -60,7 +76,8 @@ export function mapHouseSpecialist(
     content: {
       title: specialist.title,
       category: specialist.category,
-      phones: normalizePhones(specialist.phones),
+      phones,
+      phoneTypes: normalizePhoneTypes(specialist.phone_types, phones),
       email: specialist.email,
       description: specialist.description,
       sortOrder: specialist.sort_order,

@@ -1,6 +1,10 @@
 "use client";
 
 import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import {
+  ContentTemplateSlotsPanel,
+  type ContentTemplateSlot,
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import { useMemo, useState } from "react";
 
@@ -35,6 +39,14 @@ const DEFAULT_SPECIALIST_CATEGORIES = [
 type WorkspaceTab = "published" | "draft" | "archived";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "delete" | "publish" | "archive" | "restore" | null;
+type SpecialistPhoneType = "mobile" | "landline" | "free" | "other";
+
+const SPECIALIST_PHONE_TYPE_OPTIONS: Array<{ value: SpecialistPhoneType; label: string }> = [
+  { value: "mobile", label: "Мобільний" },
+  { value: "landline", label: "Міський" },
+  { value: "free", label: "Безкоштовний 0-800" },
+  { value: "other", label: "Інший" },
+];
 
 type SpecialistDraft = {
   id: string | null;
@@ -42,6 +54,7 @@ type SpecialistDraft = {
   title: string;
   category: string;
   phones: string[];
+  phoneTypes: SpecialistPhoneType[];
   email: string;
   description: string;
   sortOrder: number;
@@ -52,6 +65,7 @@ type Props = {
   houseId: string;
   specialistsData: AdminHouseSpecialistsSnapshot;
   requests: HouseSpecialistContactRequestRecord[];
+  templates?: ContentTemplateSlot[];
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
@@ -62,6 +76,7 @@ function createEmptyDraft(sortOrder: number): SpecialistDraft {
     title: "",
     category: "",
     phones: [""],
+    phoneTypes: ["mobile"],
     email: "",
     description: "",
     sortOrder,
@@ -94,6 +109,25 @@ function normalizePhones(value: string[]) {
     .filter((phone, index, array) => array.indexOf(phone) === index);
 }
 
+function normalizePhoneType(value: unknown): SpecialistPhoneType {
+  return value === "landline" || value === "free" || value === "other"
+    ? value
+    : "mobile";
+}
+
+function normalizeDraftPhoneTypes(
+  value: unknown,
+  phones: string[],
+): SpecialistPhoneType[] {
+  const rawTypes = Array.isArray(value) ? value : [];
+
+  return phones.map((_, index) => normalizePhoneType(rawTypes[index]));
+}
+
+function getPhoneTypeLabel(value: SpecialistPhoneType) {
+  return SPECIALIST_PHONE_TYPE_OPTIONS.find((option) => option.value === value)?.label ?? "Мобільний";
+}
+
 function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
   return {
     id: item.id,
@@ -101,6 +135,10 @@ function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
     title: item.content.title,
     category: item.content.category,
     phones: item.content.phones.length > 0 ? item.content.phones : [""],
+    phoneTypes: normalizeDraftPhoneTypes(
+      item.content.phoneTypes,
+      item.content.phones.length > 0 ? item.content.phones : [""],
+    ),
     email: item.content.email,
     description: item.content.description,
     sortOrder: item.content.sortOrder,
@@ -138,6 +176,7 @@ export function HouseSpecialistsWorkspace({
   houseId,
   specialistsData,
   requests,
+  templates = [],
   duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
@@ -211,35 +250,56 @@ export function HouseSpecialistsWorkspace({
     setDraft(toDraft(item));
   }
 
-  async function applySpecialistsTemplate() {
+  function buildSpecialistsTemplatePayload() {
+    const specialists = specialistsData.specialists
+      .filter((item) => item.status !== "archived")
+      .map((item) => ({
+        title: item.content.title,
+        category: item.content.category,
+        phones: item.content.phones,
+        phoneTypes: item.content.phoneTypes,
+        email: item.content.email,
+        description: item.content.description,
+        sortOrder: item.content.sortOrder,
+      }))
+      .filter((item) => item.title && item.category);
+
+    return specialists.length ? { specialists } : null;
+  }
+
+  async function applySpecialistsTemplateKeys(templateKeys: string[]) {
     setWorkspaceError(null);
     setApplyingTemplate(true);
 
-    const applied = await dispatch(
-      {
-        type: "specialists.applyTemplate",
-        houseId,
-        payload: {
-          templateKey: "base_house_contacts",
+    for (const templateKey of templateKeys) {
+      const applied = await dispatch(
+        {
+          type: "specialists.applyTemplate",
+          houseId,
+          payload: {
+            templateKey,
+          },
         },
-      },
-      {
-        successMessage: "Шаблон спеціалістів застосовано",
-        onError: setWorkspaceError,
-      },
-    );
+        {
+          successMessage: null,
+          onError: setWorkspaceError,
+        },
+      );
+
+      if (!applied) {
+        setApplyingTemplate(false);
+        return;
+      }
+    }
 
     setApplyingTemplate(false);
-
-    if (!applied) return;
-
     closeWorkspace();
     setActiveTab("draft");
   }
 
   function updateDraft(
     field: keyof SpecialistDraft,
-    value: string | number | string[],
+    value: string | number | string[] | SpecialistPhoneType[],
   ) {
     setDraft((current) => (current ? { ...current, [field]: value } : current));
   }
@@ -258,12 +318,27 @@ export function HouseSpecialistsWorkspace({
     });
   }
 
+  function handleDraftPhoneTypeChange(index: number, value: SpecialistPhoneType) {
+    setDraft((current) => {
+      if (!current) return current;
+
+      const nextPhoneTypes = normalizeDraftPhoneTypes(current.phoneTypes, current.phones);
+      nextPhoneTypes[index] = value;
+
+      return {
+        ...current,
+        phoneTypes: nextPhoneTypes,
+      };
+    });
+  }
+
   function addDraftPhone() {
     setDraft((current) =>
       current
         ? {
             ...current,
             phones: [...current.phones, ""],
+            phoneTypes: [...current.phoneTypes, "mobile"],
           }
         : current,
     );
@@ -274,10 +349,12 @@ export function HouseSpecialistsWorkspace({
       if (!current) return current;
 
       const nextPhones = current.phones.filter((_, phoneIndex) => phoneIndex !== index);
+      const nextPhoneTypes = current.phoneTypes.filter((_, phoneIndex) => phoneIndex !== index);
 
       return {
         ...current,
         phones: nextPhones.length > 0 ? nextPhones : [""],
+        phoneTypes: nextPhoneTypes.length > 0 ? nextPhoneTypes : ["mobile"],
       };
     });
   }
@@ -288,6 +365,7 @@ export function HouseSpecialistsWorkspace({
     const title = draft.title.trim();
     const category = draft.category.trim();
     const phones = normalizePhones(draft.phones);
+    const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
 
     if (!title) {
       setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
@@ -311,6 +389,7 @@ export function HouseSpecialistsWorkspace({
       title,
       category,
       phones,
+      phoneTypes,
       email: draft.email.trim(),
       description: draft.description.trim(),
       sortOrder: draft.sortOrder,
@@ -485,18 +564,6 @@ export function HouseSpecialistsWorkspace({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => void applySpecialistsTemplate()}
-                disabled={isPending || applyingTemplate}
-                className={[
-                  adminSecondaryButtonClass,
-                  "disabled:cursor-not-allowed disabled:opacity-40",
-                ].join(" ")}
-              >
-                {applyingTemplate ? "Застосовуємо..." : "Застосувати шаблон"}
-              </button>
-
               <button
                 type="button"
                 onClick={openCreateMode}
@@ -692,7 +759,21 @@ export function HouseSpecialistsWorkspace({
 
               <div className="grid gap-2">
                 {draft.phones.map((phone, index) => (
-                  <div key={`phone-${index}`} className="flex gap-2">
+                  <div key={`phone-${index}`} className="grid gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto]">
+                    <select
+                      value={normalizePhoneType(draft.phoneTypes[index])}
+                      onChange={(event) =>
+                        handleDraftPhoneTypeChange(index, event.target.value as SpecialistPhoneType)
+                      }
+                      className={adminInputClass}
+                    >
+                      {SPECIALIST_PHONE_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+
                     <input
                       value={phone}
                       onChange={(event) =>
@@ -858,6 +939,19 @@ export function HouseSpecialistsWorkspace({
         </div>
       ) : null}
 
+      <ContentTemplateSlotsPanel
+        houseId={houseId}
+        sectionKind="specialists"
+        slotLimit={5}
+        templates={templates}
+        title="Слоти спеціалістів"
+        description="Зберігайте до 5 наборів спеціалістів і застосовуйте один або кілька шаблонів у чернетки."
+        disabled={isPending || applyingTemplate}
+        multiSelect
+        buildPayload={buildSpecialistsTemplatePayload}
+        onApplyTemplateKeys={applySpecialistsTemplateKeys}
+      />
+
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 md:grid-cols-2">
           {visibleSpecialists.length > 0 ? (
@@ -888,7 +982,9 @@ export function HouseSpecialistsWorkspace({
                   <div className="text-[var(--cms-text-soft)]">Телефон</div>
                   <div>
                     {item.content.phones.length > 0
-                      ? item.content.phones.join(", ")
+                      ? item.content.phones
+                          .map((phone, index) => `${getPhoneTypeLabel(normalizePhoneType(item.content.phoneTypes[index]))}: ${phone}`)
+                          .join(", ")
                       : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
                   </div>
 

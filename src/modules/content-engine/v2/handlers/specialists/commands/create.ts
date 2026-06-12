@@ -5,6 +5,7 @@ import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
   normalizeOptionalText,
   normalizePhones,
+  normalizePhoneTypes,
   normalizeSortOrder,
   normalizeText,
   publicSpecialistsPaths,
@@ -29,6 +30,7 @@ export const createCommand: CommandSpec = {
   async execute(rawPayload, ctx) {
     const payload = rawPayload as CreateSpecialistPayload;
     const now = new Date().toISOString();
+    const phones = normalizePhones(payload.phones);
 
     const { data, error } = await ctx.supabase
       .from("house_specialists")
@@ -36,7 +38,8 @@ export const createCommand: CommandSpec = {
         house_id: ctx.house.id,
         title: normalizeText(payload.title),
         category: normalizeOptionalText(payload.category),
-        phones: normalizePhones(payload.phones),
+        phones,
+        phone_types: normalizePhoneTypes(payload.phoneTypes, phones),
         email: normalizeOptionalText(payload.email),
         description: normalizeOptionalText(payload.description),
         sort_order: normalizeSortOrder(payload.sortOrder),

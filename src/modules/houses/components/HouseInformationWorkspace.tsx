@@ -1,6 +1,10 @@
 "use client";
 
 import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import {
+  ContentTemplateSlotsPanel,
+  type ContentTemplateSlot,
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
@@ -37,6 +41,8 @@ type Props = {
   posts: InformationSectionItem[];
   faq: HouseFaqSnapshot | null;
   documents: HouseDocumentListItem[];
+  faqTemplates?: ContentTemplateSlot[];
+  informationPostTemplates?: ContentTemplateSlot[];
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
@@ -69,6 +75,8 @@ export function HouseInformationWorkspace({
   posts,
   faq,
   documents,
+  faqTemplates = [],
+  informationPostTemplates = [],
   duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
@@ -119,28 +127,54 @@ export function HouseInformationWorkspace({
     setEditingSectionId(null);
   }
 
-  async function applyBaseInformationTemplate() {
+  function buildInformationTemplatePayload() {
+    const templatePosts = posts
+      .map((section) => {
+        const content = section.content;
+        const category = typeof content.category === "string" ? content.category : "";
+
+        if (!(INFORMATION_CATEGORIES as readonly string[]).includes(category)) {
+          return null;
+        }
+
+        return {
+          headline: section.title,
+          body: typeof content.body === "string" ? content.body : "",
+          category,
+          isPinned: Boolean(content.isPinned),
+        };
+      })
+      .filter((post): post is NonNullable<typeof post> => Boolean(post?.headline && post.body));
+
+    return templatePosts.length ? { posts: templatePosts } : null;
+  }
+
+  async function applyInformationTemplateKeys(templateKeys: string[]) {
     setWorkspaceError(null);
     setApplyingPostsTemplate(true);
 
-    const applied = await dispatch(
-      {
-        type: "information_posts.applyTemplate",
-        houseId,
-        payload: {
-          templateKey: "base_information_posts",
+    for (const templateKey of templateKeys) {
+      const applied = await dispatch(
+        {
+          type: "information_posts.applyTemplate",
+          houseId,
+          payload: {
+            templateKey,
+          },
         },
-      },
-      {
-        successMessage: "Шаблон інформаційних матеріалів застосовано",
-        onError: setWorkspaceError,
-      },
-    );
+        {
+          successMessage: null,
+          onError: setWorkspaceError,
+        },
+      );
+
+      if (!applied) {
+        setApplyingPostsTemplate(false);
+        return;
+      }
+    }
 
     setApplyingPostsTemplate(false);
-
-    if (!applied) return;
-
     setMainTab("posts");
     closePostWorkspace();
     closeFaqWorkspace();
@@ -214,15 +248,6 @@ export function HouseInformationWorkspace({
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => void applyBaseInformationTemplate()}
-                disabled={!housePageId || applyingPostsTemplate || isPending}
-                className={[adminSecondaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-              >
-                {applyingPostsTemplate ? "Застосовуємо..." : "Застосувати шаблон"}
-              </button>
-
-              <button
-                type="button"
                 onClick={openCreatePost}
                 disabled={!housePageId}
                 className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
@@ -283,6 +308,19 @@ export function HouseInformationWorkspace({
 
       {mainTab === "posts" ? (
         <>
+          <ContentTemplateSlotsPanel
+            houseId={houseId}
+            sectionKind="information_post"
+            slotLimit={3}
+            templates={informationPostTemplates}
+            title="Слоти інформаційних матеріалів"
+            description="Зберігайте до 3 наборів інформаційних матеріалів і застосовуйте один або кілька шаблонів у чернетки."
+            disabled={!housePageId || applyingPostsTemplate || isPending}
+            multiSelect
+            buildPayload={buildInformationTemplatePayload}
+            onApplyTemplateKeys={applyInformationTemplateKeys}
+          />
+
 
           {workspaceMode === "create" ? (
             <CreateInformationPostInlineForm
@@ -465,6 +503,8 @@ export function HouseInformationWorkspace({
             <EditInformationFaqForm
               houseId={houseId}
               faq={faq}
+              templates={faqTemplates}
+              duplicateTargets={duplicateTargets}
               onClose={closeFaqWorkspace}
             />
           ) : null}

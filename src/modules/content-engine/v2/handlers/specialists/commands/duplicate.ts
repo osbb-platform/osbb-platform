@@ -38,6 +38,7 @@ export const duplicateCommand: CommandSpec = {
         title: source.title,
         category: source.category,
         phones: source.phones,
+        phone_types: source.phone_types ?? [],
         email: source.email,
         description: source.description,
         sort_order: source.sort_order,

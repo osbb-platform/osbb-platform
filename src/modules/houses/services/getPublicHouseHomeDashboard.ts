@@ -547,7 +547,7 @@ function pickTopAlert(
           post.title ||
           houseSystemCopy.homeDashboard.common.importantInfo,
         description:
-          truncateText(content.body, 180) ||
+          asString(content.body) ||
           houseSystemCopy.homeDashboard.common.openInfoSection,
         href: `/house/${slug}/information`,
         badge: content.isPinned ? houseSystemCopy.homeDashboard.common.important : null,

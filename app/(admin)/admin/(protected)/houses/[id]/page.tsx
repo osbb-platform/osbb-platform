@@ -26,6 +26,7 @@ import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdmin
 import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseReports } from "@/src/modules/houses/services/getAdminHouseReports";
+import { getAdminContentTemplates } from "@/src/modules/houses/services/getAdminContentTemplates";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -266,6 +267,21 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHouseReports({ houseId: house.id })
       : null;
 
+  const faqTemplates =
+    activeBlock === "information"
+      ? await getAdminContentTemplates({ sectionKind: "faq" })
+      : [];
+
+  const informationPostTemplates =
+    activeBlock === "information"
+      ? await getAdminContentTemplates({ sectionKind: "information_post" })
+      : [];
+
+  const specialistTemplates =
+    activeBlock === "specialists"
+      ? await getAdminContentTemplates({ sectionKind: "specialists" })
+      : [];
+
   const debtorsApartments =
     activeBlock === "debtors"
       ? (await getAdminHouseApartments({ houseId: house.id })).items
@@ -436,6 +452,8 @@ export default async function AdminHouseDetailPage({
           posts={validInformationPostSections}
           documents={documents}
           faq={faq}
+          faqTemplates={faqTemplates}
+          informationPostTemplates={informationPostTemplates}
         duplicateTargets={duplicateTargets}
         />
       ) : null}
@@ -473,6 +491,7 @@ export default async function AdminHouseDetailPage({
             houseId={house.id}
             houseSlug={house.slug}
             plan={planData}
+            duplicateTargets={duplicateTargets}
           />
         ) : (
           <HouseTechnicalPlaceholder
@@ -517,6 +536,7 @@ export default async function AdminHouseDetailPage({
           houseId={house.id}
           specialistsData={specialistsData}
           requests={specialistRequests}
+          templates={specialistTemplates}
         duplicateTargets={duplicateTargets}
         />
       ) : null}

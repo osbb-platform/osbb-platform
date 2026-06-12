@@ -2,7 +2,16 @@
 
 import { useMemo, useState } from "react";
 
+import {
+  CrossHouseDuplicatePanel,
+  type CrossHouseDuplicateTarget,
+} from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import {
+  ContentTemplateSlotsPanel,
+  type ContentTemplateSlot,
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
@@ -21,12 +30,16 @@ type Props = {
   houseId: string;
   faq: HouseFaqSnapshot;
   onClose: () => void;
+  templates?: ContentTemplateSlot[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 export function EditInformationFaqForm({
   houseId,
   faq,
   onClose,
+  templates = [],
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
@@ -64,15 +77,22 @@ export function EditInformationFaqForm({
     setLocalError(null);
   }
 
-  async function applyBaseFaqTemplate() {
+  async function applyFaqTemplateKeys(templateKeys: string[]) {
     setLocalError(null);
+
+    const templateKey = templateKeys[0];
+
+    if (!templateKey) {
+      setLocalError("Оберіть шаблон FAQ.");
+      return;
+    }
 
     await dispatch<HouseFaqSnapshot>(
       {
         type: "faq.applyTemplate",
         houseId,
         payload: {
-          templateKey: "base_osbb_faq",
+          templateKey,
           lockVersion: faq.lockVersion,
         },
       },
@@ -86,6 +106,34 @@ export function EditInformationFaqForm({
         },
       },
     );
+  }
+
+  async function copyFaqToDraft() {
+    setLocalError(null);
+
+    const copied = await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.duplicate",
+        houseId,
+        payload: {
+          sourceId: faq.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        successMessage: "FAQ скопійовано в чернетку",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess() {
+          onClose();
+        },
+      },
+    );
+
+    if (!copied && !lastError) {
+      return;
+    }
   }
 
   async function runCommand(command: FaqCommand) {
@@ -150,7 +198,20 @@ export function EditInformationFaqForm({
         </button>
       </div>
 
-      <div className="space-y-4">
+      <ContentTemplateSlotsPanel
+        houseId={houseId}
+        sectionKind="faq"
+        slotLimit={3}
+        templates={templates}
+        title="Слоти FAQ"
+        description="Зберігайте до 3 FAQ-шаблонів і швидко застосовуйте один із них до поточного будинку."
+        disabled={isPending || isArchived}
+        buildPayload={() => ({ items })}
+        onApplyTemplateKeys={applyFaqTemplateKeys}
+        applyConfirmationMessage="Застосування шаблону перезапише поточний список питань і відповідей FAQ. Продовжити?"
+      />
+
+      <div className="mt-6 space-y-4">
         {items.map((item, index) => (
           <div key={index} className={adminInsetSurfaceClass}>
             <div className="grid gap-3">
@@ -207,6 +268,30 @@ export function EditInformationFaqForm({
         </div>
       ) : null}
 
+      {faq.status !== "draft" ? (
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => void copyFaqToDraft()}
+            className={[
+              adminSecondaryButtonClass,
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
+          >
+            Копіювати в чернетку
+          </button>
+
+          <CrossHouseDuplicatePanel
+            houseId={houseId}
+            sourceId={faq.id}
+            commandType="faq.duplicate"
+            targets={duplicateTargets}
+            disabled={isPending}
+          />
+        </div>
+      ) : null}
+
       <div className="mt-6 flex flex-wrap justify-between gap-3">
         <div className="flex flex-wrap gap-3">
           <button
@@ -219,18 +304,6 @@ export function EditInformationFaqForm({
             ].join(" ")}
           >
             Зберегти
-          </button>
-
-          <button
-            type="button"
-            disabled={isPending || isArchived}
-            onClick={() => void applyBaseFaqTemplate()}
-            className={[
-              adminSecondaryButtonClass,
-              "disabled:cursor-not-allowed disabled:opacity-40",
-            ].join(" ")}
-          >
-            Заповнити базовим FAQ
           </button>
 
           <button

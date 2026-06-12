@@ -13,6 +13,7 @@ import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
   normalizeOptionalText,
   normalizePhones,
+  normalizePhoneTypes,
   normalizeSortOrder,
   publicSpecialistsPaths,
   specialistHistoryMetadata,
@@ -43,6 +44,7 @@ function normalizeTemplateSpecialists(value: unknown) {
         title,
         category: normalizeOptionalText(record.category),
         phones: normalizePhones(record.phones),
+        phone_types: normalizePhoneTypes(record.phoneTypes, normalizePhones(record.phones)),
         email: normalizeOptionalText(record.email),
         description: normalizeOptionalText(record.description),
         sortOrder:
@@ -142,6 +144,7 @@ export const applyTemplateCommand: CommandSpec = {
           title: specialist.title,
           category: specialist.category,
           phones: specialist.phones,
+          phoneTypes: specialist.phone_types ?? [],
           email: specialist.email,
           description: specialist.description,
           sort_order: specialist.sortOrder,

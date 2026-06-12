@@ -18,11 +18,30 @@ type SpecialistCard = {
   title: string;
   category: string;
   phones: string[];
+  phoneTypes: Array<"mobile" | "landline" | "free" | "other">;
   email: string;
   description: string;
   createdAt: string;
   updatedAt: string;
 };
+
+function normalizePhoneType(value: unknown): "mobile" | "landline" | "free" | "other" {
+  return value === "landline" || value === "free" || value === "other"
+    ? value
+    : "mobile";
+}
+
+function getPhoneTypeLabel(value: "mobile" | "landline" | "free" | "other") {
+  if (value === "landline") return "Міський";
+  if (value === "free") return "Безкоштовний 0-800";
+  if (value === "other") return "Інший";
+  return "Мобільний";
+}
+
+function getTelHref(phone: string) {
+  const normalized = phone.replace(/[^+\d]/g, "");
+  return normalized ? `tel:${normalized}` : "#";
+}
 
 function sortSpecialists(items: SpecialistCard[]) {
   return [...items].sort((left, right) => {
@@ -82,14 +101,34 @@ function SpecialistCardView({
       </h2>
 
       <div className="mt-6 space-y-3">
-        <ContactRow
-          label={houseSpecialistsCopy.card.phone}
-          value={
-            item.phones.length > 0
-              ? item.phones.join(", ")
-              : houseSpecialistsCopy.card.phoneHidden
-          }
-        />
+        {item.phones.length > 0 ? (
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-[#7A746B] sm:w-[112px]">
+              {houseSpecialistsCopy.card.phone}
+            </div>
+            <div className="grid min-w-0 gap-2">
+              {item.phones.map((phone, index) => {
+                const phoneType = normalizePhoneType(item.phoneTypes[index]);
+
+                return (
+                  <a
+                    key={`${item.id}-${phone}-tel`}
+                    href={getTelHref(phone)}
+                    className="min-w-0 break-words text-sm font-semibold leading-7 text-[#1F2A37] underline decoration-[#C9B9A6] underline-offset-4 transition hover:text-[#3F7A3D]"
+                  >
+                    <span className="text-[#7A746B]">{getPhoneTypeLabel(phoneType)}: </span>
+                    {phone}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <ContactRow
+            label={houseSpecialistsCopy.card.phone}
+            value={houseSpecialistsCopy.card.phoneHidden}
+          />
+        )}
         <ContactRow
           label={houseSpecialistsCopy.form.email}
           value={item.email}
@@ -153,6 +192,7 @@ export default async function SpecialistsPage({
       title: item.content.title,
       category: item.content.category,
       phones: item.content.phones,
+      phoneTypes: item.content.phoneTypes,
       email: item.content.email,
       description: item.content.description,
       createdAt: item.content.createdAt,
