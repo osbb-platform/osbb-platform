@@ -8,6 +8,7 @@ import { publishCommand } from "./commands/publish";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
 import { duplicateCommand } from "./commands/duplicate";
+import { applyTemplateCommand } from "./commands/applyTemplate";
 
 export const informationPostsHandler: ContentHandler = {
   key: "information_posts",
@@ -22,6 +23,7 @@ export const informationPostsHandler: ContentHandler = {
     delete: deleteCommand,
     deleteAllArchived: deleteAllArchivedCommand,
     duplicate: duplicateCommand,
+    applyTemplate: applyTemplateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {

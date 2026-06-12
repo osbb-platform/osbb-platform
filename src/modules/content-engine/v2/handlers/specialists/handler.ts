@@ -8,6 +8,7 @@ import { publishCommand } from "./commands/publish";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
 import { duplicateCommand } from "./commands/duplicate";
+import { applyTemplateCommand } from "./commands/applyTemplate";
 
 export const specialistsHandler: ContentHandler = {
   key: "specialists",
@@ -23,6 +24,7 @@ export const specialistsHandler: ContentHandler = {
     delete: deleteCommand,
     categoriesUpsert: categoriesUpsertCommand,
     duplicate: duplicateCommand,
+    applyTemplate: applyTemplateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {
