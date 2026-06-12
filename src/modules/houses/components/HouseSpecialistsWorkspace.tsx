@@ -220,7 +220,7 @@ export function HouseSpecialistsWorkspace({
         type: "specialists.applyTemplate",
         houseId,
         payload: {
-          templateKey: "base_specialists",
+          templateKey: "base_house_contacts",
         },
       },
       {
