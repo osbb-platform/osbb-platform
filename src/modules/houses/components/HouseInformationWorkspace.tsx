@@ -79,6 +79,7 @@ export function HouseInformationWorkspace({
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
+  const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
 
   const visiblePosts = posts
     .slice()
@@ -116,6 +117,33 @@ export function HouseInformationWorkspace({
     setWorkspaceError(null);
     setWorkspaceMode("idle");
     setEditingSectionId(null);
+  }
+
+  async function applyBaseInformationTemplate() {
+    setWorkspaceError(null);
+    setApplyingPostsTemplate(true);
+
+    const applied = await dispatch(
+      {
+        type: "information_posts.applyTemplate",
+        houseId,
+        payload: {
+          templateKey: "base_information_posts",
+        },
+      },
+      {
+        successMessage: "Шаблон інформаційних матеріалів застосовано",
+        onError: setWorkspaceError,
+      },
+    );
+
+    setApplyingPostsTemplate(false);
+
+    if (!applied) return;
+
+    setMainTab("posts");
+    closePostWorkspace();
+    closeFaqWorkspace();
   }
 
   async function handleCopyPostToDraft(sectionId: string) {
@@ -183,14 +211,25 @@ export function HouseInformationWorkspace({
 
             <div>
               {mainTab === "posts" ? (
-            <button
-              type="button"
-              onClick={openCreatePost}
-              disabled={!housePageId}
-              className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-            >
-              Нова стаття
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void applyBaseInformationTemplate()}
+                disabled={!housePageId || applyingPostsTemplate || isPending}
+                className={[adminSecondaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+              >
+                {applyingPostsTemplate ? "Застосовуємо..." : "Застосувати шаблон"}
+              </button>
+
+              <button
+                type="button"
+                onClick={openCreatePost}
+                disabled={!housePageId}
+                className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+              >
+                Нова стаття
+              </button>
+            </div>
           ) : null}
 
               {mainTab === "materials" ? (

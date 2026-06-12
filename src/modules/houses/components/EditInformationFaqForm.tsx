@@ -11,6 +11,7 @@ import {
   adminInputClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
@@ -61,6 +62,30 @@ export function EditInformationFaqForm({
       return next.length ? next : [{ question: "", answer: "" }];
     });
     setLocalError(null);
+  }
+
+  async function applyBaseFaqTemplate() {
+    setLocalError(null);
+
+    await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.applyTemplate",
+        houseId,
+        payload: {
+          templateKey: "base_osbb_faq",
+          lockVersion: faq.lockVersion,
+        },
+      },
+      {
+        successMessage: "Шаблон FAQ застосовано",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess() {
+          onClose();
+        },
+      },
+    );
   }
 
   async function runCommand(command: FaqCommand) {
@@ -194,6 +219,18 @@ export function EditInformationFaqForm({
             ].join(" ")}
           >
             Зберегти
+          </button>
+
+          <button
+            type="button"
+            disabled={isPending || isArchived}
+            onClick={() => void applyBaseFaqTemplate()}
+            className={[
+              adminSecondaryButtonClass,
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
+          >
+            Заповнити базовим FAQ
           </button>
 
           <button
