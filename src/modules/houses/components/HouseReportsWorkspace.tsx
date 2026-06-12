@@ -1,5 +1,7 @@
 "use client";
 
+import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -37,6 +39,7 @@ type Props = {
   houseId: string;
   reports: HouseReportSnapshot[];
   categories: HouseReportCategorySnapshot[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type TabKey = "current" | "past" | "draft" | "archive";
@@ -174,6 +177,7 @@ export function HouseReportsWorkspace({
   houseId,
   reports,
   categories,
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
@@ -1083,16 +1087,28 @@ export function HouseReportsWorkspace({
                 </button>
 
                 {workspaceMode === "edit" && (isPublishedEdit || isArchivedEdit) ? (
-                  <button
-                    type="button"
-                    disabled={readOnlyMode || isPending}
-                    onClick={() => void copySelectedReportToDraft()}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
-                  >
-                    {isPending && submitIntent === "copy"
-                      ? "Копіюємо..."
-                      : "Копіювати в чернетку"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      disabled={readOnlyMode || isPending}
+                      onClick={() => void copySelectedReportToDraft()}
+                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    >
+                      {isPending && submitIntent === "copy"
+                        ? "Копіюємо..."
+                        : "Копіювати в чернетку"}
+                    </button>
+
+                    {selectedReport ? (
+                      <CrossHouseDuplicatePanel
+                        houseId={houseId}
+                        sourceId={selectedReport.id}
+                        commandType="reports.duplicate"
+                        targets={duplicateTargets}
+                        disabled={readOnlyMode || isPending}
+                      />
+                    ) : null}
+                  </>
                 ) : null}
 
                 {isDraftLikeEdit ? (

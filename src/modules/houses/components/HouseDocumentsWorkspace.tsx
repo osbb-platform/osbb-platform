@@ -1,5 +1,7 @@
 "use client";
 
+import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -39,6 +41,7 @@ type HouseDocumentsWorkspaceProps = {
   canArchive?: boolean;
   canDelete?: boolean;
   embedded?: boolean;
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type WorkspaceTab = "active" | "draft" | "archive";
@@ -175,6 +178,7 @@ export function HouseDocumentsWorkspace({
   canArchive = true,
   canDelete = true,
   embedded = false,
+  duplicateTargets = [],
 }: HouseDocumentsWorkspaceProps) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1017,16 +1021,28 @@ export function HouseDocumentsWorkspace({
                   </button>
 
                   {formMode === "edit" && (isPublishedEdit || isArchivedEdit) ? (
-                    <button
-                      type="button"
-                      disabled={isPending || Boolean(fileError)}
-                      onClick={() => void copySelectedDocumentToDraft()}
-                      className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
-                    >
-                      {isPending && submitIntent === "copy"
-                        ? "Копіюємо..."
-                        : "Копіювати в чернетку"}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={isPending || Boolean(fileError)}
+                        onClick={() => void copySelectedDocumentToDraft()}
+                        className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
+                      >
+                        {isPending && submitIntent === "copy"
+                          ? "Копіюємо..."
+                          : "Копіювати в чернетку"}
+                      </button>
+
+                      {selectedDocument ? (
+                        <CrossHouseDuplicatePanel
+                          houseId={houseId}
+                          sourceId={selectedDocument.id}
+                          commandType="documents.duplicate"
+                          targets={duplicateTargets}
+                          disabled={isPending || Boolean(fileError)}
+                        />
+                      ) : null}
+                    </>
                   ) : null}
 
                   {formMode === "edit" &&

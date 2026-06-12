@@ -1,5 +1,7 @@
 "use client";
 
+import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useMemo, useState } from "react";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
 import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/EditAnnouncementSectionForm";
@@ -14,7 +16,6 @@ import {
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
-  
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
@@ -30,6 +31,7 @@ type HouseAnnouncementsWorkspaceProps = {
   houseSlug: string;
   housePageId: string | null;
   sections: AnnouncementItem[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type TabKey = "active" | "moderation" | "archive";
@@ -113,6 +115,7 @@ export function HouseAnnouncementsWorkspace({
   houseSlug,
   housePageId,
   sections,
+  duplicateTargets = [],
 }: HouseAnnouncementsWorkspaceProps) {
   const { dispatch, isPending: isDeletingArchive, lastError } = useAdminContentCommand();
   const [activeTab, setActiveTab] = useState<TabKey>("active");
@@ -334,7 +337,7 @@ export function HouseAnnouncementsWorkspace({
         {shouldRenderEdit && selectedSection ? (
           <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
             {selectedSection.status !== "draft" ? (
-              <div className="mb-4 flex justify-end">
+              <div className="mb-4 flex flex-wrap justify-end gap-3">
                 <button
                   type="button"
                   disabled={isDeletingArchive || copyingSectionId === selectedSection.id}
@@ -345,6 +348,14 @@ export function HouseAnnouncementsWorkspace({
                     ? "Копіюємо..."
                     : "Копіювати в чернетку"}
                 </button>
+
+                <CrossHouseDuplicatePanel
+                  houseId={houseId}
+                  sourceId={selectedSection.id}
+                  commandType="announcements.duplicate"
+                  targets={duplicateTargets}
+                  disabled={isDeletingArchive || copyingSectionId === selectedSection.id}
+                />
               </div>
             ) : null}
 
