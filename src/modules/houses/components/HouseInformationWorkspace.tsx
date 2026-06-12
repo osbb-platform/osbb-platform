@@ -8,7 +8,11 @@ import { CreateInformationPostInlineForm } from "@/src/modules/houses/components
 import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInformationFaqForm";
 import { EditInformationPostForm } from "@/src/modules/houses/components/EditInformationPostForm";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
-import { adminPrimaryButtonClass } from "@/src/shared/ui/admin/adminStyles";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
 export const INFORMATION_CATEGORIES = [
@@ -63,11 +67,14 @@ export function HouseInformationWorkspace({
   faq,
   documents,
 }: Props) {
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState(false);
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
 
   const visiblePosts = posts
     .slice()
@@ -88,18 +95,47 @@ export function HouseInformationWorkspace({
       : null;
 
   function openCreatePost() {
+    setWorkspaceError(null);
     setWorkspaceMode("create");
     setEditingSectionId(null);
     setFaqOpen(false);
   }
 
   function openEditPost(sectionId: string) {
+    setWorkspaceError(null);
     setWorkspaceMode("edit");
     setEditingSectionId(sectionId);
     setFaqOpen(false);
   }
 
   function closePostWorkspace() {
+    setWorkspaceError(null);
+    setWorkspaceMode("idle");
+    setEditingSectionId(null);
+  }
+
+  async function handleCopyPostToDraft(sectionId: string) {
+    setWorkspaceError(null);
+    setCopyingPostId(sectionId);
+
+    const copied = await dispatch(
+      {
+        type: "information_posts.duplicate",
+        houseId,
+        payload: {
+          sourceId: sectionId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setWorkspaceError,
+      },
+    );
+
+    setCopyingPostId(null);
+
+    if (!copied) return;
+
     setWorkspaceMode("idle");
     setEditingSectionId(null);
   }
@@ -214,13 +250,36 @@ export function HouseInformationWorkspace({
             />
           ) : null}
 
+          {workspaceError ?? lastError ? (
+            <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+              {workspaceError ?? lastError}
+            </div>
+          ) : null}
+
           {workspaceMode === "edit" && editingPost ? (
-            <EditInformationPostForm
-              houseId={houseId}
-              houseSlug={houseSlug}
-              section={editingPost}
-              onClose={closePostWorkspace}
-            />
+            <div className="space-y-4">
+              {editingPost.status !== "draft" ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    disabled={isPending || copyingPostId === editingPost.id}
+                    onClick={() => void handleCopyPostToDraft(editingPost.id)}
+                    className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
+                  >
+                    {copyingPostId === editingPost.id
+                      ? "Копіюємо..."
+                      : "Копіювати в чернетку"}
+                  </button>
+                </div>
+              ) : null}
+
+              <EditInformationPostForm
+                houseId={houseId}
+                houseSlug={houseSlug}
+                section={editingPost}
+                onClose={closePostWorkspace}
+              />
+            </div>
           ) : null}
 
           <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">

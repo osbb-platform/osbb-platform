@@ -350,6 +350,31 @@ export function HouseSpecialistsWorkspace({
     }
   }
 
+  async function copySpecialistToDraft() {
+    if (!draft?.id || draft.status === "draft") return;
+
+    setWorkspaceError(null);
+
+    const copied = await dispatch(
+      {
+        type: "specialists.duplicate",
+        houseId,
+        payload: {
+          sourceId: draft.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setWorkspaceError,
+      },
+    );
+
+    if (!copied) return;
+
+    closeWorkspace();
+    setActiveTab("draft");
+  }
+
   async function saveCategories(nextCategories: HouseSpecialistsCategorySnapshot[]) {
     await dispatch({
       type: "specialists.categoriesUpsert",
@@ -715,6 +740,17 @@ export function HouseSpecialistsWorkspace({
                 >
                   Скасувати
                 </button>
+
+                {workspaceMode === "edit" && draft.status !== "draft" ? (
+                  <button
+                    type="button"
+                    onClick={() => void copySpecialistToDraft()}
+                    className={adminSecondaryButtonClass}
+                    disabled={isPending}
+                  >
+                    Копіювати в чернетку
+                  </button>
+                ) : null}
 
                 {workspaceMode === "edit" ? (
                   <button

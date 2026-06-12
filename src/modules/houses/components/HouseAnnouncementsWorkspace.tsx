@@ -13,6 +13,7 @@ import {
   adminEmptyStateClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
@@ -118,6 +119,7 @@ export function HouseAnnouncementsWorkspace({
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [copyingSectionId, setCopyingSectionId] = useState<string | null>(null);
   const [isDeleteArchiveConfirmOpen, setIsDeleteArchiveConfirmOpen] = useState(false);
 
   const [createBaseline, setCreateBaseline] = useState<number | null>(null);
@@ -226,6 +228,33 @@ export function HouseAnnouncementsWorkspace({
     );
   }
 
+  async function handleCopyToDraft(sectionId: string) {
+    setWorkspaceError(null);
+    setCopyingSectionId(sectionId);
+
+    const copied = await dispatch(
+      {
+        type: "announcements.duplicate",
+        houseId,
+        payload: {
+          sourceId: sectionId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setWorkspaceError,
+      },
+    );
+
+    setCopyingSectionId(null);
+
+    if (!copied) return;
+
+    setActiveTab("moderation");
+    setMode("idle");
+    setSelectedSectionId(null);
+  }
+
   return (
     <div className={[adminSurfaceClass, "p-6"].join(" ")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -304,6 +333,21 @@ export function HouseAnnouncementsWorkspace({
 
         {shouldRenderEdit && selectedSection ? (
           <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
+            {selectedSection.status !== "draft" ? (
+              <div className="mb-4 flex justify-end">
+                <button
+                  type="button"
+                  disabled={isDeletingArchive || copyingSectionId === selectedSection.id}
+                  onClick={() => void handleCopyToDraft(selectedSection.id)}
+                  className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
+                >
+                  {copyingSectionId === selectedSection.id
+                    ? "Копіюємо..."
+                    : "Копіювати в чернетку"}
+                </button>
+              </div>
+            ) : null}
+
             <EditAnnouncementSectionForm
               houseId={houseId}
               houseSlug={houseSlug}
