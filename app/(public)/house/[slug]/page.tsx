@@ -34,6 +34,7 @@ export default async function PublicHouseHomePage({ params }: Props) {
         districtColor={districtColor}
         headline={headline}
         subheadline={subheadline}
+        houseCoverImageUrl={house.cover_image_url ?? null}
       />
 
       <PublicHouseDashboardStatusStrip items={dashboard.statusStrip} />

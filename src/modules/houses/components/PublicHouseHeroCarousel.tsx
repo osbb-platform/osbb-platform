@@ -8,6 +8,7 @@ type PublicHouseHeroCarouselProps = {
   districtColor: string;
   headline: string;
   subheadline: string;
+  houseCoverImageUrl?: string | null;
 };
 
 type Slide = {
@@ -22,11 +23,13 @@ export function PublicHouseHeroCarousel({
   districtColor,
   headline,
   subheadline,
+  houseCoverImageUrl,
 }: PublicHouseHeroCarouselProps) {
   const slides = useMemo<Slide[]>(
     () => [
       {
         image:
+          houseCoverImageUrl ??
           "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1280&q=68",
         eyebrow: houseHomeCopy.hero.slides.main.eyebrow,
         title: headline,
@@ -50,7 +53,7 @@ export function PublicHouseHeroCarousel({
           houseHomeCopy.hero.slides.all.description,
       },
     ],
-    [headline, subheadline],
+    [headline, houseCoverImageUrl, subheadline],
   );
 
   const [currentIndex, setCurrentIndex] = useState(0);

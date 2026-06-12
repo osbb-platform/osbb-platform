@@ -49,13 +49,57 @@ export async function createHouse(
   const uploadedImagePath = String(formData.get("uploadedImagePath") ?? "").trim();
   const currentUser = await getCurrentAdminUser();
   const supabase = await createSupabaseServerClient();
+  let coverImagePathForCleanup: string | null = uploadedImagePath || null;
 
   async function failWithCleanup(error: string): Promise<CreateHouseState> {
-    if (uploadedImagePath) {
-      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([uploadedImagePath]);
+    if (coverImagePathForCleanup) {
+      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([coverImagePathForCleanup]);
     }
 
     return { error };
+  }
+
+  async function finalizePendingCoverImage(params: {
+    houseId: string;
+    uploadedPath: string;
+  }) {
+    const { houseId, uploadedPath } = params;
+
+    if (!uploadedPath.startsWith("pending/")) {
+      return uploadedPath;
+    }
+
+    const fileName = uploadedPath.split("/").pop();
+
+    if (!fileName) {
+      return uploadedPath;
+    }
+
+    const finalPath = `${houseId}/${fileName}`;
+
+    const { error: moveError } = await supabase.storage
+      .from(HOUSE_COVER_BUCKET)
+      .move(uploadedPath, finalPath);
+
+    if (moveError) {
+      console.error("house cover pending move failed:", moveError);
+      return uploadedPath;
+    }
+
+    coverImagePathForCleanup = finalPath;
+
+    const { error: updateCoverError } = await supabase
+      .from("houses")
+      .update({ cover_image_path: finalPath })
+      .eq("id", houseId);
+
+    if (updateCoverError) {
+      await supabase.storage.from(HOUSE_COVER_BUCKET).remove([finalPath]);
+      coverImagePathForCleanup = null;
+      throw new Error(`Не вдалося прив’язати фото будинку: ${updateCoverError.message}`);
+    }
+
+    return finalPath;
   }
 
   const accessError = assertRegistryActionAccess({
@@ -125,6 +169,23 @@ export async function createHouse(
 
   if (insertError) {
     return failWithCleanup(`Помилка створення будинку: ${insertError.message}`);
+  }
+
+  if (uploadedImagePath) {
+    try {
+      await finalizePendingCoverImage({
+        houseId: createdHouse.id,
+        uploadedPath: uploadedImagePath,
+      });
+    } catch (error) {
+      await supabase.from("houses").delete().eq("id", createdHouse.id);
+
+      return failWithCleanup(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося прив’язати фото будинку.",
+      );
+    }
   }
 
   try {
