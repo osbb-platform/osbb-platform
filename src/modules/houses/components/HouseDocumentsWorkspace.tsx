@@ -12,6 +12,7 @@ import {
 import {
   adminInputClass,
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
@@ -43,7 +44,7 @@ type HouseDocumentsWorkspaceProps = {
 type WorkspaceTab = "active" | "draft" | "archive";
 type FormMode = "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "delete" | "delete_archive" | null;
-type SubmitIntent = "save" | "publish" | "archive" | "delete";
+type SubmitIntent = "save" | "publish" | "archive" | "delete" | "copy";
 
 const foundingDocumentTypeOptions: Array<{
   value: HouseDocumentType;
@@ -610,6 +611,36 @@ export function HouseDocumentsWorkspace({
     setActiveTab("archive");
   }
 
+  async function copySelectedDocumentToDraft() {
+    if (!selectedDocument) return;
+
+    setActionError(null);
+    setSubmitIntent("copy");
+    setActionLabel("Копіюємо документ у чернетку...");
+
+    const copied = await dispatch(
+      {
+        type: "documents.duplicate",
+        houseId,
+        payload: {
+          sourceId: selectedDocument.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setActionError,
+      },
+    );
+
+    if (!copied) return;
+
+    closeForm();
+
+    if (!embedded) {
+      setActiveTab("draft");
+    }
+  }
+
   const hasExistingAttachment =
     selectedDocument?.attachment_status === "uploaded" &&
     Boolean(selectedDocument.storage_path);
@@ -984,6 +1015,19 @@ export function HouseDocumentsWorkspace({
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
+
+                  {formMode === "edit" && (isPublishedEdit || isArchivedEdit) ? (
+                    <button
+                      type="button"
+                      disabled={isPending || Boolean(fileError)}
+                      onClick={() => void copySelectedDocumentToDraft()}
+                      className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
+                    >
+                      {isPending && submitIntent === "copy"
+                        ? "Копіюємо..."
+                        : "Копіювати в чернетку"}
+                    </button>
+                  ) : null}
 
                   {formMode === "edit" &&
                   (isDraftLikeEdit || isArchivedEdit) &&
