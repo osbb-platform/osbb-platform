@@ -8,6 +8,7 @@ import { publishCommand } from "./commands/publish";
 import { removeFilesCommand } from "./commands/removeFiles";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
+import { duplicateCommand } from "./commands/duplicate";
 
 export const planHandler: ContentHandler = {
   key: "plan",
@@ -22,6 +23,7 @@ export const planHandler: ContentHandler = {
     delete: deleteCommand,
     addFiles: addFilesCommand,
     removeFiles: removeFilesCommand,
+    duplicate: duplicateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {
