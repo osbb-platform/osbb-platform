@@ -148,6 +148,7 @@ export function HouseSpecialistsWorkspace({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -208,6 +209,32 @@ export function HouseSpecialistsWorkspace({
     setWorkspaceError(null);
     setWorkspaceMode("edit");
     setDraft(toDraft(item));
+  }
+
+  async function applySpecialistsTemplate() {
+    setWorkspaceError(null);
+    setApplyingTemplate(true);
+
+    const applied = await dispatch(
+      {
+        type: "specialists.applyTemplate",
+        houseId,
+        payload: {
+          templateKey: "base_specialists",
+        },
+      },
+      {
+        successMessage: "Шаблон спеціалістів застосовано",
+        onError: setWorkspaceError,
+      },
+    );
+
+    setApplyingTemplate(false);
+
+    if (!applied) return;
+
+    closeWorkspace();
+    setActiveTab("draft");
   }
 
   function updateDraft(
@@ -457,13 +484,27 @@ export function HouseSpecialistsWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateMode}
-              className={adminPrimaryButtonClass}
-            >
-              Створити спеціаліста
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void applySpecialistsTemplate()}
+                disabled={isPending || applyingTemplate}
+                className={[
+                  adminSecondaryButtonClass,
+                  "disabled:cursor-not-allowed disabled:opacity-40",
+                ].join(" ")}
+              >
+                {applyingTemplate ? "Застосовуємо..." : "Застосувати шаблон"}
+              </button>
+
+              <button
+                type="button"
+                onClick={openCreateMode}
+                className={adminPrimaryButtonClass}
+              >
+                Створити спеціаліста
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text)] md:grid-cols-3">
