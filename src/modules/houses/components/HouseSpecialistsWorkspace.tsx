@@ -1,5 +1,7 @@
 "use client";
 
+import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useMemo, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -50,6 +52,7 @@ type Props = {
   houseId: string;
   specialistsData: AdminHouseSpecialistsSnapshot;
   requests: HouseSpecialistContactRequestRecord[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 function createEmptyDraft(sortOrder: number): SpecialistDraft {
@@ -135,6 +138,7 @@ export function HouseSpecialistsWorkspace({
   houseId,
   specialistsData,
   requests,
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
@@ -742,14 +746,26 @@ export function HouseSpecialistsWorkspace({
                 </button>
 
                 {workspaceMode === "edit" && draft.status !== "draft" ? (
-                  <button
-                    type="button"
-                    onClick={() => void copySpecialistToDraft()}
-                    className={adminSecondaryButtonClass}
-                    disabled={isPending}
-                  >
-                    Копіювати в чернетку
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void copySpecialistToDraft()}
+                      className={adminSecondaryButtonClass}
+                      disabled={isPending}
+                    >
+                      Копіювати в чернетку
+                    </button>
+
+                    {draft.id ? (
+                      <CrossHouseDuplicatePanel
+                        houseId={houseId}
+                        sourceId={draft.id}
+                        commandType="specialists.duplicate"
+                        targets={duplicateTargets}
+                        disabled={isPending}
+                      />
+                    ) : null}
+                  </>
                 ) : null}
 
                 {workspaceMode === "edit" ? (

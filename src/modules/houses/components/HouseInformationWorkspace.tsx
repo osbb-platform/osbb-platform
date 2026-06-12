@@ -1,5 +1,7 @@
 "use client";
 
+import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
 import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
@@ -35,6 +37,7 @@ type Props = {
   posts: InformationSectionItem[];
   faq: HouseFaqSnapshot | null;
   documents: HouseDocumentListItem[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 function getPostDate(content: Record<string, unknown>) {
@@ -66,6 +69,7 @@ export function HouseInformationWorkspace({
   posts,
   faq,
   documents,
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
@@ -259,7 +263,7 @@ export function HouseInformationWorkspace({
           {workspaceMode === "edit" && editingPost ? (
             <div className="space-y-4">
               {editingPost.status !== "draft" ? (
-                <div className="flex justify-end">
+                <div className="flex flex-wrap justify-end gap-3">
                   <button
                     type="button"
                     disabled={isPending || copyingPostId === editingPost.id}
@@ -270,6 +274,14 @@ export function HouseInformationWorkspace({
                       ? "Копіюємо..."
                       : "Копіювати в чернетку"}
                   </button>
+
+                  <CrossHouseDuplicatePanel
+                    houseId={houseId}
+                    sourceId={editingPost.id}
+                    commandType="information_posts.duplicate"
+                    targets={duplicateTargets}
+                    disabled={isPending || copyingPostId === editingPost.id}
+                  />
                 </div>
               ) : null}
 
@@ -362,6 +374,7 @@ export function HouseInformationWorkspace({
           houseId={houseId}
           documents={documents}
           startInCreateMode={materialsCreateKey > 0}
+          duplicateTargets={duplicateTargets}
           embedded
         />
       ) : null}
