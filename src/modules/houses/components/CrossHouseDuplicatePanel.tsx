@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
 import {
   adminInputClass,
@@ -151,7 +152,14 @@ export function CrossHouseDuplicatePanel({
       </button>
 
       {isOpen ? (
-        <div className="mt-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left shadow-sm">
+        <div className="relative mt-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left shadow-sm">
+          <PlatformSectionLoader
+            active={isPending}
+            label="Дублюємо матеріал у вибрані будинки…"
+            message="Створюємо нові чернетки та оновлюємо історію для кожного будинку."
+            delayMs={0}
+          />
+
           <div>
             <div className="text-sm font-semibold text-[var(--cms-text)]">
               Оберіть будинки
