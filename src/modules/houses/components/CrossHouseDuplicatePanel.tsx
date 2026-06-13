@@ -22,6 +22,8 @@ export type CrossHouseDuplicateTarget = {
   archivedAt: string | null;
 };
 
+const TARGETS_PAGE_SIZE = 25;
+
 type CrossHouseDuplicatePanelProps = {
   houseId: string;
   sourceId: string;
@@ -43,6 +45,7 @@ export function CrossHouseDuplicatePanel({
   const [isOpen, setIsOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedTargetIds, setSelectedTargetIds] = useState<string[]>([]);
 
   const availableTargets = useMemo(() => {
@@ -78,12 +81,34 @@ export function CrossHouseDuplicatePanel({
     [selectedTargetIds],
   );
 
+  const totalPages = Math.max(1, Math.ceil(visibleTargets.length / TARGETS_PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTargets = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * TARGETS_PAGE_SIZE;
+    return visibleTargets.slice(startIndex, startIndex + TARGETS_PAGE_SIZE);
+  }, [safeCurrentPage, visibleTargets]);
+
+  const allTargetsSelected =
+    availableTargets.length > 0 &&
+    availableTargets.every((target) => selectedSet.has(target.id));
+
   function toggleTarget(targetId: string) {
     setSelectedTargetIds((current) =>
       current.includes(targetId)
         ? current.filter((id) => id !== targetId)
         : [...current, targetId],
     );
+  }
+
+  function toggleAllTargets() {
+    const allTargetIds = availableTargets.map((target) => target.id);
+
+    if (allTargetsSelected) {
+      setSelectedTargetIds([]);
+      return;
+    }
+
+    setSelectedTargetIds(allTargetIds);
   }
 
   function toggleVisibleTargets() {
@@ -103,10 +128,16 @@ export function CrossHouseDuplicatePanel({
     );
   }
 
+  function updateSearchQuery(value: string) {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  }
+
   function closePanel() {
     setIsOpen(false);
     setConfirmOpen(false);
     setSearchQuery("");
+    setCurrentPage(1);
     setSelectedTargetIds([]);
   }
 
@@ -173,33 +204,44 @@ export function CrossHouseDuplicatePanel({
           <div className="mt-4">
             <input
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => updateSearchQuery(event.target.value)}
               placeholder="Пошук за назвою, адресою або slug"
               className={adminInputClass}
             />
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={toggleVisibleTargets}
-              disabled={!visibleTargets.length || isPending}
-              className="text-xs font-semibold text-[var(--cms-text)] underline-offset-4 hover:underline disabled:opacity-50"
-            >
-              {visibleTargets.length > 0 &&
-              visibleTargets.every((target) => selectedSet.has(target.id))
-                ? "Зняти видимі"
-                : "Обрати видимі"}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleAllTargets}
+                disabled={!availableTargets.length || isPending}
+                className="text-xs font-semibold text-[var(--cms-text)] underline-offset-4 hover:underline disabled:opacity-50"
+              >
+                {allTargetsSelected ? "Зняти всі будинки" : "Усі будинки"}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleVisibleTargets}
+                disabled={!visibleTargets.length || isPending}
+                className="text-xs font-semibold text-[var(--cms-text)] underline-offset-4 hover:underline disabled:opacity-50"
+              >
+                {visibleTargets.length > 0 &&
+                visibleTargets.every((target) => selectedSet.has(target.id))
+                  ? "Зняти знайдені"
+                  : "Обрати знайдені"}
+              </button>
+            </div>
 
             <div className="text-xs text-[var(--cms-text-muted)]">
-              Обрано: {selectedTargetIds.length}
+              Обрано: {selectedTargetIds.length} із {availableTargets.length}
             </div>
           </div>
 
           <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
             {visibleTargets.length > 0 ? (
-              visibleTargets.map((target) => (
+              paginatedTargets.map((target) => (
                 <label
                   key={target.id}
                   className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 transition hover:border-[var(--cms-border-strong)]"
@@ -232,6 +274,34 @@ export function CrossHouseDuplicatePanel({
               </div>
             )}
           </div>
+
+          {visibleTargets.length > TARGETS_PAGE_SIZE ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+              <span>
+                Показано {paginatedTargets.length} із {visibleTargets.length}. Сторінка {safeCurrentPage} з {totalPages}.
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={isPending || safeCurrentPage <= 1}
+                  className="rounded-xl border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
+                >
+                  Назад
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={isPending || safeCurrentPage >= totalPages}
+                  className="rounded-xl border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
+                >
+                  Далі
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {lastError ? (
             <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
