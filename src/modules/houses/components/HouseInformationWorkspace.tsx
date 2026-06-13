@@ -137,11 +137,17 @@ export function HouseInformationWorkspace({
           return null;
         }
 
+        const coverImage =
+          typeof content.coverImage === "object" && content.coverImage !== null
+            ? content.coverImage
+            : null;
+
         return {
           headline: section.title,
           body: typeof content.body === "string" ? content.body : "",
           category,
           isPinned: Boolean(content.isPinned),
+          coverImage,
         };
       })
       .filter((post): post is NonNullable<typeof post> => Boolean(post?.headline && post.body));
