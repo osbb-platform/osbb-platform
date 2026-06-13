@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import {
   adminDangerButtonClass,
   adminInputClass,
@@ -67,6 +68,7 @@ export function ContentTemplateSlotsPanel({
   const [saving, setSaving] = useState(false);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
 
   const templatesBySlot = useMemo(() => {
     return new Map(templates.map((template) => [template.slotIndex, template]));
@@ -171,7 +173,7 @@ export function ContentTemplateSlotsPanel({
     setLocalSuccess("Шаблон видалено.");
   }
 
-  async function applySelectedTemplates() {
+  async function runApplySelectedTemplates() {
     setLocalError(null);
     setLocalSuccess(null);
 
@@ -180,20 +182,34 @@ export function ContentTemplateSlotsPanel({
       return;
     }
 
-    if (applyConfirmationMessage && !window.confirm(applyConfirmationMessage)) {
-      return;
-    }
-
     setApplying(true);
 
     try {
       await onApplyTemplateKeys(selectedKeys);
+      setConfirmApplyOpen(false);
       setLocalSuccess("Шаблон застосовано.");
     } catch (error) {
       setLocalError(error instanceof Error ? error.message : "Не вдалося застосувати шаблон.");
     } finally {
       setApplying(false);
     }
+  }
+
+  function applySelectedTemplates() {
+    setLocalError(null);
+    setLocalSuccess(null);
+
+    if (!selectedKeys.length) {
+      setLocalError("Оберіть шаблон.");
+      return;
+    }
+
+    if (applyConfirmationMessage) {
+      setConfirmApplyOpen(true);
+      return;
+    }
+
+    void runApplySelectedTemplates();
   }
 
   const busy = isPending || saving || applying || Boolean(deletingKey);
@@ -216,7 +232,7 @@ export function ContentTemplateSlotsPanel({
 
         <button
           type="button"
-          onClick={() => void applySelectedTemplates()}
+          onClick={applySelectedTemplates}
           disabled={disabled || busy || selectedKeys.length === 0}
           className={[adminSuccessButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
         >
@@ -320,6 +336,22 @@ export function ContentTemplateSlotsPanel({
           {localSuccess}
         </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={confirmApplyOpen}
+        title="Застосувати шаблон FAQ?"
+        description={applyConfirmationMessage ?? null}
+        confirmLabel="Застосувати шаблон"
+        tone="warning"
+        isPending={applying}
+        pendingLabel="Застосовуємо..."
+        onConfirm={() => void runApplySelectedTemplates()}
+        onCancel={() => {
+          if (!applying) {
+            setConfirmApplyOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }
