@@ -6,6 +6,7 @@ import {
   normalizeTemplatePayload,
   normalizeTemplateText,
   readSectionAndSlot,
+  validateTemplatePayloadForSection,
 } from "./shared";
 
 export const upsertCommand: CommandSpec = {
@@ -24,6 +25,12 @@ export const upsertCommand: CommandSpec = {
 
     const templatePayload = normalizeTemplatePayload(payload.payload);
     if (!templatePayload.ok) return templatePayload;
+
+    const sectionPayload = validateTemplatePayloadForSection(
+      sectionAndSlot.data.sectionKind,
+      templatePayload.data,
+    );
+    if (!sectionPayload.ok) return sectionPayload;
 
     return ok(undefined);
   },
@@ -45,6 +52,12 @@ export const upsertCommand: CommandSpec = {
     const description = normalizeTemplateText(payload.description);
     const templatePayload = normalizeTemplatePayload(payload.payload);
     if (!templatePayload.ok) return templatePayload;
+
+    const sectionPayload = validateTemplatePayloadForSection(
+      sectionAndSlot.data.sectionKind,
+      templatePayload.data,
+    );
+    if (!sectionPayload.ok) return sectionPayload;
 
     const now = new Date().toISOString();
 

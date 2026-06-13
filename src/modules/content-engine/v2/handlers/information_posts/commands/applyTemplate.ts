@@ -18,6 +18,8 @@ import {
   normalizeCoverImage,
 } from "./shared";
 
+const INFORMATION_TEMPLATE_BODY_MAX_LENGTH = 256;
+
 type InformationPostsTemplatePayload = {
   posts?: unknown;
 };
@@ -134,7 +136,12 @@ function normalizeTemplatePosts(value: unknown): NormalizedTemplatePost[] {
       const body = readString(record.body);
       const category = readString(record.category);
 
-      if (!headline || !body || !isValidCategory(category)) {
+      if (
+        !headline ||
+        !body ||
+        body.length > INFORMATION_TEMPLATE_BODY_MAX_LENGTH ||
+        !isValidCategory(category)
+      ) {
         return null;
       }
 

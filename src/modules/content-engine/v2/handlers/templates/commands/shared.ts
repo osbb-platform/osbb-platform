@@ -8,6 +8,49 @@ import {
   type TemplateSectionKind,
 } from "../../../services/templateService";
 
+const INFORMATION_TEMPLATE_BODY_MAX_LENGTH = 256;
+
+function asRecord(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function validateInformationPostTemplatePayload(
+  payload: Record<string, unknown>,
+): Result<void> {
+  const posts = Array.isArray(payload.posts) ? payload.posts : [];
+
+  for (const [index, item] of posts.entries()) {
+    const record = asRecord(item);
+    const body = readString(record.body);
+
+    if (body.length > INFORMATION_TEMPLATE_BODY_MAX_LENGTH) {
+      return err(
+        `Текст інформаційного матеріалу в шаблоні #${index + 1} має бути не більше ${INFORMATION_TEMPLATE_BODY_MAX_LENGTH} символів.`,
+        "VALIDATION_FAILED",
+      );
+    }
+  }
+
+  return ok(undefined);
+}
+
+export function validateTemplatePayloadForSection(
+  sectionKind: TemplateSectionKind,
+  payload: Record<string, unknown>,
+): Result<void> {
+  if (sectionKind === "information_post") {
+    return validateInformationPostTemplatePayload(payload);
+  }
+
+  return ok(undefined);
+}
+
 export function normalizeTemplateText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
