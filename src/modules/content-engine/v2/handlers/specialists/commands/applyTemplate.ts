@@ -144,7 +144,7 @@ export const applyTemplateCommand: CommandSpec = {
           title: specialist.title,
           category: specialist.category,
           phones: specialist.phones,
-          phoneTypes: specialist.phone_types ?? [],
+          phone_types: specialist.phone_types ?? [],
           email: specialist.email,
           description: specialist.description,
           sort_order: specialist.sortOrder,
@@ -159,6 +159,22 @@ export const applyTemplateCommand: CommandSpec = {
       .select("*");
 
     if (createError) {
+      if (createdCategories.length) {
+        const createdCategoryIds = createdCategories.map((category) => category.id);
+        const { error: rollbackError } = await ctx.supabase
+          .from("house_specialists_categories")
+          .delete()
+          .eq("house_id", ctx.house.id)
+          .in("id", createdCategoryIds);
+
+        if (rollbackError) {
+          return err(
+            `${createError.message} Нові категорії шаблону не вдалося відкотити: ${rollbackError.message}`,
+            "INTERNAL",
+          );
+        }
+      }
+
       return err(createError.message, "INTERNAL");
     }
 
