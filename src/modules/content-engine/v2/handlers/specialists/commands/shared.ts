@@ -29,9 +29,7 @@ export function normalizePhones(value: unknown) {
 }
 
 export function normalizePhoneType(value: unknown): HouseSpecialistPhoneType {
-  return value === "landline" || value === "free" || value === "other"
-    ? value
-    : "mobile";
+  return value === "landline" || value === "free" ? value : "mobile";
 }
 
 export function normalizePhoneTypes(value: unknown, phones: string[]) {

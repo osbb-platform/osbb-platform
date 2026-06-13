@@ -18,23 +18,20 @@ type SpecialistCard = {
   title: string;
   category: string;
   phones: string[];
-  phoneTypes: Array<"mobile" | "landline" | "free" | "other">;
+  phoneTypes: Array<"mobile" | "landline" | "free">;
   email: string;
   description: string;
   createdAt: string;
   updatedAt: string;
 };
 
-function normalizePhoneType(value: unknown): "mobile" | "landline" | "free" | "other" {
-  return value === "landline" || value === "free" || value === "other"
-    ? value
-    : "mobile";
+function normalizePhoneType(value: unknown): "mobile" | "landline" | "free" {
+  return value === "landline" || value === "free" ? value : "mobile";
 }
 
-function getPhoneTypeLabel(value: "mobile" | "landline" | "free" | "other") {
+function getPhoneTypeLabel(value: "mobile" | "landline" | "free") {
   if (value === "landline") return "Міський";
   if (value === "free") return "Безкоштовний 0-800";
-  if (value === "other") return "Інший";
   return "Мобільний";
 }
 

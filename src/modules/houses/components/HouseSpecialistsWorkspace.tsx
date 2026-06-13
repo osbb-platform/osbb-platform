@@ -39,13 +39,12 @@ const DEFAULT_SPECIALIST_CATEGORIES = [
 type WorkspaceTab = "published" | "draft" | "archived";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "delete" | "publish" | "archive" | "restore" | null;
-type SpecialistPhoneType = "mobile" | "landline" | "free" | "other";
+type SpecialistPhoneType = "mobile" | "landline" | "free";
 
 const SPECIALIST_PHONE_TYPE_OPTIONS: Array<{ value: SpecialistPhoneType; label: string }> = [
   { value: "mobile", label: "Мобільний" },
   { value: "landline", label: "Міський" },
   { value: "free", label: "Безкоштовний 0-800" },
-  { value: "other", label: "Інший" },
 ];
 
 type SpecialistDraft = {
@@ -110,9 +109,7 @@ function normalizePhones(value: string[]) {
 }
 
 function normalizePhoneType(value: unknown): SpecialistPhoneType {
-  return value === "landline" || value === "free" || value === "other"
-    ? value
-    : "mobile";
+  return value === "landline" || value === "free" ? value : "mobile";
 }
 
 function normalizeDraftPhoneTypes(

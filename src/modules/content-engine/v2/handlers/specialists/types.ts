@@ -1,7 +1,7 @@
 export const HOUSE_SPECIALIST_ENTITY_TYPE = "house_specialist";
 
 export type HouseSpecialistLifecycle = "draft" | "published" | "archived";
-export type HouseSpecialistPhoneType = "mobile" | "landline" | "free" | "other";
+export type HouseSpecialistPhoneType = "mobile" | "landline" | "free";
 
 export type HouseSpecialist = {
   id: string;
