@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
 import {
   adminInputClass,
@@ -39,6 +40,7 @@ export function CrossHouseDuplicatePanel({
 }: CrossHouseDuplicatePanelProps) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTargetIds, setSelectedTargetIds] = useState<string[]>([]);
 
@@ -102,6 +104,7 @@ export function CrossHouseDuplicatePanel({
 
   function closePanel() {
     setIsOpen(false);
+    setConfirmOpen(false);
     setSearchQuery("");
     setSelectedTargetIds([]);
   }
@@ -240,15 +243,31 @@ export function CrossHouseDuplicatePanel({
 
             <button
               type="button"
-              onClick={() => void duplicateToSelectedHouses()}
+              onClick={() => setConfirmOpen(true)}
               disabled={isPending || selectedTargetIds.length === 0}
               className={[adminPrimaryButtonClass, "disabled:opacity-60"].join(" ")}
             >
-              {isPending ? "Дублюємо..." : "Створити чернетки"}
+              Створити чернетки
             </button>
           </div>
         </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={confirmOpen}
+        title={`Дублювати матеріал у ${selectedTargetIds.length} будинків?`}
+        description="У кожному вибраному будинку зʼявиться нова чернетка. Оригінал у поточному будинку не зміниться."
+        confirmLabel="Створити чернетки"
+        tone="warning"
+        isPending={isPending}
+        pendingLabel="Дублюємо..."
+        onConfirm={() => void duplicateToSelectedHouses()}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }
