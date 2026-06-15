@@ -36,6 +36,7 @@ type HouseFaqRow = {
 
 type HouseFaqItemRow = {
   id: string;
+  faq_id: string;
   question: string;
   answer: string;
   sort_order: number;
@@ -50,12 +51,15 @@ function mapItem(row: HouseFaqItemRow): HouseFaqItemSnapshot {
   };
 }
 
-function mapFaq(row: HouseFaqRow, items: HouseFaqItemRow[]): HouseFaqSnapshot {
+function mapFaq(
+  row: HouseFaqRow,
+  itemsByFaqId: Map<string, HouseFaqItemRow[]>,
+): HouseFaqSnapshot {
   return {
     id: row.id,
     houseId: row.house_id,
     status: row.lifecycle_status,
-    items: items.map(mapItem),
+    items: (itemsByFaqId.get(row.id) ?? []).map(mapItem),
     lockVersion: row.lock_version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -64,46 +68,42 @@ function mapFaq(row: HouseFaqRow, items: HouseFaqItemRow[]): HouseFaqSnapshot {
   };
 }
 
+function getStatusRank(status: HouseFaqLifecycleStatus) {
+  if (status === "draft") return 0;
+  if (status === "published") return 1;
+  return 2;
+}
+
 export async function getAdminHouseFaq(
   houseId: string,
-): Promise<HouseFaqSnapshot> {
+): Promise<HouseFaqSnapshot[]> {
   noStore();
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: existing, error: existingError } = await supabase
+  const { data: faqs, error: faqError } = await supabase
     .from("house_faq")
     .select("*")
     .eq("house_id", houseId)
-    .maybeSingle();
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  if (existingError) {
-    throw new Error(`Failed to load admin house FAQ: ${existingError.message}`);
+  if (faqError) {
+    throw new Error(`Failed to load admin house FAQ: ${faqError.message}`);
   }
 
-  const faqRow = existing
-    ? (existing as HouseFaqRow)
-    : await (async () => {
-        const { data: created, error: createError } = await supabase
-          .from("house_faq")
-          .insert({
-            house_id: houseId,
-            lifecycle_status: "draft",
-          })
-          .select("*")
-          .single();
+  const faqRows = (faqs ?? []) as HouseFaqRow[];
 
-        if (createError) {
-          throw new Error(`Failed to create admin house FAQ: ${createError.message}`);
-        }
+  if (faqRows.length === 0) {
+    return [];
+  }
 
-        return created as HouseFaqRow;
-      })();
+  const faqIds = faqRows.map((faq) => faq.id);
 
   const { data: items, error: itemsError } = await supabase
     .from("house_faq_items")
-    .select("id, question, answer, sort_order")
-    .eq("faq_id", faqRow.id)
+    .select("id, faq_id, question, answer, sort_order")
+    .in("faq_id", faqIds)
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 
@@ -111,5 +111,21 @@ export async function getAdminHouseFaq(
     throw new Error(`Failed to load admin house FAQ items: ${itemsError.message}`);
   }
 
-  return mapFaq(faqRow, (items ?? []) as HouseFaqItemRow[]);
+  const itemsByFaqId = new Map<string, HouseFaqItemRow[]>();
+
+  for (const item of (items ?? []) as HouseFaqItemRow[]) {
+    const group = itemsByFaqId.get(item.faq_id) ?? [];
+    group.push(item);
+    itemsByFaqId.set(item.faq_id, group);
+  }
+
+  return faqRows
+    .slice()
+    .sort((left, right) => {
+      const statusDiff = getStatusRank(left.lifecycle_status) - getStatusRank(right.lifecycle_status);
+      if (statusDiff !== 0) return statusDiff;
+
+      return new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime();
+    })
+    .map((faq) => mapFaq(faq, itemsByFaqId));
 }

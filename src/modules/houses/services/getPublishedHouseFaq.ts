@@ -1,12 +1,11 @@
 import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
-
 import type {
   HouseFaqItemSnapshot,
   HouseFaqLifecycleStatus,
   HouseFaqSnapshot,
-} from "./getAdminHouseFaq";
+} from "@/src/modules/houses/services/getAdminHouseFaq";
 
 type HouseFaqRow = {
   id: string;
@@ -21,6 +20,7 @@ type HouseFaqRow = {
 
 type HouseFaqItemRow = {
   id: string;
+  faq_id: string;
   question: string;
   answer: string;
   sort_order: number;
@@ -58,6 +58,9 @@ export const getPublishedHouseFaq = cache(
       .select("*")
       .eq("house_id", houseId)
       .eq("lifecycle_status", "published")
+      .order("published_at", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (faqError) {
@@ -72,7 +75,7 @@ export const getPublishedHouseFaq = cache(
 
     const { data: items, error: itemsError } = await supabase
       .from("house_faq_items")
-      .select("id, question, answer, sort_order")
+      .select("id, faq_id, question, answer, sort_order")
       .eq("faq_id", faqRow.id)
       .order("sort_order", { ascending: true })
       .order("id", { ascending: true });

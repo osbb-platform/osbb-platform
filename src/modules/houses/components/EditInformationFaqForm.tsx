@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
@@ -14,29 +15,47 @@ import {
   adminInputClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
-type FaqCommand = "replaceItems" | "publish" | "archive" | "restore" | "delete";
+type FaqCommand = "archive" | "restore" | "delete";
 
 type Props = {
   houseId: string;
   faq: HouseFaqSnapshot;
   onClose: () => void;
   duplicateTargets?: CrossHouseDuplicateTarget[];
+  templates?: ContentTemplateSlot[];
+  templateSlotLimit?: number;
 };
+
+function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
+  const usedSlots = new Set(templates.map((template) => template.slotIndex));
+
+  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
+    if (!usedSlots.has(slotIndex)) {
+      return slotIndex;
+    }
+  }
+
+  return null;
+}
 
 export function EditInformationFaqForm({
   houseId,
   faq,
   onClose,
   duplicateTargets = [],
+  templates = [],
+  templateSlotLimit = 3,
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [currentLockVersion, setCurrentLockVersion] = useState(faq.lockVersion);
   const [currentStatus, setCurrentStatus] = useState(faq.status);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   const initialItems = useMemo(() => {
     return faq.items.length
@@ -134,6 +153,7 @@ export function EditInformationFaqForm({
         type: "faq.replaceItems",
         houseId,
         payload: {
+          faqId: faq.id,
           lockVersion: currentLockVersion,
           items: normalizedItems,
         },
@@ -166,6 +186,61 @@ export function EditInformationFaqForm({
     return result;
   }
 
+  async function saveFaqDraftAsTemplate() {
+    setLocalError(null);
+    setSavedMessage(null);
+
+    if (currentStatus !== "draft") {
+      setLocalError("Шаблон можна створити тільки з FAQ-чернетки.");
+      return;
+    }
+
+    const normalizedItems = normalizeLocalItems();
+
+    if (normalizedItems.length < 1) {
+      setLocalError("Додайте щонайменше одне питання та відповідь перед збереженням шаблону.");
+      return;
+    }
+
+    const slotIndex = findNextTemplateSlot(templates, templateSlotLimit);
+
+    if (!slotIndex) {
+      setLocalError(
+        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
+      );
+      return;
+    }
+
+    setIsSavingTemplate(true);
+
+    await dispatch(
+      {
+        type: "templates.upsert",
+        houseId,
+        payload: {
+          sectionKind: "faq",
+          slotIndex,
+          name: normalizedItems[0]?.question || "FAQ-шаблон",
+          description: "",
+          payload: {
+            items: normalizedItems,
+          },
+        },
+      },
+      {
+        successMessage: "FAQ-шаблон збережено",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess() {
+          setSavedMessage("FAQ-шаблон збережено. Він доступний у всіх будинках.");
+        },
+      },
+    );
+
+    setIsSavingTemplate(false);
+  }
+
   async function publishFaq() {
     setLocalError(null);
     setSavedMessage(null);
@@ -185,6 +260,7 @@ export function EditInformationFaqForm({
         type: "faq.publish",
         houseId,
         payload: {
+          faqId: faq.id,
           lockVersion: nextLockVersion,
         },
       },
@@ -201,10 +277,11 @@ export function EditInformationFaqForm({
       },
     );
   }
+
   async function copyFaqToDraft() {
     setLocalError(null);
 
-    const copied = await dispatch<HouseFaqSnapshot>(
+    await dispatch<HouseFaqSnapshot>(
       {
         type: "faq.duplicate",
         houseId,
@@ -223,30 +300,19 @@ export function EditInformationFaqForm({
         },
       },
     );
-
-    if (!copied && !lastError) {
-      return;
-    }
   }
 
   async function runCommand(command: FaqCommand) {
     setLocalError(null);
 
-    const payload =
-      command === "replaceItems"
-        ? {
-            lockVersion: currentLockVersion,
-            items,
-          }
-        : {
-            lockVersion: currentLockVersion,
-          };
-
-    const result = await dispatch<HouseFaqSnapshot>(
+    await dispatch<HouseFaqSnapshot>(
       {
         type: `faq.${command}`,
         houseId,
-        payload,
+        payload: {
+          faqId: faq.id,
+          lockVersion: currentLockVersion,
+        },
       },
       {
         onError(error) {
@@ -257,15 +323,11 @@ export function EditInformationFaqForm({
         },
       },
     );
-
-    if (!result && !lastError) {
-      return;
-    }
   }
 
   const error = localError ?? lastError;
   const isArchived = currentStatus === "archived";
-  const canPublish = currentStatus !== "published";
+  const canPublish = currentStatus === "draft";
   const canArchive = currentStatus === "published";
   const canRestore = currentStatus === "archived";
 
@@ -305,7 +367,7 @@ export function EditInformationFaqForm({
         </div>
       </div>
 
-<div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4">
         {items.map((item, index) => (
           <div key={index} className={adminInsetSurfaceClass}>
             <div className="grid gap-3">
@@ -314,6 +376,7 @@ export function EditInformationFaqForm({
                 onChange={(event) => updateItem(index, "question", event.target.value)}
                 placeholder="Запитання"
                 className={adminInputClass}
+                disabled={isArchived}
               />
 
               <textarea
@@ -322,13 +385,14 @@ export function EditInformationFaqForm({
                 rows={4}
                 placeholder="Відповідь"
                 className={adminInputClass}
+                disabled={isArchived}
               />
 
               <div>
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
-                  disabled={isPending || items.length <= 1}
+                  disabled={isPending || isArchived || items.length <= 1}
                   className={[
                     adminDangerButtonClass,
                     "disabled:cursor-not-allowed disabled:opacity-40",
@@ -393,6 +457,19 @@ export function EditInformationFaqForm({
         </div>
 
         <div className="flex flex-wrap gap-3">
+          {currentStatus === "draft" ? (
+            <button
+              type="button"
+              disabled={isPending || isSavingTemplate}
+              onClick={() => void saveFaqDraftAsTemplate()}
+              className={[
+                adminSecondaryButtonClass,
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              ].join(" ")}
+            >
+              {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
+            </button>
+          ) : null}
 
           {canRestore ? (
             <button

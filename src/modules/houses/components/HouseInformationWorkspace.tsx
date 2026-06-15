@@ -42,7 +42,7 @@ type Props = {
   houseSlug: string;
   housePageId: string | null;
   posts: InformationSectionItem[];
-  faq: HouseFaqSnapshot | null;
+  faqs: HouseFaqSnapshot[];
   documents: HouseDocumentListItem[];
   faqTemplates?: ContentTemplateSlot[];
   informationPostTemplates?: ContentTemplateSlot[];
@@ -71,12 +71,30 @@ function formatDate(value: string) {
   });
 }
 
+function getFaqStatusLabel(status: HouseFaqSnapshot["status"]) {
+  if (status === "published") return "Активна";
+  if (status === "archived") return "Архів";
+  return "Чернетка";
+}
+
+function getFaqStatusClass(status: HouseFaqSnapshot["status"]) {
+  if (status === "published") {
+    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
+  }
+
+  if (status === "archived") {
+    return "border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]";
+  }
+
+  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
+}
+
 export function HouseInformationWorkspace({
   houseId,
   houseSlug,
   housePageId,
   posts,
-  faq,
+  faqs,
   documents,
   faqTemplates = [],
   informationPostTemplates = [],
@@ -86,10 +104,11 @@ export function HouseInformationWorkspace({
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-  const [faqOpen, setFaqOpen] = useState(false);
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
+  const [creatingFaq, setCreatingFaq] = useState(false);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
   const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
@@ -108,23 +127,29 @@ export function HouseInformationWorkspace({
       return getPostDate(right.content).localeCompare(getPostDate(left.content));
     });
 
+  const visibleFaqs = faqs.slice();
+
   const editingPost =
     workspaceMode === "edit"
       ? posts.find((item) => item.id === editingSectionId) ?? null
       : null;
 
+  const editingFaq = editingFaqId
+    ? faqs.find((item) => item.id === editingFaqId) ?? null
+    : null;
+
   function openCreatePost() {
     setWorkspaceError(null);
     setWorkspaceMode("create");
     setEditingSectionId(null);
-    setFaqOpen(false);
+    setEditingFaqId(null);
   }
 
   function openEditPost(sectionId: string) {
     setWorkspaceError(null);
     setWorkspaceMode("edit");
     setEditingSectionId(sectionId);
-    setFaqOpen(false);
+    setEditingFaqId(null);
   }
 
   function closePostWorkspace() {
@@ -166,8 +191,6 @@ export function HouseInformationWorkspace({
   }
 
   async function applyFaqTemplateKeys(templateKeys: string[]) {
-    if (!faq) return;
-
     setWorkspaceError(null);
     setApplyingFaqTemplate(true);
 
@@ -179,26 +202,31 @@ export function HouseInformationWorkspace({
       return;
     }
 
-    await dispatch(
+    const applied = await dispatch<HouseFaqSnapshot>(
       {
         type: "faq.applyTemplate",
         houseId,
         payload: {
           templateKey,
-          lockVersion: faq.lockVersion,
         },
       },
       {
-        successMessage: "Шаблон FAQ застосовано",
+        successMessage: "FAQ-чернетку створено з шаблону",
         onError: setWorkspaceError,
-        onSuccess() {
+        onSuccess(data) {
+          const created = data as HouseFaqSnapshot | undefined;
           setFaqTemplatesPanelOpen(false);
           setMainTab("faq");
           closePostWorkspace();
-          closeFaqWorkspace();
+          setEditingFaqId(created?.id ?? null);
         },
       },
     );
+
+    if (!applied) {
+      setApplyingFaqTemplate(false);
+      return;
+    }
 
     setApplyingFaqTemplate(false);
   }
@@ -229,8 +257,34 @@ export function HouseInformationWorkspace({
     setEditingSectionId(null);
   }
 
-  function openFaqWorkspace() {
-    setFaqOpen(true);
+  async function createFaqDraft() {
+    setWorkspaceError(null);
+    setCreatingFaq(true);
+
+    await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.create",
+        houseId,
+        payload: {},
+      },
+      {
+        successMessage: "FAQ-чернетку створено",
+        onError: setWorkspaceError,
+        onSuccess(data) {
+          const created = data as HouseFaqSnapshot | undefined;
+          setMainTab("faq");
+          closePostWorkspace();
+          setEditingFaqId(created?.id ?? null);
+        },
+      },
+    );
+
+    setCreatingFaq(false);
+  }
+
+  function openFaqWorkspace(faqId: string) {
+    setWorkspaceError(null);
+    setEditingFaqId(faqId);
     closePostWorkspace();
   }
 
@@ -242,7 +296,7 @@ export function HouseInformationWorkspace({
   }
 
   function closeFaqWorkspace() {
-    setFaqOpen(false);
+    setEditingFaqId(null);
   }
 
   function handleMainTabChange(nextTab: InformationMainTab) {
@@ -304,7 +358,7 @@ export function HouseInformationWorkspace({
                   <button
                     type="button"
                     onClick={() => setFaqTemplatesPanelOpen(true)}
-                    disabled={!faq || applyingFaqTemplate || isPending}
+                    disabled={applyingFaqTemplate || isPending}
                     className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
                   >
                     <TemplateIcon className="h-5 w-5" />
@@ -313,11 +367,11 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={openFaqWorkspace}
-                    disabled={!faq}
+                    onClick={() => void createFaqDraft()}
+                    disabled={creatingFaq || isPending}
                     className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
-                    Редагувати FAQ
+                    {creatingFaq ? "Створюємо..." : "Створити FAQ"}
                   </button>
                 </div>
               ) : null}
@@ -337,7 +391,7 @@ export function HouseInformationWorkspace({
                 {
                   key: "faq",
                   label: "FAQ",
-                  count: faq ? 1 : 0,
+                  count: faqs.length,
                 },
                 {
                   key: "materials",
@@ -352,7 +406,7 @@ export function HouseInformationWorkspace({
 
       <AdminSidePanel
         title="Шаблони FAQ"
-        description="Оберіть збережений FAQ-шаблон. Після підтвердження він оновить FAQ поточного будинку."
+        description="Оберіть збережений FAQ-шаблон. Після підтвердження він створить FAQ-чернетку в поточному будинку."
         isOpen={faqTemplatesPanelOpen}
         onClose={() => setFaqTemplatesPanelOpen(false)}
       >
@@ -362,8 +416,8 @@ export function HouseInformationWorkspace({
           slotLimit={3}
           templates={faqTemplates}
           title="Збережені FAQ-шаблони"
-          description="Шаблони доступні в усіх будинках. Новий шаблон створюється з FAQ-чернетки."
-          disabled={!faq || applyingFaqTemplate || isPending}
+          description="Шаблони доступні в усіх будинках. Застосування створює нову FAQ-чернетку."
+          disabled={applyingFaqTemplate || isPending}
           onApplyTemplateKeys={applyFaqTemplateKeys}
         />
       </AdminSidePanel>
@@ -516,52 +570,66 @@ export function HouseInformationWorkspace({
 
       {mainTab === "faq" ? (
         <>
-          {!faqOpen ? (
-            <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-              {faq ? (
-                <button
-                  type="button"
-                  onClick={openFaqWorkspace}
-                  className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                        faq.status === "published"
-                          ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                          : faq.status === "archived"
-                            ? "border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
-                            : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                      }`}
-                    >
-                      {faq.status === "published"
-                        ? "Активна"
-                        : faq.status === "archived"
-                          ? "Архів"
-                          : "Чернетка"}
-                    </span>
-                    <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                      Запитань: {faq.items.length}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
-                    FAQ для мешканців
-                  </div>
-                </button>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                  FAQ поки не створено. Онови сторінку або перевір міграцію content-engine.
-                </div>
-              )}
+          {workspaceError ?? lastError ? (
+            <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+              {workspaceError ?? lastError}
             </div>
           ) : null}
 
-          {faqOpen && faq ? (
+          {!editingFaq ? (
+            <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+              <div className="space-y-4">
+                {visibleFaqs.length > 0 ? (
+                  visibleFaqs.map((faq) => (
+                    <button
+                      key={faq.id}
+                      type="button"
+                      onClick={() => openFaqWorkspace(faq.id)}
+                      className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${getFaqStatusClass(faq.status)}`}
+                        >
+                          {getFaqStatusLabel(faq.status)}
+                        </span>
+                        <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                          Запитань: {faq.items.length}
+                        </span>
+                        <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                          Оновлено: {formatDate(faq.updatedAt)}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
+                        FAQ для мешканців
+                      </div>
+
+                      <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                        {faq.status === "draft"
+                          ? "Чернетку можна редагувати, зберегти як шаблон або підтвердити для заміни активного FAQ."
+                          : faq.status === "published"
+                            ? "Цей FAQ зараз показується на публічній сторінці будинку."
+                            : "Архівна версія FAQ не показується на сайті."}
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
+                    FAQ поки не створено. Створи першу FAQ-чернетку через кнопку зверху.
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {editingFaq ? (
             <EditInformationFaqForm
               houseId={houseId}
-              faq={faq}
+              faq={editingFaq}
               duplicateTargets={duplicateTargets}
+              templates={faqTemplates}
+              templateSlotLimit={3}
               onClose={closeFaqWorkspace}
             />
           ) : null}

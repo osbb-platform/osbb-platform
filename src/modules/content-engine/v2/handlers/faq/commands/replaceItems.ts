@@ -1,18 +1,24 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { HouseFaq, ReplaceFaqItemsPayload } from "../types";
-import { getHouseFaq, normalizeFaqItems, readLockVersion } from "./shared";
+import {
+  getHouseFaq,
+  mapItemsForSnapshot,
+  normalizeFaqItems,
+  readFaqId,
+  readLockVersion,
+} from "./shared";
 
 export const replaceItemsCommand: CommandSpec = {
   actionKey: "edit",
   requiresLockCheck: true,
 
   async validate(rawPayload) {
-    const lockResult = readLockVersion(rawPayload);
+    const faqId = readFaqId(rawPayload);
+    if (!faqId.ok) return faqId;
 
-    if (!lockResult.ok) {
-      return err(lockResult.error, "VALIDATION_FAILED");
-    }
+    const lockResult = readLockVersion(rawPayload);
+    if (!lockResult.ok) return err(lockResult.error, "VALIDATION_FAILED");
 
     const payload = rawPayload as Partial<ReplaceFaqItemsPayload>;
     const items = normalizeFaqItems(payload.items);
@@ -28,16 +34,14 @@ export const replaceItemsCommand: CommandSpec = {
     const payload = rawPayload as ReplaceFaqItemsPayload;
     const items = normalizeFaqItems(payload.items);
 
-    const beforeResult = await getHouseFaq(ctx);
-
-    if (!beforeResult.ok) {
-      return beforeResult;
-    }
+    const beforeResult = await getHouseFaq(ctx, payload.faqId);
+    if (!beforeResult.ok) return beforeResult;
 
     const before = beforeResult.data;
 
-    const { data, error } = await ctx.supabase.rpc("replace_house_faq_items", {
+    const { data, error } = await ctx.supabase.rpc("replace_house_faq_items_by_id", {
       p_house_id: ctx.house.id,
+      p_faq_id: payload.faqId,
       p_lock_version: payload.lockVersion,
       p_items: items,
     });
@@ -48,7 +52,11 @@ export const replaceItemsCommand: CommandSpec = {
       }
 
       if (error.message.includes("FAQ_NOT_FOUND")) {
-        return err("FAQ ще не створено.", "NOT_FOUND");
+        return err("FAQ не знайдено.", "NOT_FOUND");
+      }
+
+      if (error.message.includes("FAQ_ARCHIVED")) {
+        return err("Архівний FAQ не можна редагувати.", "VALIDATION_FAILED");
       }
 
       return err(error.message, "INTERNAL");
@@ -66,7 +74,7 @@ export const replaceItemsCommand: CommandSpec = {
         beforeSnapshot: before,
         afterSnapshot: {
           ...faq,
-          items,
+          items: mapItemsForSnapshot(items),
         },
         metadata: {
           subSectionKey: "faq",

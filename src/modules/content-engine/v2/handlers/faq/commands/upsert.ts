@@ -1,90 +1,51 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { FaqLockPayload, HouseFaq } from "../types";
-import { readLockVersion } from "./shared";
+import { readFaqId, readLockVersion } from "./shared";
 
 export const upsertCommand: CommandSpec = {
   actionKey: "edit",
   requiresLockCheck: true,
 
   async validate(rawPayload) {
-    const lockResult = readLockVersion(rawPayload);
+    const faqId = readFaqId(rawPayload);
+    if (!faqId.ok) return faqId;
 
-    if (!lockResult.ok) {
-      return lockResult;
-    }
+    const lockResult = readLockVersion(rawPayload);
+    if (!lockResult.ok) return lockResult;
 
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
     const payload = rawPayload as FaqLockPayload;
+    const now = new Date().toISOString();
 
-    const { data: existing, error: existingError } = await ctx.supabase
+    const { data: before, error: beforeError } = await ctx.supabase
       .from("house_faq")
       .select("*")
       .eq("house_id", ctx.house.id)
+      .eq("id", payload.faqId)
       .maybeSingle();
 
-    if (existingError) {
-      return err(existingError.message, "INTERNAL");
+    if (beforeError) {
+      return err(beforeError.message, "INTERNAL");
     }
 
-    const now = new Date().toISOString();
-
-    if (!existing) {
-      if (payload.lockVersion !== 1) {
-        return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
-      }
-
-      const { data: created, error } = await ctx.supabase
-        .from("house_faq")
-        .insert({
-          house_id: ctx.house.id,
-          lifecycle_status: "draft",
-          lock_version: 1,
-          created_at: now,
-          updated_at: now,
-          published_at: null,
-          archived_at: null,
-        })
-        .select("*")
-        .single();
-
-      if (error) {
-        return err(error.message, "INTERNAL");
-      }
-
-      const faq = created as HouseFaq;
-
-      return ok({
-        data: faq,
-        history: {
-          entityType: "house_faq",
-          entityId: faq.id,
-          action: "created",
-          description: "Створено FAQ будинку.",
-          beforeSnapshot: null,
-          afterSnapshot: faq,
-          metadata: {
-            subSectionKey: "faq",
-          },
-        },
-      });
+    if (!before) {
+      return err("FAQ не знайдено.", "NOT_FOUND");
     }
 
-    const current = existing as HouseFaq;
-
-    const { data: updated, error } = await ctx.supabase
+    const { data, error } = await ctx.supabase
       .from("house_faq")
       .update({
         lifecycle_status: "draft",
         lock_version: payload.lockVersion + 1,
         updated_at: now,
-        published_at: null,
         archived_at: null,
       })
       .eq("house_id", ctx.house.id)
+      .eq("id", payload.faqId)
       .eq("lock_version", payload.lockVersion)
       .select("*")
       .maybeSingle();
@@ -93,11 +54,11 @@ export const upsertCommand: CommandSpec = {
       return err(error.message, "INTERNAL");
     }
 
-    if (!updated) {
+    if (!data) {
       return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
     }
 
-    const faq = updated as HouseFaq;
+    const faq = data as HouseFaq;
 
     return ok({
       data: faq,
@@ -106,7 +67,7 @@ export const upsertCommand: CommandSpec = {
         entityId: faq.id,
         action: "updated",
         description: "Оновлено статус FAQ будинку до чернетки.",
-        beforeSnapshot: current,
+        beforeSnapshot: before,
         afterSnapshot: faq,
         metadata: {
           subSectionKey: "faq",

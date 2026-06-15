@@ -5,29 +5,26 @@ import {
   readTemplateKey,
   type ContentTemplate,
 } from "../../../services/templateService";
-import type { HouseFaq, ReplaceFaqItemsPayload } from "../types";
-import { getHouseFaq, normalizeFaqItems, readLockVersion } from "./shared";
+import type { HouseFaq } from "../types";
+import { insertFaqItems, normalizeFaqItems } from "./shared";
 
 type FaqTemplatePayload = {
   items?: unknown;
 };
 
 export const applyTemplateCommand: CommandSpec = {
-  actionKey: "edit",
-  requiresLockCheck: true,
+  actionKey: "create",
+  requiresLockCheck: false,
 
   async validate(rawPayload) {
     const templateKey = readTemplateKey(rawPayload);
     if (!templateKey.ok) return templateKey;
 
-    const lockVersion = readLockVersion(rawPayload);
-    if (!lockVersion.ok) return lockVersion;
-
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
-    const payload = rawPayload as ReplaceFaqItemsPayload & { templateKey: string };
+    const payload = rawPayload as { templateKey: string };
     const templateResult = await getActiveTemplate<FaqTemplatePayload>(ctx.supabase, {
       sectionKey: "faq",
       templateKey: payload.templateKey,
@@ -42,39 +39,42 @@ export const applyTemplateCommand: CommandSpec = {
       return err("У шаблоні немає коректних питань і відповідей.", "VALIDATION_FAILED");
     }
 
-    const beforeResult = await getHouseFaq(ctx);
-    if (!beforeResult.ok) return beforeResult;
+    const now = new Date().toISOString();
 
-    const before = beforeResult.data;
+    const { data, error } = await ctx.supabase
+      .from("house_faq")
+      .insert({
+        house_id: ctx.house.id,
+        lifecycle_status: "draft",
+        lock_version: 1,
+        created_at: now,
+        updated_at: now,
+        published_at: null,
+        archived_at: null,
+      })
+      .select("*")
+      .single();
 
-    const { data, error } = await ctx.supabase.rpc("replace_house_faq_items", {
-      p_house_id: ctx.house.id,
-      p_lock_version: payload.lockVersion,
-      p_items: items,
-    });
-
-    if (error) {
-      if (error.message.includes("STALE_CONTENT")) {
-        return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
-      }
-
-      if (error.message.includes("FAQ_NOT_FOUND")) {
-        return err("FAQ ще не створено.", "NOT_FOUND");
-      }
-
-      return err(error.message, "INTERNAL");
+    if (error || !data) {
+      return err(error?.message ?? "Не вдалося застосувати шаблон FAQ.", "INTERNAL");
     }
 
     const faq = data as HouseFaq;
 
+    const itemsResult = await insertFaqItems(ctx, faq.id, items);
+    if (!itemsResult.ok) return itemsResult;
+
     return ok({
-      data: faq,
+      data: {
+        ...faq,
+        items,
+      },
       history: {
         entityType: "house_faq",
         entityId: faq.id,
         action: "template_applied",
-        description: `Застосовано шаблон FAQ «${template.title}».`,
-        beforeSnapshot: before,
+        description: `Створено FAQ-чернетку з шаблону «${template.title}».`,
+        beforeSnapshot: null,
         afterSnapshot: {
           ...faq,
           items,
@@ -86,7 +86,6 @@ export const applyTemplateCommand: CommandSpec = {
           itemsCount: items.length,
         },
       },
-      extraRevalidatePaths: [`/house/${ctx.house.slug}/information`],
     });
   },
 };

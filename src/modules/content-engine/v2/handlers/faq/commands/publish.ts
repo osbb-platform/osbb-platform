@@ -1,53 +1,49 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { FaqLockPayload, HouseFaq } from "../types";
-import { getHouseFaq, readLockVersion } from "./shared";
+import { getHouseFaq, readFaqId, readLockVersion } from "./shared";
 
 export const publishCommand: CommandSpec = {
   actionKey: "publish",
   requiresLockCheck: true,
 
   async validate(rawPayload) {
-    const lockResult = readLockVersion(rawPayload);
+    const faqId = readFaqId(rawPayload);
+    if (!faqId.ok) return faqId;
 
-    if (!lockResult.ok) {
-      return lockResult;
-    }
+    const lockResult = readLockVersion(rawPayload);
+    if (!lockResult.ok) return lockResult;
 
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
     const payload = rawPayload as FaqLockPayload;
-    const beforeResult = await getHouseFaq(ctx);
-
-    if (!beforeResult.ok) {
-      return beforeResult;
-    }
+    const beforeResult = await getHouseFaq(ctx, payload.faqId);
+    if (!beforeResult.ok) return beforeResult;
 
     const before = beforeResult.data;
-    const now = new Date().toISOString();
 
-    const { data, error } = await ctx.supabase
-      .from("house_faq")
-      .update({
-        lifecycle_status: "published",
-        published_at: before.published_at ?? now,
-        archived_at: null,
-        lock_version: payload.lockVersion + 1,
-        updated_at: now,
-      })
-      .eq("house_id", ctx.house.id)
-      .eq("lock_version", payload.lockVersion)
-      .select("*")
-      .maybeSingle();
+    const { data, error } = await ctx.supabase.rpc("publish_house_faq", {
+      p_house_id: ctx.house.id,
+      p_faq_id: payload.faqId,
+      p_lock_version: payload.lockVersion,
+    });
 
     if (error) {
-      return err(error.message, "INTERNAL");
-    }
+      if (error.message.includes("STALE_CONTENT")) {
+        return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
+      }
 
-    if (!data) {
-      return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
+      if (error.message.includes("FAQ_NOT_FOUND")) {
+        return err("FAQ не знайдено.", "NOT_FOUND");
+      }
+
+      if (error.message.includes("FAQ_ARCHIVED")) {
+        return err("Архівний FAQ не можна підтвердити.", "VALIDATION_FAILED");
+      }
+
+      return err(error.message, "INTERNAL");
     }
 
     const faq = data as HouseFaq;
@@ -58,11 +54,12 @@ export const publishCommand: CommandSpec = {
         entityType: "house_faq",
         entityId: faq.id,
         action: "published",
-        description: "Опубліковано FAQ будинку.",
+        description: "Опубліковано FAQ будинку. Попередній активний FAQ перенесено в архів.",
         beforeSnapshot: before,
         afterSnapshot: faq,
         metadata: {
           subSectionKey: "faq",
+          replacedPreviousPublished: true,
         },
       },
     });

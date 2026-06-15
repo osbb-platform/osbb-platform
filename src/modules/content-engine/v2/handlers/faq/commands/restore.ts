@@ -1,29 +1,26 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { FaqLockPayload, HouseFaq } from "../types";
-import { getHouseFaq, readLockVersion } from "./shared";
+import { getHouseFaq, readFaqId, readLockVersion } from "./shared";
 
 export const restoreCommand: CommandSpec = {
   actionKey: "restore",
   requiresLockCheck: true,
 
   async validate(rawPayload) {
-    const lockResult = readLockVersion(rawPayload);
+    const faqId = readFaqId(rawPayload);
+    if (!faqId.ok) return faqId;
 
-    if (!lockResult.ok) {
-      return lockResult;
-    }
+    const lockResult = readLockVersion(rawPayload);
+    if (!lockResult.ok) return lockResult;
 
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
     const payload = rawPayload as FaqLockPayload;
-    const beforeResult = await getHouseFaq(ctx);
-
-    if (!beforeResult.ok) {
-      return beforeResult;
-    }
+    const beforeResult = await getHouseFaq(ctx, payload.faqId);
+    if (!beforeResult.ok) return beforeResult;
 
     const before = beforeResult.data;
     const now = new Date().toISOString();
@@ -37,17 +34,13 @@ export const restoreCommand: CommandSpec = {
         updated_at: now,
       })
       .eq("house_id", ctx.house.id)
+      .eq("id", payload.faqId)
       .eq("lock_version", payload.lockVersion)
       .select("*")
       .maybeSingle();
 
-    if (error) {
-      return err(error.message, "INTERNAL");
-    }
-
-    if (!data) {
-      return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
-    }
+    if (error) return err(error.message, "INTERNAL");
+    if (!data) return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
 
     const faq = data as HouseFaq;
 
@@ -57,7 +50,7 @@ export const restoreCommand: CommandSpec = {
         entityType: "house_faq",
         entityId: faq.id,
         action: "restored",
-        description: "Відновлено FAQ будинку з архіву.",
+        description: "Відновлено FAQ будинку з архіву в чернетку.",
         beforeSnapshot: before,
         afterSnapshot: faq,
         metadata: {

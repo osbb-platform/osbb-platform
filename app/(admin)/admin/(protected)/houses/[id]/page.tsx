@@ -218,8 +218,8 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHouseInformationPosts({ houseId: house.id })
       : [];
 
-  const faq =
-    activeBlock === "information" ? await getAdminHouseFaq(house.id) : null;
+  const faqs =
+    activeBlock === "information" ? await getAdminHouseFaq(house.id) : [];
 
   const specialistsData =
     activeBlock === "specialists"
@@ -451,7 +451,7 @@ export default async function AdminHouseDetailPage({
           housePageId={informationPage?.id ?? null}
           posts={validInformationPostSections}
           documents={documents}
-          faq={faq}
+          faqs={faqs}
           faqTemplates={faqTemplates}
           informationPostTemplates={informationPostTemplates}
         duplicateTargets={duplicateTargets}

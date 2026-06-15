@@ -24,10 +24,18 @@ export type FaqItemInput = {
   answer: string;
 };
 
-export type FaqLockPayload = {
+export type FaqTargetPayload = {
+  faqId: string;
+};
+
+export type FaqLockPayload = FaqTargetPayload & {
   lockVersion: number;
 };
 
 export type ReplaceFaqItemsPayload = FaqLockPayload & {
   items: FaqItemInput[];
+};
+
+export type CreateFaqPayload = {
+  sourceFaqId?: string;
 };

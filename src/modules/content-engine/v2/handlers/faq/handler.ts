@@ -1,7 +1,8 @@
 import type { ContentHandler } from "../../types/handler";
-import { err, ok } from "../../types/result";
+import { ok } from "../../types/result";
 
 import { archiveCommand } from "./commands/archive";
+import { createCommand } from "./commands/create";
 import { deleteCommand } from "./commands/delete";
 import { publishCommand } from "./commands/publish";
 import { replaceItemsCommand } from "./commands/replaceItems";
@@ -15,6 +16,7 @@ export const faqHandler: ContentHandler = {
   workspace: "information",
 
   commands: {
+    create: createCommand,
     upsert: upsertCommand,
     replaceItems: replaceItemsCommand,
     publish: publishCommand,
@@ -25,22 +27,7 @@ export const faqHandler: ContentHandler = {
     applyTemplate: applyTemplateCommand,
   },
 
-  async onBootstrap(ctx) {
-    const { error } = await ctx.supabase.from("house_faq").upsert(
-      {
-        house_id: ctx.houseId,
-        lifecycle_status: "draft",
-      },
-      {
-        onConflict: "house_id",
-        ignoreDuplicates: true,
-      },
-    );
-
-    if (error) {
-      return err(error.message, "INTERNAL");
-    }
-
+  async onBootstrap() {
     return ok(undefined);
   },
 
