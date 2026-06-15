@@ -93,7 +93,7 @@ function getLevelLabel(level: string) {
 function getLevelDotClasses(level: string) {
   if (level === "danger") return "bg-[var(--cms-danger-text)]";
   if (level === "warning") return "bg-[var(--cms-warning-text)]";
-  return "bg-[#85e874]";
+  return "bg-[var(--cms-success-bg)]";
 }
 
 function getPreviewText(value: unknown) {
