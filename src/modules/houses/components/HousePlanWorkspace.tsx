@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  CrossHouseDuplicatePanel,
-  type CrossHouseDuplicateTarget,
-} from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useMemo, useState } from "react";
 
@@ -16,7 +14,6 @@ import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUploa
 import {
   adminInputClass,
   adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
@@ -40,7 +37,7 @@ const PLAN_ARCHIVE_YEARS = Array.from(
 
 type WorkspaceTab = "active" | "draft" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
-type SubmitIntent = "save" | "delete" | "publish" | "archive";
+type SubmitIntent = "save" | "delete" | "publish" | "archive" | "copy";
 type CreatePlanPlacement = "active" | "archive";
 
 type PlanAttachment = {
@@ -493,7 +490,7 @@ export function HousePlanWorkspace({
   async function copyPlanTaskToDraft() {
     if (!selectedTaskId || draft.status === "draft") return;
 
-    setSubmitIntent("save");
+    setSubmitIntent("copy");
     setActionLabel("Копіюємо завдання в чернетку...");
 
     const copied = await dispatch({
@@ -845,14 +842,29 @@ export function HousePlanWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={resetWorkspace}
-              aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && draft.status !== "draft" && selectedTaskId ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedTaskId}
+                  commandType="plan.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copyPlanTaskToDraft}
+                  duplicatePanelTitle="Копії завдання в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={resetWorkspace}
+                aria-label="Закрити форму"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -1108,32 +1120,6 @@ export function HousePlanWorkspace({
                 </div>
               ) : null}
             </div>
-
-            {workspaceMode === "edit" && draft.status !== "draft" ? (
-              <div className="flex flex-wrap justify-end gap-3 border-t border-[var(--cms-border)] pt-5">
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => void copyPlanTaskToDraft()}
-                  className={[
-                    adminSecondaryButtonClass,
-                    "disabled:cursor-not-allowed disabled:opacity-40",
-                  ].join(" ")}
-                >
-                  {submitIntent === "save" ? "Копіюємо..." : "Копіювати в чернетку"}
-                </button>
-
-                {selectedTaskId ? (
-                  <CrossHouseDuplicatePanel
-                    houseId={houseId}
-                    sourceId={selectedTaskId}
-                    commandType="plan.duplicate"
-                    targets={duplicateTargets}
-                    disabled={isPending}
-                  />
-                ) : null}
-              </div>
-            ) : null}
 
             {workspaceMode === "edit" && draft.status === "draft" ? (
               <div>

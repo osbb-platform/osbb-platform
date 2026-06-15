@@ -2,10 +2,8 @@
 
 import { useMemo, useState } from "react";
 
-import {
-  CrossHouseDuplicatePanel,
-  type CrossHouseDuplicateTarget,
-} from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
@@ -196,9 +194,23 @@ export function EditInformationFaqForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
-          ×
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {faq.status !== "draft" ? (
+            <ContentWorkspaceActionButtons
+              houseId={houseId}
+              sourceId={faq.id}
+              commandType="faq.duplicate"
+              duplicateTargets={duplicateTargets}
+              disabled={isPending}
+              onCopy={copyFaqToDraft}
+              duplicatePanelTitle="Копії FAQ в інші будинки"
+            />
+          ) : null}
+
+          <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
+            ×
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap justify-end gap-3">
@@ -287,30 +299,6 @@ export function EditInformationFaqForm({
       {error ? (
         <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
-        </div>
-      ) : null}
-
-      {faq.status !== "draft" ? (
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => void copyFaqToDraft()}
-            className={[
-              adminSecondaryButtonClass,
-              "disabled:cursor-not-allowed disabled:opacity-40",
-            ].join(" ")}
-          >
-            Копіювати в чернетку
-          </button>
-
-          <CrossHouseDuplicatePanel
-            houseId={houseId}
-            sourceId={faq.id}
-            commandType="faq.duplicate"
-            targets={duplicateTargets}
-            disabled={isPending}
-          />
         </div>
       ) : null}
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
@@ -370,23 +371,15 @@ export function HouseInformationWorkspace({
             <div className="space-y-4">
               {editingPost.status !== "draft" ? (
                 <div className="flex flex-wrap justify-end gap-3">
-                  <button
-                    type="button"
-                    disabled={isPending || copyingPostId === editingPost.id}
-                    onClick={() => void handleCopyPostToDraft(editingPost.id)}
-                    className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
-                  >
-                    {copyingPostId === editingPost.id
-                      ? "Копіюємо..."
-                      : "Копіювати в чернетку"}
-                  </button>
-
-                  <CrossHouseDuplicatePanel
+                  <ContentWorkspaceActionButtons
                     houseId={houseId}
                     sourceId={editingPost.id}
                     commandType="information_posts.duplicate"
-                    targets={duplicateTargets}
-                    disabled={isPending || copyingPostId === editingPost.id}
+                    duplicateTargets={duplicateTargets}
+                    disabled={isPending}
+                    isCopying={copyingPostId === editingPost.id}
+                    onCopy={() => handleCopyPostToDraft(editingPost.id)}
+                    duplicatePanelTitle="Копії інформаційного матеріалу"
                   />
                 </div>
               ) : null}

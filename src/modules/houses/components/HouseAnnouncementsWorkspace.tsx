@@ -1,6 +1,7 @@
 "use client";
 
-import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useMemo, useState } from "react";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
@@ -15,7 +16,6 @@ import {
   adminEmptyStateClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
@@ -338,23 +338,15 @@ export function HouseAnnouncementsWorkspace({
           <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
             {selectedSection.status !== "draft" ? (
               <div className="mb-4 flex flex-wrap justify-end gap-3">
-                <button
-                  type="button"
-                  disabled={isDeletingArchive || copyingSectionId === selectedSection.id}
-                  onClick={() => void handleCopyToDraft(selectedSection.id)}
-                  className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
-                >
-                  {copyingSectionId === selectedSection.id
-                    ? "Копіюємо..."
-                    : "Копіювати в чернетку"}
-                </button>
-
-                <CrossHouseDuplicatePanel
+                <ContentWorkspaceActionButtons
                   houseId={houseId}
                   sourceId={selectedSection.id}
                   commandType="announcements.duplicate"
-                  targets={duplicateTargets}
-                  disabled={isDeletingArchive || copyingSectionId === selectedSection.id}
+                  duplicateTargets={duplicateTargets}
+                  disabled={isDeletingArchive}
+                  isCopying={copyingSectionId === selectedSection.id}
+                  onCopy={() => handleCopyToDraft(selectedSection.id)}
+                  duplicatePanelTitle="Копії оголошення в інші будинки"
                 />
               </div>
             ) : null}

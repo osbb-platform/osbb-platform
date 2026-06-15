@@ -1,6 +1,7 @@
 "use client";
 
-import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -797,14 +798,29 @@ export function HouseReportsWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => resetWorkspace()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
-              aria-label="Закрити форму"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedReport ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedReport.id}
+                  commandType="reports.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={readOnlyMode || isPending}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copySelectedReportToDraft}
+                  duplicatePanelTitle="Копії звіту в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => resetWorkspace()}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                aria-label="Закрити форму"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {actionError || lastError ? (
@@ -1085,31 +1101,6 @@ export function HouseReportsWorkspace({
                 >
                   {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                 </button>
-
-                {workspaceMode === "edit" && (isPublishedEdit || isArchivedEdit) ? (
-                  <>
-                    <button
-                      type="button"
-                      disabled={readOnlyMode || isPending}
-                      onClick={() => void copySelectedReportToDraft()}
-                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
-                    >
-                      {isPending && submitIntent === "copy"
-                        ? "Копіюємо..."
-                        : "Копіювати в чернетку"}
-                    </button>
-
-                    {selectedReport ? (
-                      <CrossHouseDuplicatePanel
-                        houseId={houseId}
-                        sourceId={selectedReport.id}
-                        commandType="reports.duplicate"
-                        targets={duplicateTargets}
-                        disabled={readOnlyMode || isPending}
-                      />
-                    ) : null}
-                  </>
-                ) : null}
 
                 {isDraftLikeEdit ? (
                   <button

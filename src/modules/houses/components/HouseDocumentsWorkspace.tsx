@@ -1,6 +1,7 @@
 "use client";
 
-import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -14,7 +15,6 @@ import {
 import {
   adminInputClass,
   adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
@@ -737,14 +737,29 @@ export function HouseDocumentsWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={closeForm}
-              aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {formMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedDocument ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedDocument.id}
+                  commandType="documents.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending || Boolean(fileError)}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copySelectedDocumentToDraft}
+                  duplicatePanelTitle="Копії документа в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={closeForm}
+                aria-label="Закрити форму"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -1019,31 +1034,6 @@ export function HouseDocumentsWorkspace({
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
-
-                  {formMode === "edit" && (isPublishedEdit || isArchivedEdit) ? (
-                    <>
-                      <button
-                        type="button"
-                        disabled={isPending || Boolean(fileError)}
-                        onClick={() => void copySelectedDocumentToDraft()}
-                        className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
-                      >
-                        {isPending && submitIntent === "copy"
-                          ? "Копіюємо..."
-                          : "Копіювати в чернетку"}
-                      </button>
-
-                      {selectedDocument ? (
-                        <CrossHouseDuplicatePanel
-                          houseId={houseId}
-                          sourceId={selectedDocument.id}
-                          commandType="documents.duplicate"
-                          targets={duplicateTargets}
-                          disabled={isPending || Boolean(fileError)}
-                        />
-                      ) : null}
-                    </>
-                  ) : null}
 
                   {formMode === "edit" &&
                   (isDraftLikeEdit || isArchivedEdit) &&

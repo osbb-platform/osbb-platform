@@ -1,6 +1,7 @@
 "use client";
 
-import { CrossHouseDuplicatePanel, type CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
@@ -708,14 +709,28 @@ export function HouseSpecialistsWorkspace({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={closeWorkspace}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              aria-label="Закрити форму"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && draft.status !== "draft" && draft.id ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={draft.id}
+                  commandType="specialists.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending}
+                  onCopy={copySpecialistToDraft}
+                  duplicatePanelTitle="Копії спеціаліста в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={closeWorkspace}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                aria-label="Закрити форму"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {workspaceError ?? lastError ? (
@@ -872,29 +887,6 @@ export function HouseSpecialistsWorkspace({
                 >
                   Скасувати
                 </button>
-
-                {workspaceMode === "edit" && draft.status !== "draft" ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => void copySpecialistToDraft()}
-                      className={adminSecondaryButtonClass}
-                      disabled={isPending}
-                    >
-                      Копіювати в чернетку
-                    </button>
-
-                    {draft.id ? (
-                      <CrossHouseDuplicatePanel
-                        houseId={houseId}
-                        sourceId={draft.id}
-                        commandType="specialists.duplicate"
-                        targets={duplicateTargets}
-                        disabled={isPending}
-                      />
-                    ) : null}
-                  </>
-                ) : null}
 
                 {workspaceMode === "edit" ? (
                   <button
