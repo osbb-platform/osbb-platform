@@ -34,6 +34,18 @@ type CrossHouseDuplicatePanelProps = {
   onSuccess?: () => void;
 };
 
+function formatTargetLabel(target: CrossHouseDuplicateTarget) {
+  const district = target.districtName?.trim() || "Без району";
+  const title = target.name?.trim() || target.slug;
+  const address = target.address?.trim();
+
+  return address ? `${district} — ${title} (${address})` : `${district} — ${title}`;
+}
+
+function formatHouseCount(count: number) {
+  return count === 1 ? "1 будинку" : `${count} будинках`;
+}
+
 export function CrossHouseDuplicatePanel({
   houseId,
   sourceId,
@@ -81,6 +93,29 @@ export function CrossHouseDuplicatePanel({
     () => new Set(selectedTargetIds),
     [selectedTargetIds],
   );
+
+  const selectedTargets = useMemo(() => {
+    const targetById = new Map(
+      availableTargets.map((target) => [target.id, target]),
+    );
+
+    return selectedTargetIds
+      .map((targetId) => targetById.get(targetId))
+      .filter((target): target is CrossHouseDuplicateTarget => Boolean(target));
+  }, [availableTargets, selectedTargetIds]);
+
+  const confirmDescription = useMemo(() => {
+    const targetList = selectedTargets
+      .map((target) => `• ${formatTargetLabel(target)}`)
+      .join("\n");
+
+    return [
+      "У кожному вибраному будинку зʼявиться нова чернетка. Оригінал у поточному будинку не зміниться.",
+      "",
+      "Копії буде створено в:",
+      targetList || "• Будинки не вибрано",
+    ].join("\n");
+  }, [selectedTargets]);
 
   const totalPages = Math.max(1, Math.ceil(visibleTargets.length / TARGETS_PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -331,8 +366,8 @@ export function CrossHouseDuplicatePanel({
 
       <PlatformConfirmModal
         open={confirmOpen}
-        title={`Створити копії у ${selectedTargetIds.length} будинках?`}
-        description="У кожному вибраному будинку зʼявиться нова чернетка. Оригінал у поточному будинку не зміниться."
+        title={`Створити копії у ${formatHouseCount(selectedTargets.length)}?`}
+        description={confirmDescription}
         confirmLabel="Створити чернетки"
         tone="warning"
         isPending={isPending}

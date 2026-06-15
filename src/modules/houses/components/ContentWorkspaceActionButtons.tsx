@@ -67,9 +67,20 @@ export function ContentWorkspaceActionButtons({
     );
   }, [duplicateTargets, houseId]);
 
-  const actionButtonClass = [
+  const copyButtonClass = [
     adminIconButtonClass,
     adminButtonDisabledClass,
+    "bg-[var(--cms-surface)] text-[var(--cms-text-muted)]",
+    "hover:bg-[var(--cms-surface-elevated)] hover:text-[var(--cms-text)]",
+    "disabled:opacity-50",
+  ].join(" ");
+
+  const duplicateButtonClass = [
+    adminIconButtonClass,
+    adminButtonDisabledClass,
+    "border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]",
+    "shadow-[inset_0_0_0_2px_var(--cms-border-strong)]",
+    "hover:bg-[var(--cms-surface-elevated)]",
     "disabled:opacity-50",
   ].join(" ");
 
@@ -85,7 +96,7 @@ export function ContentWorkspaceActionButtons({
           type="button"
           onClick={() => setCopyConfirmOpen(true)}
           disabled={disabled || copyDisabled || isCopying}
-          className={actionButtonClass}
+          className={copyButtonClass}
           aria-label={copyAriaLabel}
           title={isCopying ? "Створюємо копію..." : copyAriaLabel}
         >
@@ -100,7 +111,7 @@ export function ContentWorkspaceActionButtons({
             duplicateDisabled ||
             !hasAvailableDuplicateTargets
           }
-          className={actionButtonClass}
+          className={duplicateButtonClass}
           aria-label={duplicateAriaLabel}
           title={
             hasAvailableDuplicateTargets

@@ -336,22 +336,21 @@ export function HouseAnnouncementsWorkspace({
 
         {shouldRenderEdit && selectedSection ? (
           <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
-            {selectedSection.status !== "draft" ? (
-              <div className="mb-4 flex flex-wrap justify-end gap-3">
-                <ContentWorkspaceActionButtons
-                  houseId={houseId}
-                  sourceId={selectedSection.id}
-                  commandType="announcements.duplicate"
-                  duplicateTargets={duplicateTargets}
-                  disabled={isDeletingArchive}
-                  isCopying={copyingSectionId === selectedSection.id}
-                  onCopy={() => handleCopyToDraft(selectedSection.id)}
-                  duplicatePanelTitle="Копії оголошення в інші будинки"
-                />
-              </div>
-            ) : null}
-
             <EditAnnouncementSectionForm
+              headerActions={
+                selectedSection.status !== "draft" ? (
+                  <ContentWorkspaceActionButtons
+                    houseId={houseId}
+                    sourceId={selectedSection.id}
+                    commandType="announcements.duplicate"
+                    duplicateTargets={duplicateTargets}
+                    disabled={isDeletingArchive}
+                    isCopying={copyingSectionId === selectedSection.id}
+                    onCopy={() => handleCopyToDraft(selectedSection.id)}
+                    duplicatePanelTitle="Копії оголошення в інші будинки"
+                  />
+                ) : null
+              }
               houseId={houseId}
               houseSlug={houseSlug}
               housePageId={housePageId}

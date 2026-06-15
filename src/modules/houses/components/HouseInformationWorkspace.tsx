@@ -369,22 +369,21 @@ export function HouseInformationWorkspace({
 
           {workspaceMode === "edit" && editingPost ? (
             <div className="space-y-4">
-              {editingPost.status !== "draft" ? (
-                <div className="flex flex-wrap justify-end gap-3">
-                  <ContentWorkspaceActionButtons
-                    houseId={houseId}
-                    sourceId={editingPost.id}
-                    commandType="information_posts.duplicate"
-                    duplicateTargets={duplicateTargets}
-                    disabled={isPending}
-                    isCopying={copyingPostId === editingPost.id}
-                    onCopy={() => handleCopyPostToDraft(editingPost.id)}
-                    duplicatePanelTitle="Копії інформаційного матеріалу"
-                  />
-                </div>
-              ) : null}
-
               <EditInformationPostForm
+                headerActions={
+                  editingPost.status !== "draft" ? (
+                    <ContentWorkspaceActionButtons
+                      houseId={houseId}
+                      sourceId={editingPost.id}
+                      commandType="information_posts.duplicate"
+                      duplicateTargets={duplicateTargets}
+                      disabled={isPending}
+                      isCopying={copyingPostId === editingPost.id}
+                      onCopy={() => handleCopyPostToDraft(editingPost.id)}
+                      duplicatePanelTitle="Копії інформаційного матеріалу"
+                    />
+                  ) : null
+                }
                 houseId={houseId}
                 houseSlug={houseSlug}
                 section={editingPost}

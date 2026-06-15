@@ -149,7 +149,7 @@ export function PlatformConfirmModal({
             </h3>
 
             {description ? (
-              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+              <p className="whitespace-pre-line mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                 {description}
               </p>
             ) : null}
