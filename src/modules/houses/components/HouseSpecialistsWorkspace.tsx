@@ -278,7 +278,7 @@ export function HouseSpecialistsWorkspace({
 
       if (!applied) {
         setApplyingTemplate(false);
-        return;
+        return false;
       }
     }
 
@@ -286,6 +286,7 @@ export function HouseSpecialistsWorkspace({
     setTemplatesPanelOpen(false);
     closeWorkspace();
     setActiveTab("draft");
+    return true;
   }
 
   function updateDraft(

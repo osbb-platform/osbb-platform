@@ -44,7 +44,7 @@ function normalizeTemplateSpecialists(value: unknown) {
         title,
         category: normalizeOptionalText(record.category),
         phones: normalizePhones(record.phones),
-        phone_types: normalizePhoneTypes(record.phoneTypes, normalizePhones(record.phones)),
+        phone_types: normalizePhoneTypes(record.phoneTypes ?? record.phone_types, normalizePhones(record.phones)),
         email: normalizeOptionalText(record.email),
         description: normalizeOptionalText(record.description),
         sortOrder:

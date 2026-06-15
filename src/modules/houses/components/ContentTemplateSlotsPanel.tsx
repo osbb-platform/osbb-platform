@@ -32,7 +32,7 @@ type Props = {
   title: string;
   description: string;
   disabled?: boolean;
-  onApplyTemplateKeys: (templateKeys: string[]) => Promise<void>;
+  onApplyTemplateKeys: (templateKeys: string[]) => Promise<boolean | void>;
 };
 
 function formatDate(value?: string) {
@@ -106,7 +106,13 @@ export function ContentTemplateSlotsPanel({
     setApplyingKey(template.templateKey);
 
     try {
-      await onApplyTemplateKeys([template.templateKey]);
+      const applied = await onApplyTemplateKeys([template.templateKey]);
+
+      if (applied === false) {
+        setLocalError("Не вдалося застосувати шаблон. Перевірте дані шаблону та спробуйте ще раз.");
+        return;
+      }
+
       setTemplateToApply(null);
       setLocalSuccess("Шаблон застосовано. У поточному будинку створено чернетку.");
     } catch (error) {

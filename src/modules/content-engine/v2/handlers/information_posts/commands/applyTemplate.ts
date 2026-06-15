@@ -18,7 +18,7 @@ import {
   normalizeCoverImage,
 } from "./shared";
 
-const INFORMATION_TEMPLATE_BODY_MAX_LENGTH = 256;
+const INFORMATION_TEMPLATE_BODY_MAX_LENGTH = 512;
 
 type InformationPostsTemplatePayload = {
   posts?: unknown;
@@ -183,7 +183,7 @@ export const applyTemplateCommand: CommandSpec = {
     if (!templateResult.ok) return templateResult;
 
     const template = templateResult.data;
-    const posts = normalizeTemplatePosts(template.payload.posts);
+    const posts = normalizeTemplatePosts(template.payload.posts ?? [template.payload]);
 
     if (!posts.length) {
       return err(

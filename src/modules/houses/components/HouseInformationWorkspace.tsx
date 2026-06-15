@@ -180,7 +180,7 @@ export function HouseInformationWorkspace({
 
       if (!applied) {
         setApplyingPostsTemplate(false);
-        return;
+        return false;
       }
     }
 
@@ -189,6 +189,7 @@ export function HouseInformationWorkspace({
     setMainTab("posts");
     closePostWorkspace();
     closeFaqWorkspace();
+    return true;
   }
 
   async function applyFaqTemplateKeys(templateKeys: string[]) {
@@ -200,7 +201,7 @@ export function HouseInformationWorkspace({
     if (!templateKey) {
       setWorkspaceError("Оберіть шаблон FAQ.");
       setApplyingFaqTemplate(false);
-      return;
+      return false;
     }
 
     const applied = await dispatch<HouseFaqSnapshot>(
@@ -226,10 +227,11 @@ export function HouseInformationWorkspace({
 
     if (!applied) {
       setApplyingFaqTemplate(false);
-      return;
+      return false;
     }
 
     setApplyingFaqTemplate(false);
+    return true;
   }
 
   async function handleCopyPostToDraft(sectionId: string) {
