@@ -26,10 +26,32 @@ import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdmin
 import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseReports } from "@/src/modules/houses/services/getAdminHouseReports";
+import { getAdminContentTemplates } from "@/src/modules/houses/services/getAdminContentTemplates";
 import { getAdminHouseApartments } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { getHouseDocuments } from "@/src/modules/houses/services/getHouseDocuments";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
+
+import { getAdminHouses, type AdminHouseListItem } from "@/src/modules/houses/services/getAdminHouses";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
+
+function mapCrossHouseDuplicateTargets(
+  houses: AdminHouseListItem[],
+  currentHouseId: string,
+): CrossHouseDuplicateTarget[] {
+  return houses
+    .filter((house) => house.id !== currentHouseId)
+    .map((house) => ({
+      id: house.id,
+      name: house.name,
+      slug: house.slug,
+      address: house.address,
+      districtName: house.district?.name ?? null,
+      isActive: house.is_active,
+      archivedAt: house.archived_at,
+    }));
+}
 
 type AdminHouseDetailPageProps = {
   params: Promise<{
@@ -245,6 +267,21 @@ export default async function AdminHouseDetailPage({
       ? await getAdminHouseReports({ houseId: house.id })
       : null;
 
+  const faqTemplates =
+    activeBlock === "information"
+      ? await getAdminContentTemplates({ sectionKind: "faq" })
+      : [];
+
+  const informationPostTemplates =
+    activeBlock === "information"
+      ? await getAdminContentTemplates({ sectionKind: "information_post" })
+      : [];
+
+  const specialistTemplates =
+    activeBlock === "specialists"
+      ? await getAdminContentTemplates({ sectionKind: "specialists" })
+      : [];
+
   const debtorsApartments =
     activeBlock === "debtors"
       ? (await getAdminHouseApartments({ houseId: house.id })).items
@@ -254,6 +291,11 @@ export default async function AdminHouseDetailPage({
     activeBlock === "meetings"
       ? (await getAdminHouseApartments({ houseId: house.id })).items
       : [];
+
+  const duplicateTargets = mapCrossHouseDuplicateTargets(
+    await getAdminHouses(),
+    house.id,
+  );
 
   return (
     <div className="space-y-6">
@@ -372,6 +414,7 @@ export default async function AdminHouseDetailPage({
           houseSlug={house.slug}
           housePageId={homePage?.id ?? null}
           sections={validAnnouncementSections.map(normalizeSectionForWorkspace)}
+        duplicateTargets={duplicateTargets}
         />
       ) : null}
 
@@ -397,6 +440,7 @@ export default async function AdminHouseDetailPage({
           houseId={house.id}
           reports={reportsData.reports}
           categories={reportsData.categories}
+        duplicateTargets={duplicateTargets}
         />
       ) : null}
 
@@ -408,6 +452,9 @@ export default async function AdminHouseDetailPage({
           posts={validInformationPostSections}
           documents={documents}
           faq={faq}
+          faqTemplates={faqTemplates}
+          informationPostTemplates={informationPostTemplates}
+        duplicateTargets={duplicateTargets}
         />
       ) : null}
 
@@ -423,6 +470,7 @@ export default async function AdminHouseDetailPage({
           canConfirm={access.houseWorkspaces.foundingDocuments.confirm}
           canArchive={access.houseWorkspaces.foundingDocuments.archive}
           canDelete={access.houseWorkspaces.foundingDocuments.delete}
+        duplicateTargets={duplicateTargets}
         />
       ) : null}
 
@@ -443,6 +491,7 @@ export default async function AdminHouseDetailPage({
             houseId={house.id}
             houseSlug={house.slug}
             plan={planData}
+            duplicateTargets={duplicateTargets}
           />
         ) : (
           <HouseTechnicalPlaceholder
@@ -487,6 +536,8 @@ export default async function AdminHouseDetailPage({
           houseId={house.id}
           specialistsData={specialistsData}
           requests={specialistRequests}
+          templates={specialistTemplates}
+        duplicateTargets={duplicateTargets}
         />
       ) : null}
 

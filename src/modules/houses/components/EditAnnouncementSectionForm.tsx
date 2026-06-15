@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   adminDangerButtonClass,
   adminIconButtonClass,
@@ -14,6 +15,7 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 type EditAnnouncementSectionFormProps = {
+  headerActions?: ReactNode;
   houseId: string;
   houseSlug: string;
   housePageId?: string | null;
@@ -53,6 +55,7 @@ function getLevelLabel(level: string) {
 }
 
 export function EditAnnouncementSectionForm({
+  headerActions,
   houseId,
   houseSlug,
   housePageId,
@@ -192,14 +195,17 @@ export function EditAnnouncementSectionForm({
         </div>
 
         {onClose ? (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрити редактор"
-            className={adminIconButtonClass}
-          >
-            ×
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Закрити редактор"
+              className={adminIconButtonClass}
+            >
+              ×
+            </button>
+          </div>
         ) : null}
       </div>
 

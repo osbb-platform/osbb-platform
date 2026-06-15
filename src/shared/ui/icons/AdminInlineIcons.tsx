@@ -302,3 +302,63 @@ export function AnalyticsIcon(props: IconProps) {
     </svg>
   );
 }
+
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path
+        d="M8 8.5V6.2A2.2 2.2 0 0 1 10.2 4h6.6A2.2 2.2 0 0 1 19 6.2v6.6a2.2 2.2 0 0 1-2.2 2.2h-2.3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 9.2A2.2 2.2 0 0 1 7.2 7h6.6A2.2 2.2 0 0 1 16 9.2v6.6a2.2 2.2 0 0 1-2.2 2.2H7.2A2.2 2.2 0 0 1 5 15.8V9.2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+
+export function DuplicateIcon(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path
+        d="M7 7.5V6.2A2.2 2.2 0 0 1 9.2 4h6.6A2.2 2.2 0 0 1 18 6.2v6.6a2.2 2.2 0 0 1-2.2 2.2h-1.3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 10.2A2.2 2.2 0 0 1 6.2 8h6.6A2.2 2.2 0 0 1 15 10.2v6.6a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 16.8v-6.6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18 5.5h2.5M19.25 4.25v2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

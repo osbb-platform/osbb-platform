@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
@@ -20,12 +23,14 @@ type Props = {
   houseId: string;
   faq: HouseFaqSnapshot;
   onClose: () => void;
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 export function EditInformationFaqForm({
   houseId,
   faq,
   onClose,
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
@@ -196,6 +201,33 @@ export function EditInformationFaqForm({
       },
     );
   }
+  async function copyFaqToDraft() {
+    setLocalError(null);
+
+    const copied = await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.duplicate",
+        houseId,
+        payload: {
+          sourceId: faq.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        successMessage: "FAQ скопійовано в чернетку",
+        onError(error) {
+          setLocalError(error);
+        },
+        onSuccess() {
+          onClose();
+        },
+      },
+    );
+
+    if (!copied && !lastError) {
+      return;
+    }
+  }
 
   async function runCommand(command: FaqCommand) {
     setLocalError(null);
@@ -254,12 +286,26 @@ export function EditInformationFaqForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
-          ×
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {faq.status !== "draft" ? (
+            <ContentWorkspaceActionButtons
+              houseId={houseId}
+              sourceId={faq.id}
+              commandType="faq.duplicate"
+              duplicateTargets={duplicateTargets}
+              disabled={isPending}
+              onCopy={copyFaqToDraft}
+              duplicatePanelTitle="Копії FAQ в інші будинки"
+            />
+          ) : null}
+
+          <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
+            ×
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-4">
+<div className="mt-6 space-y-4">
         {items.map((item, index) => (
           <div key={index} className={adminInsetSurfaceClass}>
             <div className="grid gap-3">
@@ -347,6 +393,7 @@ export function EditInformationFaqForm({
         </div>
 
         <div className="flex flex-wrap gap-3">
+
           {canRestore ? (
             <button
               type="button"

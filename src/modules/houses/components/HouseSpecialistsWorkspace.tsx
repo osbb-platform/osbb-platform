@@ -1,5 +1,13 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+import {
+  ContentTemplateSlotsPanel,
+  type ContentTemplateSlot,
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+
 import { useMemo, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -9,7 +17,6 @@ import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/s
 import type {
   AdminHouseSpecialistsSnapshot,
   HouseSpecialistSnapshot,
-  HouseSpecialistsCategorySnapshot,
 } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import {
   adminDangerButtonClass,
@@ -21,6 +28,7 @@ import {
   adminTextLabelClass,
   adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 const DEFAULT_SPECIALIST_CATEGORIES = [
   "Сантехнік",
@@ -33,6 +41,13 @@ const DEFAULT_SPECIALIST_CATEGORIES = [
 type WorkspaceTab = "published" | "draft" | "archived";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "delete" | "publish" | "archive" | "restore" | null;
+type SpecialistPhoneType = "mobile" | "landline" | "free";
+
+const SPECIALIST_PHONE_TYPE_OPTIONS: Array<{ value: SpecialistPhoneType; label: string }> = [
+  { value: "mobile", label: "Мобільний" },
+  { value: "landline", label: "Міський" },
+  { value: "free", label: "Безкоштовний 0-800" },
+];
 
 type SpecialistDraft = {
   id: string | null;
@@ -40,6 +55,7 @@ type SpecialistDraft = {
   title: string;
   category: string;
   phones: string[];
+  phoneTypes: SpecialistPhoneType[];
   email: string;
   description: string;
   sortOrder: number;
@@ -50,6 +66,8 @@ type Props = {
   houseId: string;
   specialistsData: AdminHouseSpecialistsSnapshot;
   requests: HouseSpecialistContactRequestRecord[];
+  templates?: ContentTemplateSlot[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 function createEmptyDraft(sortOrder: number): SpecialistDraft {
@@ -59,6 +77,7 @@ function createEmptyDraft(sortOrder: number): SpecialistDraft {
     title: "",
     category: "",
     phones: [""],
+    phoneTypes: ["mobile"],
     email: "",
     description: "",
     sortOrder,
@@ -91,6 +110,23 @@ function normalizePhones(value: string[]) {
     .filter((phone, index, array) => array.indexOf(phone) === index);
 }
 
+function normalizePhoneType(value: unknown): SpecialistPhoneType {
+  return value === "landline" || value === "free" ? value : "mobile";
+}
+
+function normalizeDraftPhoneTypes(
+  value: unknown,
+  phones: string[],
+): SpecialistPhoneType[] {
+  const rawTypes = Array.isArray(value) ? value : [];
+
+  return phones.map((_, index) => normalizePhoneType(rawTypes[index]));
+}
+
+function getPhoneTypeLabel(value: SpecialistPhoneType) {
+  return SPECIALIST_PHONE_TYPE_OPTIONS.find((option) => option.value === value)?.label ?? "Мобільний";
+}
+
 function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
   return {
     id: item.id,
@@ -98,6 +134,10 @@ function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
     title: item.content.title,
     category: item.content.category,
     phones: item.content.phones.length > 0 ? item.content.phones : [""],
+    phoneTypes: normalizeDraftPhoneTypes(
+      item.content.phoneTypes,
+      item.content.phones.length > 0 ? item.content.phones : [""],
+    ),
     email: item.content.email,
     description: item.content.description,
     sortOrder: item.content.sortOrder,
@@ -127,14 +167,24 @@ function sortSpecialists(items: HouseSpecialistSnapshot[]) {
   });
 }
 
-function normalizeCategoryTitle(value: string) {
-  return value.trim();
+
+function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
+  const usedSlots = new Set(templates.map((template) => template.slotIndex));
+
+  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
+    if (!usedSlots.has(slotIndex)) {
+      return slotIndex;
+    }
+  }
+
+  return null;
 }
 
 export function HouseSpecialistsWorkspace({
   houseId,
   specialistsData,
-  requests,
+  templates = [],
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
@@ -142,8 +192,10 @@ export function HouseSpecialistsWorkspace({
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-  const [categoryDraft, setCategoryDraft] = useState("");
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -205,10 +257,40 @@ export function HouseSpecialistsWorkspace({
     setWorkspaceMode("edit");
     setDraft(toDraft(item));
   }
+  async function applySpecialistsTemplateKeys(templateKeys: string[]) {
+    setWorkspaceError(null);
+    setApplyingTemplate(true);
+
+    for (const templateKey of templateKeys) {
+      const applied = await dispatch(
+        {
+          type: "specialists.applyTemplate",
+          houseId,
+          payload: {
+            templateKey,
+          },
+        },
+        {
+          successMessage: null,
+          onError: setWorkspaceError,
+        },
+      );
+
+      if (!applied) {
+        setApplyingTemplate(false);
+        return;
+      }
+    }
+
+    setApplyingTemplate(false);
+    setTemplatesPanelOpen(false);
+    closeWorkspace();
+    setActiveTab("draft");
+  }
 
   function updateDraft(
     field: keyof SpecialistDraft,
-    value: string | number | string[],
+    value: string | number | string[] | SpecialistPhoneType[],
   ) {
     setDraft((current) => (current ? { ...current, [field]: value } : current));
   }
@@ -227,12 +309,27 @@ export function HouseSpecialistsWorkspace({
     });
   }
 
+  function handleDraftPhoneTypeChange(index: number, value: SpecialistPhoneType) {
+    setDraft((current) => {
+      if (!current) return current;
+
+      const nextPhoneTypes = normalizeDraftPhoneTypes(current.phoneTypes, current.phones);
+      nextPhoneTypes[index] = value;
+
+      return {
+        ...current,
+        phoneTypes: nextPhoneTypes,
+      };
+    });
+  }
+
   function addDraftPhone() {
     setDraft((current) =>
       current
         ? {
             ...current,
             phones: [...current.phones, ""],
+            phoneTypes: [...current.phoneTypes, "mobile"],
           }
         : current,
     );
@@ -243,10 +340,12 @@ export function HouseSpecialistsWorkspace({
       if (!current) return current;
 
       const nextPhones = current.phones.filter((_, phoneIndex) => phoneIndex !== index);
+      const nextPhoneTypes = current.phoneTypes.filter((_, phoneIndex) => phoneIndex !== index);
 
       return {
         ...current,
         phones: nextPhones.length > 0 ? nextPhones : [""],
+        phoneTypes: nextPhoneTypes.length > 0 ? nextPhoneTypes : ["mobile"],
       };
     });
   }
@@ -257,6 +356,7 @@ export function HouseSpecialistsWorkspace({
     const title = draft.title.trim();
     const category = draft.category.trim();
     const phones = normalizePhones(draft.phones);
+    const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
 
     if (!title) {
       setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
@@ -280,6 +380,7 @@ export function HouseSpecialistsWorkspace({
       title,
       category,
       phones,
+      phoneTypes,
       email: draft.email.trim(),
       description: draft.description.trim(),
       sortOrder: draft.sortOrder,
@@ -320,6 +421,80 @@ export function HouseSpecialistsWorkspace({
     }
   }
 
+  async function saveSpecialistDraftAsTemplate() {
+    if (!draft || workspaceMode !== "create") return;
+
+    const slotIndex = findNextTemplateSlot(templates, 5);
+
+    if (!slotIndex) {
+      setWorkspaceError(
+        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
+      );
+      return;
+    }
+
+    const title = draft.title.trim();
+    const category = draft.category.trim();
+    const phones = normalizePhones(draft.phones);
+    const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
+
+    if (!title) {
+      setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
+      return;
+    }
+
+    if (!category) {
+      setWorkspaceError("Оберіть категорію спеціаліста.");
+      return;
+    }
+
+    const hasInvalidPhone = phones.some((phone) => !isValidPhone(phone));
+    if (hasInvalidPhone) {
+      setWorkspaceError("Введіть коректний номер телефону.");
+      return;
+    }
+
+    setWorkspaceError(null);
+    setSavingTemplate(true);
+
+    const saved = await dispatch(
+      {
+        type: "templates.upsert",
+        houseId,
+        payload: {
+          sectionKind: "specialists",
+          slotIndex,
+          name: title,
+          description: draft.description.trim(),
+          payload: {
+            categories: category ? [{ title: category }] : [],
+            specialists: [
+              {
+                title,
+                category,
+                phones,
+                phoneTypes,
+                email: draft.email.trim(),
+                description: draft.description.trim(),
+                sortOrder: draft.sortOrder,
+              },
+            ],
+          },
+        },
+      },
+      {
+        successMessage: "Шаблон спеціаліста збережено",
+        onError: setWorkspaceError,
+      },
+    );
+
+    setSavingTemplate(false);
+
+    if (!saved && !lastError) {
+      return;
+    }
+  }
+
   async function runLifecycleCommand(action: Exclude<ConfirmAction, null>) {
     if (!draft?.id || typeof draft.lockVersion !== "number") return;
 
@@ -350,62 +525,31 @@ export function HouseSpecialistsWorkspace({
     }
   }
 
-  async function saveCategories(nextCategories: HouseSpecialistsCategorySnapshot[]) {
-    await dispatch({
-      type: "specialists.categoriesUpsert",
-      houseId,
-      payload: {
-        categories: nextCategories.map((category, index) => ({
-          id: category.id,
-          title: category.title,
-          sortOrder: index,
-        })),
+  async function copySpecialistToDraft() {
+    if (!draft?.id || draft.status === "draft") return;
+
+    setWorkspaceError(null);
+
+    const copied = await dispatch(
+      {
+        type: "specialists.duplicate",
+        houseId,
+        payload: {
+          sourceId: draft.id,
+          targetHouseIds: [houseId],
+        },
       },
-    });
-  }
-
-  async function addCategory() {
-    const title = normalizeCategoryTitle(categoryDraft);
-
-    if (!title) return;
-
-    const exists = specialistsData.categories.some(
-      (category) => category.title.toLowerCase() === title.toLowerCase(),
+      {
+        onError: setWorkspaceError,
+      },
     );
 
-    if (exists) {
-      setCategoryDraft("");
-      return;
-    }
+    if (!copied) return;
 
-    await dispatch({
-      type: "specialists.categoriesUpsert",
-      houseId,
-      payload: {
-        categories: [
-          ...specialistsData.categories.map((category, index) => ({
-            id: category.id,
-            title: category.title,
-            sortOrder: index,
-          })),
-          {
-            title,
-            sortOrder: specialistsData.categories.length,
-          },
-        ],
-      },
-    });
-
-    setCategoryDraft("");
+    closeWorkspace();
+    setActiveTab("draft");
   }
 
-  async function removeCategory(categoryId: string) {
-    const nextCategories = specialistsData.categories.filter(
-      (category) => category.id !== categoryId,
-    );
-
-    await saveCategories(nextCategories);
-  }
 
   return (
     <div className="relative space-y-6">
@@ -424,37 +568,28 @@ export function HouseSpecialistsWorkspace({
                 Спеціалісти
               </h2>
               <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                Керування окремими картками спеціалістів, статусами публікації та каталогом категорій.
+                Керування окремими картками спеціалістів, шаблонами та статусами публікації.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateMode}
-              className={adminPrimaryButtonClass}
-            >
-              Створити спеціаліста
-            </button>
-          </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setTemplatesPanelOpen(true)}
+                disabled={isPending || applyingTemplate}
+                className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+              >
+                <TemplateIcon className="h-5 w-5" />
+                Шаблони
+              </button>
 
-          <div className="grid gap-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text)] md:grid-cols-3">
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Активні заявки
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Категорії
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{specialistsData.categories.length}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Всього карток
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{specialistsData.specialists.length}</div>
+              <button
+                type="button"
+                onClick={openCreateMode}
+                className={adminPrimaryButtonClass}
+              >
+                Створити спеціаліста
+              </button>
             </div>
           </div>
 
@@ -497,59 +632,6 @@ export function HouseSpecialistsWorkspace({
         </div>
       </div>
 
-      <div className={`${adminSurfaceClass} p-6`}>
-        <div className="flex flex-col gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-              Каталог категорій
-            </h3>
-            <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
-              Категорії використовуються для фільтрів і вибору в картці спеціаліста.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {specialistsData.categories.length > 0 ? (
-              specialistsData.categories.map((category) => (
-                <span
-                  key={category.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-2 text-sm text-[var(--cms-text)]"
-                >
-                  {category.title}
-                  <button
-                    type="button"
-                    onClick={() => removeCategory(category.id)}
-                    className="text-[var(--cms-danger-text)]"
-                    aria-label={`Видалити категорію ${category.title}`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
-            ) : (
-              <span className="text-sm text-[var(--cms-text-muted)]">
-                Каталог поки порожній. Можна додати першу категорію нижче.
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              value={categoryDraft}
-              onChange={(event) => setCategoryDraft(event.target.value)}
-              className={adminInputClass}
-              placeholder="Нова категорія"
-            />
-            <button
-              type="button"
-              onClick={addCategory}
-              className={adminSecondaryButtonClass}
-            >
-              Додати категорію
-            </button>
-          </div>
-        </div>
-      </div>
 
       {workspaceMode !== "idle" && draft ? (
         <div className={`${adminSurfaceClass} p-6`}>
@@ -565,14 +647,28 @@ export function HouseSpecialistsWorkspace({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={closeWorkspace}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              aria-label="Закрити форму"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && draft.status !== "draft" && draft.id ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={draft.id}
+                  commandType="specialists.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending}
+                  onCopy={copySpecialistToDraft}
+                  duplicatePanelTitle="Копії спеціаліста в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={closeWorkspace}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                aria-label="Закрити форму"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {workspaceError ?? lastError ? (
@@ -622,7 +718,21 @@ export function HouseSpecialistsWorkspace({
 
               <div className="grid gap-2">
                 {draft.phones.map((phone, index) => (
-                  <div key={`phone-${index}`} className="flex gap-2">
+                  <div key={`phone-${index}`} className="grid gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto]">
+                    <select
+                      value={normalizePhoneType(draft.phoneTypes[index])}
+                      onChange={(event) =>
+                        handleDraftPhoneTypeChange(index, event.target.value as SpecialistPhoneType)
+                      }
+                      className={adminInputClass}
+                    >
+                      {SPECIALIST_PHONE_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+
                     <input
                       value={phone}
                       onChange={(event) =>
@@ -728,12 +838,23 @@ export function HouseSpecialistsWorkspace({
                 ) : null}
               </div>
 
+              {workspaceMode === "create" ? (
+                <button
+                  type="button"
+                  onClick={() => void saveSpecialistDraftAsTemplate()}
+                  className={adminSecondaryButtonClass}
+                  disabled={isPending || savingTemplate}
+                >
+                  {savingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
+                </button>
+              ) : null}
+
               {workspaceMode === "edit" && draft.status === "draft" ? (
                 <button
                   type="button"
                   onClick={() => setConfirmAction("publish")}
                   className={adminSuccessButtonClass}
-                  disabled={isPending}
+                  disabled={isPending || savingTemplate}
                 >
                   Опублікувати
                 </button>
@@ -765,6 +886,24 @@ export function HouseSpecialistsWorkspace({
         </div>
       ) : null}
 
+      <AdminSidePanel
+        title="Шаблони спеціалістів"
+        description="Оберіть збережений шаблон. Після підтвердження він створить чернетку в поточному будинку."
+        isOpen={templatesPanelOpen}
+        onClose={() => setTemplatesPanelOpen(false)}
+      >
+        <ContentTemplateSlotsPanel
+          houseId={houseId}
+          sectionKind="specialists"
+          slotLimit={5}
+          templates={templates}
+          title="Збережені шаблони спеціалістів"
+          description="Шаблони доступні в усіх будинках. Новий шаблон створюється з чернетки спеціаліста."
+          disabled={isPending || applyingTemplate}
+          onApplyTemplateKeys={applySpecialistsTemplateKeys}
+        />
+      </AdminSidePanel>
+
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 md:grid-cols-2">
           {visibleSpecialists.length > 0 ? (
@@ -795,7 +934,9 @@ export function HouseSpecialistsWorkspace({
                   <div className="text-[var(--cms-text-soft)]">Телефон</div>
                   <div>
                     {item.content.phones.length > 0
-                      ? item.content.phones.join(", ")
+                      ? item.content.phones
+                          .map((phone, index) => `${getPhoneTypeLabel(normalizePhoneType(item.content.phoneTypes[index]))}: ${phone}`)
+                          .join(", ")
                       : "Телефон не вказано — на сайті буде кнопка «Залишити заявку»"}
                   </div>
 

@@ -4,6 +4,27 @@ import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseBy
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 
+import { getAdminHouses, type AdminHouseListItem } from "@/src/modules/houses/services/getAdminHouses";
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+
+
+function mapCrossHouseDuplicateTargets(
+  houses: AdminHouseListItem[],
+  currentHouseId: string,
+): CrossHouseDuplicateTarget[] {
+  return houses
+    .filter((house) => house.id !== currentHouseId)
+    .map((house) => ({
+      id: house.id,
+      name: house.name,
+      slug: house.slug,
+      address: house.address,
+      districtName: house.district?.name ?? null,
+      isActive: house.is_active,
+      archivedAt: house.archived_at,
+    }));
+}
+
 type AdminHouseAnnouncementsPageProps = {
   params: Promise<{
     id: string;
@@ -40,12 +61,18 @@ export default async function AdminHouseAnnouncementsPage({
     },
   }));
 
+  const duplicateTargets = mapCrossHouseDuplicateTargets(
+    await getAdminHouses(),
+    house.id,
+  );
+
   return (
     <HouseAnnouncementsWorkspace
       houseId={house.id}
       houseSlug={house.slug}
       housePageId={homePage?.id ?? null}
       sections={validAnnouncementSections}
+      duplicateTargets={duplicateTargets}
     />
   );
 }

@@ -3,6 +3,7 @@ import { err, ok, type Result } from "../../../types/result";
 import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
   type HouseSpecialist,
+  type HouseSpecialistPhoneType,
   type SpecialistIdAndLock,
 } from "../types";
 
@@ -25,6 +26,16 @@ export function normalizePhones(value: unknown) {
     .map((phone) => normalizeText(phone))
     .filter(Boolean)
     .filter((phone, index, array) => array.indexOf(phone) === index);
+}
+
+export function normalizePhoneType(value: unknown): HouseSpecialistPhoneType {
+  return value === "landline" || value === "free" ? value : "mobile";
+}
+
+export function normalizePhoneTypes(value: unknown, phones: string[]) {
+  const rawTypes = Array.isArray(value) ? value : [];
+
+  return phones.map((_, index) => normalizePhoneType(rawTypes[index]));
 }
 
 export function normalizeSortOrder(value: unknown) {

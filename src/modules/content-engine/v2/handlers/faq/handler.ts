@@ -7,6 +7,8 @@ import { publishCommand } from "./commands/publish";
 import { replaceItemsCommand } from "./commands/replaceItems";
 import { restoreCommand } from "./commands/restore";
 import { upsertCommand } from "./commands/upsert";
+import { duplicateCommand } from "./commands/duplicate";
+import { applyTemplateCommand } from "./commands/applyTemplate";
 
 export const faqHandler: ContentHandler = {
   key: "faq",
@@ -19,6 +21,8 @@ export const faqHandler: ContentHandler = {
     archive: archiveCommand,
     restore: restoreCommand,
     delete: deleteCommand,
+    duplicate: duplicateCommand,
+    applyTemplate: applyTemplateCommand,
   },
 
   async onBootstrap(ctx) {

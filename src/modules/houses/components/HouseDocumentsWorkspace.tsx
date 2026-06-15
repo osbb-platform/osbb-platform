@@ -1,5 +1,8 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -38,12 +41,13 @@ type HouseDocumentsWorkspaceProps = {
   canArchive?: boolean;
   canDelete?: boolean;
   embedded?: boolean;
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type WorkspaceTab = "active" | "draft" | "archive";
 type FormMode = "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "delete" | "delete_archive" | null;
-type SubmitIntent = "save" | "publish" | "archive" | "delete";
+type SubmitIntent = "save" | "publish" | "archive" | "delete" | "copy";
 
 const foundingDocumentTypeOptions: Array<{
   value: HouseDocumentType;
@@ -174,6 +178,7 @@ export function HouseDocumentsWorkspace({
   canArchive = true,
   canDelete = true,
   embedded = false,
+  duplicateTargets = [],
 }: HouseDocumentsWorkspaceProps) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -610,6 +615,36 @@ export function HouseDocumentsWorkspace({
     setActiveTab("archive");
   }
 
+  async function copySelectedDocumentToDraft() {
+    if (!selectedDocument) return;
+
+    setActionError(null);
+    setSubmitIntent("copy");
+    setActionLabel("Копіюємо документ у чернетку...");
+
+    const copied = await dispatch(
+      {
+        type: "documents.duplicate",
+        houseId,
+        payload: {
+          sourceId: selectedDocument.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setActionError,
+      },
+    );
+
+    if (!copied) return;
+
+    closeForm();
+
+    if (!embedded) {
+      setActiveTab("draft");
+    }
+  }
+
   const hasExistingAttachment =
     selectedDocument?.attachment_status === "uploaded" &&
     Boolean(selectedDocument.storage_path);
@@ -702,14 +737,29 @@ export function HouseDocumentsWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={closeForm}
-              aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {formMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedDocument ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedDocument.id}
+                  commandType="documents.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending || Boolean(fileError)}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copySelectedDocumentToDraft}
+                  duplicatePanelTitle="Копії документа в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={closeForm}
+                aria-label="Закрити форму"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4">

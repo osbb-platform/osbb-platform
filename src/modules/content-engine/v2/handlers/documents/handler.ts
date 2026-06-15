@@ -7,6 +7,7 @@ import { publishCommand } from "./commands/publish";
 import { replacePdfCommand } from "./commands/replacePdf";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
+import { duplicateCommand } from "./commands/duplicate";
 
 export const documentsHandler: ContentHandler = {
   key: "documents",
@@ -21,6 +22,7 @@ export const documentsHandler: ContentHandler = {
     delete: deleteCommand,
     deleteAllArchived: deleteAllArchivedCommand,
     replacePdf: replacePdfCommand,
+    duplicate: duplicateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {

@@ -1,5 +1,8 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+
 import { useMemo, useState } from "react";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
 import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/EditAnnouncementSectionForm";
@@ -13,7 +16,6 @@ import {
   adminEmptyStateClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
-  
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
@@ -29,6 +31,7 @@ type HouseAnnouncementsWorkspaceProps = {
   houseSlug: string;
   housePageId: string | null;
   sections: AnnouncementItem[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type TabKey = "active" | "moderation" | "archive";
@@ -90,7 +93,7 @@ function getLevelLabel(level: string) {
 function getLevelDotClasses(level: string) {
   if (level === "danger") return "bg-[var(--cms-danger-text)]";
   if (level === "warning") return "bg-[var(--cms-warning-text)]";
-  return "bg-[#85e874]";
+  return "bg-[var(--cms-success-bg)]";
 }
 
 function getPreviewText(value: unknown) {
@@ -112,12 +115,14 @@ export function HouseAnnouncementsWorkspace({
   houseSlug,
   housePageId,
   sections,
+  duplicateTargets = [],
 }: HouseAnnouncementsWorkspaceProps) {
   const { dispatch, isPending: isDeletingArchive, lastError } = useAdminContentCommand();
   const [activeTab, setActiveTab] = useState<TabKey>("active");
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [copyingSectionId, setCopyingSectionId] = useState<string | null>(null);
   const [isDeleteArchiveConfirmOpen, setIsDeleteArchiveConfirmOpen] = useState(false);
 
   const [createBaseline, setCreateBaseline] = useState<number | null>(null);
@@ -226,6 +231,33 @@ export function HouseAnnouncementsWorkspace({
     );
   }
 
+  async function handleCopyToDraft(sectionId: string) {
+    setWorkspaceError(null);
+    setCopyingSectionId(sectionId);
+
+    const copied = await dispatch(
+      {
+        type: "announcements.duplicate",
+        houseId,
+        payload: {
+          sourceId: sectionId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setWorkspaceError,
+      },
+    );
+
+    setCopyingSectionId(null);
+
+    if (!copied) return;
+
+    setActiveTab("moderation");
+    setMode("idle");
+    setSelectedSectionId(null);
+  }
+
   return (
     <div className={[adminSurfaceClass, "p-6"].join(" ")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -303,6 +335,20 @@ export function HouseAnnouncementsWorkspace({
         {shouldRenderEdit && selectedSection ? (
           <div className={[adminInsetSurfaceClass, "p-5"].join(" ")}>
             <EditAnnouncementSectionForm
+              headerActions={
+                selectedSection.status !== "draft" ? (
+                  <ContentWorkspaceActionButtons
+                    houseId={houseId}
+                    sourceId={selectedSection.id}
+                    commandType="announcements.duplicate"
+                    duplicateTargets={duplicateTargets}
+                    disabled={isDeletingArchive}
+                    isCopying={copyingSectionId === selectedSection.id}
+                    onCopy={() => handleCopyToDraft(selectedSection.id)}
+                    duplicatePanelTitle="Копії оголошення в інші будинки"
+                  />
+                ) : null
+              }
               houseId={houseId}
               houseSlug={houseSlug}
               housePageId={housePageId}

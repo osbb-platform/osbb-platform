@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -35,6 +36,7 @@ type Props = {
     status: "draft" | "published" | "archived";
     content: Record<string, unknown>;
   };
+  headerActions?: ReactNode;
   onClose: () => void;
 };
 
@@ -54,7 +56,9 @@ function getLockVersion(section: Props["section"]) {
     : 1;
 }
 
+
 export function EditInformationPostForm({
+  headerActions,
   houseId,
   houseSlug,
   section,
@@ -269,13 +273,16 @@ export function EditInformationPostForm({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className={adminIconButtonClass}
-          >
-            ×
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+            <button
+              type="button"
+              onClick={onClose}
+              className={adminIconButtonClass}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* INPUTS */}
@@ -417,8 +424,8 @@ export function EditInformationPostForm({
             </button>
           ) : null}
         </div>
-
         <div className="flex gap-3">
+
           {isDraft ? (
             <button
               type="button"

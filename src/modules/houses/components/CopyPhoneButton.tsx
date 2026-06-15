@@ -32,7 +32,7 @@ export function CopyPhoneButton({ phone }: Props) {
       onClick={handleCopy}
       className="rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3]"
     >
-      {copied ? "Номер скопійовано" : "Зателефонувати"}
+      {copied ? "Номер скопійовано" : "Копіювати номер"}
     </button>
   );
 }

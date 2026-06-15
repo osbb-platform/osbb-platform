@@ -12,7 +12,8 @@ export type HandlerKey =
   | "reports"
   | "plan"
   | "meetings"
-  | "debtors";
+  | "debtors"
+  | "templates";
 
 export type AdminCommand = {
   type: `${HandlerKey}.${string}`;

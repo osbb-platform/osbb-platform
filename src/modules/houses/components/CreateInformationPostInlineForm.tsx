@@ -5,9 +5,11 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
+import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import {
   adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   adminInputClass,
   adminIconButtonClass,
   adminInsetSurfaceClass,
@@ -26,6 +28,8 @@ type Props = {
   houseId: string;
   houseSlug: string;
   housePageId: string | null;
+  templates?: ContentTemplateSlot[];
+  templateSlotLimit?: number;
   onClose: () => void;
 };
 
@@ -39,19 +43,36 @@ function sanitizeFileName(value: string) {
     .slice(0, 120);
 }
 
+function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
+  const usedSlots = new Set(templates.map((template) => template.slotIndex));
+
+  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
+    if (!usedSlots.has(slotIndex)) {
+      return slotIndex;
+    }
+  }
+
+  return null;
+}
+
 export function CreateInformationPostInlineForm({
   houseId,
   houseSlug,
   housePageId,
+  templates = [],
+  templateSlotLimit = 3,
   onClose,
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const [body, setBody] = useState("");
   const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPinned, setIsPinned] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -98,15 +119,26 @@ export function CreateInformationPostInlineForm({
     };
   }
 
+  function buildCurrentFormData() {
+    const formElement = formRef.current;
+
+    if (!formElement) {
+      throw new Error("Форму інформаційного матеріалу не знайдено.");
+    }
+
+    return new FormData(formElement);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setActionError(null);
+    setActionSuccess(null);
+
+    let coverImage: Awaited<ReturnType<typeof uploadCoverImage>> | null = null;
 
     try {
-      const formData = new FormData(event.currentTarget);
-      const coverImage = selectedCoverImage
-        ? await uploadCoverImage(selectedCoverImage)
-        : null;
+      const formData = buildCurrentFormData();
+      coverImage = selectedCoverImage ? await uploadCoverImage(selectedCoverImage) : null;
 
       const result = await dispatch(
         {
@@ -131,6 +163,11 @@ export function CreateInformationPostInlineForm({
         await supabase.storage.from(coverImage.bucket).remove([coverImage.path]);
       }
     } catch (error) {
+      if (coverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage.from(coverImage.bucket).remove([coverImage.path]);
+      }
+
       setActionError(
         error instanceof Error
           ? error.message
@@ -139,17 +176,106 @@ export function CreateInformationPostInlineForm({
     }
   }
 
+  async function saveCurrentFormAsTemplate() {
+    setActionError(null);
+    setActionSuccess(null);
+
+    const slotIndex = findNextTemplateSlot(templates, templateSlotLimit);
+
+    if (!slotIndex) {
+      setActionError(
+        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
+      );
+      return;
+    }
+
+    let coverImage: Awaited<ReturnType<typeof uploadCoverImage>> | null = null;
+
+    try {
+      const formData = buildCurrentFormData();
+      const headline = String(formData.get("headline") ?? "").trim();
+      const bodyValue = String(formData.get("body") ?? "").trim();
+      const categoryValue = String(formData.get("category") ?? INFORMATION_CATEGORIES[0]);
+
+      if (!headline) {
+        setActionError("Вкажіть заголовок перед збереженням шаблону.");
+        return;
+      }
+
+      if (!bodyValue) {
+        setActionError("Вкажіть текст перед збереженням шаблону.");
+        return;
+      }
+
+      setIsSavingTemplate(true);
+
+      coverImage = selectedCoverImage ? await uploadCoverImage(selectedCoverImage) : null;
+
+      const saved = await dispatch(
+        {
+          type: "templates.upsert",
+          houseId,
+          payload: {
+            sectionKind: "information_post",
+            slotIndex,
+            name: headline,
+            description: "",
+            payload: {
+              posts: [
+                {
+                  headline,
+                  body: bodyValue,
+                  category: categoryValue,
+                  isPinned,
+                  coverImage,
+                },
+              ],
+            },
+          },
+        },
+        {
+          successMessage: "Шаблон інформаційного матеріалу збережено",
+          onError: setActionError,
+        },
+      );
+
+      if (!saved && coverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage.from(coverImage.bucket).remove([coverImage.path]);
+        return;
+      }
+
+      if (saved) {
+        setActionSuccess("Шаблон збережено. Він доступний у всіх будинках.");
+      }
+    } catch (error) {
+      if (coverImage) {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.storage.from(coverImage.bucket).remove([coverImage.path]);
+      }
+
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Не вдалося зберегти шаблон інформаційного матеріалу.",
+      );
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  }
+
   void houseSlug;
   void housePageId;
 
   const combinedError = actionError ?? lastError;
+  const actionsDisabled = isPending || isSavingTemplate;
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
     >
-      {/* HEADER */}
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -160,25 +286,24 @@ export function CreateInformationPostInlineForm({
           </div>
         </div>
 
-        <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму створення повідомлення">
+        <button
+          type="button"
+          onClick={onClose}
+          className={adminIconButtonClass}
+          aria-label="Закрити форму створення повідомлення"
+        >
           ×
         </button>
       </div>
 
       <div className="grid gap-4">
-        {/* TITLE */}
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок
           </label>
-          <input
-            name="headline"
-            className={adminInputClass}
-            required
-          />
+          <input name="headline" className={adminInputClass} required />
         </div>
 
-        {/* CATEGORY */}
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Категорія
@@ -196,7 +321,6 @@ export function CreateInformationPostInlineForm({
           </select>
         </div>
 
-        {/* COVER */}
         <div className={adminInsetSurfaceClass}>
           <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
             <div className="overflow-hidden rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
@@ -207,7 +331,7 @@ export function CreateInformationPostInlineForm({
                     style={{ backgroundImage: `url("${previewUrl}")` }}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-[var(--cms-text-muted)]">
+                  <div className="flex h-full w-full items-center justify-center text-xs text-[var(--cms-text-muted)]">
                     Попередній перегляд
                   </div>
                 )}
@@ -243,12 +367,11 @@ export function CreateInformationPostInlineForm({
           </div>
         </div>
 
-        {/* PIN */}
         <label className={`${adminInsetSurfaceClass} flex items-start gap-3`}>
           <input
             type="checkbox"
             checked={isPinned}
-            onChange={(e) => setIsPinned(e.target.checked)}
+            onChange={(event) => setIsPinned(event.target.checked)}
           />
           <div>
             <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -260,7 +383,6 @@ export function CreateInformationPostInlineForm({
           </div>
         </label>
 
-        {/* TEXT */}
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Текст
@@ -268,7 +390,7 @@ export function CreateInformationPostInlineForm({
           <textarea
             name="body"
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(event) => setBody(event.target.value)}
             maxLength={512}
             rows={6}
             className={adminInputClass}
@@ -286,22 +408,39 @@ export function CreateInformationPostInlineForm({
         </div>
       ) : null}
 
-      {/* ACTIONS */}
-      <div className="mt-6 flex gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className={adminPrimaryButtonClass}
-        >
-          {isPending ? "Створюємо..." : "Створити"}
-        </button>
+      {actionSuccess ? (
+        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+          {actionSuccess}
+        </div>
+      ) : null}
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={actionsDisabled}
+            className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+          >
+            {isPending ? "Створюємо..." : "Створити"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={actionsDisabled}
+            className="text-sm text-[var(--cms-text-muted)] disabled:opacity-60"
+          >
+            Скасувати
+          </button>
+        </div>
 
         <button
           type="button"
-          onClick={onClose}
-          className="text-sm text-[var(--cms-text-muted)]"
+          disabled={actionsDisabled}
+          onClick={() => void saveCurrentFormAsTemplate()}
+          className={`${adminSecondaryButtonClass} disabled:opacity-60`}
         >
-          Скасувати
+          {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
         </button>
       </div>
     </form>

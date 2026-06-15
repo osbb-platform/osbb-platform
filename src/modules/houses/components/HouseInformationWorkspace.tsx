@@ -1,5 +1,13 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+import {
+  ContentTemplateSlotsPanel,
+  type ContentTemplateSlot,
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
 import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
@@ -8,8 +16,13 @@ import { CreateInformationPostInlineForm } from "@/src/modules/houses/components
 import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInformationFaqForm";
 import { EditInformationPostForm } from "@/src/modules/houses/components/EditInformationPostForm";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
-import { adminPrimaryButtonClass } from "@/src/shared/ui/admin/adminStyles";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 export const INFORMATION_CATEGORIES = [
   "Про будинок",
@@ -31,6 +44,9 @@ type Props = {
   posts: InformationSectionItem[];
   faq: HouseFaqSnapshot | null;
   documents: HouseDocumentListItem[];
+  faqTemplates?: ContentTemplateSlot[];
+  informationPostTemplates?: ContentTemplateSlot[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 function getPostDate(content: Record<string, unknown>) {
@@ -62,12 +78,22 @@ export function HouseInformationWorkspace({
   posts,
   faq,
   documents,
+  faqTemplates = [],
+  informationPostTemplates = [],
+  duplicateTargets = [],
 }: Props) {
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState(false);
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
+  const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
+  const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
+  const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
+  const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
 
   const visiblePosts = posts
     .slice()
@@ -88,22 +114,120 @@ export function HouseInformationWorkspace({
       : null;
 
   function openCreatePost() {
+    setWorkspaceError(null);
     setWorkspaceMode("create");
     setEditingSectionId(null);
     setFaqOpen(false);
   }
 
   function openEditPost(sectionId: string) {
+    setWorkspaceError(null);
     setWorkspaceMode("edit");
     setEditingSectionId(sectionId);
     setFaqOpen(false);
   }
 
   function closePostWorkspace() {
+    setWorkspaceError(null);
     setWorkspaceMode("idle");
     setEditingSectionId(null);
   }
 
+  async function applyInformationTemplateKeys(templateKeys: string[]) {
+    setWorkspaceError(null);
+    setApplyingPostsTemplate(true);
+
+    for (const templateKey of templateKeys) {
+      const applied = await dispatch(
+        {
+          type: "information_posts.applyTemplate",
+          houseId,
+          payload: {
+            templateKey,
+          },
+        },
+        {
+          successMessage: null,
+          onError: setWorkspaceError,
+        },
+      );
+
+      if (!applied) {
+        setApplyingPostsTemplate(false);
+        return;
+      }
+    }
+
+    setApplyingPostsTemplate(false);
+    setPostTemplatesPanelOpen(false);
+    setMainTab("posts");
+    closePostWorkspace();
+    closeFaqWorkspace();
+  }
+
+  async function applyFaqTemplateKeys(templateKeys: string[]) {
+    if (!faq) return;
+
+    setWorkspaceError(null);
+    setApplyingFaqTemplate(true);
+
+    const templateKey = templateKeys[0];
+
+    if (!templateKey) {
+      setWorkspaceError("Оберіть шаблон FAQ.");
+      setApplyingFaqTemplate(false);
+      return;
+    }
+
+    await dispatch(
+      {
+        type: "faq.applyTemplate",
+        houseId,
+        payload: {
+          templateKey,
+          lockVersion: faq.lockVersion,
+        },
+      },
+      {
+        successMessage: "Шаблон FAQ застосовано",
+        onError: setWorkspaceError,
+        onSuccess() {
+          setFaqTemplatesPanelOpen(false);
+          setMainTab("faq");
+          closePostWorkspace();
+          closeFaqWorkspace();
+        },
+      },
+    );
+
+    setApplyingFaqTemplate(false);
+  }
+
+  async function handleCopyPostToDraft(sectionId: string) {
+    setWorkspaceError(null);
+    setCopyingPostId(sectionId);
+
+    const copied = await dispatch(
+      {
+        type: "information_posts.duplicate",
+        houseId,
+        payload: {
+          sourceId: sectionId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        onError: setWorkspaceError,
+      },
+    );
+
+    setCopyingPostId(null);
+
+    if (!copied) return;
+
+    setWorkspaceMode("idle");
+    setEditingSectionId(null);
+  }
 
   function openFaqWorkspace() {
     setFaqOpen(true);
@@ -143,35 +267,60 @@ export function HouseInformationWorkspace({
 
             <div>
               {mainTab === "posts" ? (
-            <button
-              type="button"
-              onClick={openCreatePost}
-              className={adminPrimaryButtonClass}
-            >
-              Нова стаття
-            </button>
-          ) : null}
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPostTemplatesPanelOpen(true)}
+                    disabled={applyingPostsTemplate || isPending}
+                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                  >
+                    <TemplateIcon className="h-5 w-5" />
+                    Шаблони
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openCreatePost}
+                    disabled={!housePageId}
+                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                  >
+                    Нова стаття
+                  </button>
+                </div>
+              ) : null}
 
               {mainTab === "materials" ? (
-            <button
-              type="button"
-              onClick={openCreateDocument}
-              className={adminPrimaryButtonClass}
-            >
-              Новий матеріал
-            </button>
-          ) : null}
+                <button
+                  type="button"
+                  onClick={openCreateDocument}
+                  className={adminPrimaryButtonClass}
+                >
+                  Новий матеріал
+                </button>
+              ) : null}
 
               {mainTab === "faq" ? (
-            <button
-              type="button"
-              onClick={openFaqWorkspace}
-              disabled={!faq}
-              className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-            >
-              Редагувати FAQ
-            </button>
-          ) : null}
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFaqTemplatesPanelOpen(true)}
+                    disabled={!faq || applyingFaqTemplate || isPending}
+                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                  >
+                    <TemplateIcon className="h-5 w-5" />
+                    Шаблони
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openFaqWorkspace}
+                    disabled={!faq}
+                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                  >
+                    Редагувати FAQ
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -188,7 +337,7 @@ export function HouseInformationWorkspace({
                 {
                   key: "faq",
                   label: "FAQ",
-                  count: faq?.items.length ?? 0,
+                  count: faq ? 1 : 0,
                 },
                 {
                   key: "materials",
@@ -201,25 +350,84 @@ export function HouseInformationWorkspace({
         </div>
       </div>
 
+      <AdminSidePanel
+        title="Шаблони FAQ"
+        description="Оберіть збережений FAQ-шаблон. Після підтвердження він оновить FAQ поточного будинку."
+        isOpen={faqTemplatesPanelOpen}
+        onClose={() => setFaqTemplatesPanelOpen(false)}
+      >
+        <ContentTemplateSlotsPanel
+          houseId={houseId}
+          sectionKind="faq"
+          slotLimit={3}
+          templates={faqTemplates}
+          title="Збережені FAQ-шаблони"
+          description="Шаблони доступні в усіх будинках. Новий шаблон створюється з FAQ-чернетки."
+          disabled={!faq || applyingFaqTemplate || isPending}
+          onApplyTemplateKeys={applyFaqTemplateKeys}
+        />
+      </AdminSidePanel>
+
       {mainTab === "posts" ? (
         <>
+          <AdminSidePanel
+            title="Шаблони інформаційних матеріалів"
+            description="Оберіть збережений шаблон. Після підтвердження він створить чернетку в поточному будинку."
+            isOpen={postTemplatesPanelOpen}
+            onClose={() => setPostTemplatesPanelOpen(false)}
+          >
+            <ContentTemplateSlotsPanel
+              houseId={houseId}
+              sectionKind="information_post"
+              slotLimit={3}
+              templates={informationPostTemplates}
+              title="Збережені інформаційні шаблони"
+              description="Шаблони доступні в усіх будинках. Новий шаблон створюється з чернетки інформаційного матеріалу."
+              disabled={!housePageId || applyingPostsTemplate || isPending}
+              onApplyTemplateKeys={applyInformationTemplateKeys}
+            />
+          </AdminSidePanel>
 
           {workspaceMode === "create" ? (
             <CreateInformationPostInlineForm
               houseId={houseId}
               houseSlug={houseSlug}
               housePageId={housePageId}
+              templates={informationPostTemplates}
+              templateSlotLimit={3}
               onClose={closePostWorkspace}
             />
           ) : null}
 
+          {workspaceError ?? lastError ? (
+            <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+              {workspaceError ?? lastError}
+            </div>
+          ) : null}
+
           {workspaceMode === "edit" && editingPost ? (
-            <EditInformationPostForm
-              houseId={houseId}
-              houseSlug={houseSlug}
-              section={editingPost}
-              onClose={closePostWorkspace}
-            />
+            <div className="space-y-4">
+              <EditInformationPostForm
+                headerActions={
+                  editingPost.status !== "draft" ? (
+                    <ContentWorkspaceActionButtons
+                      houseId={houseId}
+                      sourceId={editingPost.id}
+                      commandType="information_posts.duplicate"
+                      duplicateTargets={duplicateTargets}
+                      disabled={isPending}
+                      isCopying={copyingPostId === editingPost.id}
+                      onCopy={() => handleCopyPostToDraft(editingPost.id)}
+                      duplicatePanelTitle="Копії інформаційного матеріалу"
+                    />
+                  ) : null
+                }
+                houseId={houseId}
+                houseSlug={houseSlug}
+                section={editingPost}
+                onClose={closePostWorkspace}
+              />
+            </div>
           ) : null}
 
           <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
@@ -281,7 +489,6 @@ export function HouseInformationWorkspace({
                             {preview || "Текст повідомлення поки не заповнено"}
                           </div>
                         </div>
-
                       </div>
                     </button>
                   );
@@ -302,6 +509,7 @@ export function HouseInformationWorkspace({
           houseId={houseId}
           documents={documents}
           startInCreateMode={materialsCreateKey > 0}
+          duplicateTargets={duplicateTargets}
           embedded
         />
       ) : null}
@@ -353,6 +561,7 @@ export function HouseInformationWorkspace({
             <EditInformationFaqForm
               houseId={houseId}
               faq={faq}
+              duplicateTargets={duplicateTargets}
               onClose={closeFaqWorkspace}
             />
           ) : null}

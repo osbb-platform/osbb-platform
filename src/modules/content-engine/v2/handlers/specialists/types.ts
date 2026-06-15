@@ -1,6 +1,7 @@
 export const HOUSE_SPECIALIST_ENTITY_TYPE = "house_specialist";
 
 export type HouseSpecialistLifecycle = "draft" | "published" | "archived";
+export type HouseSpecialistPhoneType = "mobile" | "landline" | "free";
 
 export type HouseSpecialist = {
   id: string;
@@ -8,6 +9,7 @@ export type HouseSpecialist = {
   title: string;
   category: string;
   phones: string[];
+  phone_types: HouseSpecialistPhoneType[];
   email: string;
   description: string;
   sort_order: number;
@@ -35,6 +37,7 @@ export type CreateSpecialistPayload = {
   title: string;
   category?: string;
   phones?: string[];
+  phoneTypes?: HouseSpecialistPhoneType[];
   email?: string;
   description?: string;
   sortOrder?: number;

@@ -1,5 +1,8 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+
 import { useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -37,12 +40,13 @@ type Props = {
   houseId: string;
   reports: HouseReportSnapshot[];
   categories: HouseReportCategorySnapshot[];
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 type TabKey = "current" | "past" | "draft" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "restore" | "delete" | "delete_archive" | null;
-type SubmitIntent = "save" | "publish" | "archive" | "restore" | "delete";
+type SubmitIntent = "save" | "publish" | "archive" | "restore" | "delete" | "copy";
 type ReportSortMode =
   | "updated_desc"
   | "updated_asc"
@@ -203,6 +207,7 @@ export function HouseReportsWorkspace({
   houseId,
   reports,
   categories,
+  duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
@@ -662,6 +667,31 @@ export function HouseReportsWorkspace({
     resetWorkspace("archive");
   }
 
+  async function copySelectedReportToDraft() {
+    if (!selectedReport) return;
+
+    setActionError(null);
+    setSubmitIntent("copy");
+    setActionLabel("Копіюємо звіт у чернетку...");
+
+    const copied = await dispatch(
+      {
+        type: "reports.duplicate",
+        houseId,
+        payload: {
+          sourceId: selectedReport.id,
+          targetHouseIds: [houseId],
+        },
+      },
+      { onError: setActionError },
+    );
+
+    if (!copied) return;
+
+    resetWorkspace("draft");
+    setActiveTab("draft");
+  }
+
   async function handleCategoriesSync() {
     setActionError(null);
     setActionLabel("Оновлюємо каталог категорій...");
@@ -797,14 +827,29 @@ export function HouseReportsWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => resetWorkspace()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
-              aria-label="Закрити форму"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedReport ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedReport.id}
+                  commandType="reports.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={readOnlyMode || isPending}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copySelectedReportToDraft}
+                  duplicatePanelTitle="Копії звіту в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => resetWorkspace()}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                aria-label="Закрити форму"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {actionError || lastError ? (

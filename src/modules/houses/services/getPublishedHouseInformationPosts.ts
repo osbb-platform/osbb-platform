@@ -38,6 +38,7 @@ function mapPost(
       category: post.category,
       isPinned: post.is_pinned,
       coverImageUrl,
+      coverImage: null,
       createdAt: post.created_at,
       updatedAt: post.updated_at,
       publishedAt: post.published_at,

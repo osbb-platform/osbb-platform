@@ -17,6 +17,13 @@ export type HouseInformationPostSnapshot = {
     category: string;
     isPinned: boolean;
     coverImageUrl: string | null;
+    coverImage: {
+      bucket: string;
+      path: string;
+      originalName: string | null;
+      mimeType: string | null;
+      size: number | null;
+    } | null;
     createdAt: string;
     updatedAt: string;
     publishedAt: string | null;
@@ -29,6 +36,9 @@ type HouseContentFileRow = {
   entity_id: string;
   storage_bucket: string;
   storage_path: string;
+  original_file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
 };
 
 function buildPublicStorageUrl(row: HouseContentFileRow) {
@@ -47,6 +57,15 @@ function mapPost(
 ): HouseInformationPostSnapshot {
   const coverFile = coverFilesByEntityId.get(post.id);
   const coverImageUrl = coverFile ? buildPublicStorageUrl(coverFile) : null;
+  const coverImage = coverFile
+    ? {
+        bucket: coverFile.storage_bucket,
+        path: coverFile.storage_path,
+        originalName: coverFile.original_file_name,
+        mimeType: coverFile.mime_type,
+        size: coverFile.size_bytes,
+      }
+    : null;
 
   return {
     id: post.id,
@@ -59,6 +78,7 @@ function mapPost(
       category: post.category,
       isPinned: post.is_pinned,
       coverImageUrl,
+      coverImage,
       createdAt: post.created_at,
       updatedAt: post.updated_at,
       publishedAt: post.published_at,
@@ -96,7 +116,7 @@ export async function getAdminHouseInformationPosts(params: {
 
   const { data: files, error: filesError } = await supabase
     .from("house_content_files")
-    .select("entity_id, storage_bucket, storage_path")
+    .select("entity_id, storage_bucket, storage_path, original_file_name, mime_type, size_bytes")
     .eq("entity_type", "house_information_post")
     .eq("field_key", "coverImage")
     .in("entity_id", postIds);

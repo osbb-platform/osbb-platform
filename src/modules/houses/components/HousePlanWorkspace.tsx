@@ -1,5 +1,8 @@
 "use client";
 
+import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+
 import { useMemo, useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -12,6 +15,7 @@ import {
   adminInputClass,
   adminPrimaryButtonClass,
   adminSurfaceClass,
+  adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type PlanTaskStatus =
@@ -33,7 +37,8 @@ const PLAN_ARCHIVE_YEARS = Array.from(
 
 type WorkspaceTab = "active" | "draft" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
-type SubmitIntent = "save" | "delete" | "publish" | "archive";
+type SubmitIntent = "save" | "delete" | "publish" | "archive" | "copy";
+type CreatePlanPlacement = "active" | "archive";
 
 type PlanAttachment = {
   id: string;
@@ -82,6 +87,7 @@ type Props = {
   houseId: string;
   houseSlug: string;
   plan: AdminHousePlanSnapshot;
+  duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
 function createTaskId() {
@@ -239,6 +245,7 @@ export function HousePlanWorkspace({
   houseId,
   plan,
   canChangeWorkflowStatus,
+  duplicateTargets = [],
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
   const { dispatch, isPending, lastError } = useAdminContentCommand();
@@ -251,6 +258,7 @@ export function HousePlanWorkspace({
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [confirmAction, setConfirmAction] = useState<"publish" | "delete" | "archive" | null>(null);
   const [draftPublishStatus, setDraftPublishStatus] = useState<PublishablePlanTaskStatus>("planned");
+  const [createPlacement, setCreatePlacement] = useState<CreatePlanPlacement>("active");
   const [actionLabel, setActionLabel] = useState("Обробляємо завдання...");
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedPdfFiles, setSelectedPdfFiles] = useState<File[]>([]);
@@ -294,6 +302,7 @@ export function HousePlanWorkspace({
     setSelectedTaskId(null);
     setDraft(createEmptyTask());
     setDraftPublishStatus("planned");
+    setCreatePlacement("active");
     setSelectedImageFiles([]);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
@@ -309,6 +318,7 @@ export function HousePlanWorkspace({
     setSelectedTaskId(null);
     setDraft(createEmptyTask());
     setDraftPublishStatus("planned");
+    setCreatePlacement("active");
     setSelectedImageFiles([]);
     setSelectedPdfFiles([]);
     setRemovedImageIds([]);
@@ -486,6 +496,27 @@ export function HousePlanWorkspace({
     return uploadedFiles;
   }
 
+  async function copyPlanTaskToDraft() {
+    if (!selectedTaskId || draft.status === "draft") return;
+
+    setSubmitIntent("copy");
+    setActionLabel("Копіюємо завдання в чернетку...");
+
+    const copied = await dispatch({
+      type: "plan.duplicate",
+      houseId,
+      payload: {
+        sourceId: selectedTaskId,
+        targetHouseIds: [houseId],
+      },
+    });
+
+    if (!copied) return;
+
+    resetWorkspace();
+    setActiveTab("draft");
+  }
+
   async function submitTask(intent: SubmitIntent) {
     setSubmitIntent(intent);
     setActionLabel(
@@ -600,16 +631,71 @@ export function HousePlanWorkspace({
 
       if (!created) return;
 
+      let nextLockVersion = getResultLockVersion(created, 1);
+      let nextStatus: PlanTaskStatus = "draft";
+      let nextArchivedAt: string | null = null;
+
+      if (createPlacement === "active") {
+        const published = await dispatch({
+          type: "plan.publish",
+          houseId,
+          payload: {
+            id: activeTaskId,
+            lockVersion: nextLockVersion,
+            taskStatus: "planned",
+          },
+        });
+
+        if (!published) return;
+
+        nextLockVersion = getResultLockVersion(published, nextLockVersion + 1);
+        nextStatus = "planned";
+      }
+
+      if (createPlacement === "archive") {
+        const published = await dispatch({
+          type: "plan.publish",
+          houseId,
+          payload: {
+            id: activeTaskId,
+            lockVersion: nextLockVersion,
+            taskStatus: "planned",
+          },
+        });
+
+        if (!published) return;
+
+        nextLockVersion = getResultLockVersion(published, nextLockVersion + 1);
+
+        const archived = await dispatch({
+          type: "plan.archive",
+          houseId,
+          payload: {
+            id: activeTaskId,
+            lockVersion: nextLockVersion,
+          },
+        });
+
+        if (!archived) return;
+
+        nextLockVersion = getResultLockVersion(archived, nextLockVersion + 1);
+        nextStatus = "archived";
+        nextArchivedAt = new Date().toISOString();
+      }
+
       setTasks((prev) => [
         {
           ...draft,
           id: activeTaskId,
-          lockVersion: getResultLockVersion(created, 1),
+          status: nextStatus,
+          archivedAt: nextArchivedAt,
+          lockVersion: nextLockVersion,
           updatedAt: new Date().toISOString(),
         },
         ...prev,
       ]);
-      setActiveTab("draft");
+
+      setActiveTab(createPlacement === "archive" ? "archive" : "active");
       resetWorkspace();
       return;
     }
@@ -765,14 +851,29 @@ export function HousePlanWorkspace({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={resetWorkspace}
-              aria-label="Закрити форму"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              {workspaceMode === "edit" && draft.status !== "draft" && selectedTaskId ? (
+                <ContentWorkspaceActionButtons
+                  houseId={houseId}
+                  sourceId={selectedTaskId}
+                  commandType="plan.duplicate"
+                  duplicateTargets={duplicateTargets}
+                  disabled={isPending}
+                  isCopying={isPending && submitIntent === "copy"}
+                  onCopy={copyPlanTaskToDraft}
+                  duplicatePanelTitle="Копії завдання в інші будинки"
+                />
+              ) : null}
+
+              <button
+                type="button"
+                onClick={resetWorkspace}
+                aria-label="Закрити форму"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -855,6 +956,25 @@ export function HousePlanWorkspace({
               placeholder="Підрядник"
               className={adminInputClass}
             />
+
+            {workspaceMode === "create" ? (
+              <div>
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
+                  Після створення
+                </label>
+                <select
+                  value={createPlacement}
+                  onChange={(e) => setCreatePlacement(e.target.value as CreatePlanPlacement)}
+                  className={adminInputClass}
+                >
+                  <option value="active">Активний — одразу опублікувати в плані</option>
+                  <option value="archive">Архів — одразу перенести в архів</option>
+                </select>
+                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                  Оберіть, де має з’явитися нове завдання після збереження.
+                </div>
+              </div>
+            ) : null}
 
             <div>
               <select
@@ -1012,6 +1132,9 @@ export function HousePlanWorkspace({
 
             {workspaceMode === "edit" && draft.status === "draft" ? (
               <div>
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
+                  Статус після підтвердження
+                </label>
                 <select
                   value={draftPublishStatus}
                   onChange={(e) => setDraftPublishStatus(e.target.value as PublishablePlanTaskStatus)}
@@ -1025,16 +1148,30 @@ export function HousePlanWorkspace({
                   Цей статус буде застосовано після підтвердження та публікації завдання.
                 </div>
               </div>
-            ) : workspaceMode === "edit" && draft.status !== "draft" ? (
-              <select
-                value={draft.status}
-                onChange={(e) => updateStatus(e.target.value as PlanTaskStatus)}
-                className={adminInputClass}
-              >
-                {getStatusOptions().map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+            ) : workspaceMode === "edit" && draft.status !== "draft" && draft.status !== "archived" ? (
+              <div>
+                <label className={`mb-2 block ${adminTextLabelClass}`}>
+                  Поточний статус виконання
+                </label>
+                <select
+                  value={draft.status}
+                  onChange={(e) => updateStatus(e.target.value as PlanTaskStatus)}
+                  disabled={!workflowAccessGranted || isPending}
+                  className={[
+                    adminInputClass,
+                    !workflowAccessGranted ? "cursor-not-allowed opacity-60" : "",
+                  ].join(" ")}
+                >
+                  {getStatusOptions().map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                  {workflowAccessGranted
+                    ? "Після збереження статус оновиться в CMS і на публічній сторінці плану."
+                    : "У цієї ролі немає прав змінювати статус виконання."}
+                </div>
+              </div>
             ) : null}
 
             <div className="overflow-x-auto">

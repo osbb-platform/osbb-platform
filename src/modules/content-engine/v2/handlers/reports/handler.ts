@@ -10,6 +10,7 @@ import { removePdfCommand } from "./commands/removePdf";
 import { replacePdfCommand } from "./commands/replacePdf";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
+import { duplicateCommand } from "./commands/duplicate";
 
 export const reportsHandler: ContentHandler = {
   key: "reports",
@@ -26,6 +27,7 @@ export const reportsHandler: ContentHandler = {
     replacePdf: replacePdfCommand,
     removePdf: removePdfCommand,
     categoriesUpsert: categoriesUpsertCommand,
+    duplicate: duplicateCommand,
   },
 
   publicRevalidatePaths(houseSlug) {
