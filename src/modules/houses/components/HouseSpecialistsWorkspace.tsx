@@ -174,7 +174,6 @@ function normalizeCategoryTitle(value: string) {
 export function HouseSpecialistsWorkspace({
   houseId,
   specialistsData,
-  requests,
   templates = [],
   duplicateTargets = [],
 }: Props) {
@@ -188,6 +187,7 @@ export function HouseSpecialistsWorkspace({
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
+  const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -577,32 +577,20 @@ export function HouseSpecialistsWorkspace({
 
               <button
                 type="button"
+                onClick={() => setCategoriesPanelOpen(true)}
+                disabled={isPending}
+                className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
+              >
+                Категорії
+              </button>
+
+              <button
+                type="button"
                 onClick={openCreateMode}
                 className={adminPrimaryButtonClass}
               >
                 Створити спеціаліста
               </button>
-            </div>
-          </div>
-
-          <div className="grid gap-3 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text)] md:grid-cols-3">
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Активні заявки
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{requests.length}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Категорії
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{specialistsData.categories.length}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.16em] text-[var(--cms-text-soft)]">
-                Всього карток
-              </div>
-              <div className="mt-1 text-2xl font-semibold">{specialistsData.specialists.length}</div>
             </div>
           </div>
 
@@ -645,8 +633,13 @@ export function HouseSpecialistsWorkspace({
         </div>
       </div>
 
-      <div className={`${adminSurfaceClass} p-6`}>
-        <div className="flex flex-col gap-4">
+      <AdminSidePanel
+        title="Категорії спеціалістів"
+        description="Керуйте каталогом категорій без зайвого блоку на робочій площині."
+        isOpen={categoriesPanelOpen}
+        onClose={() => setCategoriesPanelOpen(false)}
+      >
+        <div className="space-y-5">
           <div>
             <h3 className="text-lg font-semibold text-[var(--cms-text)]">
               Каталог категорій
@@ -692,12 +685,14 @@ export function HouseSpecialistsWorkspace({
               type="button"
               onClick={addCategory}
               className={adminSecondaryButtonClass}
+              disabled={isPending}
             >
               Додати категорію
             </button>
           </div>
         </div>
-      </div>
+      </AdminSidePanel>
+
 
       {workspaceMode !== "idle" && draft ? (
         <div className={`${adminSurfaceClass} p-6`}>
@@ -970,7 +965,7 @@ export function HouseSpecialistsWorkspace({
         />
       </AdminSidePanel>
 
-<div className={`${adminSurfaceClass} p-6`}>
+      <div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 md:grid-cols-2">
           {visibleSpecialists.length > 0 ? (
             visibleSpecialists.map((item) => (
