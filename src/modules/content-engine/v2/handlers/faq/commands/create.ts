@@ -15,9 +15,13 @@ export const createCommand: CommandSpec = {
     const payload = rawPayload as CreateFaqPayload;
     const now = new Date().toISOString();
 
-    let sourceItems = [] as { question: string; answer: string }[];
+    let sourceItems = normalizeFaqItems(payload.items);
 
-    if (typeof payload.sourceFaqId === "string" && payload.sourceFaqId.trim()) {
+    if (
+      sourceItems.length === 0 &&
+      typeof payload.sourceFaqId === "string" &&
+      payload.sourceFaqId.trim()
+    ) {
       const { data: source, error: sourceError } = await ctx.supabase
         .from("house_faq")
         .select("id")

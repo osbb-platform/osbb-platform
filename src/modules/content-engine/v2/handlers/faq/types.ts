@@ -38,4 +38,5 @@ export type ReplaceFaqItemsPayload = FaqLockPayload & {
 
 export type CreateFaqPayload = {
   sourceFaqId?: string;
+  items?: unknown;
 };

@@ -13,6 +13,7 @@ import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHou
 import type { HouseInformationPostSnapshot } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { CreateInformationPostInlineForm } from "@/src/modules/houses/components/CreateInformationPostInlineForm";
+import { CreateInformationFaqForm } from "@/src/modules/houses/components/CreateInformationFaqForm";
 import { EditInformationFaqForm } from "@/src/modules/houses/components/EditInformationFaqForm";
 import { EditInformationPostForm } from "@/src/modules/houses/components/EditInformationPostForm";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -105,10 +106,10 @@ export function HouseInformationWorkspace({
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [faqCreateOpen, setFaqCreateOpen] = useState(false);
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
-  const [creatingFaq, setCreatingFaq] = useState(false);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
   const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
@@ -257,33 +258,17 @@ export function HouseInformationWorkspace({
     setEditingSectionId(null);
   }
 
-  async function createFaqDraft() {
+  function openCreateFaqForm() {
     setWorkspaceError(null);
-    setCreatingFaq(true);
-
-    await dispatch<HouseFaqSnapshot>(
-      {
-        type: "faq.create",
-        houseId,
-        payload: {},
-      },
-      {
-        successMessage: "FAQ-чернетку створено",
-        onError: setWorkspaceError,
-        onSuccess(data) {
-          const created = data as HouseFaqSnapshot | undefined;
-          setMainTab("faq");
-          closePostWorkspace();
-          setEditingFaqId(created?.id ?? null);
-        },
-      },
-    );
-
-    setCreatingFaq(false);
+    setMainTab("faq");
+    closePostWorkspace();
+    setEditingFaqId(null);
+    setFaqCreateOpen(true);
   }
 
   function openFaqWorkspace(faqId: string) {
     setWorkspaceError(null);
+    setFaqCreateOpen(false);
     setEditingFaqId(faqId);
     closePostWorkspace();
   }
@@ -297,6 +282,7 @@ export function HouseInformationWorkspace({
 
   function closeFaqWorkspace() {
     setEditingFaqId(null);
+    setFaqCreateOpen(false);
   }
 
   function handleMainTabChange(nextTab: InformationMainTab) {
@@ -367,11 +353,11 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={() => void createFaqDraft()}
-                    disabled={creatingFaq || isPending}
+                    onClick={openCreateFaqForm}
+                    disabled={isPending}
                     className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
-                    {creatingFaq ? "Створюємо..." : "Створити FAQ"}
+                    Створити FAQ
                   </button>
                 </div>
               ) : null}
@@ -576,7 +562,7 @@ export function HouseInformationWorkspace({
             </div>
           ) : null}
 
-          {!editingFaq ? (
+          {!editingFaq && !faqCreateOpen ? (
             <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
               <div className="space-y-4">
                 {visibleFaqs.length > 0 ? (
@@ -621,6 +607,15 @@ export function HouseInformationWorkspace({
                 )}
               </div>
             </div>
+          ) : null}
+
+          {faqCreateOpen ? (
+            <CreateInformationFaqForm
+              houseId={houseId}
+              templates={faqTemplates}
+              templateSlotLimit={3}
+              onClose={closeFaqWorkspace}
+            />
           ) : null}
 
           {editingFaq ? (
