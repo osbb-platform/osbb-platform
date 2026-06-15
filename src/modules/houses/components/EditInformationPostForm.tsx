@@ -7,11 +7,9 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
-import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import {
   adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSuccessButtonClass,
   adminDangerButtonClass,
   adminWarningButtonClass,
@@ -39,8 +37,6 @@ type Props = {
     content: Record<string, unknown>;
   };
   headerActions?: ReactNode;
-  templates?: ContentTemplateSlot[];
-  templateSlotLimit?: number;
   onClose: () => void;
 };
 
@@ -60,47 +56,12 @@ function getLockVersion(section: Props["section"]) {
     : 1;
 }
 
-function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
-  const usedSlots = new Set(templates.map((template) => template.slotIndex));
-
-  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
-    if (!usedSlots.has(slotIndex)) {
-      return slotIndex;
-    }
-  }
-
-  return null;
-}
-
-function readCoverImageFromContent(content: Record<string, unknown>) {
-  const coverImage = content.coverImage;
-
-  if (!coverImage || typeof coverImage !== "object" || Array.isArray(coverImage)) {
-    return null;
-  }
-
-  const record = coverImage as Record<string, unknown>;
-
-  if (typeof record.bucket !== "string" || typeof record.path !== "string") {
-    return null;
-  }
-
-  return {
-    bucket: record.bucket,
-    path: record.path,
-    originalName: typeof record.originalName === "string" ? record.originalName : null,
-    mimeType: typeof record.mimeType === "string" ? record.mimeType : null,
-    size: typeof record.size === "number" ? record.size : null,
-  };
-}
 
 export function EditInformationPostForm({
   headerActions,
   houseId,
   houseSlug,
   section,
-  templates = [],
-  templateSlotLimit = 3,
   onClose,
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
@@ -118,7 +79,6 @@ export function EditInformationPostForm({
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
@@ -252,98 +212,6 @@ export function EditInformationPostForm({
     }
   }
 
-  async function saveCurrentDraftAsTemplate() {
-    if (!isDraft) return;
-
-    setActionError(null);
-
-    const slotIndex = findNextTemplateSlot(templates, templateSlotLimit);
-
-    if (!slotIndex) {
-      setActionError(
-        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
-      );
-      return;
-    }
-
-    let uploadedCoverImage: Awaited<ReturnType<typeof uploadCoverImage>> | null = null;
-
-    try {
-      const formData = buildFormData();
-      const headline = String(formData.get("headline") ?? "").trim();
-      const bodyValue = String(formData.get("body") ?? "").trim();
-      const categoryValue = String(formData.get("category") ?? INFORMATION_CATEGORIES[0]);
-
-      if (!headline) {
-        setActionError("Вкажіть заголовок перед збереженням шаблону.");
-        return;
-      }
-
-      if (!bodyValue) {
-        setActionError("Вкажіть текст перед збереженням шаблону.");
-        return;
-      }
-
-      setIsSavingTemplate(true);
-
-      uploadedCoverImage = selectedCoverImage
-        ? await uploadCoverImage(selectedCoverImage)
-        : null;
-
-      const coverImage = uploadedCoverImage ?? readCoverImageFromContent(section.content);
-
-      const saved = await dispatch(
-        {
-          type: "templates.upsert",
-          houseId,
-          payload: {
-            sectionKind: "information_post",
-            slotIndex,
-            name: headline,
-            description: "",
-            payload: {
-              posts: [
-                {
-                  headline,
-                  body: bodyValue,
-                  category: categoryValue,
-                  isPinned,
-                  coverImage,
-                },
-              ],
-            },
-          },
-        },
-        {
-          successMessage: "Шаблон інформаційного матеріалу збережено",
-          onError: setActionError,
-        },
-      );
-
-      if (!saved && uploadedCoverImage) {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.storage
-          .from(uploadedCoverImage.bucket)
-          .remove([uploadedCoverImage.path]);
-      }
-    } catch (error) {
-      if (uploadedCoverImage) {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.storage
-          .from(uploadedCoverImage.bucket)
-          .remove([uploadedCoverImage.path]);
-      }
-
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : "Не вдалося зберегти шаблон інформаційного матеріалу.",
-      );
-    } finally {
-      setIsSavingTemplate(false);
-    }
-  }
-
   async function runMutation(kind: "publish" | "archive" | "delete") {
     setActionError(null);
     setPendingAction(kind);
@@ -384,7 +252,7 @@ export function EditInformationPostForm({
   void houseSlug;
 
   const combinedError = actionError ?? lastError;
-  const buttonsDisabled = isPending || pendingAction !== null || isSaving || isSavingTemplate;
+  const buttonsDisabled = isPending || pendingAction !== null || isSaving;
 
   return (
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
@@ -556,18 +424,7 @@ export function EditInformationPostForm({
             </button>
           ) : null}
         </div>
-
         <div className="flex gap-3">
-          {isDraft ? (
-            <button
-              type="button"
-              disabled={buttonsDisabled}
-              onClick={() => void saveCurrentDraftAsTemplate()}
-              className={`${adminSecondaryButtonClass} disabled:opacity-60`}
-            >
-              {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
-            </button>
-          ) : null}
 
           {isDraft ? (
             <button

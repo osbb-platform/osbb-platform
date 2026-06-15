@@ -6,7 +6,6 @@ import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
-import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
@@ -15,30 +14,15 @@ import {
   adminInputClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type FaqCommand = "replaceItems" | "publish" | "archive" | "restore" | "delete";
 
-function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
-  const usedSlots = new Set(templates.map((template) => template.slotIndex));
-
-  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
-    if (!usedSlots.has(slotIndex)) {
-      return slotIndex;
-    }
-  }
-
-  return null;
-}
-
 type Props = {
   houseId: string;
   faq: HouseFaqSnapshot;
   onClose: () => void;
-  templates?: ContentTemplateSlot[];
-  templateSlotLimit?: number;
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
@@ -46,13 +30,10 @@ export function EditInformationFaqForm({
   houseId,
   faq,
   onClose,
-  templates = [],
-  templateSlotLimit = 3,
   duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   const initialItems = useMemo(() => {
     return faq.items.length
@@ -110,61 +91,6 @@ export function EditInformationFaqForm({
     );
 
     if (!copied && !lastError) {
-      return;
-    }
-  }
-
-  async function saveFaqDraftAsTemplate() {
-    if (faq.status !== "draft") return;
-
-    setLocalError(null);
-
-    const slotIndex = findNextTemplateSlot(templates, templateSlotLimit);
-
-    if (!slotIndex) {
-      setLocalError(
-        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
-      );
-      return;
-    }
-
-    const normalizedItems = items
-      .map((item) => ({
-        question: item.question.trim(),
-        answer: item.answer.trim(),
-      }))
-      .filter((item) => item.question && item.answer);
-
-    if (!normalizedItems.length) {
-      setLocalError("Додайте хоча б одне запитання і відповідь перед збереженням шаблону.");
-      return;
-    }
-
-    setIsSavingTemplate(true);
-
-    const saved = await dispatch(
-      {
-        type: "templates.upsert",
-        houseId,
-        payload: {
-          sectionKind: "faq",
-          slotIndex,
-          name: normalizedItems[0]?.question || `FAQ шаблон ${slotIndex}`,
-          description: "",
-          payload: {
-            items: normalizedItems,
-          },
-        },
-      },
-      {
-        successMessage: "FAQ-шаблон збережено",
-        onError: setLocalError,
-      },
-    );
-
-    setIsSavingTemplate(false);
-
-    if (!saved && !lastError) {
       return;
     }
   }
@@ -327,19 +253,6 @@ export function EditInformationFaqForm({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {faq.status === "draft" ? (
-            <button
-              type="button"
-              disabled={isPending || isSavingTemplate}
-              onClick={() => void saveFaqDraftAsTemplate()}
-              className={[
-                adminSecondaryButtonClass,
-                "disabled:cursor-not-allowed disabled:opacity-40",
-              ].join(" ")}
-            >
-              {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
-            </button>
-          ) : null}
 
           {canRestore ? (
             <button

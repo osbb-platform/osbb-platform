@@ -17,7 +17,6 @@ import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/s
 import type {
   AdminHouseSpecialistsSnapshot,
   HouseSpecialistSnapshot,
-  HouseSpecialistsCategorySnapshot,
 } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import {
   adminDangerButtonClass,
@@ -168,9 +167,6 @@ function sortSpecialists(items: HouseSpecialistSnapshot[]) {
   });
 }
 
-function normalizeCategoryTitle(value: string) {
-  return value.trim();
-}
 
 function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
   const usedSlots = new Set(templates.map((template) => template.slotIndex));
@@ -196,12 +192,10 @@ export function HouseSpecialistsWorkspace({
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-  const [categoryDraft, setCategoryDraft] = useState("");
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
-  const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -428,7 +422,7 @@ export function HouseSpecialistsWorkspace({
   }
 
   async function saveSpecialistDraftAsTemplate() {
-    if (!draft || workspaceMode !== "edit" || draft.status !== "draft") return;
+    if (!draft || workspaceMode !== "create") return;
 
     const slotIndex = findNextTemplateSlot(templates, 5);
 
@@ -556,62 +550,6 @@ export function HouseSpecialistsWorkspace({
     setActiveTab("draft");
   }
 
-  async function saveCategories(nextCategories: HouseSpecialistsCategorySnapshot[]) {
-    await dispatch({
-      type: "specialists.categoriesUpsert",
-      houseId,
-      payload: {
-        categories: nextCategories.map((category, index) => ({
-          id: category.id,
-          title: category.title,
-          sortOrder: index,
-        })),
-      },
-    });
-  }
-
-  async function addCategory() {
-    const title = normalizeCategoryTitle(categoryDraft);
-
-    if (!title) return;
-
-    const exists = specialistsData.categories.some(
-      (category) => category.title.toLowerCase() === title.toLowerCase(),
-    );
-
-    if (exists) {
-      setCategoryDraft("");
-      return;
-    }
-
-    await dispatch({
-      type: "specialists.categoriesUpsert",
-      houseId,
-      payload: {
-        categories: [
-          ...specialistsData.categories.map((category, index) => ({
-            id: category.id,
-            title: category.title,
-            sortOrder: index,
-          })),
-          {
-            title,
-            sortOrder: specialistsData.categories.length,
-          },
-        ],
-      },
-    });
-
-    setCategoryDraft("");
-  }
-
-  async function removeCategory(categoryId: string) {
-    const nextCategories = specialistsData.categories.filter(
-      (category) => category.id !== categoryId,
-    );
-
-    await saveCategories(nextCategories);
-  }
 
   return (
     <div className="relative space-y-6">
@@ -630,7 +568,7 @@ export function HouseSpecialistsWorkspace({
                 Спеціалісти
               </h2>
               <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                Керування окремими картками спеціалістів, статусами публікації та каталогом категорій.
+                Керування окремими картками спеціалістів, шаблонами та статусами публікації.
               </p>
             </div>
 
@@ -643,15 +581,6 @@ export function HouseSpecialistsWorkspace({
               >
                 <TemplateIcon className="h-5 w-5" />
                 Шаблони
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setCategoriesPanelOpen(true)}
-                disabled={isPending}
-                className={[adminSecondaryButtonClass, "disabled:opacity-60"].join(" ")}
-              >
-                Категорії
               </button>
 
               <button
@@ -702,66 +631,6 @@ export function HouseSpecialistsWorkspace({
           </div>
         </div>
       </div>
-
-      <AdminSidePanel
-        title="Категорії спеціалістів"
-        description="Керуйте каталогом категорій без зайвого блоку на робочій площині."
-        isOpen={categoriesPanelOpen}
-        onClose={() => setCategoriesPanelOpen(false)}
-      >
-        <div className="space-y-5">
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-              Каталог категорій
-            </h3>
-            <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
-              Категорії використовуються для фільтрів і вибору в картці спеціаліста.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {specialistsData.categories.length > 0 ? (
-              specialistsData.categories.map((category) => (
-                <span
-                  key={category.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-2 text-sm text-[var(--cms-text)]"
-                >
-                  {category.title}
-                  <button
-                    type="button"
-                    onClick={() => removeCategory(category.id)}
-                    className="text-[var(--cms-danger-text)]"
-                    aria-label={`Видалити категорію ${category.title}`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
-            ) : (
-              <span className="text-sm text-[var(--cms-text-muted)]">
-                Каталог поки порожній. Можна додати першу категорію нижче.
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              value={categoryDraft}
-              onChange={(event) => setCategoryDraft(event.target.value)}
-              className={adminInputClass}
-              placeholder="Нова категорія"
-            />
-            <button
-              type="button"
-              onClick={addCategory}
-              className={adminSecondaryButtonClass}
-              disabled={isPending}
-            >
-              Додати категорію
-            </button>
-          </div>
-        </div>
-      </AdminSidePanel>
 
 
       {workspaceMode !== "idle" && draft ? (
@@ -969,7 +838,7 @@ export function HouseSpecialistsWorkspace({
                 ) : null}
               </div>
 
-              {workspaceMode === "edit" && draft.status === "draft" ? (
+              {workspaceMode === "create" ? (
                 <button
                   type="button"
                   onClick={() => void saveSpecialistDraftAsTemplate()}

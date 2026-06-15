@@ -396,6 +396,8 @@ export function HouseInformationWorkspace({
               houseId={houseId}
               houseSlug={houseSlug}
               housePageId={housePageId}
+              templates={informationPostTemplates}
+              templateSlotLimit={3}
               onClose={closePostWorkspace}
             />
           ) : null}
@@ -563,7 +565,6 @@ export function HouseInformationWorkspace({
             <EditInformationFaqForm
               houseId={houseId}
               faq={faq}
-              templates={faqTemplates}
               duplicateTargets={duplicateTargets}
               onClose={closeFaqWorkspace}
             />
