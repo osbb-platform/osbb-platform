@@ -22,6 +22,7 @@ export type ContentTemplate<TPayload extends Record<string, unknown>> = {
   description: string;
   payload: TPayload;
   sortOrder: number;
+  createdAt?: string;
 };
 
 type ContentTemplateRow = {
@@ -35,6 +36,7 @@ type ContentTemplateRow = {
   description: string | null;
   payload: Record<string, unknown>;
   sort_order: number | null;
+  created_at?: string | null;
   is_active?: boolean | null;
 };
 
@@ -108,6 +110,7 @@ function mapTemplateRow<TPayload extends Record<string, unknown>>(
     description: row.description ?? "",
     payload: row.payload as TPayload,
     sortOrder: row.sort_order ?? slotIndex * 10,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
@@ -121,11 +124,11 @@ export async function getContentTemplates<TPayload extends Record<string, unknow
 
   const { data, error } = await supabase
     .from("content_templates")
-    .select("id, section_key, section_kind, template_key, slot_index, name, title, description, payload, sort_order, is_active")
+    .select("id, section_key, section_kind, template_key, slot_index, name, title, description, payload, sort_order, created_at, is_active")
     .eq("section_key", sectionKey)
     .eq("is_active", true)
-    .order("slot_index", { ascending: true })
-    .order("sort_order", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("slot_index", { ascending: true });
 
   if (error) {
     return err(`Не вдалося прочитати список шаблонів: ${error.message}`, "INTERNAL");
@@ -143,7 +146,7 @@ export async function getActiveTemplate<TPayload extends Record<string, unknown>
 ): Promise<Result<ContentTemplate<TPayload>>> {
   const { data, error } = await supabase
     .from("content_templates")
-    .select("id, section_key, section_kind, template_key, slot_index, name, title, description, payload, sort_order")
+    .select("id, section_key, section_kind, template_key, slot_index, name, title, description, payload, sort_order, created_at")
     .eq("section_key", params.sectionKey)
     .eq("template_key", params.templateKey)
     .eq("is_active", true)

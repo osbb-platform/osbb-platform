@@ -6,11 +6,7 @@ import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
-import {
-  ContentTemplateSlotsPanel,
-  type ContentTemplateSlot,
-} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
-import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
@@ -22,15 +18,27 @@ import {
   adminSecondaryButtonClass,
   adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
-import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 type FaqCommand = "replaceItems" | "publish" | "archive" | "restore" | "delete";
+
+function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
+  const usedSlots = new Set(templates.map((template) => template.slotIndex));
+
+  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
+    if (!usedSlots.has(slotIndex)) {
+      return slotIndex;
+    }
+  }
+
+  return null;
+}
 
 type Props = {
   houseId: string;
   faq: HouseFaqSnapshot;
   onClose: () => void;
   templates?: ContentTemplateSlot[];
+  templateSlotLimit?: number;
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
@@ -39,10 +47,12 @@ export function EditInformationFaqForm({
   faq,
   onClose,
   templates = [],
+  templateSlotLimit = 3,
   duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   const initialItems = useMemo(() => {
     return faq.items.length
@@ -54,7 +64,6 @@ export function EditInformationFaqForm({
   }, [faq.items]);
 
   const [items, setItems] = useState(initialItems);
-  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
 
   function updateItem(index: number, field: "question" | "answer", value: string) {
     setItems((prev) =>
@@ -77,38 +86,6 @@ export function EditInformationFaqForm({
     });
     setLocalError(null);
   }
-
-  async function applyFaqTemplateKeys(templateKeys: string[]) {
-    setLocalError(null);
-
-    const templateKey = templateKeys[0];
-
-    if (!templateKey) {
-      setLocalError("Оберіть шаблон FAQ.");
-      return;
-    }
-
-    await dispatch<HouseFaqSnapshot>(
-      {
-        type: "faq.applyTemplate",
-        houseId,
-        payload: {
-          templateKey,
-          lockVersion: faq.lockVersion,
-        },
-      },
-      {
-        successMessage: "Шаблон FAQ застосовано",
-        onError(error) {
-          setLocalError(error);
-        },
-        onSuccess() {
-          onClose();
-        },
-      },
-    );
-  }
-
   async function copyFaqToDraft() {
     setLocalError(null);
 
@@ -133,6 +110,61 @@ export function EditInformationFaqForm({
     );
 
     if (!copied && !lastError) {
+      return;
+    }
+  }
+
+  async function saveFaqDraftAsTemplate() {
+    if (faq.status !== "draft") return;
+
+    setLocalError(null);
+
+    const slotIndex = findNextTemplateSlot(templates, templateSlotLimit);
+
+    if (!slotIndex) {
+      setLocalError(
+        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
+      );
+      return;
+    }
+
+    const normalizedItems = items
+      .map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question && item.answer);
+
+    if (!normalizedItems.length) {
+      setLocalError("Додайте хоча б одне запитання і відповідь перед збереженням шаблону.");
+      return;
+    }
+
+    setIsSavingTemplate(true);
+
+    const saved = await dispatch(
+      {
+        type: "templates.upsert",
+        houseId,
+        payload: {
+          sectionKind: "faq",
+          slotIndex,
+          name: normalizedItems[0]?.question || `FAQ шаблон ${slotIndex}`,
+          description: "",
+          payload: {
+            items: normalizedItems,
+          },
+        },
+      },
+      {
+        successMessage: "FAQ-шаблон збережено",
+        onError: setLocalError,
+      },
+    );
+
+    setIsSavingTemplate(false);
+
+    if (!saved && !lastError) {
       return;
     }
   }
@@ -212,38 +244,6 @@ export function EditInformationFaqForm({
           </button>
         </div>
       </div>
-
-      <div className="mb-4 flex flex-wrap justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => setTemplatesPanelOpen(true)}
-          disabled={isPending || isArchived}
-          className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
-        >
-          <TemplateIcon className="h-5 w-5" />
-          Шаблони
-        </button>
-      </div>
-
-      <AdminSidePanel
-        title="Шаблони FAQ"
-        description="Зберігайте до 3 FAQ-шаблонів і застосовуйте один із них через підтвердження."
-        isOpen={templatesPanelOpen}
-        onClose={() => setTemplatesPanelOpen(false)}
-      >
-        <ContentTemplateSlotsPanel
-          houseId={houseId}
-          sectionKind="faq"
-          slotLimit={3}
-          templates={templates}
-          title="Слоти FAQ"
-          description="Зберігайте до 3 FAQ-шаблонів і швидко застосовуйте один із них до поточного будинку."
-          disabled={isPending || isArchived}
-          buildPayload={() => ({ items })}
-          onApplyTemplateKeys={applyFaqTemplateKeys}
-          applyConfirmationMessage="Застосування шаблону перезапише поточний список питань і відповідей FAQ. Продовжити?"
-        />
-      </AdminSidePanel>
 
 <div className="mt-6 space-y-4">
         {items.map((item, index) => (
@@ -327,6 +327,20 @@ export function EditInformationFaqForm({
         </div>
 
         <div className="flex flex-wrap gap-3">
+          {faq.status === "draft" ? (
+            <button
+              type="button"
+              disabled={isPending || isSavingTemplate}
+              onClick={() => void saveFaqDraftAsTemplate()}
+              className={[
+                adminSecondaryButtonClass,
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              ].join(" ")}
+            >
+              {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
+            </button>
+          ) : null}
+
           {canRestore ? (
             <button
               type="button"

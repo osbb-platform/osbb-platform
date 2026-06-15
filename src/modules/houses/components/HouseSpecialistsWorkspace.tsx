@@ -172,6 +172,18 @@ function normalizeCategoryTitle(value: string) {
   return value.trim();
 }
 
+function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
+  const usedSlots = new Set(templates.map((template) => template.slotIndex));
+
+  for (let slotIndex = 1; slotIndex <= slotLimit; slotIndex += 1) {
+    if (!usedSlots.has(slotIndex)) {
+      return slotIndex;
+    }
+  }
+
+  return null;
+}
+
 export function HouseSpecialistsWorkspace({
   houseId,
   specialistsData,
@@ -187,6 +199,7 @@ export function HouseSpecialistsWorkspace({
   const [categoryDraft, setCategoryDraft] = useState("");
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
   const [categoriesPanelOpen, setCategoriesPanelOpen] = useState(false);
 
@@ -250,24 +263,6 @@ export function HouseSpecialistsWorkspace({
     setWorkspaceMode("edit");
     setDraft(toDraft(item));
   }
-
-  function buildSpecialistsTemplatePayload() {
-    const specialists = specialistsData.specialists
-      .filter((item) => item.status !== "archived")
-      .map((item) => ({
-        title: item.content.title,
-        category: item.content.category,
-        phones: item.content.phones,
-        phoneTypes: item.content.phoneTypes,
-        email: item.content.email,
-        description: item.content.description,
-        sortOrder: item.content.sortOrder,
-      }))
-      .filter((item) => item.title && item.category);
-
-    return specialists.length ? { specialists } : null;
-  }
-
   async function applySpecialistsTemplateKeys(templateKeys: string[]) {
     setWorkspaceError(null);
     setApplyingTemplate(true);
@@ -429,6 +424,80 @@ export function HouseSpecialistsWorkspace({
 
     if (updated) {
       closeWorkspace();
+    }
+  }
+
+  async function saveSpecialistDraftAsTemplate() {
+    if (!draft || workspaceMode !== "edit" || draft.status !== "draft") return;
+
+    const slotIndex = findNextTemplateSlot(templates, 5);
+
+    if (!slotIndex) {
+      setWorkspaceError(
+        "Вільних слотів для шаблонів більше немає. Видаліть один із поточних шаблонів, щоб звільнити слот.",
+      );
+      return;
+    }
+
+    const title = draft.title.trim();
+    const category = draft.category.trim();
+    const phones = normalizePhones(draft.phones);
+    const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
+
+    if (!title) {
+      setWorkspaceError("Вкажіть ім’я та прізвище або назву компанії.");
+      return;
+    }
+
+    if (!category) {
+      setWorkspaceError("Оберіть категорію спеціаліста.");
+      return;
+    }
+
+    const hasInvalidPhone = phones.some((phone) => !isValidPhone(phone));
+    if (hasInvalidPhone) {
+      setWorkspaceError("Введіть коректний номер телефону.");
+      return;
+    }
+
+    setWorkspaceError(null);
+    setSavingTemplate(true);
+
+    const saved = await dispatch(
+      {
+        type: "templates.upsert",
+        houseId,
+        payload: {
+          sectionKind: "specialists",
+          slotIndex,
+          name: title,
+          description: draft.description.trim(),
+          payload: {
+            categories: category ? [{ title: category }] : [],
+            specialists: [
+              {
+                title,
+                category,
+                phones,
+                phoneTypes,
+                email: draft.email.trim(),
+                description: draft.description.trim(),
+                sortOrder: draft.sortOrder,
+              },
+            ],
+          },
+        },
+      },
+      {
+        successMessage: "Шаблон спеціаліста збережено",
+        onError: setWorkspaceError,
+      },
+    );
+
+    setSavingTemplate(false);
+
+    if (!saved && !lastError) {
+      return;
     }
   }
 
@@ -903,9 +972,20 @@ export function HouseSpecialistsWorkspace({
               {workspaceMode === "edit" && draft.status === "draft" ? (
                 <button
                   type="button"
+                  onClick={() => void saveSpecialistDraftAsTemplate()}
+                  className={adminSecondaryButtonClass}
+                  disabled={isPending || savingTemplate}
+                >
+                  {savingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
+                </button>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.status === "draft" ? (
+                <button
+                  type="button"
                   onClick={() => setConfirmAction("publish")}
                   className={adminSuccessButtonClass}
-                  disabled={isPending}
+                  disabled={isPending || savingTemplate}
                 >
                   Опублікувати
                 </button>
@@ -939,7 +1019,7 @@ export function HouseSpecialistsWorkspace({
 
       <AdminSidePanel
         title="Шаблони спеціалістів"
-        description="Керуйте слотами і застосовуйте один або кілька шаблонів у чернетки."
+        description="Оберіть збережений шаблон. Після підтвердження він створить чернетку в поточному будинку."
         isOpen={templatesPanelOpen}
         onClose={() => setTemplatesPanelOpen(false)}
       >
@@ -948,11 +1028,9 @@ export function HouseSpecialistsWorkspace({
           sectionKind="specialists"
           slotLimit={5}
           templates={templates}
-          title="Слоти спеціалістів"
-          description="Зберігайте до 5 наборів спеціалістів і застосовуйте один або кілька шаблонів у чернетки."
+          title="Збережені шаблони спеціалістів"
+          description="Шаблони доступні в усіх будинках. Новий шаблон створюється з чернетки спеціаліста."
           disabled={isPending || applyingTemplate}
-          multiSelect
-          buildPayload={buildSpecialistsTemplatePayload}
           onApplyTemplateKeys={applySpecialistsTemplateKeys}
         />
       </AdminSidePanel>

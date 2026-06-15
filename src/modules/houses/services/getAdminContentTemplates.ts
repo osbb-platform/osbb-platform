@@ -32,5 +32,6 @@ export async function getAdminContentTemplates(params: {
     description: template.description,
     payload: template.payload,
     sortOrder: template.sortOrder,
+    createdAt: template.createdAt,
   }));
 }

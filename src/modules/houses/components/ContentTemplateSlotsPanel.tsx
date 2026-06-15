@@ -2,13 +2,11 @@
 
 import { useMemo, useState } from "react";
 
-import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
   adminDangerButtonClass,
-  adminInputClass,
-  adminSecondaryButtonClass,
-  adminSuccessButtonClass,
+  adminPrimaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 export type TemplateSectionKind = "faq" | "specialists" | "information_post";
@@ -23,6 +21,7 @@ export type ContentTemplateSlot = {
   description: string;
   payload: Record<string, unknown>;
   sortOrder: number;
+  createdAt?: string;
 };
 
 type Props = {
@@ -33,16 +32,37 @@ type Props = {
   title: string;
   description: string;
   disabled?: boolean;
-  multiSelect?: boolean;
-  buildPayload: () => Record<string, unknown> | null;
   onApplyTemplateKeys: (templateKeys: string[]) => Promise<void>;
-  applyConfirmationMessage?: string;
 };
 
-function getDefaultName(sectionKind: TemplateSectionKind, slotIndex: number) {
-  if (sectionKind === "faq") return `FAQ шаблон ${slotIndex}`;
-  if (sectionKind === "specialists") return `Шаблон спеціалістів ${slotIndex}`;
-  return `Шаблон інформації ${slotIndex}`;
+function formatDate(value?: string) {
+  if (!value) return "Дата не вказана";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Дата не вказана";
+
+  return date.toLocaleDateString("uk-UA", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getTemplatePreview(template: ContentTemplateSlot) {
+  const payload = template.payload;
+
+  if (template.sectionKind === "faq") {
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    return `${items.length} питань`;
+  }
+
+  if (template.sectionKind === "specialists") {
+    const specialists = Array.isArray(payload.specialists) ? payload.specialists : [];
+    return `${specialists.length} карток`;
+  }
+
+  const posts = Array.isArray(payload.posts) ? payload.posts : [];
+  return `${posts.length} матеріалів`;
 }
 
 export function ContentTemplateSlotsPanel({
@@ -53,96 +73,47 @@ export function ContentTemplateSlotsPanel({
   title,
   description,
   disabled = false,
-  multiSelect = false,
-  buildPayload,
   onApplyTemplateKeys,
-  applyConfirmationMessage,
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  const [slotIndex, setSlotIndex] = useState(1);
-  const [name, setName] = useState(getDefaultName(sectionKind, 1));
-  const [slotDescription, setSlotDescription] = useState("");
+
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [applyingKey, setApplyingKey] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
-  const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
+  const [templateToApply, setTemplateToApply] = useState<ContentTemplateSlot | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<ContentTemplateSlot | null>(null);
 
-  const templatesBySlot = useMemo(() => {
-    return new Map(templates.map((template) => [template.slotIndex, template]));
+  const orderedTemplates = useMemo(() => {
+    return templates.slice().sort((left, right) => {
+      const rightTime = new Date(right.createdAt ?? "").getTime();
+      const leftTime = new Date(left.createdAt ?? "").getTime();
+
+      if (!Number.isNaN(rightTime) && !Number.isNaN(leftTime) && rightTime !== leftTime) {
+        return rightTime - leftTime;
+      }
+
+      return right.slotIndex - left.slotIndex;
+    });
   }, [templates]);
 
-  function toggleTemplate(templateKey: string) {
+  const busy = isPending || Boolean(applyingKey) || Boolean(deletingKey);
+  const error = localError ?? lastError;
+
+  async function applyTemplate(template: ContentTemplateSlot) {
     setLocalError(null);
     setLocalSuccess(null);
+    setApplyingKey(template.templateKey);
 
-    if (!multiSelect) {
-      setSelectedKeys([templateKey]);
-      return;
+    try {
+      await onApplyTemplateKeys([template.templateKey]);
+      setTemplateToApply(null);
+      setLocalSuccess("Шаблон застосовано. У поточному будинку створено чернетку.");
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : "Не вдалося застосувати шаблон.");
+    } finally {
+      setApplyingKey(null);
     }
-
-    setSelectedKeys((current) =>
-      current.includes(templateKey)
-        ? current.filter((key) => key !== templateKey)
-        : [...current, templateKey],
-    );
-  }
-
-  function handleSlotChange(nextSlotIndex: number) {
-    setSlotIndex(nextSlotIndex);
-
-    const existing = templatesBySlot.get(nextSlotIndex);
-    setName(existing?.name || existing?.title || getDefaultName(sectionKind, nextSlotIndex));
-    setSlotDescription(existing?.description ?? "");
-    setLocalError(null);
-    setLocalSuccess(null);
-  }
-
-  async function saveCurrentToSlot() {
-    setLocalError(null);
-    setLocalSuccess(null);
-
-    const payload = buildPayload();
-
-    if (!payload) {
-      setLocalError("Немає коректних даних для збереження шаблону.");
-      return;
-    }
-
-    const normalizedName = name.trim();
-
-    if (!normalizedName) {
-      setLocalError("Вкажіть назву шаблону.");
-      return;
-    }
-
-    setSaving(true);
-
-    const saved = await dispatch(
-      {
-        type: "templates.upsert",
-        houseId,
-        payload: {
-          sectionKind,
-          slotIndex,
-          name: normalizedName,
-          description: slotDescription.trim(),
-          payload,
-        },
-      },
-      {
-        successMessage: null,
-        onError: setLocalError,
-      },
-    );
-
-    setSaving(false);
-
-    if (!saved) return;
-
-    setLocalSuccess("Шаблон збережено.");
   }
 
   async function deleteTemplate(template: ContentTemplateSlot) {
@@ -169,186 +140,132 @@ export function ContentTemplateSlotsPanel({
 
     if (!deleted) return;
 
-    setSelectedKeys((current) => current.filter((key) => key !== template.templateKey));
+    setTemplateToDelete(null);
     setLocalSuccess("Шаблон видалено.");
   }
 
-  async function runApplySelectedTemplates() {
-    setLocalError(null);
-    setLocalSuccess(null);
-
-    if (!selectedKeys.length) {
-      setLocalError("Оберіть шаблон.");
-      return;
-    }
-
-    setApplying(true);
-
-    try {
-      await onApplyTemplateKeys(selectedKeys);
-      setConfirmApplyOpen(false);
-      setLocalSuccess("Шаблон застосовано.");
-    } catch (error) {
-      setLocalError(error instanceof Error ? error.message : "Не вдалося застосувати шаблон.");
-    } finally {
-      setApplying(false);
-    }
-  }
-
-  function applySelectedTemplates() {
-    setLocalError(null);
-    setLocalSuccess(null);
-
-    if (!selectedKeys.length) {
-      setLocalError("Оберіть шаблон.");
-      return;
-    }
-
-    if (applyConfirmationMessage) {
-      setConfirmApplyOpen(true);
-      return;
-    }
-
-    void runApplySelectedTemplates();
-  }
-
-  const busy = isPending || saving || applying || Boolean(deletingKey);
-  const error = localError ?? lastError;
-
   return (
     <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cms-text-soft)]">
-            Шаблони
-          </div>
-          <h3 className="mt-1 text-lg font-semibold text-[var(--cms-text)]">
-            {title}
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
-            {description}
-          </p>
+      <div>
+        <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cms-text-soft)]">
+          Шаблони
         </div>
-
-        <button
-          type="button"
-          onClick={applySelectedTemplates}
-          disabled={disabled || busy || selectedKeys.length === 0}
-          className={[adminSuccessButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-        >
-          {applying ? "Застосовуємо..." : "Застосувати вибрані"}
-        </button>
-      </div>
-
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        {Array.from({ length: slotLimit }, (_, index) => index + 1).map((currentSlot) => {
-          const template = templatesBySlot.get(currentSlot);
-          const isSelected = template ? selectedKeys.includes(template.templateKey) : false;
-
-          return (
-            <div
-              key={currentSlot}
-              className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <label className="flex min-w-0 flex-1 items-start gap-3">
-                  <input
-                    type={multiSelect ? "checkbox" : "radio"}
-                    checked={isSelected}
-                    disabled={disabled || busy || !template}
-                    onChange={() => template ? toggleTemplate(template.templateKey) : undefined}
-                    className="mt-1"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[var(--cms-text)]">
-                      Слот {currentSlot}: {template?.name || template?.title || "порожній"}
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 text-[var(--cms-text-muted)]">
-                      {template?.description || (template ? "Опис не вказано." : "Слот ще не заповнено.")}
-                    </span>
-                  </span>
-                </label>
-
-                {template ? (
-                  <button
-                    type="button"
-                    onClick={() => void deleteTemplate(template)}
-                    disabled={disabled || busy}
-                    className={[adminDangerButtonClass, "px-3 py-2 text-xs disabled:opacity-40"].join(" ")}
-                  >
-                    {deletingKey === template.templateKey ? "..." : "Видалити"}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 grid gap-3 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 lg:grid-cols-[130px_minmax(0,1fr)_minmax(0,1fr)_auto]">
-        <select
-          value={slotIndex}
-          onChange={(event) => handleSlotChange(Number(event.target.value))}
-          disabled={disabled || busy}
-          className={adminInputClass}
-        >
-          {Array.from({ length: slotLimit }, (_, index) => index + 1).map((currentSlot) => (
-            <option key={currentSlot} value={currentSlot}>
-              Слот {currentSlot}
-            </option>
-          ))}
-        </select>
-
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          disabled={disabled || busy}
-          className={adminInputClass}
-          placeholder="Назва шаблону"
-        />
-
-        <input
-          value={slotDescription}
-          onChange={(event) => setSlotDescription(event.target.value)}
-          disabled={disabled || busy}
-          className={adminInputClass}
-          placeholder="Опис шаблону"
-        />
-
-        <button
-          type="button"
-          onClick={() => void saveCurrentToSlot()}
-          disabled={disabled || busy}
-          className={[adminSecondaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-        >
-          {saving ? "Зберігаємо..." : "Зберегти в слот"}
-        </button>
+        <h3 className="mt-1 text-lg font-semibold text-[var(--cms-text)]">
+          {title}
+        </h3>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
+          {description}
+        </p>
       </div>
 
       {error ? (
-        <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
         </div>
       ) : null}
 
       {localSuccess ? (
-        <div className="mt-3 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {localSuccess}
         </div>
       ) : null}
 
+      <div className="mt-4 max-h-[68vh] space-y-3 overflow-y-auto pr-1">
+        {orderedTemplates.length > 0 ? (
+          orderedTemplates.map((template) => (
+            <article
+              key={template.id}
+              className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+            >
+              <div className="flex flex-col gap-3">
+                <div>
+                  <div className="text-base font-semibold text-[var(--cms-text)]">
+                    {template.name || template.title || "Шаблон без назви"}
+                  </div>
+                  <div className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
+                    {template.description || getTemplatePreview(template)}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] uppercase tracking-wide text-[var(--cms-text-soft)]">
+                    <span>Створено: {formatDate(template.createdAt)}</span>
+                    <span>·</span>
+                    <span>Слот {template.slotIndex} із {slotLimit}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateToApply(template)}
+                    disabled={disabled || busy}
+                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                  >
+                    {applyingKey === template.templateKey ? "Застосовуємо..." : "Застосувати"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTemplateToDelete(template)}
+                    disabled={disabled || busy}
+                    className={[adminDangerButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                  >
+                    {deletingKey === template.templateKey ? "Видаляємо..." : "Видалити"}
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
+            Шаблонів поки немає. Створіть чернетку, заповніть її та натисніть
+            «Запамʼятати як шаблон» у правому нижньому куті форми.
+          </div>
+        )}
+      </div>
+
       <PlatformConfirmModal
-        open={confirmApplyOpen}
-        title="Застосувати шаблон FAQ?"
-        description={applyConfirmationMessage ?? null}
-        confirmLabel="Застосувати шаблон"
-        tone="warning"
-        isPending={applying}
+        open={Boolean(templateToApply)}
+        title="Застосувати шаблон?"
+        description={
+          templateToApply
+            ? `У поточному будинку буде створено нову чернетку з шаблону «${templateToApply.name || templateToApply.title}».`
+            : ""
+        }
+        confirmLabel="Застосувати"
         pendingLabel="Застосовуємо..."
-        onConfirm={() => void runApplySelectedTemplates()}
+        tone="publish"
+        isPending={Boolean(applyingKey)}
         onCancel={() => {
-          if (!applying) {
-            setConfirmApplyOpen(false);
+          if (!applyingKey) {
+            setTemplateToApply(null);
+          }
+        }}
+        onConfirm={() => {
+          if (templateToApply) {
+            void applyTemplate(templateToApply);
+          }
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={Boolean(templateToDelete)}
+        title="Видалити шаблон?"
+        description={
+          templateToDelete
+            ? `Шаблон «${templateToDelete.name || templateToDelete.title}» буде видалено із системи. Він більше не буде доступний в інших будинках.`
+            : ""
+        }
+        confirmLabel="Видалити шаблон"
+        pendingLabel="Видаляємо..."
+        tone="destructive"
+        isPending={Boolean(deletingKey)}
+        onCancel={() => {
+          if (!deletingKey) {
+            setTemplateToDelete(null);
+          }
+        }}
+        onConfirm={() => {
+          if (templateToDelete) {
+            void deleteTemplate(templateToDelete);
           }
         }}
       />

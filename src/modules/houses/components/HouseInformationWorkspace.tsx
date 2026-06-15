@@ -91,7 +91,9 @@ export function HouseInformationWorkspace({
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
+  const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
+  const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
 
   const visiblePosts = posts
     .slice()
@@ -130,35 +132,6 @@ export function HouseInformationWorkspace({
     setWorkspaceMode("idle");
     setEditingSectionId(null);
   }
-
-  function buildInformationTemplatePayload() {
-    const templatePosts = posts
-      .map((section) => {
-        const content = section.content;
-        const category = typeof content.category === "string" ? content.category : "";
-
-        if (!(INFORMATION_CATEGORIES as readonly string[]).includes(category)) {
-          return null;
-        }
-
-        const coverImage =
-          typeof content.coverImage === "object" && content.coverImage !== null
-            ? content.coverImage
-            : null;
-
-        return {
-          headline: section.title,
-          body: typeof content.body === "string" ? content.body : "",
-          category,
-          isPinned: Boolean(content.isPinned),
-          coverImage,
-        };
-      })
-      .filter((post): post is NonNullable<typeof post> => Boolean(post?.headline && post.body));
-
-    return templatePosts.length ? { posts: templatePosts } : null;
-  }
-
   async function applyInformationTemplateKeys(templateKeys: string[]) {
     setWorkspaceError(null);
     setApplyingPostsTemplate(true);
@@ -189,6 +162,44 @@ export function HouseInformationWorkspace({
     setMainTab("posts");
     closePostWorkspace();
     closeFaqWorkspace();
+  }
+
+  async function applyFaqTemplateKeys(templateKeys: string[]) {
+    if (!faq) return;
+
+    setWorkspaceError(null);
+    setApplyingFaqTemplate(true);
+
+    const templateKey = templateKeys[0];
+
+    if (!templateKey) {
+      setWorkspaceError("Оберіть шаблон FAQ.");
+      setApplyingFaqTemplate(false);
+      return;
+    }
+
+    await dispatch(
+      {
+        type: "faq.applyTemplate",
+        houseId,
+        payload: {
+          templateKey,
+          lockVersion: faq.lockVersion,
+        },
+      },
+      {
+        successMessage: "Шаблон FAQ застосовано",
+        onError: setWorkspaceError,
+        onSuccess() {
+          setFaqTemplatesPanelOpen(false);
+          setMainTab("faq");
+          closePostWorkspace();
+          closeFaqWorkspace();
+        },
+      },
+    );
+
+    setApplyingFaqTemplate(false);
   }
 
   async function handleCopyPostToDraft(sectionId: string) {
@@ -291,14 +302,26 @@ export function HouseInformationWorkspace({
           ) : null}
 
               {mainTab === "faq" ? (
-            <button
-              type="button"
-              onClick={openFaqWorkspace}
-              disabled={!faq}
-              className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-            >
-              Редагувати FAQ
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setFaqTemplatesPanelOpen(true)}
+                disabled={!faq || applyingFaqTemplate || isPending}
+                className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+              >
+                <TemplateIcon className="h-5 w-5" />
+                Шаблони
+              </button>
+
+              <button
+                type="button"
+                onClick={openFaqWorkspace}
+                disabled={!faq}
+                className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+              >
+                Редагувати FAQ
+              </button>
+            </div>
           ) : null}
             </div>
           </div>
@@ -329,12 +352,30 @@ export function HouseInformationWorkspace({
         </div>
       </div>
 
+      <AdminSidePanel
+        title="Шаблони FAQ"
+        description="Оберіть збережений FAQ-шаблон. Після підтвердження він оновить FAQ поточного будинку."
+        isOpen={faqTemplatesPanelOpen}
+        onClose={() => setFaqTemplatesPanelOpen(false)}
+      >
+        <ContentTemplateSlotsPanel
+          houseId={houseId}
+          sectionKind="faq"
+          slotLimit={3}
+          templates={faqTemplates}
+          title="Збережені FAQ-шаблони"
+          description="Шаблони доступні в усіх будинках. Новий шаблон створюється з FAQ-чернетки."
+          disabled={!faq || applyingFaqTemplate || isPending}
+          onApplyTemplateKeys={applyFaqTemplateKeys}
+        />
+      </AdminSidePanel>
+
       {mainTab === "posts" ? (
         <>
 
           <AdminSidePanel
             title="Шаблони інформаційних матеріалів"
-            description="Керуйте слотами і застосовуйте шаблони у чернетки без зайвих блоків на робочій площині."
+            description="Оберіть збережений шаблон. Після підтвердження він створить чернетку в поточному будинку."
             isOpen={postTemplatesPanelOpen}
             onClose={() => setPostTemplatesPanelOpen(false)}
           >
@@ -343,11 +384,9 @@ export function HouseInformationWorkspace({
               sectionKind="information_post"
               slotLimit={3}
               templates={informationPostTemplates}
-              title="Слоти інформаційних матеріалів"
-              description="Зберігайте до 3 наборів інформаційних матеріалів і застосовуйте один або кілька шаблонів у чернетки."
+              title="Збережені інформаційні шаблони"
+              description="Шаблони доступні в усіх будинках. Новий шаблон створюється з чернетки інформаційного матеріалу."
               disabled={!housePageId || applyingPostsTemplate || isPending}
-              multiSelect
-              buildPayload={buildInformationTemplatePayload}
               onApplyTemplateKeys={applyInformationTemplateKeys}
             />
           </AdminSidePanel>
