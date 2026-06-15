@@ -12,6 +12,7 @@ import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
 } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
@@ -23,6 +24,7 @@ import {
   adminSecondaryButtonClass,
   adminSuccessButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 type FaqCommand = "replaceItems" | "publish" | "archive" | "restore" | "delete";
 
@@ -54,6 +56,7 @@ export function EditInformationFaqForm({
   }, [faq.items]);
 
   const [items, setItems] = useState(initialItems);
+  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
 
   function updateItem(index: number, field: "question" | "answer", value: string) {
     setItems((prev) =>
@@ -198,20 +201,39 @@ export function EditInformationFaqForm({
         </button>
       </div>
 
-      <ContentTemplateSlotsPanel
-        houseId={houseId}
-        sectionKind="faq"
-        slotLimit={3}
-        templates={templates}
-        title="Слоти FAQ"
-        description="Зберігайте до 3 FAQ-шаблонів і швидко застосовуйте один із них до поточного будинку."
-        disabled={isPending || isArchived}
-        buildPayload={() => ({ items })}
-        onApplyTemplateKeys={applyFaqTemplateKeys}
-        applyConfirmationMessage="Застосування шаблону перезапише поточний список питань і відповідей FAQ. Продовжити?"
-      />
+      <div className="mb-4 flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setTemplatesPanelOpen(true)}
+          disabled={isPending || isArchived}
+          className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+        >
+          <TemplateIcon className="h-5 w-5" />
+          Шаблони
+        </button>
+      </div>
 
-      <div className="mt-6 space-y-4">
+      <AdminSidePanel
+        title="Шаблони FAQ"
+        description="Зберігайте до 3 FAQ-шаблонів і застосовуйте один із них через підтвердження."
+        isOpen={templatesPanelOpen}
+        onClose={() => setTemplatesPanelOpen(false)}
+      >
+        <ContentTemplateSlotsPanel
+          houseId={houseId}
+          sectionKind="faq"
+          slotLimit={3}
+          templates={templates}
+          title="Слоти FAQ"
+          description="Зберігайте до 3 FAQ-шаблонів і швидко застосовуйте один із них до поточного будинку."
+          disabled={isPending || isArchived}
+          buildPayload={() => ({ items })}
+          onApplyTemplateKeys={applyFaqTemplateKeys}
+          applyConfirmationMessage="Застосування шаблону перезапише поточний список питань і відповідей FAQ. Продовжити?"
+        />
+      </AdminSidePanel>
+
+<div className="mt-6 space-y-4">
         {items.map((item, index) => (
           <div key={index} className={adminInsetSurfaceClass}>
             <div className="grid gap-3">

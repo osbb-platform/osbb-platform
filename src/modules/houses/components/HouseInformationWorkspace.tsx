@@ -5,6 +5,7 @@ import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
 } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
@@ -20,6 +21,7 @@ import {
   adminSecondaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 export const INFORMATION_CATEGORIES = [
   "Про будинок",
@@ -88,6 +90,7 @@ export function HouseInformationWorkspace({
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
+  const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
 
   const visiblePosts = posts
     .slice()
@@ -181,6 +184,7 @@ export function HouseInformationWorkspace({
     }
 
     setApplyingPostsTemplate(false);
+    setPostTemplatesPanelOpen(false);
     setMainTab("posts");
     closePostWorkspace();
     closeFaqWorkspace();
@@ -252,6 +256,18 @@ export function HouseInformationWorkspace({
             <div>
               {mainTab === "posts" ? (
             <div className="flex flex-wrap gap-3">
+              {mainTab === "posts" ? (
+                <button
+                  type="button"
+                  onClick={() => setPostTemplatesPanelOpen(true)}
+                  disabled={applyingPostsTemplate || isPending}
+                  className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                >
+                  <TemplateIcon className="h-5 w-5" />
+                  Шаблони
+                </button>
+              ) : null}
+
               <button
                 type="button"
                 onClick={openCreatePost}
@@ -314,21 +330,28 @@ export function HouseInformationWorkspace({
 
       {mainTab === "posts" ? (
         <>
-          <ContentTemplateSlotsPanel
-            houseId={houseId}
-            sectionKind="information_post"
-            slotLimit={3}
-            templates={informationPostTemplates}
-            title="Слоти інформаційних матеріалів"
-            description="Зберігайте до 3 наборів інформаційних матеріалів і застосовуйте один або кілька шаблонів у чернетки."
-            disabled={!housePageId || applyingPostsTemplate || isPending}
-            multiSelect
-            buildPayload={buildInformationTemplatePayload}
-            onApplyTemplateKeys={applyInformationTemplateKeys}
-          />
 
+          <AdminSidePanel
+            title="Шаблони інформаційних матеріалів"
+            description="Керуйте слотами і застосовуйте шаблони у чернетки без зайвих блоків на робочій площині."
+            isOpen={postTemplatesPanelOpen}
+            onClose={() => setPostTemplatesPanelOpen(false)}
+          >
+            <ContentTemplateSlotsPanel
+              houseId={houseId}
+              sectionKind="information_post"
+              slotLimit={3}
+              templates={informationPostTemplates}
+              title="Слоти інформаційних матеріалів"
+              description="Зберігайте до 3 наборів інформаційних матеріалів і застосовуйте один або кілька шаблонів у чернетки."
+              disabled={!housePageId || applyingPostsTemplate || isPending}
+              multiSelect
+              buildPayload={buildInformationTemplatePayload}
+              onApplyTemplateKeys={applyInformationTemplateKeys}
+            />
+          </AdminSidePanel>
 
-          {workspaceMode === "create" ? (
+{workspaceMode === "create" ? (
             <CreateInformationPostInlineForm
               houseId={houseId}
               houseSlug={houseSlug}

@@ -5,6 +5,7 @@ import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
 } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
 import { useMemo, useState } from "react";
 
@@ -27,6 +28,7 @@ import {
   adminTextLabelClass,
   adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
 const DEFAULT_SPECIALIST_CATEGORIES = [
   "Сантехнік",
@@ -185,6 +187,7 @@ export function HouseSpecialistsWorkspace({
   const [categoryDraft, setCategoryDraft] = useState("");
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
 
   const categories = useMemo(() => {
     const fromCatalog = specialistsData.categories
@@ -290,6 +293,7 @@ export function HouseSpecialistsWorkspace({
     }
 
     setApplyingTemplate(false);
+    setTemplatesPanelOpen(false);
     closeWorkspace();
     setActiveTab("draft");
   }
@@ -561,6 +565,16 @@ export function HouseSpecialistsWorkspace({
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setTemplatesPanelOpen(true)}
+                disabled={isPending || applyingTemplate}
+                className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+              >
+                <TemplateIcon className="h-5 w-5" />
+                Шаблони
+              </button>
+
               <button
                 type="button"
                 onClick={openCreateMode}
@@ -936,20 +950,27 @@ export function HouseSpecialistsWorkspace({
         </div>
       ) : null}
 
-      <ContentTemplateSlotsPanel
-        houseId={houseId}
-        sectionKind="specialists"
-        slotLimit={5}
-        templates={templates}
-        title="Слоти спеціалістів"
-        description="Зберігайте до 5 наборів спеціалістів і застосовуйте один або кілька шаблонів у чернетки."
-        disabled={isPending || applyingTemplate}
-        multiSelect
-        buildPayload={buildSpecialistsTemplatePayload}
-        onApplyTemplateKeys={applySpecialistsTemplateKeys}
-      />
+      <AdminSidePanel
+        title="Шаблони спеціалістів"
+        description="Керуйте слотами і застосовуйте один або кілька шаблонів у чернетки."
+        isOpen={templatesPanelOpen}
+        onClose={() => setTemplatesPanelOpen(false)}
+      >
+        <ContentTemplateSlotsPanel
+          houseId={houseId}
+          sectionKind="specialists"
+          slotLimit={5}
+          templates={templates}
+          title="Слоти спеціалістів"
+          description="Зберігайте до 5 наборів спеціалістів і застосовуйте один або кілька шаблонів у чернетки."
+          disabled={isPending || applyingTemplate}
+          multiSelect
+          buildPayload={buildSpecialistsTemplatePayload}
+          onApplyTemplateKeys={applySpecialistsTemplateKeys}
+        />
+      </AdminSidePanel>
 
-      <div className={`${adminSurfaceClass} p-6`}>
+<div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 md:grid-cols-2">
           {visibleSpecialists.length > 0 ? (
             visibleSpecialists.map((item) => (
