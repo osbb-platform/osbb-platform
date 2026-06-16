@@ -28,9 +28,63 @@ type PaymentSettings = {
   buttonLabel: string;
 };
 
+type CalculatorSettings = {
+  enabled: boolean;
+  courtFee: string;
+  legalAid: string;
+  inflationRate: string;
+  enforcementRate: string;
+  title: string;
+  note: string;
+  disclaimer: string;
+};
+
 function normalizeAmount(value: string) {
-  const normalized = Number(String(value ?? "").replace(",", "."));
-  return Number.isFinite(normalized) ? normalized : 0;
+  const normalized = String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(",", ".");
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function hasValidBalance(value: string) {
+  if (!String(value ?? "").trim()) return false;
+
+  return Number.isFinite(
+    Number(
+      String(value ?? "")
+        .replace(/\s+/g, "")
+        .replace(",", "."),
+    ),
+  );
+}
+
+function isDebtBalance(value: string) {
+  return normalizeAmount(value) < 0;
+}
+
+function normalizeSearchValue(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[№#]/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function itemMatchesQuery(item: DebtorItem, query: string) {
+  const normalizedQuery = normalizeSearchValue(query);
+
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    item.apartmentLabel,
+    item.accountNumber,
+    item.ownerName,
+    item.apartmentLabel.replace(/^кв\.?\s*/i, ""),
+  ].some((value) => normalizeSearchValue(value).includes(normalizedQuery));
 }
 
 function normalizeItems(value: unknown): DebtorItem[] {
@@ -58,19 +112,8 @@ function normalizeItems(value: unknown): DebtorItem[] {
       };
     })
     .filter((item): item is DebtorItem => Boolean(item?.apartmentId))
-    .filter((item) => normalizeAmount(item.amount) > 0);
+    .filter((item) => hasValidBalance(item.amount));
 }
-
-type CalculatorSettings = {
-  enabled: boolean;
-  courtFee: string;
-  legalAid: string;
-  inflationRate: string;
-  enforcementRate: string;
-  title: string;
-  note: string;
-  disclaimer: string;
-};
 
 function normalizeCalculator(value: unknown): CalculatorSettings | null {
   if (!value || typeof value !== "object") {
@@ -105,9 +148,12 @@ function normalizePayment(value: unknown): PaymentSettings {
 
   return {
     url: String(raw.url ?? "").trim(),
-    title: String(raw.title ?? "Оплата заборгованості").trim() || "Оплата заборгованості",
+    title:
+      String(raw.title ?? "Оплата заборгованості").trim() ||
+      "Оплата заборгованості",
     note: String(raw.note ?? "").trim(),
-    buttonLabel: String(raw.buttonLabel ?? "Оплатити").trim() || "Оплатити",
+    buttonLabel:
+      String(raw.buttonLabel ?? "Оплатити").trim() || "Оплатити",
   };
 }
 
@@ -135,17 +181,37 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+function formatSignedBalance(amount: number) {
+  if (amount > 0) return `+${formatCurrency(amount)} ₴`;
+  if (amount < 0) return `−${formatCurrency(Math.abs(amount))} ₴`;
 
-function getDebtRowClass(amount: number) {
-  if (amount >= 10000) {
-    return "border-[#E6CFCF] bg-[#F5E6E6]";
-  }
+  return "0 ₴";
+}
 
-  if (amount >= 5000) {
+function getBalanceStatus(amount: number) {
+  if (amount < 0) return "Є заборгованість";
+  if (amount > 0) return "Позитивний баланс";
+
+  return "Баланс 0";
+}
+
+function getBalanceRowClass(amount: number) {
+  if (amount < 0) {
     return "border-[#E6CFCF] bg-[#F8ECEC]";
   }
 
+  if (amount > 0) {
+    return "border-[#CFE4D4] bg-[#EAF4EC]";
+  }
+
   return "border-[#E5DBCF]";
+}
+
+function getBalanceTextClass(amount: number) {
+  if (amount < 0) return "text-red-700";
+  if (amount > 0) return "text-emerald-700";
+
+  return "text-[#1F2A37]";
 }
 
 export default async function DebtorsPage({
@@ -172,66 +238,57 @@ export default async function DebtorsPage({
       }
     : null;
 
-  const hasPublishedItems = Boolean(debtors && debtors.activeItems.length > 0);
-
-  const hasPublishedSnapshot = Boolean(
-    content &&
-      (typeof content.updatedAt === "string" ||
-        (Array.isArray(content.activeItems) && hasPublishedItems)),
-  );
-
   const updatedAtLabel = formatUpdatedAt(content?.updatedAt);
   const payment = normalizePayment(content?.payment);
   const calculator = normalizeCalculator(content?.calculator);
-  const activeItems = normalizeItems(content?.activeItems);
+  const balanceItems = normalizeItems(content?.activeItems);
+  const debtItems = balanceItems.filter((item) => isDebtBalance(item.amount));
 
   const visibleItems = searchQuery
-    ? activeItems.filter((item) =>
-        [item.apartmentLabel, item.accountNumber]
-          .join(" ")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-      )
-    : activeItems;
+    ? balanceItems.filter((item) => itemMatchesQuery(item, searchQuery))
+    : debtItems;
 
-  const totalAmount = activeItems.reduce(
-    (sum, item) => sum + normalizeAmount(item.amount),
+  const totalDebtAmount = debtItems.reduce(
+    (sum, item) => sum + Math.abs(normalizeAmount(item.amount)),
     0,
   );
 
+  const hasPublishedSnapshot = Boolean(content && balanceItems.length > 0);
   const noPublishedState = !hasPublishedSnapshot;
-  const noDebtorsState = hasPublishedSnapshot && activeItems.length === 0;
+  const noDebtorsState = hasPublishedSnapshot && !searchQuery && debtItems.length === 0;
   const noSearchResultsState =
-    hasPublishedSnapshot && activeItems.length > 0 && visibleItems.length === 0;
+    hasPublishedSnapshot && Boolean(searchQuery) && visibleItems.length === 0;
 
   return (
     <section className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="w-full min-w-0 rounded-[24px] border border-[#DDD4CA] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[32px] sm:p-8"><div className="min-w-0 text-center">
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
-          Нарахування та боржники
-        </h1>
+      <div className="w-full min-w-0 rounded-[24px] border border-[#DDD4CA] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[32px] sm:p-8">
+        <div className="min-w-0 text-center">
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
+            Нарахування та боржники
+          </h1>
 
-        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#7A746B]">
-          Актуальна інформація про заборгованості по будинку та стан нарахувань.
-        </p>
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#7A746B]">
+            Актуальний баланс особових рахунків та список квартир із заборгованістю.
+          </p>
 
-        <div className="mt-6 inline-flex rounded-full border border-[#DDD4CA] bg-[#EAE2D8] px-4 py-2 text-sm font-medium text-[#2A3642]">
-          Дата актуальності: {updatedAtLabel}
+          <div className="mt-6 inline-flex rounded-full border border-[#DDD4CA] bg-[#EAE2D8] px-4 py-2 text-sm font-medium text-[#2A3642]">
+            Дата актуальності: {updatedAtLabel}
+          </div>
         </div>
-      </div></div>
+      </div>
 
-      <section className="mt-8 mx-auto max-w-5xl grid min-w-0 gap-4 lg:grid-cols-3 justify-center text-center">
+      <section className="mt-8 mx-auto grid min-w-0 max-w-5xl justify-center gap-4 text-center lg:grid-cols-3">
         <article className="rounded-[22px] border border-[#DDD4CA] bg-[#F6F2EC] p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm font-medium text-[#2A3642]">Кількість боржників</div>
           <div className="mt-3 text-3xl font-semibold text-[#1F2A37]">
-            {activeItems.length}
+            {debtItems.length}
           </div>
         </article>
 
         <article className="rounded-[22px] border border-[#DDD4CA] bg-[#F6F2EC] p-4 sm:rounded-[28px] sm:p-6">
           <div className="text-sm font-medium text-[#2A3642]">Загальна сума заборгованості</div>
           <div className="mt-3 text-3xl font-semibold text-[#1F2A37]">
-            {formatCurrency(totalAmount)} ₴
+            {formatCurrency(totalDebtAmount)} ₴
           </div>
         </article>
 
@@ -239,10 +296,10 @@ export default async function DebtorsPage({
           <div className="text-sm font-medium text-[#2A3642]">Статус публікації</div>
           <div className="mt-3 text-lg font-semibold text-[#1F2A37]">
             {noPublishedState
-              ? "Список не опубліковано"
-              : noDebtorsState
+              ? "Баланси не опубліковано"
+              : debtItems.length === 0
                 ? "Боржників немає"
-                : "Список опубліковано"}
+                : "Баланси опубліковано"}
           </div>
         </article>
       </section>
@@ -253,7 +310,7 @@ export default async function DebtorsPage({
             type="text"
             name="q"
             defaultValue={searchQuery}
-            placeholder="Пошук за квартирою або особовим рахунком"
+            placeholder="Введіть квартиру або особовий рахунок"
             className="w-full rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition hover:border-[#CBBBAA] focus:border-[#CBBBAA] focus:ring-2 focus:ring-[#E5DBCF]"
           />
           <button
@@ -263,16 +320,20 @@ export default async function DebtorsPage({
             Знайти
           </button>
         </form>
+
+        <p className="mt-3 text-sm leading-6 text-[#7A746B]">
+          Без пошуку показуються тільки квартири із заборгованістю. Через пошук мешканець може перевірити актуальний баланс своєї квартири або особового рахунку.
+        </p>
       </div>
 
       <section className="mt-8 min-w-0">
         {noPublishedState ? (
           <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
-            Немає опублікованого списку заборгованостей.
+            Немає опублікованого списку балансів.
           </div>
         ) : noDebtorsState ? (
           <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
-            На даний момент опублікований список не містить боржників.
+            На даний момент за опублікованими балансами боржників немає. Для перевірки конкретної квартири скористайтесь пошуком.
           </div>
         ) : noSearchResultsState ? (
           <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
@@ -280,9 +341,9 @@ export default async function DebtorsPage({
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-hidden rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8]">
-            <div className="w-full overflow-x-auto overflow-y-auto max-h-[520px] overscroll-x-contain">
+            <div className="max-h-[520px] w-full overflow-x-auto overflow-y-auto overscroll-x-contain">
               <table className="w-full table-auto border-collapse">
-                <thead className="bg-[#EAE2D8] sticky top-0 z-10">
+                <thead className="sticky top-0 z-10 bg-[#EAE2D8]">
                   <tr className="border-b border-[#E5DBCF] text-left">
                     <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
                       Квартира
@@ -291,10 +352,10 @@ export default async function DebtorsPage({
                       Особовий рахунок
                     </th>
                     <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
-                      Сума
+                      Баланс
                     </th>
                     <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
-                      Термін
+                      Статус
                     </th>
                   </tr>
                 </thead>
@@ -306,7 +367,7 @@ export default async function DebtorsPage({
                     return (
                       <tr
                         key={item.apartmentId}
-                        className={`border-b border-[#E5DBCF] hover:bg-[#EDE3D9] ${getDebtRowClass(amount)}`}
+                        className={`border-b border-[#E5DBCF] hover:bg-[#EDE3D9] ${getBalanceRowClass(amount)}`}
                       >
                         <td className="px-5 py-4 text-sm font-medium text-[#1F2A37]">
                           {item.apartmentLabel || "—"}
@@ -314,11 +375,11 @@ export default async function DebtorsPage({
                         <td className="px-5 py-4 text-sm text-[#5B6B7C]">
                           {item.accountNumber || "—"}
                         </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-[#1F2A37]">
-                          {formatCurrency(amount)} ₴
+                        <td className={`px-5 py-4 text-sm font-semibold ${getBalanceTextClass(amount)}`}>
+                          {formatSignedBalance(amount)}
                         </td>
                         <td className="px-5 py-4 text-sm text-[#5B6B7C]">
-                          {item.days ? `${item.days} дн.` : "—"}
+                          {getBalanceStatus(amount)}
                         </td>
                       </tr>
                     );
@@ -332,17 +393,17 @@ export default async function DebtorsPage({
 
       <PublicDebtorsPaymentBlock
         payment={payment}
-        items={activeItems.map((item) => ({
+        items={debtItems.map((item) => ({
           apartmentId: item.apartmentId,
           apartmentLabel: item.apartmentLabel,
           accountNumber: item.accountNumber,
-          amount: item.amount,
+          amount: String(Math.abs(normalizeAmount(item.amount))),
         }))}
       />
 
       <PublicDebtorsCalculatorBlock
         calculator={calculator}
-        hasPublishedDebtors={!noPublishedState && activeItems.length > 0}
+        hasPublishedDebtors={!noPublishedState && debtItems.length > 0}
       />
     </section>
   );

@@ -159,17 +159,25 @@ function normalizeDecimalInput(value: string) {
   return value.replace(",", ".");
 }
 
-function isPositiveAmount(value: string) {
+function parseBalanceAmount(value: string) {
+  const normalized = Number(normalizeDecimalInput(value).replace(/\s+/g, ""));
+  return Number.isFinite(normalized) ? normalized : 0;
+}
+
+function hasBalanceAmount(value: string) {
   if (!value.trim()) return false;
 
-  const normalized = Number(normalizeDecimalInput(value));
-  return Number.isFinite(normalized) && normalized > 0;
+  return Number.isFinite(Number(normalizeDecimalInput(value).replace(/\s+/g, "")));
+}
+
+function isDebtBalance(value: string) {
+  return parseBalanceAmount(value) < 0;
 }
 
 function formatSummaryAmount(items: DebtSnapshotItem[]) {
   const total = items.reduce((sum, item) => {
-    const amount = Number(normalizeDecimalInput(item.amount));
-    return Number.isFinite(amount) ? sum + amount : sum;
+    const amount = parseBalanceAmount(item.amount);
+    return amount < 0 ? sum + Math.abs(amount) : sum;
   }, 0);
 
   return new Intl.NumberFormat("ru-RU", {
@@ -241,8 +249,13 @@ export function HouseDebtorsWorkspace({
   );
 
   const previewItems = useMemo(
-    () => workingRows.filter((item) => isPositiveAmount(item.amount)),
+    () => workingRows.filter((item) => hasBalanceAmount(item.amount)),
     [workingRows],
+  );
+
+  const previewDebtorsCount = useMemo(
+    () => previewItems.filter((item) => isDebtBalance(item.amount)).length,
+    [previewItems],
   );
 
   const filteredRows = useMemo(() => {
@@ -252,8 +265,8 @@ export function HouseDebtorsWorkspace({
       activeTab === "all"
         ? workingRows
         : activeTab === "published"
-          ? activeItems.filter((item) => isPositiveAmount(item.amount))
-          : draftItems.filter((item) => isPositiveAmount(item.amount));
+          ? activeItems.filter((item) => hasBalanceAmount(item.amount))
+          : draftItems.filter((item) => hasBalanceAmount(item.amount));
 
     if (!query) {
       return source;
@@ -280,7 +293,10 @@ export function HouseDebtorsWorkspace({
     field: "amount" | "days",
     value: string,
   ) {
-    const nextValue = field === "amount" ? value.replace(/[^\d.,]/g, "") : value.replace(/[^\d]/g, "");
+    const nextValue =
+      field === "amount"
+        ? value.replace(/[^\d,.-]/g, "").replace(/(?!^)-/g, "")
+        : value.replace(/[^\d]/g, "");
 
     setWorkingRows((prev) =>
       prev.map((item) =>
@@ -516,14 +532,20 @@ export function HouseDebtorsWorkspace({
   const paymentSaveSuccess =
     submittedMode === "save_payment" && !isPending && !lastError;
   const totalApartmentsCount = workingRows.length;
+  const publishedBalanceRowsCount = activeItems.filter((item) =>
+    hasBalanceAmount(item.amount),
+  ).length;
+  const draftBalanceRowsCount = draftItems.filter((item) =>
+    hasBalanceAmount(item.amount),
+  ).length;
   const publishedDebtorsCount = activeItems.filter((item) =>
-    isPositiveAmount(item.amount),
+    isDebtBalance(item.amount),
   ).length;
   const draftDebtorsCount = draftItems.filter((item) =>
-    isPositiveAmount(item.amount),
+    isDebtBalance(item.amount),
   ).length;
-  const isDraftEmpty = draftDebtorsCount === 0;
-  const isPublishedEmpty = publishedDebtorsCount === 0;
+  const isDraftEmpty = draftBalanceRowsCount === 0;
+  const isPublishedEmpty = publishedBalanceRowsCount === 0;
   const isPreviewEmpty = previewItems.length === 0;
   const trimmedPaymentUrl = payment.url.trim();
   const hasPaymentUrl = Boolean(trimmedPaymentUrl);
@@ -558,15 +580,15 @@ export function HouseDebtorsWorkspace({
           <div>
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">Боржники</h2>
             <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Керування реєстром заборгованостей по квартирах, чернеткою публікації та опублікованим списком для мешканців.
+              Керування балансами особових рахунків, чернеткою публікації та списком боржників для мешканців.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             {[
               { key: "all", label: "Усі квартири", count: totalApartmentsCount },
-              { key: "published", label: "Опубліковано", count: publishedDebtorsCount },
-              { key: "draft", label: "Чернетка", count: draftDebtorsCount },
+              { key: "published", label: "Опубліковано", count: publishedBalanceRowsCount },
+              { key: "draft", label: "Чернетка", count: draftBalanceRowsCount },
             ].map((tab) => {
               const isActive = activeTab === tab.key;
 
@@ -669,7 +691,7 @@ export function HouseDebtorsWorkspace({
 
       {activeTab === "draft" && isDraftEmpty ? (
         <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Чернетка поки порожня. Після підготовки списку боржників і збереження попереднього перегляду вона з’явиться тут.
+          Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
         </div>
       ) : null}
       {activeTab === "draft" && !isDraftEmpty ? (
@@ -708,7 +730,7 @@ export function HouseDebtorsWorkspace({
 
       {activeTab === "published" && isPublishedEmpty ? (
         <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться квартири із заборгованістю.
+          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
         </div>
       ) : null}
       {activeTab === "all" ? (
@@ -1139,7 +1161,7 @@ export function HouseDebtorsWorkspace({
                             updateField(row.apartmentId, "amount", event.target.value)
                           }
                           inputMode="decimal"
-                          placeholder="0.00"
+                          placeholder="-1500.00 або 250.00"
                           className="w-[140px] rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
                         />
                       ) : (
@@ -1199,7 +1221,7 @@ export function HouseDebtorsWorkspace({
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Боржників: {previewItems.length}
+                  Боржників: {previewDebtorsCount}
                 </span>
                 <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}

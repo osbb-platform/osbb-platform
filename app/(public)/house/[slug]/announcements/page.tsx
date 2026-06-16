@@ -87,18 +87,12 @@ function formatPublishedAt(value: unknown) {
 }
 
 
-function getBodyPreview(value: unknown, maxLength = 320) {
+function getAnnouncementBody(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
     return houseAnnouncementsCopy.empty.noText;
   }
 
-  const normalized = value.trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  return `${normalized.slice(0, maxLength).trim()}…`;
+  return value.trim();
 }
 
 export default async function PublicHouseAnnouncementsPage({
@@ -373,7 +367,7 @@ export default async function PublicHouseAnnouncementsPage({
                         <div
                           className={`mt-3 whitespace-pre-wrap break-words text-sm leading-6 sm:mt-4 sm:text-[15px] sm:leading-7 ${styles.body}`}
                         >
-                          {getBodyPreview(content.body, 320)}
+                          {getAnnouncementBody(content.body)}
                         </div>
                       </div>
                     </div>

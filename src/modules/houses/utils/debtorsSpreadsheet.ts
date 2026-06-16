@@ -5,7 +5,14 @@ const HEADER_ALIASES = {
   accountNumber: ["Особовий рахунок", "Лицевой счет"],
   ownerName: ["Власник", "Владелец"],
   area: ["Площа", "Квадраты"],
-  amount: ["Сума боргу", "Сумма долга"],
+  amount: [
+    "Баланс",
+    "Стан рахунку",
+    "Состояние счета",
+    "Сальдо",
+    "Сума боргу",
+    "Сумма долга",
+  ],
   days: ["Термін боргу", "Срок долга"],
 } as const;
 
@@ -72,8 +79,13 @@ function isAreaValid(value: string) {
 }
 
 function isAmountValid(value: string) {
-  if (!value) return true;
-  return /^\d+(?:[.,]\d+)?$/.test(value);
+  const normalized = value.trim().replace(/\s+/g, "").replace(",", ".");
+
+  if (!normalized) {
+    return true;
+  }
+
+  return /^-?\d+(\.\d{1,2})?$/.test(normalized);
 }
 
 function isDaysValid(value: string) {
@@ -111,7 +123,7 @@ export function exportDebtorsRegistry(params: {
     "Особовий рахунок": row.accountNumber,
     "Власник": row.ownerName,
     "Площа": formatAreaForSheet(row.area),
-    "Сума боргу": row.amount,
+    "Баланс": row.amount,
     "Термін боргу": row.days,
   }));
 
