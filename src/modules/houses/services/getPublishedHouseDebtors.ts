@@ -11,7 +11,6 @@ import {
   type AdminHouseDebtorsSnapshot,
   type HouseDebtorsItemSnapshot,
 } from "./getAdminHouseDebtors";
-import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 
 function mapSettings(settings: HouseDebtorsSettings | null) {
   return {
@@ -117,7 +116,6 @@ export const getPublishedHouseDebtors = cache(
     const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
     const activeItems = ((itemsResult.data ?? []) as unknown as HouseDebtorsItem[])
       .map(mapItem)
-      .filter((item) => isAmountEligibleForDebtors(item.amount))
       .sort(sortItems);
 
     const mappedSettings = mapSettings(settings);
