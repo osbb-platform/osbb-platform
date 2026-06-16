@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
+import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import {
@@ -171,7 +172,7 @@ function hasBalanceAmount(value: string) {
 }
 
 function isDebtBalance(value: string) {
-  return parseBalanceAmount(value) < 0;
+  return isAmountEligibleForDebtors(value);
 }
 
 function formatSummaryAmount(items: DebtSnapshotItem[]) {

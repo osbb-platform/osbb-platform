@@ -2,6 +2,7 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
+import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -61,7 +62,7 @@ function hasValidBalance(value: string) {
 }
 
 function isDebtBalance(value: string) {
-  return normalizeAmount(value) < 0;
+  return isAmountEligibleForDebtors(value);
 }
 
 function normalizeSearchValue(value: string) {
