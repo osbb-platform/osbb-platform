@@ -42,6 +42,10 @@ const DEFAULT_SNAPSHOT: RequisitesSnapshot = {
   paymentButtonLabel: "Перейти до оплати",
 };
 
+function toSafeString(value: unknown, fallback = "") {
+  return String(value ?? fallback);
+}
+
 function normalizeIban(value: string) {
   return value.replace(/\s+/g, "").toUpperCase();
 }
@@ -51,8 +55,8 @@ function isValidIban(value: string) {
   return /^UA\d{27}$/.test(iban);
 }
 
-function normalizeLegacyPurposeTemplate(value: string) {
-  const normalized = value.trim();
+function normalizeLegacyPurposeTemplate(value: unknown) {
+  const normalized = toSafeString(value).trim();
 
   if (
     normalized ===
@@ -64,18 +68,18 @@ function normalizeLegacyPurposeTemplate(value: string) {
   return normalized;
 }
 
-function normalizeSnapshot(value: HouseRequisitesSnapshot): RequisitesSnapshot {
+function normalizeSnapshot(value: Partial<HouseRequisitesSnapshot> | null | undefined): RequisitesSnapshot {
   return {
-    recipient: value.recipient.trim(),
-    iban: value.iban.trim(),
-    edrpou: value.edrpou.trim(),
-    bank: value.bank.trim(),
+    recipient: toSafeString(value?.recipient).trim(),
+    iban: toSafeString(value?.iban).trim(),
+    edrpou: toSafeString(value?.edrpou).trim(),
+    bank: toSafeString(value?.bank).trim(),
     purposeTemplate:
-      normalizeLegacyPurposeTemplate(value.purposeTemplate) ||
+      normalizeLegacyPurposeTemplate(value?.purposeTemplate) ||
       DEFAULT_SNAPSHOT.purposeTemplate,
-    paymentUrl: value.paymentUrl.trim(),
+    paymentUrl: toSafeString(value?.paymentUrl).trim(),
     paymentButtonLabel:
-      value.paymentButtonLabel.trim() || DEFAULT_SNAPSHOT.paymentButtonLabel,
+      toSafeString(value?.paymentButtonLabel).trim() || DEFAULT_SNAPSHOT.paymentButtonLabel,
   };
 }
 
