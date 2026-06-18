@@ -1,9 +1,11 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type { HouseRecord } from "@/src/shared/types/entities/house.types";
 
-export const getHouseBySlug = cache(async (slug: string): Promise<HouseRecord | null> => {
-  const supabase = await createSupabaseServerClient();
+async function loadHouseBySlug(slug: string): Promise<HouseRecord | null> {
+  const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
     .from("houses")
@@ -59,7 +61,7 @@ export const getHouseBySlug = cache(async (slug: string): Promise<HouseRecord | 
   const typedData = data as unknown as HouseRecord;
 
   if (typedData.cover_image_path) {
-    const { data: publicUrlData } = await supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from("house-cover-images")
       .getPublicUrl(typedData.cover_image_path);
 
@@ -69,4 +71,15 @@ export const getHouseBySlug = cache(async (slug: string): Promise<HouseRecord | 
   }
 
   return typedData;
+}
+
+export const getHouseBySlug = cache(async (slug: string): Promise<HouseRecord | null> => {
+  return unstable_cache(
+    () => loadHouseBySlug(slug),
+    ["public-house-by-slug", slug],
+    {
+      tags: ["house-by-slug", `house-slug:${slug}`],
+      revalidate: 300,
+    },
+  )();
 });

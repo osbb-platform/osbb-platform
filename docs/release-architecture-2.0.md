@@ -190,3 +190,58 @@ These references are intentionally retained until a separate compatibility remov
 House-section versioning was quarantined with legacy actions.
 
 Remaining live references are in src/modules/company/*, which is a separate legacy subsystem and outside the 13 house content sections migrated in this release.
+
+## Hotfix — Public runtime request reduction / Vercel 403 mitigation
+
+Date: 2026-06-18  
+Branch: release/summer-2026-main-integration-20260615142407
+
+### Scope
+
+This hotfix reduces excessive public/root requests that could lead to Vercel 403 / rate-limit symptoms on public house pages.
+
+### Runtime changes
+
+- `proxy.ts` now exits early for `/api/*` before any Supabase/auth work.
+- Supabase middleware auth lookup is limited to the admin host only.
+- Root domain and public house subdomains no longer create middleware Supabase clients and no longer call `auth.getUser()`.
+- Added a cookie-free public Supabase server client for cacheable public reads.
+- Public house read services now use `unstable_cache` with house-level and section-level tags.
+- Content mutations now invalidate public cache tags through `revalidateTag(..., "max")` plus existing public paths.
+- Public read services return safe empty/null snapshots on read errors instead of throwing into public runtime.
+- `validateHouseSession` remains intentionally cookie/server based and is not moved into public cache.
+
+### Bell feed optimization
+
+- Replaced public bell feed fan-out from 11 public service calls with a single Supabase RPC:
+  - `public.get_house_bell_feed(target_house_id uuid, window_days int default 7)`
+- Local migration file:
+  - `supabase/migrations/202606180001_create_house_bell_feed_rpc.sql`
+- Production migration note:
+  - Apply this SQL manually through Supabase SQL Editor before/with production deployment.
+  - Do not rely on CLI migration push for production in this hotfix workflow.
+
+### Analytics request batching
+
+- `/api/analytics/track` accepts both legacy single-event payloads and new `events[]` batch payloads.
+- Public house tracker sends `site_visit` + `section_view` in one beacon/fetch payload per route.
+- PDF viewer sends `document_open` using the same batch-compatible payload shape.
+- Server ingest inserts analytics rows in one batch insert, capped at 20 events per request.
+
+### Observability checks after production deploy
+
+Check Vercel logs and browser Network for the following:
+
+- Public/root requests must not trigger Supabase auth middleware calls.
+- `/api/*` requests should bypass proxy auth work.
+- Public house first load should not show repeated service fan-out for the bell feed.
+- Bell feed should call `/rest/v1/rpc/get_house_bell_feed` once per cache miss.
+- Analytics tracker should send one `/api/analytics/track` request containing `events[]` for page visit + section view.
+- No new public 403 spikes on 10-house smoke test.
+- Public pages should continue rendering safe empty states if a content read fails.
+
+### Validation
+
+- `npm run build` passed after proxy/cache/bell-feed/analytics changes.
+- `npm run lint` passed with one pre-existing warning:
+  - `src/modules/houses/components/HouseDebtorsWorkspace.tsx` — unused `draftDebtorsCount`.

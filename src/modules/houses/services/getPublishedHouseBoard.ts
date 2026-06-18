@@ -1,4 +1,7 @@
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 export type PublishedHouseBoardIntro = {
   intro: string;
@@ -45,6 +48,15 @@ type BoardMemberRow = {
   updated_at: string;
 };
 
+function emptyBoard(): PublishedHouseBoard {
+  return {
+    intro: {
+      intro: "",
+    },
+    members: [],
+  };
+}
+
 function mapMember(row: BoardMemberRow): PublishedHouseBoardMember {
   return {
     id: row.id,
@@ -60,8 +72,8 @@ function mapMember(row: BoardMemberRow): PublishedHouseBoardMember {
   };
 }
 
-export async function getPublishedHouseBoard(houseId: string): Promise<PublishedHouseBoard> {
-  const supabase = await createSupabaseServerClient();
+async function loadPublishedHouseBoard(houseId: string): Promise<PublishedHouseBoard> {
+  const supabase = createSupabasePublicClient();
 
   const { data: intro, error: introError } = await supabase
     .from("house_board_intro")
@@ -70,7 +82,11 @@ export async function getPublishedHouseBoard(houseId: string): Promise<Published
     .maybeSingle();
 
   if (introError) {
-    throw new Error(`Failed to load published house board intro: ${introError.message}`);
+    console.error("Failed to load published house board intro:", {
+      houseId,
+      message: introError.message,
+    });
+    return emptyBoard();
   }
 
   const { data: members, error: membersError } = await supabase
@@ -81,7 +97,16 @@ export async function getPublishedHouseBoard(houseId: string): Promise<Published
     .order("created_at", { ascending: true });
 
   if (membersError) {
-    throw new Error(`Failed to load published house board members: ${membersError.message}`);
+    console.error("Failed to load published house board members:", {
+      houseId,
+      message: membersError.message,
+    });
+    return {
+      intro: {
+        intro: ((intro as BoardIntroRow | null)?.intro ?? ""),
+      },
+      members: [],
+    };
   }
 
   return {
@@ -92,8 +117,8 @@ export async function getPublishedHouseBoard(houseId: string): Promise<Published
   };
 }
 
-export async function getChairmanForHouse(houseId: string) {
-  const supabase = await createSupabaseServerClient();
+async function loadChairmanForHouse(houseId: string) {
+  const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
     .from("house_board_members")
@@ -105,8 +130,36 @@ export async function getChairmanForHouse(houseId: string) {
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to load house chairman: ${error.message}`);
+    console.error("Failed to load house chairman:", {
+      houseId,
+      message: error.message,
+    });
+    return null;
   }
 
   return data ? mapMember(data as BoardMemberRow) : null;
 }
+
+export const getPublishedHouseBoard = cache(
+  async (houseId: string): Promise<PublishedHouseBoard> => {
+    return unstable_cache(
+      () => loadPublishedHouseBoard(houseId),
+      ["published-house-board", houseId],
+      {
+        tags: [`house:${houseId}:board`, `house:${houseId}:board_members`, `house:${houseId}:board_intro`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
+  },
+);
+
+export const getChairmanForHouse = cache(async (houseId: string) => {
+  return unstable_cache(
+    () => loadChairmanForHouse(houseId),
+    ["public-house-chairman", houseId],
+    {
+      tags: [`house:${houseId}:board`, `house:${houseId}:board_members`, `house:${houseId}`],
+      revalidate: 300,
+    },
+  )();
+});

@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 import type { HouseRequisitesSnapshot } from "./getAdminHouseRequisites";
 
@@ -32,26 +33,43 @@ const mapRow = (row: HouseRequisitesPublicRow): HouseRequisitesSnapshot => ({
   updatedAt: row.updated_at,
 });
 
+async function loadPublishedHouseRequisites(
+  houseId: string,
+): Promise<HouseRequisitesSnapshot | null> {
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase
+    .from("house_requisites")
+    .select(
+      "id, house_id, recipient, iban, edrpou, bank, purpose_template, payment_url, payment_button_label, lock_version, updated_at",
+    )
+    .eq("house_id", houseId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load published house requisites:", {
+      houseId,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapRow(data as HouseRequisitesPublicRow);
+}
+
 export const getPublishedHouseRequisites = cache(
   async (houseId: string): Promise<HouseRequisitesSnapshot | null> => {
-    const supabase = await createSupabaseServerClient();
-
-    const { data, error } = await supabase
-      .from("house_requisites")
-      .select(
-        "id, house_id, recipient, iban, edrpou, bank, purpose_template, payment_url, payment_button_label, lock_version, updated_at",
-      )
-      .eq("house_id", houseId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`Failed to load published house requisites: ${error.message}`);
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return mapRow(data as HouseRequisitesPublicRow);
+    return unstable_cache(
+      () => loadPublishedHouseRequisites(houseId),
+      ["published-house-requisites", houseId],
+      {
+        tags: [`house:${houseId}:requisites`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

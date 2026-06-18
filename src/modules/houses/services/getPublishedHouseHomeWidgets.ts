@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 import type { HouseHomeWidgetsSnapshot } from "./getAdminHouseHomeWidgets";
 
@@ -52,24 +53,41 @@ const mapRow = (row: HouseHomeWidgetsPublicRow): HouseHomeWidgetsSnapshot => ({
   updatedAt: row.updated_at,
 });
 
+async function loadPublishedHouseHomeWidgets(
+  houseId: string,
+): Promise<HouseHomeWidgetsSnapshot | null> {
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase
+    .from("house_home_widgets")
+    .select("id, house_id, status_widgets, lock_version, updated_at")
+    .eq("house_id", houseId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load published house home widgets:", {
+      houseId,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapRow(data as HouseHomeWidgetsPublicRow);
+}
+
 export const getPublishedHouseHomeWidgets = cache(
   async (houseId: string): Promise<HouseHomeWidgetsSnapshot | null> => {
-    const supabase = await createSupabaseServerClient();
-
-    const { data, error } = await supabase
-      .from("house_home_widgets")
-      .select("id, house_id, status_widgets, lock_version, updated_at")
-      .eq("house_id", houseId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`Failed to load published house home widgets: ${error.message}`);
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return mapRow(data as HouseHomeWidgetsPublicRow);
+    return unstable_cache(
+      () => loadPublishedHouseHomeWidgets(houseId),
+      ["published-house-home-widgets", houseId],
+      {
+        tags: [`house:${houseId}:home_widgets`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

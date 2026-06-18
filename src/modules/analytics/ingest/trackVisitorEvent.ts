@@ -39,27 +39,44 @@ function sanitizeMetadata(metadata: Record<string, unknown> | null | undefined) 
   );
 }
 
-export async function trackVisitorEvent(input: TrackVisitorEventInput) {
+function normalizeVisitorEvent(input: TrackVisitorEventInput) {
+  if (!input.houseId || !input.sessionId || !input.eventType) {
+    return null;
+  }
+
+  return {
+    house_id: input.houseId,
+    session_id: input.sessionId,
+    event_type: input.eventType,
+    section_key: input.sectionKey ?? null,
+    entity_id: input.entityId ?? null,
+    metadata: sanitizeMetadata(input.metadata),
+  };
+}
+
+export async function trackVisitorEvents(inputs: TrackVisitorEventInput[]) {
   try {
-    if (!input.houseId || !input.sessionId || !input.eventType) {
+    const rows = inputs
+      .map(normalizeVisitorEvent)
+      .filter((row): row is NonNullable<typeof row> => row !== null)
+      .slice(0, 20);
+
+    if (rows.length === 0) {
       return;
     }
 
     const supabase = await createSupabaseServerClient();
 
-    const { error } = await supabase.from("house_visitor_events").insert({
-      house_id: input.houseId,
-      session_id: input.sessionId,
-      event_type: input.eventType,
-      section_key: input.sectionKey ?? null,
-      entity_id: input.entityId ?? null,
-      metadata: sanitizeMetadata(input.metadata),
-    });
+    const { error } = await supabase.from("house_visitor_events").insert(rows);
 
     if (error) {
-      console.error("[analytics] Failed to track visitor event", error.message);
+      console.error("[analytics] Failed to track visitor events", error.message);
     }
   } catch (error) {
-    console.error("[analytics] Visitor event tracking failed", error);
+    console.error("[analytics] Visitor events tracking failed", error);
   }
+}
+
+export async function trackVisitorEvent(input: TrackVisitorEventInput) {
+  await trackVisitorEvents([input]);
 }

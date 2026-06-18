@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseDebtorsItem,
   HouseDebtorsSettings,
@@ -54,6 +55,16 @@ function mapSettings(settings: HouseDebtorsSettings | null) {
   };
 }
 
+function emptySnapshot(): AdminHouseDebtorsSnapshot {
+  return {
+    ...mapSettings(null),
+    updatedAt: null,
+    activeItems: [],
+    draftItems: [],
+    archivedItems: [],
+  };
+}
+
 function mapItem(item: HouseDebtorsItem): HouseDebtorsItemSnapshot {
   return {
     id: item.id,
@@ -82,58 +93,75 @@ function sortItems(
   });
 }
 
+async function loadPublishedHouseDebtors(
+  houseId: string,
+): Promise<AdminHouseDebtorsSnapshot> {
+  const supabase = createSupabasePublicClient();
+
+  const [settingsResult, itemsResult] = await Promise.all([
+    supabase
+      .from("house_debtors_settings")
+      .select("*")
+      .eq("house_id", houseId)
+      .maybeSingle(),
+    supabase
+      .from("house_debtors_items")
+      .select("*")
+      .eq("house_id", houseId)
+      .eq("lifecycle_status", "published")
+      .order("apartment_label", { ascending: true })
+      .order("updated_at", { ascending: false }),
+  ]);
+
+  if (settingsResult.error) {
+    console.error("Failed to load published debtors settings:", {
+      houseId,
+      message: settingsResult.error.message,
+    });
+    return emptySnapshot();
+  }
+
+  if (itemsResult.error) {
+    console.error("Failed to load published debtors items:", {
+      houseId,
+      message: itemsResult.error.message,
+    });
+    return emptySnapshot();
+  }
+
+  const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
+  const activeItems = ((itemsResult.data ?? []) as unknown as HouseDebtorsItem[])
+    .map(mapItem)
+    .sort(sortItems);
+
+  const mappedSettings = mapSettings(settings);
+
+  const latestItemsUpdatedAt =
+    activeItems.length > 0
+      ? activeItems
+          .map((item) => item.updatedAt)
+          .sort()
+          .at(-1) ?? null
+      : null;
+
+  return {
+    ...mappedSettings,
+    updatedAt: latestItemsUpdatedAt ?? mappedSettings.updatedAt,
+    activeItems,
+    draftItems: [],
+    archivedItems: [],
+  };
+}
+
 export const getPublishedHouseDebtors = cache(
   async (houseId: string): Promise<AdminHouseDebtorsSnapshot> => {
-    const supabase = await createSupabaseServerClient();
-
-    const [settingsResult, itemsResult] = await Promise.all([
-      supabase
-        .from("house_debtors_settings")
-        .select("*")
-        .eq("house_id", houseId)
-        .maybeSingle(),
-      supabase
-        .from("house_debtors_items")
-        .select("*")
-        .eq("house_id", houseId)
-        .eq("lifecycle_status", "published")
-        .order("apartment_label", { ascending: true })
-        .order("updated_at", { ascending: false }),
-    ]);
-
-    if (settingsResult.error) {
-      throw new Error(
-        `Failed to load published debtors settings: ${settingsResult.error.message}`,
-      );
-    }
-
-    if (itemsResult.error) {
-      throw new Error(
-        `Failed to load published debtors items: ${itemsResult.error.message}`,
-      );
-    }
-
-    const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
-    const activeItems = ((itemsResult.data ?? []) as unknown as HouseDebtorsItem[])
-      .map(mapItem)
-      .sort(sortItems);
-
-    const mappedSettings = mapSettings(settings);
-
-    const latestItemsUpdatedAt =
-      activeItems.length > 0
-        ? activeItems
-            .map((item) => item.updatedAt)
-            .sort()
-            .at(-1) ?? null
-        : null;
-
-    return {
-      ...mappedSettings,
-      updatedAt: latestItemsUpdatedAt ?? mappedSettings.updatedAt,
-      activeItems,
-      draftItems: [],
-      archivedItems: [],
-    };
+    return unstable_cache(
+      () => loadPublishedHouseDebtors(houseId),
+      ["published-house-debtors", houseId],
+      {
+        tags: [`house:${houseId}:debtors`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

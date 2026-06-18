@@ -37,25 +37,21 @@ function resolveSubdomain(hostname: string): string | null {
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabase, response } = createSupabaseMiddlewareClient(request);
-
-  // Важно для Supabase SSR: обновляет auth cookies на каждом request.
-  // Без этого server components/actions на Vercel могут получать Auth session missing.
-  await supabase.auth.getUser();
-
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
   const subdomain = resolveSubdomain(hostname);
 
-  // API не переписываем ни на одном host.
+  // API-запросы не должны создавать Supabase middleware client,
+  // не должны обновлять auth-сессию через auth.getUser()
+  // и не должны переписываться ни на одном host.
   if (pathname.startsWith("/api/")) {
-    return response;
+    return NextResponse.next();
   }
 
   // Vercel preview не трогаем.
   if (hostname === "vercel.app" || hostname.endsWith(".vercel.app")) {
-    return response;
+    return NextResponse.next();
   }
 
   // www → apex только на prod-домене.
@@ -66,7 +62,7 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // Root / localhost / unknown host — pass-through.
+  // Root / localhost / unknown host — pass-through без Supabase/auth.
   if (!subdomain) {
     // На apex старые внутренние публичные/admin пути не должны светиться.
     if (hostname === ROOT_DOMAIN) {
@@ -79,13 +75,20 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    return response;
+    return NextResponse.next();
   }
 
   // ADMIN subdomain:
   // browser: admin.root/houses
   // internal: /admin/houses
+  //
+  // Supabase auth refresh нужен только admin-поддомену.
+  // Public/root/runtime не должны делать round-trip к Auth.
   if (subdomain === "admin") {
+    const { supabase, response } = createSupabaseMiddlewareClient(request);
+
+    await supabase.auth.getUser();
+
     if (pathname === "/admin" || pathname.startsWith("/admin/")) {
       url.pathname = pathname.slice("/admin".length) || "/";
       return NextResponse.redirect(url, 308);
@@ -102,6 +105,8 @@ export async function proxy(request: NextRequest) {
   // HOUSE subdomains:
   // browser: slug.root/announcements
   // internal: /house/slug/announcements
+  //
+  // Public house subdomains не создают Supabase middleware client.
   if (!RESERVED_SUBDOMAINS.has(subdomain)) {
     const duplicatePrefix = `/house/${subdomain}`;
 
@@ -114,12 +119,11 @@ export async function proxy(request: NextRequest) {
       pathname === "/" ? `/house/${subdomain}` : `/house/${subdomain}${pathname}`;
 
     return NextResponse.rewrite(
-      new URL(withSearch(housePath, url.search), request.url),
-      { headers: response.headers }
+      new URL(withSearch(housePath, url.search), request.url)
     );
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

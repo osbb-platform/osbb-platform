@@ -9,6 +9,17 @@ type PublicHouseAnalyticsTrackerProps = {
   houseSlug: string;
 };
 
+type AnalyticsBatchEvent = {
+  eventType: VisitorEventType;
+  sectionKey?: string | null;
+  metadata: {
+    source: "public_house";
+    houseSlug: string;
+    sectionKey: string | null;
+    pathname: string;
+  };
+};
+
 const SECTION_KEYS = new Set([
   "announcements",
   "information",
@@ -36,24 +47,18 @@ function getSectionKey(pathname: string, houseSlug: string) {
   return SECTION_KEYS.has(firstSegment) ? firstSegment : null;
 }
 
-function sendAnalyticsEvent(input: {
+function sendAnalyticsEvents(input: {
   houseId: string;
-  houseSlug: string;
-  eventType: VisitorEventType;
-  sectionKey?: string | null;
-  pathname?: string;
+  events: AnalyticsBatchEvent[];
 }) {
   try {
+    if (input.events.length === 0) {
+      return;
+    }
+
     const payload = JSON.stringify({
       houseId: input.houseId,
-      eventType: input.eventType,
-      sectionKey: input.sectionKey ?? null,
-      metadata: {
-        source: "public_house",
-        houseSlug: input.houseSlug,
-        sectionKey: input.sectionKey ?? null,
-        pathname: input.pathname ?? null,
-      },
+      events: input.events,
     });
 
     if (typeof navigator !== "undefined" && navigator.sendBeacon) {
@@ -71,7 +76,7 @@ function sendAnalyticsEvent(input: {
       keepalive: true,
     });
   } catch (error) {
-    console.error("[analytics] Failed to send visitor event", error);
+    console.error("[analytics] Failed to send visitor events", error);
   }
 }
 
@@ -88,32 +93,39 @@ export function PublicHouseAnalyticsTracker({
   );
 
   useEffect(() => {
-    if (visitedRef.current) {
-      return;
+    const events: AnalyticsBatchEvent[] = [];
+
+    if (!visitedRef.current) {
+      visitedRef.current = true;
+
+      events.push({
+        eventType: "site_visit",
+        sectionKey,
+        metadata: {
+          source: "public_house",
+          houseSlug,
+          sectionKey,
+          pathname,
+        },
+      });
     }
 
-    visitedRef.current = true;
-
-    sendAnalyticsEvent({
-      houseId,
-      houseSlug,
-      eventType: "site_visit",
-      sectionKey,
-      pathname,
-    });
-  }, [houseId, houseSlug, pathname, sectionKey]);
-
-  useEffect(() => {
-    if (!sectionKey) {
-      return;
+    if (sectionKey) {
+      events.push({
+        eventType: "section_view",
+        sectionKey,
+        metadata: {
+          source: "public_house",
+          houseSlug,
+          sectionKey,
+          pathname,
+        },
+      });
     }
 
-    sendAnalyticsEvent({
+    sendAnalyticsEvents({
       houseId,
-      houseSlug,
-      eventType: "section_view",
-      sectionKey,
-      pathname,
+      events,
     });
   }, [houseId, houseSlug, pathname, sectionKey]);
 

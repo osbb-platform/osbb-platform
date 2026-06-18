@@ -44,13 +44,17 @@ export function PublicReportPdfViewer({
 
       const payload = JSON.stringify({
         houseId: analyticsHouseId,
-        eventType: "document_open",
-        entityId: analyticsEntityId ?? null,
-        metadata: {
-          source: "public_pdf_viewer",
-          houseSlug: analyticsHouseSlug ?? null,
-          documentType: analyticsDocumentType ?? bucket,
-        },
+        events: [
+          {
+            eventType: "document_open",
+            entityId: analyticsEntityId ?? null,
+            metadata: {
+              source: "public_pdf_viewer",
+              houseSlug: analyticsHouseSlug ?? null,
+              documentType: analyticsDocumentType ?? bucket,
+            },
+          },
+        ],
       });
 
       if (typeof navigator !== "undefined" && navigator.sendBeacon) {

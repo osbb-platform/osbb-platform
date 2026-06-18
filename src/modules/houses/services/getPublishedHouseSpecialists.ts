@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseSpecialist,
   HouseSpecialistCategory,
@@ -11,46 +12,68 @@ import {
   type AdminHouseSpecialistsSnapshot,
 } from "./getAdminHouseSpecialists";
 
-export const getPublishedHouseSpecialists = cache(
-  async (houseId: string): Promise<AdminHouseSpecialistsSnapshot> => {
-    const supabase = await createSupabaseServerClient();
+async function loadPublishedHouseSpecialists(
+  houseId: string,
+): Promise<AdminHouseSpecialistsSnapshot> {
+  const supabase = createSupabasePublicClient();
 
-    const [specialistsResult, categoriesResult] = await Promise.all([
-      supabase
-        .from("house_specialists")
-        .select("*")
-        .eq("house_id", houseId)
-        .eq("lifecycle_status", "published")
-        .order("sort_order", { ascending: true })
-        .order("published_at", { ascending: false })
-        .order("updated_at", { ascending: false }),
-      supabase
-        .from("house_specialists_categories")
-        .select("*")
-        .eq("house_id", houseId)
-        .order("sort_order", { ascending: true })
-        .order("title", { ascending: true }),
-    ]);
+  const [specialistsResult, categoriesResult] = await Promise.all([
+    supabase
+      .from("house_specialists")
+      .select("*")
+      .eq("house_id", houseId)
+      .eq("lifecycle_status", "published")
+      .order("sort_order", { ascending: true })
+      .order("published_at", { ascending: false })
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("house_specialists_categories")
+      .select("*")
+      .eq("house_id", houseId)
+      .order("sort_order", { ascending: true })
+      .order("title", { ascending: true }),
+  ]);
 
-    if (specialistsResult.error) {
-      throw new Error(
-        `Failed to load published specialists: ${specialistsResult.error.message}`,
-      );
-    }
+  if (specialistsResult.error) {
+    console.error("Failed to load published specialists:", {
+      houseId,
+      message: specialistsResult.error.message,
+    });
+    return { specialists: [], categories: [] };
+  }
 
-    if (categoriesResult.error) {
-      throw new Error(
-        `Failed to load published specialist categories: ${categoriesResult.error.message}`,
-      );
-    }
-
+  if (categoriesResult.error) {
+    console.error("Failed to load published specialist categories:", {
+      houseId,
+      message: categoriesResult.error.message,
+    });
     return {
       specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
         mapHouseSpecialist,
       ),
-      categories: ((categoriesResult.data ?? []) as unknown as HouseSpecialistCategory[]).map(
-        mapHouseSpecialistCategory,
-      ),
+      categories: [],
     };
+  }
+
+  return {
+    specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
+      mapHouseSpecialist,
+    ),
+    categories: ((categoriesResult.data ?? []) as unknown as HouseSpecialistCategory[]).map(
+      mapHouseSpecialistCategory,
+    ),
+  };
+}
+
+export const getPublishedHouseSpecialists = cache(
+  async (houseId: string): Promise<AdminHouseSpecialistsSnapshot> => {
+    return unstable_cache(
+      () => loadPublishedHouseSpecialists(houseId),
+      ["published-house-specialists", houseId],
+      {
+        tags: [`house:${houseId}:specialists`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );
