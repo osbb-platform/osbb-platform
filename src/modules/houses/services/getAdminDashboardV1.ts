@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { getPlatformChangeHistory } from "@/src/modules/history/services/getPlatformChangeHistory";
 import {
   getAdminActiveApartmentCountsByHouseIds,
@@ -77,10 +78,10 @@ function getHouseBlockHref(houseId: string, block?: string) {
   const safeBlock = block?.trim();
 
   if (!safeBlock || safeBlock === "home") {
-    return `/admin/houses/${houseId}`;
+    return `${ROUTES.admin.houses}/${houseId}`;
   }
 
-  return `/admin/houses/${houseId}?block=${safeBlock}`;
+  return `${ROUTES.admin.houses}/${houseId}?block=${safeBlock}`;
 }
 
 

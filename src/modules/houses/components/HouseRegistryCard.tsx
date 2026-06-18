@@ -1,5 +1,6 @@
 "use client";
 
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -343,7 +344,7 @@ export function HouseRegistryCard({
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href={`/admin/houses/${house.id}`}
+              href={`${ROUTES.admin.houses}/${house.id}`}
               className={adminSecondaryButtonClass}
             >
               Керування будинком
