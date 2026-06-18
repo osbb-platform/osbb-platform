@@ -1,5 +1,6 @@
 "use client";
 
+import { houseUrl } from "@/src/shared/config/app/domains";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -481,7 +482,7 @@ export function PublicPlatformLandingClient() {
 
                           <div className="mt-6">
                             <Link
-                              href={`/house/${item.slug}`}
+                              href={houseUrl(item.slug)}
                               onClick={() => handleResultClick(item)}
                               className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
                             >
