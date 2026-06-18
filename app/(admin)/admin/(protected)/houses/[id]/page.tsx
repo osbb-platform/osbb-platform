@@ -1,3 +1,4 @@
+import { houseOrigin } from "@/src/shared/config/app/domains";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
@@ -179,7 +180,7 @@ export default async function AdminHouseDetailPage({
     notFound();
   }
 
-  const basePublicUrl = `https://${house.slug}.osbb-platform.com.ua`;
+  const basePublicUrl = houseOrigin(house.slug);
 
   const publicPreviewHref =
     {
