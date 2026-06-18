@@ -54,15 +54,6 @@ const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 const HOUSE_COVER_BUCKET = "house-cover-images";
 const HOUSE_COVER_MAX_SIZE_BYTES = 15 * 1024 * 1024;
 
-function sanitizeUploadFileName(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 120);
-}
 
 async function uploadHouseCoverImage(file: File, houseId: string) {
   const validation = validateSingleImageFile(file, {
@@ -76,8 +67,9 @@ async function uploadHouseCoverImage(file: File, houseId: string) {
   }
 
   const supabase = createSupabaseBrowserClient();
-  const fileExt = file.name.split(".").pop() || "jpg";
-  const safeFileName = sanitizeUploadFileName(file.name) || `cover.${fileExt}`;
+  const rawFileExt = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const fileExt = ["jpg", "jpeg", "png", "webp"].includes(rawFileExt) ? rawFileExt : "jpg";
+  const safeFileName = `cover.${fileExt}`;
   const randomId =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
