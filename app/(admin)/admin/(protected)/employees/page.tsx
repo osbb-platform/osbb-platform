@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { CreateEmployeeForm } from "@/src/modules/employees/components/CreateEmployeeForm";
@@ -23,7 +24,7 @@ export default async function AdminEmployeesPage({
   const currentUser = await getCurrentAdminUser();
 
   if (!currentUser) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "employees");

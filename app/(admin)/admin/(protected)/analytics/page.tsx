@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAnalyticsAccess } from "@/src/modules/analytics/services/getAnalyticsAccess";
@@ -182,7 +183,7 @@ export default async function AdminAnalyticsPage({
   const currentUser = await getCurrentAdminUser();
 
   if (!currentUser?.role) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "analytics");

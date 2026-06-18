@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { getAdminDistricts } from "@/src/modules/districts/services/getAdminDistricts";
 import { HousesRegistryWorkspace } from "@/src/modules/houses/components/HousesRegistryWorkspace";
@@ -17,7 +18,7 @@ export default async function AdminHousesPage() {
   ]);
 
   if (!currentUser) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "houses");

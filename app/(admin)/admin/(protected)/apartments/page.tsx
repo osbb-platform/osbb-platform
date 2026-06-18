@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { ApartmentsRegistryWorkspace } from "@/src/modules/apartments/components/ApartmentsRegistryWorkspace";
@@ -24,7 +25,7 @@ export default async function AdminApartmentsPage({
   ]);
 
   if (!currentUser) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "apartments");

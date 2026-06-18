@@ -1,5 +1,6 @@
 "use client";
 
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import {
   useCallback,
   useEffect,
@@ -287,7 +288,7 @@ export function IdleLockProvider({
   async function handleLogout() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    window.location.assign("/admin/login");
+    window.location.assign(ROUTES.admin.login);
   }
 
   useEffect(() => {
