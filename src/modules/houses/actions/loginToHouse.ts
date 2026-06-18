@@ -191,5 +191,5 @@ export async function loginToHouse(
     path: "/",
   });
 
-  redirect(`/house/${slug}`);
+  redirect("/");
 }

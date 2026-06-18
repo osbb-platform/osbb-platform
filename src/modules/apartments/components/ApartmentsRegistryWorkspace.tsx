@@ -1,5 +1,6 @@
 "use client";
 
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -296,7 +297,7 @@ export function ApartmentsRegistryWorkspace({
     }
 
     const query = params.toString();
-    router.push(query ? `/admin/apartments?${query}` : "/admin/apartments");
+    router.push(query ? `${ROUTES.admin.apartments}?${query}` : ROUTES.admin.apartments);
   }
 
   function handleDistrictChange(nextDistrictId: string) {

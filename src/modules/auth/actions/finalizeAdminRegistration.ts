@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseActionClient } from "@/src/integrations/supabase/server/action";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
-import { ROUTES } from "@/src/shared/config/routes/routes.config";
+import { INTERNAL_ROUTES, ROUTES } from "@/src/shared/config/routes/routes.config";
 
 type FinalizeAdminRegistrationResult = {
   error: string | null;
@@ -113,8 +113,8 @@ export async function finalizeAdminRegistration(): Promise<FinalizeAdminRegistra
     },
   });
 
-  revalidatePath(ROUTES.admin.employees);
-  revalidatePath(ROUTES.admin.profile);
+  revalidatePath(INTERNAL_ROUTES.admin.employees);
+  revalidatePath(INTERNAL_ROUTES.admin.profile);
 
   return {
     error: null,

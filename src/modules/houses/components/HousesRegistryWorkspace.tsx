@@ -1,5 +1,6 @@
 "use client";
 
+import { houseOrigin } from "@/src/shared/config/app/domains";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -459,7 +460,7 @@ function ArchivedHouseRestoreCard({
           </button>
 
           <Link
-            href={`https://${house.slug}.osbb-platform.com.ua`}
+            href={houseOrigin(house.slug)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"

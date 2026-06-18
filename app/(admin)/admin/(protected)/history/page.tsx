@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getAdminDistricts } from "@/src/modules/districts/services/getAdminDistricts";
@@ -243,7 +244,7 @@ export default async function AdminHistoryPage({
   ]);
 
   if (!currentUser) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "history");
@@ -458,7 +459,7 @@ export default async function AdminHistoryPage({
         {result.totalPages > 1 ? (
           <div className="mt-6 flex items-center justify-end gap-2">
             <a
-              href={`/admin/history?${buildQueryString(currentParams, {
+              href={`${ROUTES.admin.history}?${buildQueryString(currentParams, {
                 page: result.page > 1 ? result.page - 1 : 1,
               })}`}
               className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
@@ -482,7 +483,7 @@ export default async function AdminHistoryPage({
                   ) : null}
 
                   <a
-                    href={`/admin/history?${buildQueryString(currentParams, {
+                    href={`${ROUTES.admin.history}?${buildQueryString(currentParams, {
                       page: pageNumber,
                     })}`}
                     className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm font-medium transition ${
@@ -498,7 +499,7 @@ export default async function AdminHistoryPage({
             })}
 
             <a
-              href={`/admin/history?${buildQueryString(currentParams, {
+              href={`${ROUTES.admin.history}?${buildQueryString(currentParams, {
                 page:
                   result.page < result.totalPages
                     ? result.page + 1

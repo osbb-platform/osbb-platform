@@ -1,5 +1,6 @@
 "use server";
 
+import { houseOrigin } from "@/src/shared/config/app/domains";
 import QRCode from "qrcode";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getHouseAnnouncementHtml } from "./getHouseAnnouncementHtml";
@@ -29,7 +30,7 @@ export async function generateHouseAnnouncementPdf(params: {
 
   try {
     const supabase = createSupabaseAdminClient();
-    const publicUrl = `https://${params.slug}.osbb-platform.com.ua`;
+    const publicUrl = houseOrigin(params.slug);
     const qrCodeDataUrl = await QRCode.toDataURL(publicUrl);
 
     const html = getHouseAnnouncementHtml({

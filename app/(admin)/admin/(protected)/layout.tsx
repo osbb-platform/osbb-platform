@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { IdleLockProvider } from "@/src/modules/auth/components/IdleLockProvider";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -17,7 +18,7 @@ export default async function ProtectedAdminLayout({
   const currentUser = await getCurrentAdminUser();
 
   if (!currentUser || !currentUser.role) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   const access = getResolvedAccess(currentUser.role);

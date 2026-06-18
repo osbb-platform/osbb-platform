@@ -23,7 +23,7 @@ const SECTION_KEYS = new Set([
 ]);
 
 function getSectionKey(pathname: string, houseSlug: string) {
-  const prefix = `/house/${houseSlug}`;
+  const prefix = "";
   const relativePath = pathname.startsWith(prefix)
     ? pathname.slice(prefix.length)
     : pathname;

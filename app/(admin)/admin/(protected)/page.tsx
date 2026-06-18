@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { AdminDashboardWidgetCard } from "@/src/modules/cms/components/AdminDashboardWidgetCard";
 import { AdminDashboardAttentionCarousel } from "@/src/modules/cms/components/AdminDashboardAttentionCarousel";
@@ -398,7 +399,7 @@ export default async function AdminDashboardPage() {
 
           <div className="mt-4">
             <Link
-              href="/admin/houses"
+              href={ROUTES.admin.houses}
               className="inline-flex items-center rounded-2xl border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
             >
               Відкрити список будинків

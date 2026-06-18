@@ -200,13 +200,13 @@ export default async function ReportsPage({
                 {
                   key: "current",
                   label: houseReportsCopy.tabs.current,
-                  href: `/house/${slug}/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
+                  href: `/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
                   count: currentReports.length,
                 },
                 {
                   key: "past",
                   label: "Минулі роки",
-                  href: `/house/${slug}/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
+                  href: `/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
                   count: pastReports.length,
                 },
               ].map((item) => {
@@ -256,7 +256,7 @@ export default async function ReportsPage({
                   <Link
             prefetch={false}
                     key={year}
-                    href={`/house/${slug}/reports?mode=past&year=${year}`}
+                    href={`/reports?mode=past&year=${year}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
                       selectedYear === String(year)
                         ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -282,7 +282,7 @@ export default async function ReportsPage({
                   <Link
             prefetch={false}
                     key={month}
-                    href={`/house/${slug}/reports?mode=current&month=${month}`}
+                    href={`/reports?mode=current&month=${month}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
                       selectedMonth === month
                         ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"

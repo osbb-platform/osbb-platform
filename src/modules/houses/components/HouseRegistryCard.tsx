@@ -1,5 +1,7 @@
 "use client";
 
+import { houseOrigin } from "@/src/shared/config/app/domains";
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -324,7 +326,7 @@ export function HouseRegistryCard({
   ) : null}
 
   <Link
-    href={`https://${house.slug}.osbb-platform.com.ua`}
+    href={houseOrigin(house.slug)}
     target="_blank"
     rel="noreferrer"
     className={`${adminIconButtonClass} h-11 w-11`}
@@ -343,7 +345,7 @@ export function HouseRegistryCard({
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href={`/admin/houses/${house.id}`}
+              href={`${ROUTES.admin.houses}/${house.id}`}
               className={adminSecondaryButtonClass}
             >
               Керування будинком

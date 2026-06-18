@@ -22,19 +22,19 @@ type PublicHouseNavigationProps = {
 };
 
 const primaryItems = [
-  { label: houseCopy.navigation.announcements, href: (slug: string) => `/house/${slug}/announcements` },
-  { label: houseCopy.navigation.reports, href: (slug: string) => `/house/${slug}/reports` },
-  { label: houseCopy.navigation.plan, href: (slug: string) => `/house/${slug}/plan` },
-  { label: houseCopy.navigation.meetings, href: (slug: string) => `/house/${slug}/meetings` },
+  { label: houseCopy.navigation.announcements, href: () => "/announcements" },
+  { label: houseCopy.navigation.reports, href: () => "/reports" },
+  { label: houseCopy.navigation.plan, href: () => "/plan" },
+  { label: houseCopy.navigation.meetings, href: () => "/meetings" },
 ];
 
 const secondaryItems = [
-  { label: houseCopy.navigation.board, href: (slug: string) => `/house/${slug}/board` },
-  { label: houseCopy.navigation.information, href: (slug: string) => `/house/${slug}/information` },
-  { label: houseCopy.navigation.requisites, href: (slug: string) => `/house/${slug}/requisites` },
-  { label: houseCopy.navigation.specialists, href: (slug: string) => `/house/${slug}/specialists` },
-  { label: houseCopy.navigation.debtors, href: (slug: string) => `/house/${slug}/debtors` },
-  { label: houseCopy.navigation.foundingDocuments, href: (slug: string) => `/house/${slug}/founding-documents` },
+  { label: houseCopy.navigation.board, href: () => "/board" },
+  { label: houseCopy.navigation.information, href: () => "/information" },
+  { label: houseCopy.navigation.requisites, href: () => "/requisites" },
+  { label: houseCopy.navigation.specialists, href: () => "/specialists" },
+  { label: houseCopy.navigation.debtors, href: () => "/debtors" },
+  { label: houseCopy.navigation.foundingDocuments, href: () => "/founding-documents" },
 ];
 
 export function PublicHouseNavigation({
@@ -53,10 +53,10 @@ export function PublicHouseNavigation({
       <div className="flex items-center gap-3">
         <nav className="hidden items-center gap-2 xl:flex">
           {primaryItems.map((item) => {
-            const href = item.href(slug);
+            const href = item.href();
             const isActive =
               pathname === href ||
-              (href !== `/house/${slug}` && pathname.startsWith(href));
+              (href !== "/" && pathname.startsWith(href));
 
             return (
               <Link

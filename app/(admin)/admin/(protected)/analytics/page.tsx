@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAnalyticsAccess } from "@/src/modules/analytics/services/getAnalyticsAccess";
@@ -182,7 +183,7 @@ export default async function AdminAnalyticsPage({
   const currentUser = await getCurrentAdminUser();
 
   if (!currentUser?.role) {
-    redirect("/admin/login");
+    redirect(ROUTES.admin.login);
   }
 
   assertTopLevelAccess(currentUser.role, "analytics");
@@ -257,7 +258,7 @@ export default async function AdminAnalyticsPage({
           <div className="flex flex-wrap gap-2">
             {ANALYTICS_TABS.map((tab) => {
               const isActive = activeTab === tab.key;
-              const href = `/admin/analytics?${buildQueryString(currentParams, {
+              const href = `${ROUTES.admin.analytics}?${buildQueryString(currentParams, {
                 tab: tab.key,
               })}`;
 
@@ -286,7 +287,7 @@ export default async function AdminAnalyticsPage({
             </div>
 
             <Link
-              href={`/admin/analytics?${buildQueryString(currentParams, {
+              href={`${ROUTES.admin.analytics}?${buildQueryString(currentParams, {
                 houseId: null,
                 from: defaults.from,
                 to: defaults.to,
@@ -298,7 +299,7 @@ export default async function AdminAnalyticsPage({
             </Link>
           </div>
 
-          <form action="/admin/analytics" className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_auto]">
+          <form action={ROUTES.admin.analytics} className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_auto]">
             <input type="hidden" name="tab" value={activeTab} />
 
             <div>
@@ -357,7 +358,7 @@ export default async function AdminAnalyticsPage({
             {PRESETS.map((preset) => {
               const range = getPresetRange(preset);
               const isActive = activePreset === preset;
-              const href = `/admin/analytics?${buildQueryString(currentParams, {
+              const href = `${ROUTES.admin.analytics}?${buildQueryString(currentParams, {
                 from: range.from,
                 to: range.to,
               })}`;

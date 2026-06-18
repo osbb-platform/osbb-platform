@@ -1,3 +1,5 @@
+import { houseOrigin } from "@/src/shared/config/app/domains";
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { notFound } from "next/navigation";
@@ -178,7 +180,7 @@ export default async function AdminHouseDetailPage({
     notFound();
   }
 
-  const basePublicUrl = `https://${house.slug}.osbb-platform.com.ua`;
+  const basePublicUrl = houseOrigin(house.slug);
 
   const publicPreviewHref =
     {
@@ -304,7 +306,7 @@ export default async function AdminHouseDetailPage({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
               <Link
-                href="/admin/houses"
+                href={ROUTES.admin.houses}
                 className="transition hover:text-[var(--cms-text)]"
               >
                 Будинки
@@ -384,7 +386,7 @@ export default async function AdminHouseDetailPage({
               </Link>
 
               <Link
-                href="/admin/houses"
+                href={ROUTES.admin.houses}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
                 aria-label="Назад до реєстру будинків"
                 title="Назад до реєстру"

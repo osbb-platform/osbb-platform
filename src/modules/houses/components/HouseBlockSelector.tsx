@@ -1,5 +1,6 @@
 "use client";
 
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -59,7 +60,7 @@ export function HouseBlockSelector({
           onPendingBlockChange?.(nextBlock);
 
           startTransition(() => {
-            router.push(`/admin/houses/${houseId}?block=${nextBlock}`);
+            router.push(`${ROUTES.admin.houses}/${houseId}?block=${nextBlock}`);
           });
         }}
         className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] disabled:cursor-wait disabled:opacity-80"

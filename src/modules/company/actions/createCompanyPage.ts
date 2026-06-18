@@ -1,5 +1,6 @@
 "use server";
 
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
@@ -114,5 +115,5 @@ export async function createCompanyPage(formData: FormData): Promise<void> {
   revalidatePath("/admin/company-pages");
   revalidatePath(`/admin/company-pages/${createdPage.id}`);
 
-  redirect(`/admin/company-pages/${createdPage.id}`);
+  redirect(`${ROUTES.admin.companyPages}/${createdPage.id}`);
 }

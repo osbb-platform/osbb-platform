@@ -223,7 +223,7 @@ export default async function PublicHouseAnnouncementsPage({
                   <Link
             prefetch={false}
                     key={item.key}
-                    href={`/house/${slug}/announcements?filter=${item.key}`}
+                    href={`/announcements?filter=${item.key}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
                       isActive
                         ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"

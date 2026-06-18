@@ -242,7 +242,7 @@ function buildAnnouncementsWidget(
   slug: string,
   announcements: PublishedHouseAnnouncement[],
 ): PublicHouseHomeWidget {
-  const href = `/house/${slug}/announcements`;
+  const href = "/announcements";
 
   const sortedAnnouncements = [...announcements].sort((left, right) => {
     return (
@@ -302,7 +302,7 @@ function buildPlanWidget(
   slug: string,
   tasks: PlanTask[],
 ): PublicHouseHomeWidget {
-  const href = `/house/${slug}/plan`;
+  const href = "/plan";
 
   if (tasks.length === 0) {
     return {
@@ -387,7 +387,7 @@ function buildMeetingsWidget(
     updatedAt: string;
   }>,
 ): PublicHouseHomeWidget {
-  const href = `/house/${slug}/meetings`;
+  const href = "/meetings";
   const items = meetings.filter((item) => item.status !== "draft");
 
   if (items.length === 0) {
@@ -481,7 +481,7 @@ function buildDebtorsWidget(
     }>;
   } | null,
 ): PublicHouseHomeWidget {
-  const href = `/house/${slug}/debtors`;
+  const href = "/debtors";
 
   const hasPublishedSnapshot = Boolean(
     debtors && debtors.updatedAt && debtors.activeItems.length > 0,
@@ -549,7 +549,7 @@ function pickTopAlert(
         description:
           asString(content.body) ||
           houseSystemCopy.homeDashboard.common.openInfoSection,
-        href: `/house/${slug}/information`,
+        href: "/information",
         badge: content.isPinned ? houseSystemCopy.homeDashboard.common.important : null,
         publishedAt: content.publishedAt || content.updatedAt || null,
         isExpired: false,
@@ -566,7 +566,7 @@ function pickTopAlert(
       description:
         truncateText(item.shortDescription, 180) ||
         houseSystemCopy.homeDashboard.common.activeVotingDescription,
-      href: `/house/${slug}/meetings?mode=active`,
+      href: "/meetings?mode=active",
       badge: houseSystemCopy.homeDashboard.common.voting,
       publishedAt: asString(item.meetingDateTime) || null,
       isExpired: false,
