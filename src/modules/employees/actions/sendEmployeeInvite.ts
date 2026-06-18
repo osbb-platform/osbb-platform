@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/ad
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
-import { ROUTES } from "@/src/shared/config/routes/routes.config";
+import { INTERNAL_ROUTES, ROUTES } from "@/src/shared/config/routes/routes.config";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 
@@ -171,7 +171,7 @@ export async function sendEmployeeInvite(
     },
   });
 
-  revalidatePath(ROUTES.admin.employees);
+  revalidatePath(INTERNAL_ROUTES.admin.employees);
 
   return {
     error: null,
