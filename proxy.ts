@@ -1,9 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+
+import {
+  RESERVED_SUBDOMAINS,
+  ROOT_DOMAIN,
+} from "./src/shared/config/app/domains";
 import { createSupabaseMiddlewareClient } from "./src/integrations/supabase/server/middleware";
 
-const ROOT_DOMAIN = "osbb-platform.com.ua";
-const ADMIN_HOST = `admin.${ROOT_DOMAIN}`;
 const WWW_HOST = `www.${ROOT_DOMAIN}`;
 
 function getHostname(hostHeader: string | null) {
@@ -12,6 +15,25 @@ function getHostname(hostHeader: string | null) {
 
 function withSearch(pathname: string, search: string) {
   return `${pathname}${search || ""}`;
+}
+
+/** Возвращает поддомен ("admin" | "{slug}") или null для корневого домена. */
+function resolveSubdomain(hostname: string): string | null {
+  // DEV: localhost = root, admin.localhost / slug.localhost = subdomains
+  if (hostname === "localhost") return null;
+  if (hostname.endsWith(".localhost")) {
+    return hostname.slice(0, -".localhost".length);
+  }
+
+  if (hostname === ROOT_DOMAIN || hostname === WWW_HOST) {
+    return null;
+  }
+
+  if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
+    return hostname.slice(0, -`.${ROOT_DOMAIN}`.length);
+  }
+
+  return null;
 }
 
 export async function proxy(request: NextRequest) {
@@ -24,22 +46,19 @@ export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
+  const subdomain = resolveSubdomain(hostname);
 
+  // API не переписываем ни на одном host.
   if (pathname.startsWith("/api/")) {
     return response;
   }
 
-  // локалка и vercel preview не трогаем
-  if (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname === "vercel.app" ||
-    hostname.endsWith(".vercel.app")
-  ) {
+  // Vercel preview не трогаем.
+  if (hostname === "vercel.app" || hostname.endsWith(".vercel.app")) {
     return response;
   }
 
-  // 👉 www → apex
+  // www → apex только на prod-домене.
   if (hostname === WWW_HOST) {
     return NextResponse.redirect(
       new URL(`https://${ROOT_DOMAIN}${withSearch(pathname, url.search)}`),
@@ -47,28 +66,32 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // 👉 ROOT DOMAIN
-  if (hostname === ROOT_DOMAIN) {
-    if (pathname.startsWith("/admin")) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
+  // Root / localhost / unknown host — pass-through.
+  if (!subdomain) {
+    // На apex старые внутренние публичные/admin пути не должны светиться.
+    if (hostname === ROOT_DOMAIN) {
+      if (pathname.startsWith("/admin")) {
+        return new NextResponse("Not Found", { status: 404 });
+      }
 
-    if (pathname.startsWith("/house/")) {
-      return new NextResponse("Not Found", { status: 404 });
+      if (pathname.startsWith("/house/")) {
+        return new NextResponse("Not Found", { status: 404 });
+      }
     }
 
     return response;
   }
 
-  // 👉 ADMIN
-  if (hostname === ADMIN_HOST) {
-    let adminPath = pathname;
-
-    if (adminPath === "/") {
-      adminPath = "/admin";
-    } else if (!adminPath.startsWith("/admin")) {
-      adminPath = `/admin${adminPath}`;
+  // ADMIN subdomain:
+  // browser: admin.root/houses
+  // internal: /admin/houses
+  if (subdomain === "admin") {
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      url.pathname = pathname.slice("/admin".length) || "/";
+      return NextResponse.redirect(url, 308);
     }
+
+    const adminPath = pathname === "/" ? "/admin" : `/admin${pathname}`;
 
     return NextResponse.rewrite(
       new URL(withSearch(adminPath, url.search), request.url),
@@ -76,24 +99,24 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // 👉 HOUSE SUBDOMAINS
-  if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
-    const slug = hostname.replace(`.${ROOT_DOMAIN}`, ""); // ✅ FIX
+  // HOUSE subdomains:
+  // browser: slug.root/announcements
+  // internal: /house/slug/announcements
+  if (!RESERVED_SUBDOMAINS.has(subdomain)) {
+    const duplicatePrefix = `/house/${subdomain}`;
 
-    if (slug && slug !== "www" && slug !== "admin") {
-      let housePath = pathname;
-
-      if (housePath === "/") {
-        housePath = `/house/${slug}`;
-      } else if (!housePath.startsWith(`/house/${slug}`)) {
-        housePath = `/house/${slug}${housePath}`;
-      }
-
-      return NextResponse.rewrite(
-        new URL(withSearch(housePath, url.search), request.url),
-        { headers: response.headers }
-      );
+    if (pathname === duplicatePrefix || pathname.startsWith(`${duplicatePrefix}/`)) {
+      url.pathname = pathname.slice(duplicatePrefix.length) || "/";
+      return NextResponse.redirect(url, 308);
     }
+
+    const housePath =
+      pathname === "/" ? `/house/${subdomain}` : `/house/${subdomain}${pathname}`;
+
+    return NextResponse.rewrite(
+      new URL(withSearch(housePath, url.search), request.url),
+      { headers: response.headers }
+    );
   }
 
   return response;
