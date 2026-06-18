@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseFaqItemSnapshot,
   HouseFaqLifecycleStatus,
@@ -49,41 +50,61 @@ function mapFaq(row: HouseFaqRow, items: HouseFaqItemRow[]): HouseFaqSnapshot {
   };
 }
 
+async function loadPublishedHouseFaq(houseId: string): Promise<HouseFaqSnapshot | null> {
+  const supabase = createSupabasePublicClient();
+
+  const { data: faq, error: faqError } = await supabase
+    .from("house_faq")
+    .select("*")
+    .eq("house_id", houseId)
+    .eq("lifecycle_status", "published")
+    .order("published_at", { ascending: false })
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (faqError) {
+    console.error("Failed to load published house FAQ:", {
+      houseId,
+      message: faqError.message,
+    });
+    return null;
+  }
+
+  if (!faq) {
+    return null;
+  }
+
+  const faqRow = faq as HouseFaqRow;
+
+  const { data: items, error: itemsError } = await supabase
+    .from("house_faq_items")
+    .select("id, faq_id, question, answer, sort_order")
+    .eq("faq_id", faqRow.id)
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (itemsError) {
+    console.error("Failed to load published house FAQ items:", {
+      houseId,
+      faqId: faqRow.id,
+      message: itemsError.message,
+    });
+    return mapFaq(faqRow, []);
+  }
+
+  return mapFaq(faqRow, (items ?? []) as HouseFaqItemRow[]);
+}
+
 export const getPublishedHouseFaq = cache(
   async (houseId: string): Promise<HouseFaqSnapshot | null> => {
-    const supabase = await createSupabaseServerClient();
-
-    const { data: faq, error: faqError } = await supabase
-      .from("house_faq")
-      .select("*")
-      .eq("house_id", houseId)
-      .eq("lifecycle_status", "published")
-      .order("published_at", { ascending: false })
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (faqError) {
-      throw new Error(`Failed to load published house FAQ: ${faqError.message}`);
-    }
-
-    if (!faq) {
-      return null;
-    }
-
-    const faqRow = faq as HouseFaqRow;
-
-    const { data: items, error: itemsError } = await supabase
-      .from("house_faq_items")
-      .select("id, faq_id, question, answer, sort_order")
-      .eq("faq_id", faqRow.id)
-      .order("sort_order", { ascending: true })
-      .order("id", { ascending: true });
-
-    if (itemsError) {
-      throw new Error(`Failed to load published house FAQ items: ${itemsError.message}`);
-    }
-
-    return mapFaq(faqRow, (items ?? []) as HouseFaqItemRow[]);
+    return unstable_cache(
+      () => loadPublishedHouseFaq(houseId),
+      ["published-house-faq", houseId],
+      {
+        tags: [`house:${houseId}:faq`, `house:${houseId}:information`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

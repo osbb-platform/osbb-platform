@@ -1,15 +1,17 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 export type PublicHouseDocumentFeedItem = {
   id: string;
   updated_at: string;
 };
 
-export const getPublicHouseDocumentsFeed = cache(async (
+async function loadPublicHouseDocumentsFeed(
   houseId: string,
-): Promise<PublicHouseDocumentFeedItem[]> => {
-  const supabase = await createSupabaseServerClient();
+): Promise<PublicHouseDocumentFeedItem[]> {
+  const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
     .from("house_documents")
@@ -29,4 +31,17 @@ export const getPublicHouseDocumentsFeed = cache(async (
   }
 
   return (data ?? []) as PublicHouseDocumentFeedItem[];
+}
+
+export const getPublicHouseDocumentsFeed = cache(async (
+  houseId: string,
+): Promise<PublicHouseDocumentFeedItem[]> => {
+  return unstable_cache(
+    () => loadPublicHouseDocumentsFeed(houseId),
+    ["public-house-documents-feed", houseId],
+    {
+      tags: [`house:${houseId}:documents`, `house:${houseId}`],
+      revalidate: 300,
+    },
+  )();
 });

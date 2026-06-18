@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 import type { HouseHeroSnapshot } from "./getAdminHouseHero";
 
@@ -26,26 +27,41 @@ const mapRow = (row: HouseHeroPublicRow): HouseHeroSnapshot => ({
   updatedAt: row.updated_at,
 });
 
+async function loadPublishedHouseHero(houseId: string): Promise<HouseHeroSnapshot | null> {
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase
+    .from("house_hero")
+    .select(
+      "id, house_id, headline, subheadline, cta_label, cover_image_url, lock_version, updated_at",
+    )
+    .eq("house_id", houseId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load published house hero:", {
+      houseId,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapRow(data as HouseHeroPublicRow);
+}
+
 export const getPublishedHouseHero = cache(
   async (houseId: string): Promise<HouseHeroSnapshot | null> => {
-    const supabase = await createSupabaseServerClient();
-
-    const { data, error } = await supabase
-      .from("house_hero")
-      .select(
-        "id, house_id, headline, subheadline, cta_label, cover_image_url, lock_version, updated_at",
-      )
-      .eq("house_id", houseId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`Failed to load published house hero: ${error.message}`);
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    return mapRow(data as HouseHeroPublicRow);
+    return unstable_cache(
+      () => loadPublishedHouseHero(houseId),
+      ["published-house-hero", houseId],
+      {
+        tags: [`house:${houseId}:hero`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

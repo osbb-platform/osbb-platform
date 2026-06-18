@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { trackVisitorEvent } from "@/src/modules/analytics/ingest/trackVisitorEvent";
+import { trackVisitorEvents } from "@/src/modules/analytics/ingest/trackVisitorEvent";
 import {
   VISITOR_EVENT_TYPES,
   type VisitorEventType,
@@ -10,15 +10,20 @@ import {
   HOUSE_VISITOR_COOKIE_NAME,
 } from "@/src/modules/analytics/utils/visitorId";
 
-type AnalyticsTrackPayload = {
-  houseId?: unknown;
+type AnalyticsTrackEventPayload = {
   eventType?: unknown;
   sectionKey?: unknown;
   entityId?: unknown;
   metadata?: unknown;
 };
 
+type AnalyticsTrackPayload = AnalyticsTrackEventPayload & {
+  houseId?: unknown;
+  events?: unknown;
+};
+
 const VISITOR_EVENT_TYPE_SET = new Set<string>(VISITOR_EVENT_TYPES);
+const MAX_BATCH_EVENTS = 20;
 
 function isVisitorEventType(value: unknown): value is VisitorEventType {
   return typeof value === "string" && VISITOR_EVENT_TYPE_SET.has(value);
@@ -62,6 +67,19 @@ function analyticsNoContent(sessionId?: string, shouldSetCookie = false) {
   return response;
 }
 
+function getPayloadEvents(payload: AnalyticsTrackPayload) {
+  if (Array.isArray(payload.events)) {
+    return payload.events
+      .filter(
+        (event): event is AnalyticsTrackEventPayload =>
+          !!event && typeof event === "object" && !Array.isArray(event),
+      )
+      .slice(0, MAX_BATCH_EVENTS);
+  }
+
+  return [payload];
+}
+
 export async function POST(request: NextRequest) {
   const cookieSessionId = request.cookies.get(HOUSE_VISITOR_COOKIE_NAME)?.value;
   const sessionId = cookieSessionId || randomUUID();
@@ -74,20 +92,29 @@ export async function POST(request: NextRequest) {
     }
 
     const houseId = optionalString(payload.houseId);
-    const eventType = payload.eventType;
 
-    if (!houseId || !isVisitorEventType(eventType)) {
+    if (!houseId) {
       return analyticsNoContent(sessionId, !cookieSessionId);
     }
 
-    await trackVisitorEvent({
-      houseId,
-      sessionId,
-      eventType,
-      sectionKey: optionalString(payload.sectionKey),
-      entityId: optionalString(payload.entityId),
-      metadata: safeMetadata(payload.metadata),
-    });
+    const events = getPayloadEvents(payload)
+      .map((event) => ({
+        houseId,
+        sessionId,
+        eventType: event.eventType,
+        sectionKey: optionalString(event.sectionKey),
+        entityId: optionalString(event.entityId),
+        metadata: safeMetadata(event.metadata),
+      }))
+      .filter((event): event is typeof event & { eventType: VisitorEventType } =>
+        isVisitorEventType(event.eventType),
+      );
+
+    if (events.length === 0) {
+      return analyticsNoContent(sessionId, !cookieSessionId);
+    }
+
+    await trackVisitorEvents(events);
 
     return analyticsNoContent(sessionId, !cookieSessionId);
   } catch (error) {

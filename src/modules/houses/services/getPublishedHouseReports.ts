@@ -1,6 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseReportCategorySnapshot,
   HouseReportSnapshot,
@@ -54,6 +55,13 @@ type HouseReportCategoryRow = {
   updated_at: string;
 };
 
+function emptyReports(): PublishedHouseReportsData {
+  return {
+    reports: [],
+    categories: [],
+  };
+}
+
 function mapCategory(row: HouseReportCategoryRow): HouseReportCategorySnapshot {
   return {
     id: row.id,
@@ -105,84 +113,96 @@ function mapReport(
   };
 }
 
-export const getPublishedHouseReports = cache(
-  async (houseId: string): Promise<PublishedHouseReportsData> => {
-    const supabase = await createSupabaseServerClient();
+async function loadPublishedHouseReports(houseId: string): Promise<PublishedHouseReportsData> {
+  const supabase = createSupabasePublicClient();
 
-    const [reportsResult, categoriesResult] = await Promise.all([
-      supabase
-        .from("house_reports")
-        .select(
-          [
-            "id",
-            "house_id",
-            "title",
-            "description",
-            "category_id",
-            "category_title",
-            "report_date",
-            "period_type",
-            "month",
-            "year",
-            "is_pinned",
-            "is_new",
-            "new_until",
-            "lifecycle_status",
-            "lock_version",
-            "sort_order",
-            "created_at",
-            "updated_at",
-            "published_at",
-            "archived_at",
-            "created_by",
-          ].join(", "),
-        )
-        .eq("house_id", houseId)
-        .eq("lifecycle_status", "published")
-        .order("is_pinned", { ascending: false })
-        .order("report_date", { ascending: false }),
-      supabase
-        .from("house_report_categories")
-        .select("id, house_id, title, sort_order, created_at, updated_at")
-        .eq("house_id", houseId)
-        .order("sort_order", { ascending: true }),
-    ]);
+  const [reportsResult, categoriesResult] = await Promise.all([
+    supabase
+      .from("house_reports")
+      .select(
+        [
+          "id",
+          "house_id",
+          "title",
+          "description",
+          "category_id",
+          "category_title",
+          "report_date",
+          "period_type",
+          "month",
+          "year",
+          "is_pinned",
+          "is_new",
+          "new_until",
+          "lifecycle_status",
+          "lock_version",
+          "sort_order",
+          "created_at",
+          "updated_at",
+          "published_at",
+          "archived_at",
+          "created_by",
+        ].join(", "),
+      )
+      .eq("house_id", houseId)
+      .eq("lifecycle_status", "published")
+      .order("is_pinned", { ascending: false })
+      .order("report_date", { ascending: false }),
+    supabase
+      .from("house_report_categories")
+      .select("id, house_id, title, sort_order, created_at, updated_at")
+      .eq("house_id", houseId)
+      .order("sort_order", { ascending: true }),
+  ]);
 
-    if (reportsResult.error) {
-      throw new Error(`Failed to load published house reports: ${reportsResult.error.message}`);
-    }
+  if (reportsResult.error) {
+    console.error("Failed to load published house reports:", {
+      houseId,
+      message: reportsResult.error.message,
+    });
+    return emptyReports();
+  }
 
-    if (categoriesResult.error) {
-      throw new Error(`Failed to load published house report categories: ${categoriesResult.error.message}`);
-    }
+  if (categoriesResult.error) {
+    console.error("Failed to load published house report categories:", {
+      houseId,
+      message: categoriesResult.error.message,
+    });
+    return {
+      reports: [],
+      categories: [],
+    };
+  }
 
-    const reports = (reportsResult.data ?? []) as unknown as HouseReportRow[];
-    const reportIds = reports.map((report) => report.id);
+  const reports = (reportsResult.data ?? []) as unknown as HouseReportRow[];
+  const reportIds = reports.map((report) => report.id);
 
-    let filesByReportId = new Map<string, HouseReportFileRow>();
+  let filesByReportId = new Map<string, HouseReportFileRow>();
 
-    if (reportIds.length > 0) {
-      const { data: files, error: filesError } = await supabase
-        .from("house_content_files")
-        .select(
-          [
-            "entity_id",
-            "storage_bucket",
-            "storage_path",
-            "original_file_name",
-            "mime_type",
-            "size_bytes",
-            "uploaded_at",
-          ].join(", "),
-        )
-        .eq("entity_type", "house_report")
-        .eq("field_key", "pdf")
-        .in("entity_id", reportIds);
+  if (reportIds.length > 0) {
+    const { data: files, error: filesError } = await supabase
+      .from("house_content_files")
+      .select(
+        [
+          "entity_id",
+          "storage_bucket",
+          "storage_path",
+          "original_file_name",
+          "mime_type",
+          "size_bytes",
+          "uploaded_at",
+        ].join(", "),
+      )
+      .eq("entity_type", "house_report")
+      .eq("field_key", "pdf")
+      .in("entity_id", reportIds);
 
-      if (filesError) {
-        throw new Error(`Failed to load published house report files: ${filesError.message}`);
-      }
-
+    if (filesError) {
+      console.error("Failed to load published house report files:", {
+        houseId,
+        message: filesError.message,
+      });
+    } else {
       filesByReportId = new Map(
         ((files ?? []) as unknown as HouseReportFileRow[]).map((file) => [
           file.entity_id,
@@ -190,10 +210,23 @@ export const getPublishedHouseReports = cache(
         ]),
       );
     }
+  }
 
-    return {
-      reports: reports.map((report) => mapReport(report, filesByReportId.get(report.id))),
-      categories: ((categoriesResult.data ?? []) as unknown as HouseReportCategoryRow[]).map(mapCategory),
-    };
+  return {
+    reports: reports.map((report) => mapReport(report, filesByReportId.get(report.id))),
+    categories: ((categoriesResult.data ?? []) as unknown as HouseReportCategoryRow[]).map(mapCategory),
+  };
+}
+
+export const getPublishedHouseReports = cache(
+  async (houseId: string): Promise<PublishedHouseReportsData> => {
+    return unstable_cache(
+      () => loadPublishedHouseReports(houseId),
+      ["published-house-reports", houseId],
+      {
+        tags: [`house:${houseId}:reports`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
   },
 );

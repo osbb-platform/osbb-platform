@@ -15,18 +15,14 @@ function withSearch(pathname: string, search: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabase, response } = createSupabaseMiddlewareClient(request);
-
-  // Важно для Supabase SSR: обновляет auth cookies на каждом request.
-  // Без этого server components/actions на Vercel могут получать Auth session missing.
-  await supabase.auth.getUser();
-
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
 
+  // API-запросы не должны создавать Supabase middleware client
+  // и не должны обновлять auth-сессию через auth.getUser().
   if (pathname.startsWith("/api/")) {
-    return response;
+    return NextResponse.next();
   }
 
   // локалка и vercel preview не трогаем
@@ -36,7 +32,7 @@ export async function proxy(request: NextRequest) {
     hostname === "vercel.app" ||
     hostname.endsWith(".vercel.app")
   ) {
-    return response;
+    return NextResponse.next();
   }
 
   // 👉 www → apex
@@ -47,21 +43,15 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // 👉 ROOT DOMAIN
-  if (hostname === ROOT_DOMAIN) {
-    if (pathname.startsWith("/admin")) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    if (pathname.startsWith("/house/")) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    return response;
-  }
-
   // 👉 ADMIN
+  // Supabase auth refresh нужен только admin-хосту.
   if (hostname === ADMIN_HOST) {
+    const { supabase, response } = createSupabaseMiddlewareClient(request);
+
+    // Важно для Supabase SSR: обновляет auth cookies только в админке.
+    // Публичные поддомены и root-домен не должны делать round-trip к Auth.
+    await supabase.auth.getUser();
+
     let adminPath = pathname;
 
     if (adminPath === "/") {
@@ -76,9 +66,22 @@ export async function proxy(request: NextRequest) {
     );
   }
 
+  // 👉 ROOT DOMAIN
+  if (hostname === ROOT_DOMAIN) {
+    if (pathname.startsWith("/admin")) {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+
+    if (pathname.startsWith("/house/")) {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+
+    return NextResponse.next();
+  }
+
   // 👉 HOUSE SUBDOMAINS
   if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {
-    const slug = hostname.replace(`.${ROOT_DOMAIN}`, ""); // ✅ FIX
+    const slug = hostname.replace(`.${ROOT_DOMAIN}`, "");
 
     if (slug && slug !== "www" && slug !== "admin") {
       let housePath = pathname;
@@ -90,13 +93,12 @@ export async function proxy(request: NextRequest) {
       }
 
       return NextResponse.rewrite(
-        new URL(withSearch(housePath, url.search), request.url),
-        { headers: response.headers }
+        new URL(withSearch(housePath, url.search), request.url)
       );
     }
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
