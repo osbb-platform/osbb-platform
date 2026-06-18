@@ -33,7 +33,7 @@ const SECTION_KEYS = new Set([
   "founding-documents",
 ]);
 
-function getSectionKey(pathname: string, houseSlug: string) {
+function getSectionKey(pathname: string) {
   const prefix = "";
   const relativePath = pathname.startsWith(prefix)
     ? pathname.slice(prefix.length)
@@ -88,8 +88,8 @@ export function PublicHouseAnalyticsTracker({
   const visitedRef = useRef(false);
 
   const sectionKey = useMemo(
-    () => getSectionKey(pathname, houseSlug),
-    [houseSlug, pathname],
+    () => getSectionKey(pathname),
+    [pathname],
   );
 
   useEffect(() => {
