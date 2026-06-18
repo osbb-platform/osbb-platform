@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EditCompanyHeroSectionForm } from "@/src/modules/company/components/EditCompanyHeroSectionForm";
@@ -69,7 +70,7 @@ export default async function AdminCompanyPageDetailPage({
 
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/company-pages"
+              href={ROUTES.admin.companyPages}
               className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
             >
               Назад к списку
