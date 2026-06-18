@@ -7,7 +7,7 @@ import type { CSSProperties } from "react";
 
 type NavigationItem = {
   label: string;
-  href: (slug: string) => string;
+  href: () => string;
 };
 
 function normalizeBoardRoleLabel(value: string | null | undefined) {
@@ -128,10 +128,10 @@ export function PublicHouseSidePanel({ chairman,
         <div className="flex-1 overflow-y-auto px-5 py-5">
           <div className="grid gap-3">
             {items.map((item) => {
-              const href = item.href(slug);
+              const href = item.href();
               const isActive =
                 pathname === href ||
-                (href !== `/house/${slug}` && pathname.startsWith(href));
+                (href !== "/" && pathname.startsWith(href));
 
               return (
                 <Link
