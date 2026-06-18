@@ -240,7 +240,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
             prefetch={false}
-              href={`/house/${slug}/plan`}
+              href={"/plan"}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "active"
                   ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -258,7 +258,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
 
             <Link
             prefetch={false}
-              href={`/house/${slug}/plan?mode=archive`}
+              href={"/plan?mode=archive"}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-sm font-semibold transition ${
                 selectedMode === "archive"
                   ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -355,7 +355,7 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
                     <Link
             prefetch={false}
                       key={year}
-                      href={`/house/${slug}/plan?mode=archive&year=${year}`}
+                      href={`/plan?mode=archive&year=${year}`}
                       className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                         isActive
                           ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"

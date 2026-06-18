@@ -246,7 +246,7 @@ export default async function PublicMeetingsPage({
                   <Link
             prefetch={false}
                     key={mode}
-                    href={`/house/${slug}/meetings?mode=${mode}`}
+                    href={`/meetings?mode=${mode}`}
                     className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                       isActive
                         ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -273,7 +273,7 @@ export default async function PublicMeetingsPage({
               <div className="flex w-full min-w-0 justify-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
                 <Link
             prefetch={false}
-                  href={`/house/${slug}/meetings?mode=archive&month=all`}
+                  href={"/meetings?mode=archive&month=all"}
                   className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
                     selectedMonth === "all"
                       ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
@@ -290,7 +290,7 @@ export default async function PublicMeetingsPage({
                     <Link
             prefetch={false}
                       key={month}
-                      href={`/house/${slug}/meetings?mode=archive&month=${month}`}
+                      href={`/meetings?mode=archive&month=${month}`}
                       className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
                         isActive
                           ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"

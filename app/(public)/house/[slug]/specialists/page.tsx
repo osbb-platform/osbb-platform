@@ -146,7 +146,7 @@ function SpecialistCardView({
         ) : (
           <Link
             prefetch={false}
-            href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}&specialist=${encodeURIComponent(item.id)}`}
+            href={`/specialists?category=${encodeURIComponent(activeCategory)}&specialist=${encodeURIComponent(item.id)}`}
             scroll={false}
             className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#E4DBD1] bg-[#EFE7DD] px-5 text-sm font-semibold text-[#2A3642] transition hover:bg-[#E5DBCF]"
           >
@@ -260,7 +260,7 @@ export default async function SpecialistsPage({
                       <Link
                         prefetch={false}
                         key={item.key}
-                        href={`/house/${slug}/specialists?category=${encodeURIComponent(item.key)}`}
+                        href={`/specialists?category=${encodeURIComponent(item.key)}`}
                         scroll={false}
                         className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
                           isActive
@@ -318,7 +318,7 @@ export default async function SpecialistsPage({
         <>
           <Link
             prefetch={false}
-            href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
+            href={`/specialists?category=${encodeURIComponent(activeCategory)}`}
             scroll={false}
             className="fixed inset-0 z-40 bg-[#1F2A37]/30 backdrop-blur-sm"
             aria-label={houseSpecialistsCopy.page.closeModal}
@@ -338,7 +338,7 @@ export default async function SpecialistsPage({
 
                 <Link
                   prefetch={false}
-                  href={`/house/${slug}/specialists?category=${encodeURIComponent(activeCategory)}`}
+                  href={`/specialists?category=${encodeURIComponent(activeCategory)}`}
                   scroll={false}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] transition hover:bg-[#F0E9E1]"
                 >
