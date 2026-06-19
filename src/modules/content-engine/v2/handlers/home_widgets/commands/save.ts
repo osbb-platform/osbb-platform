@@ -40,7 +40,7 @@ function normalizeWidgets(value: unknown): HomeWidget[] {
 
 export const saveCommand: CommandSpec = {
   actionKey: "edit",
-  requiresLockCheck: true,
+  requiresLockCheck: false,
 
   async validate(rawPayload) {
     const payload = rawPayload as Partial<SaveHomeWidgetsPayload>;
@@ -78,10 +78,6 @@ export const saveCommand: CommandSpec = {
     const now = new Date().toISOString();
 
     if (!existing) {
-      if (payload.lockVersion !== 1) {
-        return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
-      }
-
       const { data: created, error } = await ctx.supabase
         .from("house_home_widgets")
         .insert({
@@ -118,24 +114,22 @@ export const saveCommand: CommandSpec = {
 
     const current = existing as HouseHomeWidgets;
 
+    const nextLockVersion =
+      typeof current.lock_version === "number" ? current.lock_version + 1 : 1;
+
     const { data: updated, error } = await ctx.supabase
       .from("house_home_widgets")
       .update({
         status_widgets: statusWidgets,
-        lock_version: payload.lockVersion + 1,
+        lock_version: nextLockVersion,
         updated_at: now,
       })
       .eq("house_id", ctx.house.id)
-      .eq("lock_version", payload.lockVersion)
       .select("*")
-      .maybeSingle();
+      .single();
 
     if (error) {
       return err(error.message, "INTERNAL");
-    }
-
-    if (!updated) {
-      return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
     }
 
     const widgets = updated as HouseHomeWidgets;
