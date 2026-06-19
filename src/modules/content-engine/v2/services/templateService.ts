@@ -7,7 +7,7 @@ export type TemplateSectionKind = "faq" | "specialists" | "information_post";
 
 export const TEMPLATE_SLOT_LIMITS: Record<TemplateSectionKind, number> = {
   faq: 3,
-  specialists: 5,
+  specialists: 10,
   information_post: 3,
 };
 
