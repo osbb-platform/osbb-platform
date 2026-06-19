@@ -191,13 +191,15 @@ export function HouseRegistryCard({
   homeWidgets,
   onOpenSettings,
 }: HouseRegistryCardProps) {
-  const dashboardWidgets = homeWidgets ?? {
-    id: "",
-    houseId: house.id,
-    statusWidgets: [],
-    lockVersion: 1,
-    updatedAt: "",
-  };
+  const [dashboardWidgets, setDashboardWidgets] = useState(
+    homeWidgets ?? {
+      id: "",
+      houseId: house.id,
+      statusWidgets: [],
+      lockVersion: 1,
+      updatedAt: "",
+    },
+  );
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isTariffOpen, setIsTariffOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -548,6 +550,7 @@ export function HouseRegistryCard({
                 houseSlug={house.slug}
                 initialWidgets={dashboardWidgets.statusWidgets}
                 initialLockVersion={dashboardWidgets.lockVersion}
+                onSaved={setDashboardWidgets}
               />
             </div>
           </div>

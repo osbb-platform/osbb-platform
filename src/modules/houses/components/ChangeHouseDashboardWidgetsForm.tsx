@@ -27,6 +27,7 @@ type Props = {
   initialWidgets: Widget[];
   initialLockVersion?: number;
   readOnlyMode?: boolean;
+  onSaved?: (snapshot: HouseHomeWidgetsSnapshot) => void;
 };
 
 function createEmptyWidget(index: number): Widget {
@@ -83,6 +84,7 @@ export function ChangeHouseDashboardWidgetsForm({
   initialWidgets,
   initialLockVersion = 1,
   readOnlyMode,
+  onSaved,
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
@@ -156,9 +158,11 @@ export function ChangeHouseDashboardWidgetsForm({
       },
       {
         onSuccess(data) {
-          const saved = normalizeSavedRow(data as HouseHomeWidgetsSnapshot);
+          const savedSnapshot = data as HouseHomeWidgetsSnapshot;
+          const saved = normalizeSavedRow(savedSnapshot);
           setLockVersion(saved.lockVersion);
           setWidgets(ensureAtLeastOne(saved.statusWidgets));
+          onSaved?.(savedSnapshot);
           setSuccessMessage("Показники головної сторінки збережено.");
         },
       },
