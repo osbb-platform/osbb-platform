@@ -30,6 +30,8 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
+const SPECIALISTS_TEMPLATE_SLOT_LIMIT = 10;
+
 const DEFAULT_SPECIALIST_CATEGORIES = [
   "Сантехнік",
   "Електрик",
@@ -425,7 +427,7 @@ export function HouseSpecialistsWorkspace({
   async function saveSpecialistDraftAsTemplate() {
     if (!draft || workspaceMode !== "create") return;
 
-    const slotIndex = findNextTemplateSlot(templates, 5);
+    const slotIndex = findNextTemplateSlot(templates, SPECIALISTS_TEMPLATE_SLOT_LIMIT);
 
     if (!slotIndex) {
       setWorkspaceError(
@@ -896,7 +898,7 @@ export function HouseSpecialistsWorkspace({
         <ContentTemplateSlotsPanel
           houseId={houseId}
           sectionKind="specialists"
-          slotLimit={5}
+          slotLimit={SPECIALISTS_TEMPLATE_SLOT_LIMIT}
           templates={templates}
           title="Збережені шаблони спеціалістів"
           description="Шаблони доступні в усіх будинках. Новий шаблон створюється з чернетки спеціаліста."
