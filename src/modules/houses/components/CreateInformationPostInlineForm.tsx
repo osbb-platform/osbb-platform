@@ -33,14 +33,17 @@ type Props = {
   onClose: () => void;
 };
 
-function sanitizeFileName(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9а-яіїєґ._-]+/giu, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 120);
+function getSafeCoverFileName(file: File) {
+  const rawFileExt = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const fileExt = ["jpg", "jpeg", "png", "webp"].includes(rawFileExt) ? rawFileExt : "jpg";
+
+  return `cover.${fileExt}`;
+}
+
+function getRandomStorageId() {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
 }
 
 function findNextTemplateSlot(templates: ContentTemplateSlot[], slotLimit: number) {
@@ -93,11 +96,9 @@ export function CreateInformationPostInlineForm({
     }
 
     const supabase = createSupabaseBrowserClient();
-    const fileExt = file.name.split(".").pop() || "jpg";
-    const safeFileName = sanitizeFileName(file.name) || `cover.${fileExt}`;
-    const filePath = `${houseId}/${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}-${safeFileName}`;
+    const safeFileName = getSafeCoverFileName(file);
+    const randomId = getRandomStorageId();
+    const filePath = `${houseId}/${Date.now()}-${randomId}-${safeFileName}`;
 
     const { error } = await supabase.storage
       .from(INFORMATION_IMAGE_BUCKET)
