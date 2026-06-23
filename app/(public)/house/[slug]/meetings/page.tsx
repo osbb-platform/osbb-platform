@@ -117,6 +117,40 @@ function formatManualVoteApartmentLabel(
   return formatPublicApartmentLabel(apartment?.label ?? vote.apartmentLabel);
 }
 
+function getApartmentLabelKey(label: string) {
+  return normalizePublicApartmentLabel(label).toLowerCase();
+}
+
+function getNotVotedApartmentLabels(
+  meeting: MeetingItem,
+  apartments: Array<{ id: string; label: string }>,
+) {
+  const votedLabelKeys = new Set(
+    (meeting.manualVotes ?? [])
+      .map((vote) => getApartmentLabelKey(vote.apartmentLabel))
+      .filter(Boolean),
+  );
+
+  const notVotedByLabel = new Map<string, string>();
+
+  for (const apartment of apartments) {
+    const formattedLabel = formatPublicApartmentLabel(apartment.label);
+    const key = getApartmentLabelKey(formattedLabel);
+
+    if (!key || votedLabelKeys.has(key) || notVotedByLabel.has(key)) {
+      continue;
+    }
+
+    notVotedByLabel.set(key, formattedLabel);
+  }
+
+  return Array.from(notVotedByLabel.values()).sort((left, right) =>
+    left.localeCompare(right, "uk", {
+      numeric: true,
+    }),
+  );
+}
+
 
 export default async function PublicMeetingsPage({
   params,
@@ -450,7 +484,7 @@ export default async function PublicMeetingsPage({
                     <div className="text-sm font-semibold text-[#1F2A37]">
                       {houseMeetingsCopy.voters.voted}
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-[#5B6B7C]">
+                    <div className="mt-3 max-h-80 space-y-2 overflow-y-auto overscroll-contain pr-2 text-sm text-[#5B6B7C]">
                       {(meeting.manualVotes ?? []).length > 0 ? (
                         (meeting.manualVotes ?? []).map((vote) => (
                           <div key={vote.apartmentId}>
@@ -469,16 +503,9 @@ export default async function PublicMeetingsPage({
                         ? houseMeetingsCopy.voters.notVoted
                         : houseMeetingsCopy.voters.notYet}
                     </div>
-                    <div className="mt-3 whitespace-pre-wrap break-words text-sm text-[#5B6B7C]">
-                      {apartments
-                        .filter(
-                          (apartment) =>
-                            !(meeting.manualVotes ?? []).some(
-                              (vote) => vote.apartmentId === apartment.id,
-                            ),
-                        )
-                        .map((apartment) => formatPublicApartmentLabel(apartment.label))
-                        .join(",\n") || "Усі квартири вже враховані"}
+                    <div className="mt-3 max-h-80 overflow-y-auto overscroll-contain whitespace-pre-wrap break-words pr-2 text-sm text-[#5B6B7C]">
+                      {getNotVotedApartmentLabels(meeting, apartments).join(",\n") ||
+                        "Усі квартири вже враховані"}
                     </div>
                   </div>
                 </div>
