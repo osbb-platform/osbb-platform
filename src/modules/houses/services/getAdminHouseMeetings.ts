@@ -76,6 +76,14 @@ function mapQuestion(question: HouseMeetingQuestion): HouseMeetingsQuestionSnaps
   };
 }
 
+function normalizeMeetingApartmentLabel(label: string) {
+  const trimmed = label.trim();
+  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
+  const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
+
+  return withoutOwner || withoutPrefix || trimmed;
+}
+
 function mapManualVotes(
   votes: HouseMeetingManualVote[],
 ): HouseMeetingsManualVoteSnapshot[] {
@@ -86,7 +94,7 @@ function mapManualVotes(
       grouped.get(vote.apartment_id) ??
       {
         apartmentId: vote.apartment_id,
-        apartmentLabel: vote.apartment_label,
+        apartmentLabel: normalizeMeetingApartmentLabel(vote.apartment_label),
         submittedAt: vote.recorded_at,
         answers: [],
       };

@@ -308,7 +308,7 @@ function combineMeetingDateTime(date: string, time: string) {
 
 function formatApartmentVoteLabel(apartment: {
   apartmentLabel: string;
-  ownerName?: string;
+  ownerName?: string | null;
 }) {
   const label = apartment.apartmentLabel.trim();
   const normalizedLabel =
@@ -317,6 +317,67 @@ function formatApartmentVoteLabel(apartment: {
   return apartment.ownerName
     ? `${normalizedLabel} — ${apartment.ownerName}`
     : normalizedLabel;
+}
+
+function normalizeApartmentVoteLabel(label: string) {
+  const trimmed = label.trim();
+  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
+  const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
+
+  return withoutOwner || withoutPrefix || trimmed;
+}
+
+function formatRecordedApartmentVoteLabel(
+  vote: { apartmentId: string; apartmentLabel: string },
+  apartments: Array<{
+    id: string;
+    apartmentLabel: string;
+    ownerName?: string | null;
+  }>,
+) {
+  const apartment = apartments.find((item) => item.id === vote.apartmentId);
+  const apartmentLabel = normalizeApartmentVoteLabel(
+    apartment?.apartmentLabel ?? vote.apartmentLabel,
+  );
+
+  return formatApartmentVoteLabel({
+    apartmentLabel,
+    ownerName: apartment?.ownerName ?? null,
+  });
+}
+
+function getNotParticipatingApartments(
+  meeting: { manualVotes?: Array<{ apartmentId: string }> },
+  apartments: Array<{
+    id: string;
+    apartmentLabel: string;
+    ownerName?: string | null;
+  }>,
+) {
+  const votedApartmentIds = new Set(
+    (meeting.manualVotes ?? [])
+      .map((vote) => vote.apartmentId)
+      .filter(Boolean),
+  );
+
+  return apartments.filter((apartment) => !votedApartmentIds.has(apartment.id));
+}
+
+function formatNotParticipatingApartments(
+  meeting: { manualVotes?: Array<{ apartmentId: string }> },
+  apartments: Array<{
+    id: string;
+    apartmentLabel: string;
+    ownerName?: string | null;
+  }>,
+) {
+  const notParticipating = getNotParticipatingApartments(meeting, apartments);
+
+  if (notParticipating.length === 0) {
+    return "усі квартири взяли участь";
+  }
+
+  return notParticipating.map(formatApartmentVoteLabel).join(", ");
 }
 
 function recalculateMeetingQuestionResults(
@@ -946,7 +1007,7 @@ export function HouseMeetingsWorkspace({
 
                       const nextVote: ManualVoteEntry = {
                         apartmentId: selectedApartment.id,
-                        apartmentLabel: formatApartmentVoteLabel(selectedApartment),
+                        apartmentLabel: selectedApartment.apartmentLabel,
                         submittedAt: new Date().toISOString(),
                         answers: draft.questions.map((question) => ({
                           questionId: question.id,
@@ -1030,7 +1091,7 @@ export function HouseMeetingsWorkspace({
                           className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                         >
                           <div className="text-sm font-medium text-[var(--cms-text)]">
-                            {vote.apartmentLabel}
+                            {formatRecordedApartmentVoteLabel(vote, apartments)}
                           </div>
 
                           <div className="text-xs text-[var(--cms-text-muted)]">
@@ -1323,7 +1384,7 @@ export function HouseMeetingsWorkspace({
                 {formatDate(meeting.meetingDateTime)}
               </div>
               <div className="mt-3 text-sm text-[var(--cms-text-soft)]">
-                {meeting.questions.length} питань
+                {meeting.questions.length} питань · Не брали участь: {formatNotParticipatingApartments(meeting, apartments)}
               </div>
             </article>
           ))

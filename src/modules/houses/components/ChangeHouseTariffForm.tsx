@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { changeHouseTariff } from "@/src/modules/houses/actions/changeHouseTariff";
 import {
   adminInputClass,
@@ -29,18 +30,32 @@ export function ChangeHouseTariffForm({
   houseSlug,
   initialValue,
 }: Props) {
-  const [state, formAction, isPending] = useActionState(
-    changeHouseTariff,
-    initialState,
-  );
+  const router = useRouter();
+  const [state, setState] = useState<State>(initialState);
+  const [isPending, startTransition] = useTransition();
   const [value, setValue] = useState(
     initialValue !== null && initialValue !== undefined
       ? String(initialValue)
       : "",
   );
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    startTransition(async () => {
+      const nextState = await changeHouseTariff(initialState, formData);
+      setState(nextState);
+
+      if (!nextState.error) {
+        router.refresh();
+      }
+    });
+  }
+
   return (
-    <form action={formAction} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <input type="hidden" name="houseId" value={houseId} />
       <input type="hidden" name="houseSlug" value={houseSlug} />
 
