@@ -90,6 +90,33 @@ function getMeetingStatusLabel(status: MeetingLifecycleStatus) {
   return houseMeetingsCopy.status.archived;
 }
 
+function normalizePublicApartmentLabel(label: string) {
+  const trimmed = label.trim();
+  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
+  const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
+
+  return withoutOwner || withoutPrefix || trimmed;
+}
+
+function formatPublicApartmentLabel(label: string) {
+  const normalized = normalizePublicApartmentLabel(label);
+
+  if (/^(кв\.?|прим\.?)\s+/i.test(normalized)) {
+    return normalized;
+  }
+
+  return `Кв. ${normalized}`;
+}
+
+function formatManualVoteApartmentLabel(
+  vote: ManualVoteEntry,
+  apartments: Array<{ id: string; label: string }>,
+) {
+  const apartment = apartments.find((item) => item.id === vote.apartmentId);
+
+  return formatPublicApartmentLabel(apartment?.label ?? vote.apartmentLabel);
+}
+
 
 export default async function PublicMeetingsPage({
   params,
@@ -414,7 +441,8 @@ export default async function PublicMeetingsPage({
                 </div>
               ) : null}
 
-              {(meeting.status === "review" ||
+              {(meeting.status === "active" ||
+                meeting.status === "review" ||
                 meeting.status === "completed" ||
                 meeting.status === "archived") ? (
                 <div className="mt-3 space-y-3 sm:mt-4 sm:grid sm:gap-4 lg:grid-cols-2 sm:space-y-0">
@@ -426,7 +454,7 @@ export default async function PublicMeetingsPage({
                       {(meeting.manualVotes ?? []).length > 0 ? (
                         (meeting.manualVotes ?? []).map((vote) => (
                           <div key={vote.apartmentId}>
-                            {vote.apartmentLabel}
+                            {formatManualVoteApartmentLabel(vote, apartments)}
                           </div>
                         ))
                       ) : (
@@ -449,7 +477,7 @@ export default async function PublicMeetingsPage({
                               (vote) => vote.apartmentId === apartment.id,
                             ),
                         )
-                        .map((apartment) => apartment.label)
+                        .map((apartment) => formatPublicApartmentLabel(apartment.label))
                         .join(",\n") || "Усі квартири вже враховані"}
                     </div>
                   </div>
