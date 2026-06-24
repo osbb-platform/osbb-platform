@@ -275,7 +275,7 @@ export function CreateInformationPostInlineForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
+      className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
@@ -324,7 +324,7 @@ export function CreateInformationPostInlineForm({
 
         <div className={adminInsetSurfaceClass}>
           <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <div className="overflow-hidden rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
+            <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
               <div className="aspect-[16/9] w-full">
                 {previewUrl ? (
                   <div
@@ -404,13 +404,13 @@ export function CreateInformationPostInlineForm({
       </div>
 
       {combinedError ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {combinedError}
         </div>
       ) : null}
 
       {actionSuccess ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {actionSuccess}
         </div>
       ) : null}

@@ -217,7 +217,7 @@ export function CrossHouseDuplicatePanel({
 
   if (!availableTargets.length) {
     return (
-      <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-5 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
+      <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-5 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
         Немає доступних активних будинків для створення копії. Поточний будинок
         виключається зі списку автоматично.
       </div>
@@ -225,7 +225,7 @@ export function CrossHouseDuplicatePanel({
   }
 
   return (
-    <div className="relative rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left shadow-sm">
+    <div className="relative rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left shadow-[var(--cms-shadow-sm)]">
       <PlatformSectionLoader
         active={isPending}
         label="Створюємо копії у вибраних будинках…"
@@ -286,7 +286,7 @@ export function CrossHouseDuplicatePanel({
           paginatedTargets.map((target) => (
             <label
               key={target.id}
-              className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 transition hover:border-[var(--cms-border-strong)]"
+              className="flex cursor-pointer items-start gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 transition hover:border-[var(--cms-border-strong)]"
             >
               <input
                 type="checkbox"
@@ -311,14 +311,14 @@ export function CrossHouseDuplicatePanel({
             </label>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-sm text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-sm text-[var(--cms-text-muted)]">
             За цим пошуком будинків не знайдено.
           </div>
         )}
       </div>
 
       {visibleTargets.length > TARGETS_PAGE_SIZE ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
           <span>
             Показано {paginatedTargets.length} із {visibleTargets.length}.
             Сторінка {safeCurrentPage} з {totalPages}.
@@ -329,7 +329,7 @@ export function CrossHouseDuplicatePanel({
               type="button"
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
               disabled={isPending || disabled || safeCurrentPage <= 1}
-              className="rounded-xl border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
+              className="rounded-[var(--r-md)] border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
             >
               Назад
             </button>
@@ -338,7 +338,7 @@ export function CrossHouseDuplicatePanel({
               type="button"
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
               disabled={isPending || disabled || safeCurrentPage >= totalPages}
-              className="rounded-xl border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
+              className="rounded-[var(--r-md)] border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
             >
               Далі
             </button>
@@ -347,7 +347,7 @@ export function CrossHouseDuplicatePanel({
       ) : null}
 
       {lastError ? (
-        <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {lastError}
         </div>
       ) : null}

@@ -125,7 +125,7 @@ export function CreateAnnouncementInlineForm({
           <button
             type="submit"
             disabled={isPending}
-            className={[adminPrimaryButtonClass, "min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
+            className={[adminPrimaryButtonClass, "min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
           >
             {isPending ? "Зберігаємо..." : "Зберегти"}
           </button>
