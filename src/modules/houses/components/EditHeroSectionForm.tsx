@@ -169,7 +169,7 @@ export function EditHeroSectionForm({
       </div>
 
       {lastError ? (
-        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {lastError}
         </div>
       ) : null}

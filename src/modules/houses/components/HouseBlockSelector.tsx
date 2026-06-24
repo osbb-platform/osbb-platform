@@ -63,7 +63,7 @@ export function HouseBlockSelector({
             router.push(`${ROUTES.admin.houses}/${houseId}?block=${nextBlock}`);
           });
         }}
-        className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] disabled:cursor-wait disabled:opacity-80"
+        className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] disabled:cursor-wait disabled:opacity-80"
       >
         {houseNavigationBlocks.map((block) => (
           <option key={block.value} value={block.value}>

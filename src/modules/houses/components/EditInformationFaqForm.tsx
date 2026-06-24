@@ -332,7 +332,7 @@ export function EditInformationFaqForm({
   const canRestore = currentStatus === "archived";
 
   return (
-    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <div className="mb-4 flex justify-between">
         <div>
           <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -421,13 +421,13 @@ export function EditInformationFaqForm({
       </div>
 
       {savedMessage ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {savedMessage}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
         </div>
       ) : null}

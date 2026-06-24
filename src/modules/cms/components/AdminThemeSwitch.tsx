@@ -1,10 +1,9 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
-} from "@/src/shared/ui/admin/adminStyles";
+
+import { Button } from "@/src/shared/ui/admin/Button";
+import { Card } from "@/src/shared/ui/admin/Card";
 
 type AdminTheme = "dark" | "light";
 
@@ -70,45 +69,33 @@ export function AdminThemeSwitch() {
     persistTheme(nextTheme);
   }
 
-  const lightButtonClass =
-    theme === "light"
-      ? adminPrimaryButtonClass
-      : adminSecondaryButtonClass;
-
-  const darkButtonClass =
-    theme === "dark"
-      ? adminPrimaryButtonClass
-      : adminSecondaryButtonClass;
-
   return (
-    <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 md:col-span-2">
-      <div className="mb-3">
-        <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-          Налаштування теми
-        </h3>
+    <Card
+      title="Налаштування теми"
+      className="md:col-span-2"
+      bodyClassName="space-y-5"
+    >
+      <p className="max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
+        Оберіть режим відображення робочої зони платформи. Механізм теми зберігається у localStorage та застосовується через data-admin-theme.
+      </p>
 
-        <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-          Оберіть режим відображення робочої зони платформи.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <button
+      <div className="inline-flex rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-1.5">
+        <Button
           type="button"
+          variant={theme === "light" ? "primary" : "ghost"}
           onClick={() => handleThemeChange("light")}
-          className={lightButtonClass}
         >
           Світла
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant={theme === "dark" ? "primary" : "ghost"}
           onClick={() => handleThemeChange("dark")}
-          className={darkButtonClass}
         >
           Темна
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

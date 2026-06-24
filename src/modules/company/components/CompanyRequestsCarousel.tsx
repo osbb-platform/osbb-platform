@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
 import type { CompanyContactRequestRecord } from "@/src/modules/company/services/getCompanyContactRequests";
+import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type Props = {
   requests: CompanyContactRequestRecord[];
@@ -50,31 +53,26 @@ export function CompanyRequestsCarousel({ requests }: Props) {
 
   if (!activeItem) {
     return (
-      <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-6 text-[var(--cms-text-muted)]">
-        Заявок пока нет.
-      </div>
+      <EmptyState
+        title="Заявок пока нет"
+        description="Новые заявки с публичного сайта компании появятся здесь."
+      />
     );
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-5">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 shadow-[var(--cms-shadow-sm)]">
       <div className="flex h-full flex-col gap-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="text-lg font-semibold text-[var(--cms-text)] sm:text-xl">
+              <div className="font-[family-name:var(--font-serif)] text-[20px] font-semibold tracking-[-0.01em] text-[var(--cms-text)]">
                 {activeItem.house_name}
               </div>
 
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                  activeItem.status === "new"
-                    ? "border border-orange-300 bg-orange-50 text-orange-700"
-                    : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]"
-                }`}
-              >
+              <AdminStatusBadge tone={activeItem.status === "new" ? "warning" : "neutral"}>
                 {activeItem.status === "new" ? "Новая" : "Просмотрена"}
-              </span>
+              </AdminStatusBadge>
             </div>
 
             <div className="mt-3 text-sm text-[var(--cms-text-muted)]">
@@ -93,13 +91,13 @@ export function CompanyRequestsCarousel({ requests }: Props) {
             </div>
 
             {activeItem.comment ? (
-              <div className="mt-4 rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3 text-sm leading-6 text-[var(--cms-text-muted)]">
+              <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                 {activeItem.comment}
               </div>
             ) : null}
           </div>
 
-          <div className="min-w-[180px] text-sm text-[var(--cms-text-muted)]">
+          <div className="shrink-0 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 py-2 text-sm text-[var(--cms-text-muted)]">
             {formatDateTime(activeItem.created_at)}
           </div>
         </div>
@@ -110,12 +108,12 @@ export function CompanyRequestsCarousel({ requests }: Props) {
             onClick={handlePrev}
             disabled={!canGoPrev}
             aria-label="Предыдущая заявка"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] text-base font-semibold text-[var(--cms-text)] transition-colors hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             ←
           </button>
 
-          <div className="min-w-[72px] text-center text-sm text-[var(--cms-warning-text)]">
+          <div className="min-w-[72px] text-center text-sm font-medium text-[var(--cms-text-muted)]">
             {safeIndex + 1} из {visibleItems.length}
           </div>
 
@@ -124,7 +122,7 @@ export function CompanyRequestsCarousel({ requests }: Props) {
             onClick={handleNext}
             disabled={!canGoNext}
             aria-label="Следующая заявка"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] text-base font-semibold text-[var(--cms-text)] transition-colors hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             →
           </button>

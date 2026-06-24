@@ -29,7 +29,7 @@ export function CreateCompanyPageForm() {
           name="title"
           type="text"
           placeholder="О компании"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -41,7 +41,7 @@ export function CreateCompanyPageForm() {
           name="slug"
           type="text"
           placeholder="about"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -53,7 +53,7 @@ export function CreateCompanyPageForm() {
           name="seoTitle"
           type="text"
           placeholder="SEO title"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -65,7 +65,7 @@ export function CreateCompanyPageForm() {
           name="seoDescription"
           type="text"
           placeholder="SEO description"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 

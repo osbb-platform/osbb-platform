@@ -86,7 +86,7 @@ function DetailCard({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3">
+    <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3">
       <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
         {label}
       </div>
@@ -123,7 +123,7 @@ export function EmployeeCard({
 
   return (
     <>
-      <article className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
+      <article className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-lg font-semibold text-[var(--cms-text)]">
@@ -140,18 +140,18 @@ export function EmployeeCard({
           </div>
 
           <div className="flex shrink-0 flex-wrap items-start gap-2">
-            <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+            <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               {getRoleLabel(employee.role)}
             </span>
 
-            <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+            <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               {getStatusLabel(employee.status)}
             </span>
 
             <button
               type="button"
               onClick={() => setIsDetailsOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)] hover:text-[var(--cms-text)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               aria-label={`Налаштування співробітника ${employeeLabel}`}
               title="Налаштування"
             >
@@ -175,7 +175,7 @@ export function EmployeeCard({
       </article>
 
       {isDetailsOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -183,8 +183,8 @@ export function EmployeeCard({
             aria-label="Закрити панель співробітника"
           />
 
-          <aside className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border-primary)] px-6 py-6">
+          <aside className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)]">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
                   Співробітник
@@ -202,7 +202,7 @@ export function EmployeeCard({
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(false)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)] hover:text-[var(--cms-text)]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель"
               >
                 <CloseIcon />
@@ -211,11 +211,11 @@ export function EmployeeCard({
 
             <div className="flex flex-1 flex-col gap-5 px-6 py-6">
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                   {getRoleLabel(employee.role)}
                 </span>
 
-                <span className="inline-flex rounded-full border border-[var(--cms-border-primary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                   {getStatusLabel(employee.status)}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export function EmployeeCard({
                 />
               </div>
 
-              <div className="mt-auto space-y-3 border-t border-[var(--cms-border-primary)] pt-5">
+              <div className="mt-auto space-y-3 border-t border-[var(--cms-border)] pt-5">
                 {canSendInvite ? (
                   <SendInviteButton membershipId={employee.membershipId} />
                 ) : null}

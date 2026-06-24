@@ -170,14 +170,14 @@ export function AdminSidebar({
 
   return (
     <aside
-      className={`relative w-full border-b border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-bg)] transition-[width] duration-300 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
+      className={`relative w-full border-b border-[var(--cms-border)] bg-[var(--cms-sidebar-bg)] shadow-[var(--cms-shadow-md)] transition-[width] duration-300 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
         isCollapsed ? "lg:w-24" : "lg:w-72"
       }`}
     >
       <button
         type="button"
         onClick={toggleSidebar}
-        className="absolute right-0 top-7 z-20 hidden h-9 w-9 translate-x-1/2 items-center justify-center rounded-xl border border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-card)] text-[var(--cms-text-muted)] shadow-sm transition hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)] lg:inline-flex"
+        className="absolute right-0 top-7 z-20 hidden h-9 w-9 translate-x-1/2 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-sidebar-card)] text-[var(--cms-text-muted)] shadow-[var(--cms-shadow-sm)] transition hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)] lg:inline-flex"
         aria-label={isCollapsed ? "Розгорнути бокову панель" : "Згорнути бокову панель"}
         title={isCollapsed ? "Розгорнути панель" : "Згорнути панель"}
       >
@@ -197,13 +197,13 @@ export function AdminSidebar({
 
       <div className="flex h-full min-h-0 flex-col">
         <div
-          className={`shrink-0 border-b border-[var(--cms-border-primary)] py-5 ${
+          className={`shrink-0 border-b border-[var(--cms-border)] py-5 ${
             isCollapsed ? "px-3" : "px-6"
           }`}
         >
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-sidebar-card)] text-[var(--cms-text)]"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-sidebar-card)] text-[var(--cms-accent-primary)] shadow-[var(--cms-shadow-sm)]"
               aria-label="OSBB Platform"
               title="OSBB Platform"
             >
@@ -233,11 +233,11 @@ export function AdminSidebar({
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
                     title={isCollapsed ? item.label : undefined}
-                    className={`flex items-center rounded-2xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center rounded-[var(--r-lg)] text-sm font-medium transition-all duration-200 ${
                       isCollapsed ? "justify-center px-3 py-3" : "justify-between gap-3 px-4 py-3"
                     } ${
                       isActive
-                        ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                        ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
                         : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)]"
                     }`}
                   >
@@ -252,20 +252,20 @@ export function AdminSidebar({
 
                     {!isCollapsed && item.badgeLabel ? (
                       <span
-                        className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${
+                        className={`inline-flex items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-[10px] font-bold tracking-wide ${
                           isActive
-                            ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
+                            ? "border border-[var(--cms-accent-primary)] bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
+                            : "border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                         }`}
                       >
                         {item.badgeLabel}
                       </span>
                     ) : !isCollapsed && typeof item.badgeCount === "number" && item.badgeCount > 0 ? (
                       <span
-                        className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                           isActive
-                            ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                            : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
+                            ? "border border-[var(--cms-accent-primary)] bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
+                            : "border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                         }`}
                       >
                         {item.badgeCount > 99 ? "99+" : item.badgeCount}
@@ -277,17 +277,17 @@ export function AdminSidebar({
           </div>
         </nav>
 
-        <div className={`shrink-0 border-t border-[var(--cms-border-primary)] py-4 ${isCollapsed ? "px-3" : "px-4"}`}>
+        <div className={`shrink-0 border-t border-[var(--cms-border)] py-4 ${isCollapsed ? "px-3" : "px-4"}`}>
           <Link
             href={ROUTES.admin.profile}
             aria-current={isProfileActive ? "page" : undefined}
             title={isCollapsed ? currentUser.fullName ?? currentUser.email ?? "Профіль" : undefined}
-            className={`block rounded-3xl border transition-all duration-200 ${
+            className={`block rounded-[var(--r-xl)] border transition-all duration-200 ${
               isCollapsed ? "p-3 text-center" : "p-4"
             } ${
               isProfileActive
-                ? "border-[var(--cms-border-secondary)] bg-[var(--cms-sidebar-card)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
-                : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] hover:bg-[var(--cms-sidebar-hover)]"
+                ? "border-[var(--cms-border-strong)] bg-[var(--cms-sidebar-card)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
+                : "border-[var(--cms-border)] bg-[var(--cms-surface)] hover:bg-[var(--cms-sidebar-hover)]"
             }`}
           >
             <div
@@ -295,7 +295,7 @@ export function AdminSidebar({
                 isCollapsed ? "justify-center" : "gap-3"
               }`}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-sm font-bold uppercase text-[var(--cms-text)]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] text-sm font-bold uppercase text-[var(--cms-accent-primary)]">
                 {getProfileInitials(currentUser)}
               </div>
 

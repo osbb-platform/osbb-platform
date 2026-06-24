@@ -104,7 +104,7 @@ function getLifecycleClasses(lifecycle: HouseDocumentLifecycle) {
     return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
   }
 
-  return "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)]";
+  return "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
 }
 
 function formatDate(value: string | null) {
@@ -658,7 +658,7 @@ export function HouseDocumentsWorkspace({
         active={isPending}
         delayMs={280}
         label={actionLabel}
-        className="rounded-3xl"
+        className="rounded-[var(--r-xl)]"
       />
 
       {!embedded ? (
@@ -676,7 +676,7 @@ export function HouseDocumentsWorkspace({
               type="button"
               disabled={isPending}
               onClick={() => setConfirmAction("delete_archive")}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
             >
               {isPending && confirmAction === "delete_archive"
                 ? "Видаляємо архів..."
@@ -755,7 +755,7 @@ export function HouseDocumentsWorkspace({
                 type="button"
                 onClick={closeForm}
                 aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
               >
                 ×
               </button>
@@ -860,7 +860,7 @@ export function HouseDocumentsWorkspace({
                     setFileError(null);
                     setSelectedFile(file);
                   }}
-                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                 />
 
                 <p className="mt-2 text-xs text-[var(--cms-text-soft)]">
@@ -894,7 +894,7 @@ export function HouseDocumentsWorkspace({
             </div>
 
             {formMode === "edit" ? (
-              <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
                 <div className="flex flex-col gap-4">
                   <div>
                     <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -906,7 +906,7 @@ export function HouseDocumentsWorkspace({
                   </div>
 
                   {hasExistingAttachment && selectedDocument ? (
-                    <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
+                    <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
                       <div className="flex flex-col gap-2">
                         <div className="text-sm font-medium text-[var(--cms-text)]">
                           Поточний файл:{" "}
@@ -931,7 +931,7 @@ export function HouseDocumentsWorkspace({
                               href={selectedDocument.signed_file_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                             >
                               Відкрити поточний файл
                             </a>
@@ -962,7 +962,7 @@ export function HouseDocumentsWorkspace({
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 text-sm text-[var(--cms-text-muted)]">
+                    <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 text-sm text-[var(--cms-text-muted)]">
                       У цього документа поки немає завантаженого файла.
                     </div>
                   )}
@@ -997,7 +997,7 @@ export function HouseDocumentsWorkspace({
                         setSelectedFile(file);
                         setRemoveAttachment(false);
                       }}
-                      className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                      className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                     />
 
                     {fileError ? (
@@ -1018,7 +1018,7 @@ export function HouseDocumentsWorkspace({
             {actionError ?? lastError ? (
               <div
                 role="alert"
-                className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+                className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
                 {actionError ?? lastError}
               </div>
@@ -1042,7 +1042,7 @@ export function HouseDocumentsWorkspace({
                       type="button"
                       disabled={isPending || Boolean(fileError)}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -1054,7 +1054,7 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -1065,7 +1065,7 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                   </button>
@@ -1114,7 +1114,7 @@ export function HouseDocumentsWorkspace({
         ) : null}
 
         {visibleDocuments.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
             {baseVisibleDocuments.length === 0
               ? getEmptyText(activeTab, emptyTitle)
               : "За цим пошуком документів не знайдено. Змініть запит або очистіть поле пошуку."}
@@ -1131,7 +1131,7 @@ export function HouseDocumentsWorkspace({
                   type="button"
                   onClick={() => switchToEditMode(document)}
                   className={[
-                    "w-full rounded-3xl border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
+                    "w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
                     isSelected
                       ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                       : "border-[var(--cms-border)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]",
@@ -1145,13 +1145,13 @@ export function HouseDocumentsWorkspace({
                         </div>
 
                         {isSelected ? (
-                          <span className="rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                             Відкрито у формі
                           </span>
                         ) : null}
 
                         {hasAttachment ? (
-                          <span className="rounded-full border border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+                          <span className="rounded-[var(--r-pill)] border border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
                             Файл прикріплено
                           </span>
                         ) : null}
@@ -1165,13 +1165,13 @@ export function HouseDocumentsWorkspace({
                         </span>
 
                         {!isFoundingScope ? (
-                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {document.document_year
                               ? `Рік: ${document.document_year}`
                               : "Рік не вказано"}
                           </span>
                         ) : (
-                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {getDocumentTypeLabel(document.document_type)}
                           </span>
                         )}
@@ -1203,7 +1203,7 @@ export function HouseDocumentsWorkspace({
 
                     <div className="flex flex-col items-start gap-3 lg:items-end">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
+                        className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
                       >
                         {getLifecycleLabel(document.lifecycle_status)}
                       </span>

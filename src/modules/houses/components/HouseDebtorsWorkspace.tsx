@@ -598,7 +598,7 @@ export function HouseDebtorsWorkspace({
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key as WorkspaceTab)}
-                  className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
                     isActive
                       ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
                       : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
@@ -606,7 +606,7 @@ export function HouseDebtorsWorkspace({
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                       isActive
                         ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                         : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
@@ -623,13 +623,13 @@ export function HouseDebtorsWorkspace({
 
       <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
         {lastError ? (
-        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {lastError}
         </div>
       ) : null}
 
       {importError ? (
-        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {importError}
         </div>
       ) : null}
@@ -691,12 +691,12 @@ export function HouseDebtorsWorkspace({
       </div>
 
       {activeTab === "draft" && isDraftEmpty ? (
-        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
         </div>
       ) : null}
       {activeTab === "draft" && !isDraftEmpty ? (
-        <div className="flex flex-col gap-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium text-[var(--cms-warning-text)]">
               Чернетка готова до публікації
@@ -730,13 +730,13 @@ export function HouseDebtorsWorkspace({
 
 
       {activeTab === "published" && isPublishedEmpty ? (
-        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
         </div>
       ) : null}
       {activeTab === "all" ? (
         <div
-          className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
+          className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
         >
           <div
             role="button"
@@ -760,7 +760,7 @@ export function HouseDebtorsWorkspace({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
                 paymentBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : hasPaymentUrl && !isPaymentUrlValid
@@ -777,7 +777,7 @@ export function HouseDebtorsWorkspace({
           </div>
 
           {paymentSaveSuccess ? (
-            <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
               Налаштування блоку оплати збережено.
             </div>
           ) : null}
@@ -788,7 +788,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={() => setIsPaymentSettingsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   aria-label="Закрити налаштування оплати"
                 >
                   ×
@@ -805,7 +805,7 @@ export function HouseDebtorsWorkspace({
                     setPayment((prev) => ({ ...prev, url: event.target.value }))
                   }
                   placeholder="https://pay.example.com/debtors"
-                  className={`w-full rounded-2xl border px-4 py-3 text-sm text-[var(--cms-text)] ${
+                  className={`w-full rounded-[var(--r-lg)] border px-4 py-3 text-sm text-[var(--cms-text)] ${
                     hasPaymentUrl && !isPaymentUrlValid
                       ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)]"
                       : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)]"
@@ -867,7 +867,7 @@ export function HouseDebtorsWorkspace({
                 />
               </div>
 
-              <div className="md:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+              <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
                   Попередній перегляд публічного блоку
                 </div>
@@ -877,7 +877,7 @@ export function HouseDebtorsWorkspace({
                 <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                   {payment.note || "Опис блоку оплати з’явиться тут."}
                 </div>
-                <div className="mt-4 inline-flex rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)]">
+                <div className="mt-4 inline-flex rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)]">
                   {payment.buttonLabel || "Оплатити"}
                 </div>
               </div>
@@ -909,7 +909,7 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {activeTab === "all" ? (
-        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
           <div
             role="button"
             tabIndex={0}
@@ -932,7 +932,7 @@ export function HouseDebtorsWorkspace({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
                 calculatorBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
@@ -943,7 +943,7 @@ export function HouseDebtorsWorkspace({
           </div>
 
           {calculatorSaveSuccess ? (
-            <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
               Налаштування калькулятора збережено.
             </div>
           ) : null}
@@ -954,7 +954,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={() => setIsCalculatorSettingsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   aria-label="Закрити налаштування калькулятора"
                 >
                   ×
@@ -1075,7 +1075,7 @@ export function HouseDebtorsWorkspace({
                 />
               </div>
 
-              <div className="md:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+              <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
                   Попередній перегляд параметрів
                 </div>
@@ -1117,11 +1117,11 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {activeTab === "all" && filteredRows.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
           У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
         </div>
       ) : filteredRows.length > 0 ? (
-        <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
+        <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
           <div className="max-h-[70vh] overflow-auto">
             <table className="min-w-full border-collapse">
               <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
@@ -1163,7 +1163,7 @@ export function HouseDebtorsWorkspace({
                           }
                           inputMode="decimal"
                           placeholder="-1500.00 або 250.00"
-                          className="w-[140px] rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                          className="w-[140px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
                         />
                       ) : (
                         <span className="text-sm text-[var(--cms-text)]">
@@ -1181,7 +1181,7 @@ export function HouseDebtorsWorkspace({
                           }
                           inputMode="numeric"
                           placeholder="—"
-                          className="w-[100px] rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                          className="w-[100px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
                         />
                       ) : (
                         <span className="text-sm text-[var(--cms-text)]">
@@ -1198,7 +1198,7 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {isPreviewOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.8)] px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm">
           <button
             type="button"
             onClick={closePreview}
@@ -1206,9 +1206,9 @@ export function HouseDebtorsWorkspace({
             aria-label="Закрити попередній перегляд"
           />
 
-          <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="border-b border-[var(--cms-border)] px-6 py-5">
-              <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Попередній перегляд перед збереженням
               </div>
 
@@ -1221,10 +1221,10 @@ export function HouseDebtorsWorkspace({
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Боржників: {previewDebtorsCount}
                 </span>
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}
                 </span>
               </div>
@@ -1232,11 +1232,11 @@ export function HouseDebtorsWorkspace({
 
             <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
               {isPreviewEmpty ? (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
                   У попередньому перегляді немає рядків для збереження. Вкажіть суму боргу хоча б для однієї квартири.
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
+                <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
                   <table className="min-w-full border-collapse">
                     <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
                       <tr className="border-b border-[var(--cms-border)] text-left">

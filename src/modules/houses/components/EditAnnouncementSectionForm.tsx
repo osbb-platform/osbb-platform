@@ -269,7 +269,7 @@ export function EditAnnouncementSectionForm({
         </div>
 
         {combinedError ? (
-          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {combinedError}
           </div>
         ) : null}
@@ -284,7 +284,7 @@ export function EditAnnouncementSectionForm({
                   setActionError(null);
                   formRef.current?.requestSubmit();
                 }}
-                className={`${adminPrimaryButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl ${
+                className={`${adminPrimaryButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl ${
                   isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
@@ -296,7 +296,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
@@ -309,7 +309,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("publish")}
-                  className={`${adminSuccessButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminSuccessButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                 </button>
@@ -322,7 +322,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("archive")}
-                  className={`${adminWarningButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminWarningButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
                 </button>
@@ -335,7 +335,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-3xl px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>

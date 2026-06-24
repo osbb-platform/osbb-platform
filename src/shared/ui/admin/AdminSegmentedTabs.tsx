@@ -18,6 +18,7 @@ type AdminSegmentedTabsProps = {
   activeKey: string;
   onChange: (key: string) => void;
   className?: string;
+  ariaLabel?: string;
 };
 
 export function AdminSegmentedTabs({
@@ -25,9 +26,19 @@ export function AdminSegmentedTabs({
   activeKey,
   onChange,
   className = "",
+  ariaLabel = "Фільтр",
 }: AdminSegmentedTabsProps) {
   return (
-    <div className={["flex flex-wrap gap-3", className].filter(Boolean).join(" ")}>
+    <div
+      className={[
+        "inline-flex max-w-full flex-wrap gap-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-1.5",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      role="tablist"
+      aria-label={ariaLabel}
+    >
       {items.map((item) => {
         const isActive = item.key === activeKey;
 
@@ -35,6 +46,8 @@ export function AdminSegmentedTabs({
           <button
             key={item.key}
             type="button"
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onChange(item.key)}
             className={[
               adminTabBaseClass,

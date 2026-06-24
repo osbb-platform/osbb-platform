@@ -64,14 +64,14 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
           setState(INITIAL_STATE);
           setOpen(true);
         }}
-        className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
+        className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
       >
         Створити задачу
       </button>
 
       {open ? (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(15,23,42,0.72)] px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="create-task-title"
@@ -80,7 +80,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
           }}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-bg-primary)] p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)]"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-lg)]"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -101,7 +101,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                 type="button"
                 disabled={isPending}
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
                 aria-label="Закрити"
               >
                 ×
@@ -116,7 +116,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                 <input
                   name="title"
                   required
-                  className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                  className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   placeholder="Наприклад: перевірити чернетку оголошення"
                 />
               </label>
@@ -128,7 +128,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                 <textarea
                   name="description"
                   rows={4}
-                  className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                  className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   placeholder="Деталі задачі"
                 />
               </label>
@@ -140,7 +140,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                   </span>
                   <select
                     name="assignedTo"
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   >
                     <option value="">Не призначено</option>
                     {assignees.map((assignee) => (
@@ -157,7 +157,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                   </span>
                   <select
                     name="houseId"
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   >
                     <option value="">Без будинку</option>
                     {houses.map((house) => (
@@ -174,7 +174,7 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                   </span>
                   <select
                     name="priority"
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   >
                     <option value="">Без пріоритету</option>
                     <option value="low">Низький</option>
@@ -190,13 +190,13 @@ export function CreateTaskModal({ assignees, houses }: CreateTaskModalProps) {
                   <input
                     name="deadlineAt"
                     type="date"
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                   />
                 </label>
               </div>
 
               {state.error ? (
-                <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {state.error}
                 </div>
               ) : null}

@@ -191,14 +191,14 @@ export function HouseRequisitesWorkspace({
                 <button
                   type="button"
                   onClick={handleOpenSettings}
-                  className="inline-flex rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  className="inline-flex rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                 >
                   Редагувати
                 </button>
               ) : null}
             </div>
 
-            <div className="rounded-3xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
               <div className="space-y-3">
                 <div><span className="text-[var(--cms-text-muted)]">Отримувач:</span> {snapshot.recipient || "—"}</div>
                 <div><span className="text-[var(--cms-text-muted)]">IBAN:</span> {snapshot.iban || "—"}</div>
@@ -231,7 +231,7 @@ export function HouseRequisitesWorkspace({
               <button
                 type="button"
                 onClick={handleCloseEditing}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                 aria-label="Закрити форму"
               >
                 ×
@@ -259,7 +259,7 @@ export function HouseRequisitesWorkspace({
                   value={snapshot.iban}
                   onChange={(e) => updateField("iban", normalizeIban(e.target.value))}
                   placeholder="UA123456789012345678901234567"
-                  className={`w-full rounded-2xl border px-4 py-3 text-[var(--cms-text)] ${
+                  className={`w-full rounded-[var(--r-lg)] border px-4 py-3 text-[var(--cms-text)] ${
                     ibanValid
                       ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text)]"
                       : "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)]"
@@ -346,7 +346,7 @@ export function HouseRequisitesWorkspace({
               Попередній перегляд сторінки для мешканця
             </div>
 
-            <div className="mt-5 rounded-3xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
+            <div className="mt-5 rounded-[var(--r-xl)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
               <div className="space-y-3">
                 <div><span className="text-[var(--cms-text-muted)]">Отримувач:</span> {snapshot.recipient || "—"}</div>
                 <div><span className="text-[var(--cms-text-muted)]">IBAN:</span> {snapshot.iban || "—"}</div>

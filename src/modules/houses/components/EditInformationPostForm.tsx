@@ -256,7 +256,7 @@ export function EditInformationPostForm({
   const buttonsDisabled = isPending || pendingAction !== null || isSaving;
 
   return (
-    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <form
         ref={formRef}
         id="information-post-edit-form"
@@ -315,7 +315,7 @@ export function EditInformationPostForm({
         {/* COVER */}
         <div className={adminInsetSurfaceClass}>
           <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <div className="overflow-hidden rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
+            <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]">
               <div className="aspect-[16/9] w-full">
                 {previewUrl ? (
                   <div
@@ -396,7 +396,7 @@ export function EditInformationPostForm({
         </div>
 
         {combinedError ? (
-          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {combinedError}
           </div>
         ) : null}

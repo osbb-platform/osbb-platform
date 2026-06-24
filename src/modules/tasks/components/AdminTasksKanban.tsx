@@ -107,7 +107,7 @@ function getPriorityCardClass(priority: string | null) {
     return "border-[rgba(249,115,22,0.55)] bg-[rgba(249,115,22,0.10)]";
   }
 
-  return "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]";
+  return "border-[var(--cms-border)] bg-[var(--cms-surface)]";
 }
 
 function formatDate(value: string | null) {
@@ -142,13 +142,13 @@ function TaskColumn({
     <section
       ref={setNodeRef}
       className={[
-        "min-h-[560px] rounded-3xl border p-4 transition",
+        "min-h-[560px] rounded-[var(--r-xl)] border p-4 transition",
         isOver
           ? "border-[var(--cms-tab-active-border)] bg-[var(--cms-tab-active-bg)]"
-          : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)]",
+          : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)]",
       ].join(" ")}
     >
-      <div className="mb-4 rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3">
+      <div className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-[var(--cms-text)]">
             {label}
@@ -164,7 +164,7 @@ function TaskColumn({
         ))}
 
         {tasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm leading-6 text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4 text-sm leading-6 text-[var(--cms-text-muted)]">
             У цій колонці поки немає задач.
           </div>
         ) : null}
@@ -203,9 +203,9 @@ function TaskCard({
       style={style}
       onClick={() => onOpenTask(task)}
       className={[
-        "flex h-[260px] cursor-pointer flex-col rounded-3xl border p-4 shadow-sm transition",
+        "flex h-[260px] cursor-pointer flex-col rounded-[var(--r-xl)] border p-4 shadow-[var(--cms-shadow-sm)] transition",
         getPriorityCardClass(task.priority),
-        isDragging ? "opacity-60" : "hover:border-[var(--cms-border-secondary)]",
+        isDragging ? "opacity-60" : "hover:border-[var(--cms-border-strong)]",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-3">
@@ -216,7 +216,7 @@ function TaskCard({
           {...listeners}
           {...attributes}
           onClick={(event) => event.stopPropagation()}
-          className="inline-flex h-8 min-w-8 cursor-grab items-center justify-center rounded-xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-2 text-xs font-semibold text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)] active:cursor-grabbing"
+          className="inline-flex h-8 min-w-8 cursor-grab items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-2 text-xs font-semibold text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] active:cursor-grabbing"
           aria-label="Перетягнути задачу"
           title="Перетягнути"
         >
@@ -379,7 +379,7 @@ export function AdminTasksKanban({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold text-[var(--cms-text)]">
@@ -390,7 +390,7 @@ export function AdminTasksKanban({
               Розділ уже доступний для роботи та проходить фінальне доопрацювання першої production-версії.
             </p>
 
-            <div className="mt-4 inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+            <div className="mt-4 inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
               Активних задач, що потребують уваги: {activeIncompleteCount}
             </div>
           </div>
@@ -401,7 +401,7 @@ export function AdminTasksKanban({
             <button
               type="button"
               onClick={() => setView((current) => current === "board" ? "archive" : "board")}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)]"
             >
               {view === "board" ? "Архів" : "Назад до задач"}
             </button>
@@ -409,7 +409,7 @@ export function AdminTasksKanban({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4">
+      <div className="space-y-4 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
         <div>
           <h2 className="text-lg font-semibold text-[var(--cms-text)]">
             {view === "board" ? "Фільтри задач" : "Архів задач"}
@@ -425,7 +425,7 @@ export function AdminTasksKanban({
           <select
             value={taskTypeFilter}
             onChange={(event) => setTaskTypeFilter(event.target.value as "all" | "manual" | "auto")}
-            className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
           >
             <option value="all">Усі задачі</option>
             <option value="manual">Ручні</option>
@@ -435,7 +435,7 @@ export function AdminTasksKanban({
           <select
             value={assigneeFilter}
             onChange={(event) => setAssigneeFilter(event.target.value)}
-            className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
           >
             <option value="all">Усі виконавці</option>
             {assignees.map((assignee) => (
@@ -448,7 +448,7 @@ export function AdminTasksKanban({
           <select
             value={priorityFilter}
             onChange={(event) => setPriorityFilter(event.target.value)}
-            className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
           >
             <option value="all">Усі пріоритети</option>
                         <option value="high">Високий</option>
@@ -477,9 +477,9 @@ export function AdminTasksKanban({
         </DndContext>
         ) : null
       ) : (
-        <div className="overflow-hidden rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)]">
+        <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)]">
           <table className="w-full text-sm">
-            <thead className="bg-[var(--cms-bg-secondary)]">
+            <thead className="bg-[var(--cms-surface-muted)]">
               <tr>
                 <th className="px-4 py-3 text-left">Задача</th>
                 <th className="px-4 py-3 text-left">Тип</th>
@@ -494,7 +494,7 @@ export function AdminTasksKanban({
                 <tr
                   key={task.id}
                   onClick={() => setSelectedTaskId(task.id)}
-                  className="cursor-pointer border-t border-[var(--cms-border-primary)] hover:bg-[var(--cms-bg-secondary)]"
+                  className="cursor-pointer border-t border-[var(--cms-border)] hover:bg-[var(--cms-surface-muted)]"
                 >
                   <td className="px-4 py-3">{task.title}</td>
                   <td className="px-4 py-3">{getTypeLabel(task.taskType)}</td>

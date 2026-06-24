@@ -26,8 +26,8 @@ export function AdminOnboardingModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[rgba(15,23,42,0.72)] px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--cms-overlay)] px-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         
         {/* Skip */}
         <button
@@ -50,8 +50,8 @@ export function AdminOnboardingModal({ onClose }: Props) {
           {ADMIN_ONBOARDING_STEPS.map((_, i) => (
             <div
               key={i}
-              className={`h-2 w-2 rounded-full ${
-                i === step ? "bg-[var(--cms-primary)]" : "bg-[var(--cms-bg-tertiary)]"
+              className={`h-2 w-2 rounded-[var(--r-pill)] ${
+                i === step ? "bg-[var(--cms-primary)]" : "bg-[var(--cms-pill-bg)]"
               }`}
             />
           ))}
@@ -69,7 +69,7 @@ export function AdminOnboardingModal({ onClose }: Props) {
 
           <button
             onClick={next}
-            className="rounded-2xl bg-[var(--cms-primary)] px-5 py-2 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
+            className="rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-5 py-2 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
           >
             {isLast ? "Перейти в дашборд" : "Далі →"}
           </button>

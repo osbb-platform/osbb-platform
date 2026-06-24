@@ -1,5 +1,20 @@
+import { Inter, Lora } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-serif-lora",
+  weight: ["500", "600"],
+  display: "swap",
+});
+
 
 export const metadata: Metadata = {
   title: "OSBB Platform",
@@ -35,7 +50,7 @@ const themeInitScript = `
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="uk" data-admin-theme="light" suppressHydrationWarning>
+    <html lang="uk" data-admin-theme="light" suppressHydrationWarning className={`${inter.variable} ${lora.variable}`}>
       <head>
         <script
           id="admin-theme-init"

@@ -230,7 +230,7 @@ function HouseEditorCard({
     >
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+          <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
             Налаштування будинку
           </div>
           <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
@@ -245,7 +245,7 @@ function HouseEditorCard({
           <button
             type="button"
             onClick={() => setIsAnnouncementOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             title="Оголошення для мешканців"
           >
             🧾
@@ -254,7 +254,7 @@ function HouseEditorCard({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити налаштування будинку"
           >
           ×
@@ -272,7 +272,7 @@ function HouseEditorCard({
       />
 
       {archiveState.error ? (
-        <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {archiveState.error}
         </div>
       ) : null}
@@ -312,8 +312,8 @@ function HouseEditorCard({
 
       {isAnnouncementOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] p-4 backdrop-blur-sm">
-          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[var(--cms-border-primary)] px-5 py-4">
+          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)]">
+            <div className="flex items-center justify-between border-b border-[var(--cms-border)] px-5 py-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">
                 Оголошення для мешканців
               </div>
@@ -322,7 +322,7 @@ function HouseEditorCard({
                 <a
                   href={`/api/reports/view?path=${encodeURIComponent(`${house.id}/announcement.pdf`)}&bucket=house-announcements&download=1&filename=${encodeURIComponent(`${house.slug}.pdf`)}&v=pdf-hotfix-20260604`}
                   download={`${house.slug}.pdf`}
-                  className="inline-flex min-w-[150px] items-center justify-center rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] shadow-sm transition hover:bg-[var(--cms-pill-bg)]"
+                  className="inline-flex min-w-[150px] items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)] transition hover:bg-[var(--cms-pill-bg)]"
                 >
                   Завантажити PDF
                 </a>
@@ -330,7 +330,7 @@ function HouseEditorCard({
                 <button
                   type="button"
                   onClick={() => setIsAnnouncementOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--cms-border-primary)] text-lg text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-secondary)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-pill)] border border-[var(--cms-border)] text-lg text-[var(--cms-text-muted)] hover:bg-[var(--cms-surface-muted)]"
                 >
                   ×
                 </button>
@@ -414,7 +414,7 @@ function ArchivedHouseRestoreCard({
   }
 
   return (
-    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[var(--cms-shadow-md)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start gap-3">
@@ -423,17 +423,17 @@ function ArchivedHouseRestoreCard({
             </h3>
 
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 slug: {house.slug}
               </span>
 
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Архів
               </span>
 
               {house.district ? (
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
+                  className="rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
@@ -451,7 +451,7 @@ function ArchivedHouseRestoreCard({
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text-soft)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text-soft)]"
             aria-label="Настройки недоступны для архивного дома"
             title="Архівний будинок"
             disabled
@@ -463,7 +463,7 @@ function ArchivedHouseRestoreCard({
             href={houseOrigin(house.slug)}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label={`Відкрити сайт будинку ${house.name}`}
             title="Відкрити сайт будинку"
           >
@@ -504,25 +504,25 @@ function ArchivedHouseRestoreCard({
       </div>
 
       {state.error ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
       {deleteState.error ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {deleteState.error}
         </div>
       ) : null}
 
       {state.successMessage ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {state.successMessage}
         </div>
       ) : null}
 
       {deleteState.successMessage ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {deleteState.successMessage}
         </div>
       ) : null}
@@ -639,13 +639,13 @@ export function HousesRegistryWorkspace({
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Активних: {activeHouses.length}
               </span>
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 В архіві: {archivedHouses.length}
               </span>
-              <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Усього: {houses.length}
               </span>
             </div>
@@ -672,7 +672,7 @@ export function HousesRegistryWorkspace({
             <button
               type="button"
               onClick={() => setIsArchiveOpen(true)}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
             >
               Архів будинків
             </button>
@@ -693,7 +693,7 @@ export function HousesRegistryWorkspace({
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             >
               ×
             </button>
@@ -723,7 +723,7 @@ export function HousesRegistryWorkspace({
             </p>
           </div>
 
-          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+          <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
             Знайдено: {filteredHouses.length}
           </div>
         </div>
@@ -738,7 +738,7 @@ export function HousesRegistryWorkspace({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Введіть будинок, вулицю, slug або назву ОСББ"
-              className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+              className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
             />
           </div>
 
@@ -749,7 +749,7 @@ export function HousesRegistryWorkspace({
             <select
               value={districtFilter}
               onChange={(event) => setDistrictFilter(event.target.value)}
-              className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+              className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
             >
               <option value="">Усі райони</option>
               {districts.map((district) => (
@@ -764,7 +764,7 @@ export function HousesRegistryWorkspace({
 
       <div className="grid gap-4">
         {filteredHouses.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
             За поточними фільтрами будинки не знайдено.
           </div>
         ) : (
@@ -780,7 +780,7 @@ export function HousesRegistryWorkspace({
       </div>
 
       {isArchiveOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.72)] px-4 py-8 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-8 backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0"
@@ -788,10 +788,10 @@ export function HousesRegistryWorkspace({
             aria-label="Закрити архів будинків"
           />
 
-          <div className="relative z-10 flex max-h-[85dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+          <div className="relative z-10 flex max-h-[85dvh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Архів будинків
                 </div>
                 <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
@@ -805,7 +805,7 @@ export function HousesRegistryWorkspace({
               <button
                 type="button"
                 onClick={() => setIsArchiveOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
               >
                 ×
               </button>
@@ -813,7 +813,7 @@ export function HousesRegistryWorkspace({
 
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {archivedHouses.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 text-[var(--cms-text-muted)]">
                   В архіві поки немає будинків.
                 </div>
               ) : (

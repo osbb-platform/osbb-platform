@@ -386,13 +386,13 @@ export function ApartmentsRegistryWorkspace({
   return (
     <div className="space-y-6">
       {archiveState.error || archiveAllState.error ? (
-        <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {archiveState.error ?? archiveAllState.error}
         </div>
       ) : null}
 
       {archiveState.success || archiveAllState.success ? (
-        <div className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {archiveState.success ?? archiveAllState.success}
         </div>
       ) : null}
@@ -463,7 +463,7 @@ export function ApartmentsRegistryWorkspace({
                   <button
                     type="button"
                     onClick={handleArchiveAll}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cms-surface)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cms-surface)]"
                     aria-label="Очистити активний список квартир"
                     title="Очистити"
                   >
@@ -520,16 +520,16 @@ export function ApartmentsRegistryWorkspace({
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Активних: {summary?.activeCount ?? 0}
                 </span>
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   В архіві: {summary?.archivedCount ?? 0}
                 </span>
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Останній імпорт: {formatDate(summary?.lastImportAt ?? null)}
                 </span>
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Хто імпортував: {summary?.lastImportActorName ?? "—"}
                 </span>
               </div>
@@ -585,8 +585,8 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: false })}
               className={
                 !archived
-                  ? "rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
-                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                  ? "rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
+                  : "rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               }
             >
               Активні
@@ -597,8 +597,8 @@ export function ApartmentsRegistryWorkspace({
               onClick={() => updateParams({ archived: true })}
               className={
                 archived
-                  ? "rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
-                  : "rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                  ? "rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
+                  : "rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               }
             >
               Архів
@@ -606,17 +606,17 @@ export function ApartmentsRegistryWorkspace({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
+            <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
               Знайдено: {filteredItems.length}
             </div>
-            <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
+            <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-2 text-sm font-medium text-[var(--cms-pill-text)]">
               Сортування: {sortDirection === "asc" ? "↑" : "↓"}
             </div>
           </div>
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
+          <div className="mt-6 rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
             {archived
               ? "В архіві обраного будинку за поточними фільтрами немає квартир."
               : "В активному реєстрі обраного будинку за поточними фільтрами немає квартир. Змініть фільтри, використайте завантаження файлу або ручне додавання."}
@@ -637,7 +637,7 @@ export function ApartmentsRegistryWorkspace({
               · {sortDirection === "asc" ? "за зростанням" : "за спаданням"}
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-3xl border border-[var(--cms-border)]">
+            <div className="mt-6 overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
               <div className="max-h-[72vh] overflow-auto">
                 <table className="min-w-full border-collapse">
                   <thead className="sticky top-0 z-10 bg-[var(--cms-surface-elevated)]">

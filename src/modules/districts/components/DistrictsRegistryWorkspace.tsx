@@ -201,7 +201,7 @@ function DistrictFormCard({
           type="button"
           onClick={onCancel}
           disabled={!canManageDistricts}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
           aria-label="Закрити форму"
         >
           ×
@@ -235,7 +235,7 @@ function DistrictFormCard({
             type="text"
             value={slugPreview}
             readOnly
-            className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
+            className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
           />
         </div>
 
@@ -249,7 +249,7 @@ function DistrictFormCard({
             </div>
 
             <div
-              className="h-12 w-12 rounded-2xl border border-[var(--cms-border)]"
+              className="h-12 w-12 rounded-[var(--r-lg)] border border-[var(--cms-border)]"
               style={{ backgroundColor: themeColor }}
             />
           </div>
@@ -262,7 +262,7 @@ function DistrictFormCard({
                 onChange={(event) =>
                   setThemeColor(event.target.value.toUpperCase())
                 }
-                className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-1"
+                className="h-12 w-full cursor-pointer rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-1"
                 aria-label="Вибір кольору району"
               />
             </div>
@@ -283,13 +283,13 @@ function DistrictFormCard({
         </div>
 
         {state.error ? (
-          <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {state.error}
           </div>
         ) : null}
 
         {deleteState.error ? (
-          <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {deleteState.error}
           </div>
         ) : null}
@@ -438,10 +438,10 @@ export function DistrictsRegistryWorkspace({
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+          <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
             Районів: {visibleDistricts.length}
           </div>
-          <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
+          <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-sm font-medium text-[var(--cms-pill-text)]">
             Будинків: {totalHousesCount}
           </div>
         </div>
@@ -496,7 +496,7 @@ export function DistrictsRegistryWorkspace({
       ) : null}
 
       {filteredDistricts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
           <div className="text-xl font-semibold text-[var(--cms-text)]">
             Поки немає жодного району
           </div>
@@ -519,7 +519,7 @@ export function DistrictsRegistryWorkspace({
           {filteredDistricts.map((district) => (
             <article
               key={district.id}
-              className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]"
+              className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[var(--cms-shadow-md)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -533,7 +533,7 @@ export function DistrictsRegistryWorkspace({
 
                 <div className="flex items-center gap-3">
                   <span
-                    className="h-5 w-5 rounded-full border border-[var(--cms-border)]"
+                    className="h-5 w-5 rounded-[var(--r-pill)] border border-[var(--cms-border)]"
                     style={{ backgroundColor: district.theme_color }}
                     aria-label={`Колір району ${district.theme_color}`}
                     title={district.theme_color}
@@ -542,21 +542,21 @@ export function DistrictsRegistryWorkspace({
                     <button
                       type="button"
                       onClick={() => openEditForm(district)}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-pill-bg)]"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-[var(--cms-text)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-pill-bg)]"
                       aria-label={`Налаштувати район ${district.name}`}
                       title="Налаштувати район"
                     >
                       <SettingsIcon />
                     </button>
                   ) : (
-                    <span className="inline-flex items-center rounded-2xl border border-[var(--cms-border)] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--cms-text-muted)]">
+                    <span className="inline-flex items-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--cms-text-muted)]">
                       Системний
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="mt-6 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
+              <div className="mt-6 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
                 <div className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
                   {padHousesCount(district.houses_count)}
                 </div>

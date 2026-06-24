@@ -397,7 +397,7 @@ export function IdleLockProvider({
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] shadow-sm transition hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)] transition hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label={showPassword ? "Приховати пароль" : "Показати пароль"}
                     aria-pressed={showPassword}
                     disabled={isUnlocking}
@@ -440,7 +440,7 @@ export function IdleLockProvider({
               {unlockError ? (
                 <div
                   role="alert"
-                  className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+                  className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
                 >
                   {unlockError}
                 </div>

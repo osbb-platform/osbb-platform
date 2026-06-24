@@ -189,7 +189,7 @@ export function CreateHouseForm({
           type="text"
           value={slugPreview}
           readOnly
-          className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-[var(--cms-text-muted)] outline-none"
         />
         <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
           Slug формується автоматично за назвою будинку та далі не редагується.
@@ -290,7 +290,7 @@ export function CreateHouseForm({
 
       <div className={`md:col-span-2 ${adminSurfaceClass} p-4`}>
         <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
-          <div className="overflow-hidden rounded-[20px] border border-[var(--cms-border)] bg-[var(--cms-surface)]">
+          <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)]">
             <div className="aspect-[16/9] w-full">
               {previewUrl ? (
                 <div
@@ -355,7 +355,7 @@ export function CreateHouseForm({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                  className="inline-flex shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                 >
                   Обрати файл
                 </button>
@@ -383,7 +383,7 @@ export function CreateHouseForm({
       </div>
 
       {combinedError ? (
-        <div className="md:col-span-2 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {combinedError}
         </div>
       ) : null}

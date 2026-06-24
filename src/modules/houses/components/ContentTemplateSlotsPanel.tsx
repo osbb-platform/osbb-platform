@@ -151,7 +151,7 @@ export function ContentTemplateSlotsPanel({
   }
 
   return (
-    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
       <div>
         <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cms-text-soft)]">
           Шаблони
@@ -165,13 +165,13 @@ export function ContentTemplateSlotsPanel({
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
         </div>
       ) : null}
 
       {localSuccess ? (
-        <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {localSuccess}
         </div>
       ) : null}
@@ -181,7 +181,7 @@ export function ContentTemplateSlotsPanel({
           orderedTemplates.map((template) => (
             <article
               key={template.id}
-              className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+              className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
             >
               <div className="flex flex-col gap-3">
                 <div>
@@ -221,7 +221,7 @@ export function ContentTemplateSlotsPanel({
             </article>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
             Шаблонів поки немає. Створіть чернетку, заповніть її та натисніть
             «Запамʼятати як шаблон» у правому нижньому куті форми.
           </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useToast } from "@/src/shared/ui/toast/ToastProvider";
+
+import { Button } from "@/src/shared/ui/admin/Button";
 
 type Props = {
   phone: string;
@@ -9,7 +10,6 @@ type Props = {
 
 export function CopyPhoneButton({ phone }: Props) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   async function handleCopy() {
     try {
@@ -18,21 +18,17 @@ export function CopyPhoneButton({ phone }: Props) {
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
-      toast({
-        tone: "error",
-        title: "Не вдалося скопіювати номер",
-        description: `Скопіюйте вручну: ${phone}`,
-      });
     }
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant={copied ? "success" : "secondary"}
+      size="sm"
       onClick={handleCopy}
-      className="rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3]"
     >
-      {copied ? "Номер скопійовано" : "Копіювати номер"}
-    </button>
+      {copied ? "Скопійовано" : "Копіювати телефон"}
+    </Button>
   );
 }

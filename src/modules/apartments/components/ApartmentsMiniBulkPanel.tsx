@@ -162,7 +162,7 @@ export function ApartmentsMiniBulkPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.72)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0"
@@ -170,10 +170,10 @@ export function ApartmentsMiniBulkPanel({
         aria-label="Закрити панель ручного додавання квартир"
       />
 
-      <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+      <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
           <div>
-            <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+            <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Ручне додавання
             </div>
 
@@ -189,7 +189,7 @@ export function ApartmentsMiniBulkPanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити"
           >
             ×
@@ -198,13 +198,13 @@ export function ApartmentsMiniBulkPanel({
 
         <div className="border-b border-[var(--cms-border)] px-6 py-4">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+            <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Будинок: {houseName}
             </span>
-            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+            <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Заповнено рядків: {filledRowsCount}
             </span>
-            <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+            <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Ліміт: 20
             </span>
           </div>
@@ -219,7 +219,7 @@ export function ApartmentsMiniBulkPanel({
           <input type="hidden" name="rows" value={rowsPayload} />
 
           <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
-            <div className="overflow-hidden rounded-3xl border border-[var(--cms-border)]">
+            <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse">
                   <thead className="bg-[var(--cms-surface-elevated)]">
@@ -304,7 +304,7 @@ export function ApartmentsMiniBulkPanel({
                               placeholder="45,5"
                               className={
                                 areaInvalid
-                                  ? "w-full min-w-[120px] rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-2 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-danger-text)]"
+                                  ? "w-full min-w-[120px] rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-2 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-danger-text)]"
                                   : `w-full min-w-[120px] ${adminInputClass}`
                               }
                             />
@@ -346,25 +346,25 @@ export function ApartmentsMiniBulkPanel({
             ) : null}
 
             {hasInvalidAreas ? (
-              <div className="mt-6 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
+              <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
                 Виправте формат поля «Площа» у підсвічених рядках перед збереженням.
               </div>
             ) : null}
 
             {hasMissingRequiredRows ? (
-              <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+              <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                 Є рядки з незаповненими обов’язковими полями. Заповніть особовий рахунок, квартиру та власника або видаліть такий рядок.
               </div>
             ) : null}
 
             {state.error ? (
-              <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+              <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                 {state.error}
               </div>
             ) : null}
 
             {state.successMessage ? (
-              <div className="mt-6 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+              <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
                 {state.successMessage}
               </div>
             ) : null}

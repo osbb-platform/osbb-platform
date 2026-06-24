@@ -295,7 +295,7 @@ export function HouseInformationWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -442,7 +442,7 @@ export function HouseInformationWorkspace({
           ) : null}
 
           {workspaceError ?? lastError ? (
-            <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+            <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
               {workspaceError ?? lastError}
             </div>
           ) : null}
@@ -472,7 +472,7 @@ export function HouseInformationWorkspace({
             </div>
           ) : null}
 
-          <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <div className="space-y-4">
               {visiblePosts.length > 0 ? (
                 visiblePosts.map((section) => {
@@ -492,7 +492,7 @@ export function HouseInformationWorkspace({
                       key={section.id}
                       type="button"
                       onClick={() => openEditPost(section.id)}
-                      className={`block w-full overflow-hidden rounded-2xl border p-4 text-left transition ${
+                      className={`block w-full overflow-hidden rounded-[var(--r-lg)] border p-4 text-left transition ${
                         isPinned
                           ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)]"
                           : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)]"
@@ -536,7 +536,7 @@ export function HouseInformationWorkspace({
                   );
                 })
               ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                   Повідомлень поки немає. Створи першу публікацію через кнопку зверху.
                 </div>
               )}
@@ -559,13 +559,13 @@ export function HouseInformationWorkspace({
       {mainTab === "faq" ? (
         <>
           {workspaceError ?? lastError ? (
-            <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+            <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
               {workspaceError ?? lastError}
             </div>
           ) : null}
 
           {!editingFaq && !faqCreateOpen ? (
-            <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
               <div className="space-y-4">
                 {visibleFaqs.length > 0 ? (
                   visibleFaqs.map((faq) => (
@@ -573,7 +573,7 @@ export function HouseInformationWorkspace({
                       key={faq.id}
                       type="button"
                       onClick={() => openFaqWorkspace(faq.id)}
-                      className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+                      className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span
@@ -603,7 +603,7 @@ export function HouseInformationWorkspace({
                     </button>
                   ))
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
+                  <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                     FAQ поки не створено. Створи першу FAQ-чернетку через кнопку зверху.
                   </div>
                 )}
