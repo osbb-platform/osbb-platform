@@ -1373,7 +1373,7 @@ export function HouseMeetingsWorkspace({
                   {meeting.title || "Без назви"}
                 </div>
                 <span
-                  className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-wide ${getMeetingStatusBadgeClasses(
+                  className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-[11px] font-medium uppercase tracking-wide ${getMeetingStatusBadgeClasses(
                     meeting.status,
                   )}`}
                 >

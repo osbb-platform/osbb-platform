@@ -606,7 +606,7 @@ export function HouseDebtorsWorkspace({
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                       isActive
                         ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                         : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
@@ -760,7 +760,7 @@ export function HouseDebtorsWorkspace({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
                 paymentBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : hasPaymentUrl && !isPaymentUrlValid
@@ -932,7 +932,7 @@ export function HouseDebtorsWorkspace({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
                 calculatorBlockReady
                   ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
                   : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
@@ -1208,7 +1208,7 @@ export function HouseDebtorsWorkspace({
 
           <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="border-b border-[var(--cms-border)] px-6 py-5">
-              <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+              <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                 Попередній перегляд перед збереженням
               </div>
 
@@ -1221,10 +1221,10 @@ export function HouseDebtorsWorkspace({
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Боржників: {previewDebtorsCount}
                 </span>
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}
                 </span>
               </div>

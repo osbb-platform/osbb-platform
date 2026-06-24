@@ -780,7 +780,7 @@ export function HouseReportsWorkspace({
                 >
                   <span>{label}</span>
                   <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                       isActive
                         ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                         : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
@@ -1250,20 +1250,20 @@ export function HouseReportsWorkspace({
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={getStatusBadgeClasses(report.lifecycleStatus)}>
-                    <span className="inline-flex rounded-full px-3 py-1 text-xs font-medium">
+                    <span className="inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium">
                       {getStatusLabel(report.lifecycleStatus)}
                     </span>
                   </span>
-                  <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                     {normalizeReportCategory(report.categoryTitle) || "Без категорії"}
                   </span>
                   {report.isPinned ? (
-                    <span className="rounded-full bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
+                    <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
                       Важливе
                     </span>
                   ) : null}
                   {report.isNew ? (
-                    <span className="rounded-full bg-[var(--cms-success-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-success-text)]">
+                    <span className="rounded-[var(--r-pill)] bg-[var(--cms-success-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-success-text)]">
                       Нове
                     </span>
                   ) : null}

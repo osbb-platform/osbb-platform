@@ -770,7 +770,7 @@ export function EditBoardSectionForm({
                 >
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
+                      <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
                         {role.role || getRoleLabel(role.status)}
                       </span>
                     </div>

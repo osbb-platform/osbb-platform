@@ -1145,13 +1145,13 @@ export function HouseDocumentsWorkspace({
                         </div>
 
                         {isSelected ? (
-                          <span className="rounded-full border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                             Відкрито у формі
                           </span>
                         ) : null}
 
                         {hasAttachment ? (
-                          <span className="rounded-full border border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+                          <span className="rounded-[var(--r-pill)] border border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
                             Файл прикріплено
                           </span>
                         ) : null}
@@ -1165,13 +1165,13 @@ export function HouseDocumentsWorkspace({
                         </span>
 
                         {!isFoundingScope ? (
-                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {document.document_year
                               ? `Рік: ${document.document_year}`
                               : "Рік не вказано"}
                           </span>
                         ) : (
-                          <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
+                          <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-xs text-[var(--cms-text-muted)]">
                             {getDocumentTypeLabel(document.document_type)}
                           </span>
                         )}
@@ -1203,7 +1203,7 @@ export function HouseDocumentsWorkspace({
 
                     <div className="flex flex-col items-start gap-3 lg:items-end">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
+                        className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
                       >
                         {getLifecycleLabel(document.lifecycle_status)}
                       </span>

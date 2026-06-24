@@ -825,7 +825,7 @@ export function HousePlanWorkspace({
               >
                 <span>{label}</span>
                 <span
-                  className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                     activeTab === key
                       ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                       : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
@@ -1296,10 +1296,10 @@ export function HousePlanWorkspace({
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}>
+                  <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}>
                     {priorityLabel}
                   </span>
-                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}>
+                  <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}>
                     {statusLabel}
                   </span>
                 </div>

@@ -620,7 +620,7 @@ export function HouseSpecialistsWorkspace({
                 >
                   <span>{label}</span>
                   <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
                       isActive
                         ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
                         : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
@@ -918,12 +918,12 @@ export function HouseSpecialistsWorkspace({
                 className="block w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
               >
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+                  <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                     {getStatusLabel(item.status)}
                   </span>
 
                   {item.content.category ? (
-                    <span className="inline-flex rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+                    <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
                       {item.content.category}
                     </span>
                   ) : null}
