@@ -167,8 +167,8 @@ export function AdminPasswordSetupForm({
       : "Введіть новий пароль для входу.";
 
   return (
-    <div className="w-full rounded-[32px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-sm">
-      <div className="mb-6 inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-4 py-2 text-sm text-[var(--cms-text-muted)] sm:text-lg">
+    <div className="w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
+      <div className="mb-6 inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-4 py-2 text-sm text-[var(--cms-text-muted)] sm:text-lg">
         {mode === "complete-registration"
           ? "Створення пароля"
           : "Відновлення доступу"}
@@ -191,7 +191,7 @@ export function AdminPasswordSetupForm({
             type="password" autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)] disabled:opacity-60"
+            className="w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] disabled:opacity-60"
             placeholder="Не менше 8 символів"
             disabled={status !== "ready"}
           />
@@ -205,14 +205,14 @@ export function AdminPasswordSetupForm({
             type="password" autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
-            className="w-full rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)] disabled:opacity-60"
+            className="w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-base text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)] disabled:opacity-60"
             placeholder="Повторіть пароль"
             disabled={status !== "ready"}
           />
         </div>
 
         {error ? (
-          <div role="alert" className="rounded-3xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-6 py-4 text-lg text-[var(--cms-danger-text)]">
+          <div role="alert" className="rounded-[var(--r-xl)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-6 py-4 text-lg text-[var(--cms-danger-text)]">
             {error}
           </div>
         ) : null}
@@ -220,7 +220,7 @@ export function AdminPasswordSetupForm({
         <button
           type="submit"
           disabled={status !== "ready"}
-          className="rounded-3xl bg-[var(--cms-primary)] px-5 py-3 text-base font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-50"
+          className="rounded-[var(--r-xl)] bg-[var(--cms-primary)] px-5 py-3 text-base font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-50"
         >
           Зберегти пароль
         </button>

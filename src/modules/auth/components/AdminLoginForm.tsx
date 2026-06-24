@@ -30,7 +30,7 @@ export function AdminLoginForm() {
           name="email"
           type="email"
           placeholder="admin@company.ua"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
           autoComplete="off"
         />
       </div>
@@ -48,13 +48,13 @@ export function AdminLoginForm() {
           name="password"
           type="password"
           placeholder="Введіть пароль"
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-5 py-4 text-lg text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
           autoComplete="new-password"
         />
       </div>
 
       {state.error ? (
-        <div role="alert" className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-left text-sm text-[var(--cms-danger-text)]">
+        <div role="alert" className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-left text-sm text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}
@@ -63,7 +63,7 @@ export function AdminLoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-6 py-4 text-lg font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
+          className="inline-flex min-w-[220px] items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-6 py-4 text-lg font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90 disabled:opacity-60"
         >
           {isPending ? "Входимо..." : "Увійти"}
         </button>
