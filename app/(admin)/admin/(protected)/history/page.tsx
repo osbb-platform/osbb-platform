@@ -125,7 +125,7 @@ function getRetentionMessage(tab: PlatformHistoryTab) {
 function getSourceBadgeClasses(sourceType: "cms" | "house_portal") {
   return sourceType === "house_portal"
     ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-    : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text-muted)]";
+    : "border-[var(--cms-border)] bg-[var(--cms-pill-bg)] text-[var(--cms-text-muted)]";
 }
 
 
@@ -337,8 +337,8 @@ export default async function AdminHistoryPage({
         }))}
       />
 
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5">
-        <div className="mb-4 rounded-2xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-700">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+        <div className="mb-4 rounded-[var(--r-lg)] border border-sky-300 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-700">
           {getRetentionMessage(tab)}
         </div>
 
@@ -357,7 +357,7 @@ export default async function AdminHistoryPage({
         </div>
 
         {result.items.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-6 py-8">
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-6 py-8">
             <div className="text-lg font-semibold text-[var(--cms-text)]">
               {emptyState.title}
             </div>
@@ -366,9 +366,9 @@ export default async function AdminHistoryPage({
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-[var(--cms-border-primary)]">
+          <div className="overflow-x-auto rounded-[var(--r-lg)] border border-[var(--cms-border)]">
             <div className="min-w-[1320px]">
-              <div className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
+              <div className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
                 <div>Дія</div>
                 <div>Дата</div>
                 <div>Потік</div>
@@ -401,11 +401,11 @@ export default async function AdminHistoryPage({
                 return (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm transition hover:bg-[var(--cms-bg-secondary)]"
+                    className="grid grid-cols-[72px_180px_140px_220px_180px_180px_220px] gap-3 border-b border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm transition hover:bg-[var(--cms-surface-muted)]"
                   >
                     <div>
                       <span
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl border text-xs font-semibold ${getActionIconClasses(
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] border text-xs font-semibold ${getActionIconClasses(
                           actionTone,
                         )}`}
                       >
@@ -419,7 +419,7 @@ export default async function AdminHistoryPage({
 
                     <div>
                       <span
-                        className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${getSourceBadgeClasses(
+                        className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${getSourceBadgeClasses(
                           item.source_type,
                         )}`}
                       >
@@ -462,10 +462,10 @@ export default async function AdminHistoryPage({
               href={`${ROUTES.admin.history}?${buildQueryString(currentParams, {
                 page: result.page > 1 ? result.page - 1 : 1,
               })}`}
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border text-sm transition ${
                 result.page > 1
-                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
-                  : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
+                  ? "border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
+                  : "pointer-events-none border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
               }`}
             >
               ‹
@@ -486,10 +486,10 @@ export default async function AdminHistoryPage({
                     href={`${ROUTES.admin.history}?${buildQueryString(currentParams, {
                       page: pageNumber,
                     })}`}
-                    className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm font-medium transition ${
+                    className={`inline-flex h-10 min-w-10 items-center justify-center rounded-[var(--r-md)] px-3 text-sm font-medium transition ${
                       isActive
                         ? "bg-[var(--cms-accent-primary)] text-[var(--cms-accent-foreground)]"
-                        : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
+                        : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
                     }`}
                   >
                     {pageNumber}
@@ -505,10 +505,10 @@ export default async function AdminHistoryPage({
                     ? result.page + 1
                     : result.totalPages,
               })}`}
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border text-sm transition ${
                 result.page < result.totalPages
-                  ? "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
-                  : "pointer-events-none border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
+                  ? "border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
+                  : "pointer-events-none border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
               }`}
             >
               ›

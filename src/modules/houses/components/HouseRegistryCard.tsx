@@ -235,7 +235,7 @@ export function HouseRegistryCard({
 
   return (
     <>
-      <div className={`${adminSurfaceClass} p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[0_12px_32px_rgba(2,6,23,0.28)]`}>
+      <div className={`${adminSurfaceClass} p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)] hover:shadow-[var(--cms-shadow-md)]`}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start gap-3">
@@ -244,13 +244,13 @@ export function HouseRegistryCard({
               </h3>
 
               <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   {house.slug}
                 </span>
 
                 {house.district ? (
                   <span
-                    className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
+                    className="rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium text-[var(--cms-primary-contrast)]"
                     style={{ backgroundColor: house.district.theme_color }}
                   >
                     {house.district.name}
@@ -258,7 +258,7 @@ export function HouseRegistryCard({
                 ) : null}
 
                 {house.management_company ? (
-                  <span className="rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                  <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                     {house.management_company.name}
                   </span>
                 ) : null}
@@ -309,7 +309,7 @@ export function HouseRegistryCard({
   >
     <MessageIcon />
     {localUnreadCount > 0 ? (
-      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
+      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
         {localUnreadCount > 9 ? "9+" : localUnreadCount}
       </span>
     ) : null}
@@ -357,7 +357,7 @@ export function HouseRegistryCard({
       </div>
 
       {isMessagesOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -365,10 +365,10 @@ export function HouseRegistryCard({
             aria-label="Закрити центр звернень"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+          <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Центр звернень
                 </div>
 
@@ -384,7 +384,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsMessagesOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель"
               >
                 ×
@@ -393,10 +393,10 @@ export function HouseRegistryCard({
 
             <div className="flex-1 px-6 py-6">
               <div className="mb-5 flex flex-wrap items-center gap-3">
-                <div className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <div className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Усього записів: {localMessageItems.length}
                 </div>
-                <div className="rounded-full border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-danger-text)]">
+                <div className="rounded-[var(--r-pill)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-danger-text)]">
                   Нових: {isMarkingSeen ? "..." : localUnreadCount}
                 </div>
               </div>
@@ -406,21 +406,21 @@ export function HouseRegistryCard({
                   {localMessageItems.map((item) => (
                     <article
   key={item.id}
-  className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5"
+  className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5"
 >
   <div className="flex flex-wrap items-center gap-2">
-    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-pill-text)]">
+    <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-pill-text)]">
       {getMessageTypeLabel(item.category)}
     </span>
-    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
+    <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
       Квартира: {item.apartment || "—"}
     </span>
-    <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
+    <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
       {formatMessageDate(item.created_at)}
     </span>
 
     {item.status === "new" ? (
-      <span className="rounded-full border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-danger-text)]">
+      <span className="rounded-[var(--r-pill)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-danger-text)]">
         Нове
       </span>
     ) : null}
@@ -447,7 +447,7 @@ export function HouseRegistryCard({
   </div>
 
   {item.comment ? (
-    <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm leading-7 text-[var(--cms-text-muted)]">
+    <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm leading-7 text-[var(--cms-text-muted)]">
       {item.comment}
     </div>
   ) : null}
@@ -455,7 +455,7 @@ export function HouseRegistryCard({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-5 py-6 text-sm leading-7 text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-5 py-6 text-sm leading-7 text-[var(--cms-text-muted)]">
                   Для цього будинку поки немає звернень. Коли мешканець залишить повідомлення або заявку на спеціаліста, воно з’явиться тут.
                 </div>
               )}
@@ -465,7 +465,7 @@ export function HouseRegistryCard({
       ) : null}
 
       {isPasswordOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -473,10 +473,10 @@ export function HouseRegistryCard({
             aria-label="Закрити зміну пароля"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Код доступу будинку
                 </div>
 
@@ -492,7 +492,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsPasswordOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель"
               >
                 ×
@@ -510,7 +510,7 @@ export function HouseRegistryCard({
       ) : null}
 
       {isTariffOpen ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.6)] backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
@@ -518,10 +518,10 @@ export function HouseRegistryCard({
             aria-label="Закрити зміну тарифу"
           />
 
-          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+          <div className="relative z-10 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-6 py-6">
               <div>
-                <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Віджети головної
                 </div>
 
@@ -537,7 +537,7 @@ export function HouseRegistryCard({
               <button
                 type="button"
                 onClick={() => setIsTariffOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити панель налаштування віджетів"
               >
                 ×

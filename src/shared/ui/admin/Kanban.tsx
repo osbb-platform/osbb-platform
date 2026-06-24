@@ -21,23 +21,32 @@ export type KanbanColumnProps = {
 
 export const KanbanColumn = React.forwardRef<HTMLDivElement, KanbanColumnProps>(function KanbanColumn(
   { title, tone = "neutral", count, isOver, children, className, ...rest },
-  ref
+  ref,
 ) {
   return (
     <div
       ref={ref}
       {...rest}
       className={cx(
-        "flex flex-col gap-3 rounded-[var(--r-lg)] border bg-[var(--cms-surface-muted)] p-3.5 transition-colors",
-        isOver ? "border-[var(--cms-accent-primary)]" : "border-[var(--cms-border)]",
-        className
+        "flex min-h-[240px] flex-col gap-3 rounded-[var(--r-xl)] border bg-[var(--cms-surface-muted)] p-3.5 shadow-[var(--cms-shadow-sm)] transition-[background-color,border-color,box-shadow]",
+        isOver
+          ? "border-[var(--cms-accent-primary)] bg-[color-mix(in_srgb,var(--cms-accent-primary)_8%,var(--cms-surface-muted))] shadow-[var(--cms-shadow-md)]"
+          : "border-[var(--cms-border)]",
+        className,
       )}
     >
-      <div className="flex items-center gap-2 pb-1">
-        <span className={cx("h-[9px] w-[9px] rounded-full", DOT[tone])} aria-hidden="true" />
-        <span className="text-[13px] font-semibold text-[var(--cms-text)]">{title}</span>
-        {typeof count === "number" && <span className="ml-auto text-xs font-semibold text-[var(--cms-text-soft)]">{count}</span>}
+      <div className="flex items-center gap-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 py-2">
+        <span className={cx("h-[9px] w-[9px] rounded-[var(--r-pill)]", DOT[tone])} aria-hidden="true" />
+        <span className="min-w-0 truncate text-[13px] font-semibold text-[var(--cms-text)]">
+          {title}
+        </span>
+        {typeof count === "number" ? (
+          <span className="ml-auto rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-2 py-px text-xs font-semibold text-[var(--cms-text-soft)]">
+            {count}
+          </span>
+        ) : null}
       </div>
+
       {children}
     </div>
   );
@@ -50,18 +59,18 @@ export type KanbanCardProps = {
 
 export const KanbanCard = React.forwardRef<HTMLDivElement, KanbanCardProps>(function KanbanCard(
   { dragging, children, className, ...rest },
-  ref
+  ref,
 ) {
   return (
     <div
       ref={ref}
       {...rest}
       className={cx(
-        "rounded-[var(--r-md)] border bg-[var(--cms-surface)] p-3.5",
+        "rounded-[var(--r-lg)] border bg-[var(--cms-surface)] p-3.5 transition-[background-color,border-color,box-shadow,opacity]",
         dragging
-          ? "border-2 border-[var(--cms-accent-primary)] shadow-[var(--cms-shadow-md)]"
-          : "border-[var(--cms-border)] shadow-[var(--cms-shadow-sm)]",
-        className
+          ? "border-[var(--cms-accent-primary)] shadow-[var(--cms-shadow-md)]"
+          : "border-[var(--cms-border)] shadow-[var(--cms-shadow-sm)] hover:border-[var(--cms-border-strong)]",
+        className,
       )}
     >
       {children}

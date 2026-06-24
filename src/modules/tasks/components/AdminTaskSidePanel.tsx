@@ -55,7 +55,7 @@ function SaveTaskButton() {
     <button
       type="submit"
       disabled={pending}
-      className={["inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
+      className={["inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
       {pending ? "Зберігаємо..." : "Зберегти"}
     </button>
   );
@@ -77,7 +77,7 @@ function CommentSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className={["inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
+      className={["inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90", adminButtonDisabledClass].join(" ")} >
       {pending ? "Додаємо..." : "Додати коментар"}
     </button>
   );
@@ -123,7 +123,7 @@ function DetailRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4">
+    <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
       <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
         {label}
       </div>
@@ -192,17 +192,17 @@ export function AdminTaskSidePanel({
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-[rgba(15,23,42,0.50)] backdrop-blur-sm"
+      className="fixed inset-0 z-[110] bg-[var(--cms-overlay)] backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="task-panel-title"
       onMouseDown={onClose}
     >
       <aside
-        className="ml-auto flex h-full w-full max-w-2xl flex-col border-l border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] shadow-[0_24px_80px_rgba(2,6,23,0.55)]"
+        className="ml-auto flex h-full w-full max-w-2xl flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)]"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="shrink-0 border-b border-[var(--cms-border-primary)] p-6">
+        <div className="shrink-0 border-b border-[var(--cms-border)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
@@ -228,7 +228,7 @@ export function AdminTaskSidePanel({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)]"
               aria-label="Закрити"
             >
               ×
@@ -260,10 +260,10 @@ export function AdminTaskSidePanel({
                   type="button"
                   onClick={() => setActiveTab(tab.key as TaskPanelTab)}
                   className={[
-                    "inline-flex items-center rounded-full px-5 py-3 text-sm font-medium transition",
+                    "inline-flex items-center rounded-[var(--r-pill)] px-5 py-3 text-sm font-medium transition",
                     isActive
                       ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                      : "border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-tertiary)]",
+                      : "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-pill-bg)]",
                   ].join(" ")}
                 >
                   {tab.label}
@@ -286,7 +286,7 @@ export function AdminTaskSidePanel({
                     name="title"
                     defaultValue={task.title}
                     disabled={task.taskType !== "manual"}
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                   />
                 </label>
 
@@ -298,7 +298,7 @@ export function AdminTaskSidePanel({
                     name="description"
                     rows={4}
                     defaultValue={task.description ?? ""}
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                   />
                 </label>
 
@@ -308,7 +308,7 @@ export function AdminTaskSidePanel({
                     <select
                       name="status"
                       defaultValue={task.status}
-                      className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                      className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                     >
                       <option value="todo">Взяти в роботу</option>
                       <option value="in_progress">В процесі</option>
@@ -322,7 +322,7 @@ export function AdminTaskSidePanel({
                     <select
                       name="assignedTo"
                       defaultValue={task.assignedToId ?? ""}
-                      className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                      className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                     >
                       <option value="">Не призначено</option>
                       {assignees.map((assignee) => (
@@ -338,7 +338,7 @@ export function AdminTaskSidePanel({
                     <select
                       name="priority"
                       defaultValue={task.priority ?? ""}
-                      className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                      className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                     >
                       <option value="">Без пріоритету</option>
                                             <option value="high">Високий</option>
@@ -353,7 +353,7 @@ export function AdminTaskSidePanel({
                       type="date"
                       name="deadlineAt"
                       defaultValue={formatDateInputValue(task.deadlineAt)}
-                      className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm"
+                      className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm"
                     />
                   </label>
                 </div>
@@ -362,14 +362,14 @@ export function AdminTaskSidePanel({
                   <DetailRow label="Тип" value={getTypeLabel(task.taskType)} />
 
                   {task.taskType === "manual" ? (
-                    <label className="block rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4">
+                    <label className="block rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
                       <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                         Будинок
                       </span>
                       <select
                         name="houseId"
                         defaultValue={task.primaryHouseId ?? ""}
-                        className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text)]"
+                        className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)]"
                       >
                         <option value="">Без будинку</option>
                         {houses.map((house) => (
@@ -385,14 +385,14 @@ export function AdminTaskSidePanel({
                 </div>
 
                 {updateState.error ? (
-                  <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                  <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                     {updateState.error}
                   </div>
                 ) : null}
 
               </div>
 
-              <div className="fixed bottom-0 right-0 w-full max-w-2xl border-t border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+              <div className="fixed bottom-0 right-0 w-full max-w-2xl border-t border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex gap-3">
                     <SaveTaskButton />
@@ -403,7 +403,7 @@ export function AdminTaskSidePanel({
                         setActionError(null);
                         setConfirmAction("delete");
                       }}
-                      className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)]"
+                      className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)]"
                     >
                       Видалити
                     </button>
@@ -415,7 +415,7 @@ export function AdminTaskSidePanel({
                       setActionError(null);
                       setConfirmAction("archive");
                     }}
-                    className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-3 text-sm font-medium"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-5 py-3 text-sm font-medium"
                   >
                     Архівувати
                   </button>
@@ -426,7 +426,7 @@ export function AdminTaskSidePanel({
 
           {activeTab === "comments" ? (
             <div className="space-y-4">
-              <form action={commentAction} className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4">
+              <form action={commentAction} className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
                 <input type="hidden" name="taskId" value={task.id} />
 
                 <label className="block">
@@ -436,19 +436,19 @@ export function AdminTaskSidePanel({
                   <textarea
                     name="content"
                     rows={3}
-                    className="mt-2 w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                    className="mt-2 w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
                     placeholder="Напишіть короткий коментар по задачі"
                   />
                 </label>
 
                 {commentState.error ? (
-                  <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                  <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                     {commentState.error}
                   </div>
                 ) : null}
 
                 {commentState.success ? (
-                  <div className="mt-3 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+                  <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
                     {commentState.success}
                   </div>
                 ) : null}
@@ -463,7 +463,7 @@ export function AdminTaskSidePanel({
                 task.comments.map((comment) => (
                   <div
                     key={comment.id}
-                    className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="text-sm font-semibold text-[var(--cms-text)]">
@@ -479,7 +479,7 @@ export function AdminTaskSidePanel({
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4 text-sm text-[var(--cms-text-muted)]">
                   Коментарів поки немає.
                 </div>
               )}
@@ -488,9 +488,9 @@ export function AdminTaskSidePanel({
           ) : null}
 
           {activeTab === "history" ? (
-            <div className="overflow-hidden rounded-2xl border border-[var(--cms-border-primary)]">
+            <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--cms-border)]">
               <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="bg-[var(--cms-bg-secondary)] text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                <thead className="bg-[var(--cms-surface-muted)] text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                   <tr>
                     <th className="px-4 py-3">Дата</th>
                     <th className="px-4 py-3">Дія</th>
@@ -499,10 +499,10 @@ export function AdminTaskSidePanel({
                     <th className="px-4 py-3">Стало</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--cms-border-primary)]">
+                <tbody className="divide-y divide-[var(--cms-border)]">
                   {task.events.length ? (
                     task.events.map((event) => (
-                      <tr key={event.id} className="bg-[var(--cms-bg-primary)]">
+                      <tr key={event.id} className="bg-[var(--cms-surface)]">
                         <td className="px-4 py-3 text-[var(--cms-text-muted)]">
                           {formatDateTime(event.createdAt)}
                         </td>
