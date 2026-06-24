@@ -10,10 +10,10 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import {
   adminBodyClass,
   adminDangerButtonClass,
-  adminEmptyStateClass,
   adminInsetSurfaceClass,
   adminPrimaryButtonClass,
   adminSurfaceClass,
@@ -441,13 +441,10 @@ export function HouseAnnouncementsWorkspace({
             );
           })
         ) : (
-          <div className={adminEmptyStateClass}>
-            {activeTab === "active"
-              ? "Зараз немає активних оголошень для мешканців. Після підтвердження вони відображатимуться тут."
-              : activeTab === "moderation"
-                ? "Чернеток поки немає. Створи нове оголошення, щоб почати роботу."
-                : "Архів оголошень поки порожній."}
-          </div>
+          <EmptyState
+            title="Оголошень поки немає"
+            description="Створіть перше оголошення або секцію, щоб вона зʼявилася у списку."
+          />
         )}
       </div>
     </div>
