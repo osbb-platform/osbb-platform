@@ -28,7 +28,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(functi
           type="checkbox"
           disabled={disabled}
           className={cx(
-            "peer absolute inset-0 m-0 cursor-inherit appearance-none rounded-[6px]",
+            "peer absolute inset-0 m-0 cursor-inherit appearance-none rounded-[var(--r-sm)]",
             className,
           )}
           {...rest}
@@ -36,7 +36,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(functi
         <span
           aria-hidden="true"
           className={cx(
-            "pointer-events-none absolute inset-0 flex items-center justify-center rounded-[6px] transition-colors",
+            "pointer-events-none absolute inset-0 flex items-center justify-center rounded-[var(--r-sm)] transition-colors",
             "border-[1.5px] border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)]",
             "peer-checked:border-transparent peer-checked:bg-[var(--cms-accent-primary)]",
             "peer-focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]",

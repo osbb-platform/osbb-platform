@@ -237,7 +237,7 @@ export function AdminSidebar({
                       isCollapsed ? "justify-center px-3 py-3" : "justify-between gap-3 px-4 py-3"
                     } ${
                       isActive
-                        ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                        ? "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
                         : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-sidebar-hover)] hover:text-[var(--cms-text)]"
                     }`}
                   >
@@ -286,7 +286,7 @@ export function AdminSidebar({
               isCollapsed ? "p-3 text-center" : "p-4"
             } ${
               isProfileActive
-                ? "border-[var(--cms-border-strong)] bg-[var(--cms-sidebar-card)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
+                ? "border-[var(--cms-border-strong)] bg-[var(--cms-sidebar-card)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
                 : "border-[var(--cms-border)] bg-[var(--cms-surface)] hover:bg-[var(--cms-sidebar-hover)]"
             }`}
           >

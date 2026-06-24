@@ -9,7 +9,7 @@ export type SkeletonProps = {
 };
 
 const VARIANT: Record<NonNullable<SkeletonProps["variant"]>, string> = {
-  text: "h-3 w-full rounded-[6px]",
+  text: "h-3 w-full rounded-[var(--r-sm)]",
   block: "h-24 w-full rounded-[var(--r-lg)]",
   card: "h-40 w-full rounded-[var(--r-xl)]",
   row: "h-11 w-full rounded-[var(--r-md)]",

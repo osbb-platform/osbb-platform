@@ -50,10 +50,10 @@ export default async function AdminCompanyPageDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+            <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
               Company Page Detail
             </div>
 
@@ -71,7 +71,7 @@ export default async function AdminCompanyPageDetailPage({
           <div className="flex flex-wrap gap-2">
             <Link
               href={ROUTES.admin.companyPages}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
             >
               Назад к списку
             </Link>
@@ -79,7 +79,7 @@ export default async function AdminCompanyPageDetailPage({
             <Link
               href="/"
               target="_blank"
-              className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)] transition hover:opacity-90"
             >
               Открыть главный сайт
             </Link>
@@ -89,7 +89,7 @@ export default async function AdminCompanyPageDetailPage({
 
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2 space-y-6">
-          <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Редактирование страницы компании
             </h2>
@@ -116,21 +116,21 @@ export default async function AdminCompanyPageDetailPage({
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Секции страницы компании
             </h2>
 
             <div className="mt-6 grid gap-4">
               {sections.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] px-4 py-4 text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                   Секции страницы пока не найдены.
                 </div>
               ) : (
                 sections.map((section) => (
                   <div
                     key={section.id}
-                    className="rounded-2xl border border-[var(--cms-border-primary)] px-4 py-4"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-4"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -142,7 +142,7 @@ export default async function AdminCompanyPageDetailPage({
                         </div>
                       </div>
 
-                      <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                      <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                         {getStatusLabel(section.status)}
                       </div>
                     </div>
@@ -152,7 +152,7 @@ export default async function AdminCompanyPageDetailPage({
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Редактирование hero секции компании
             </h2>
@@ -173,7 +173,7 @@ export default async function AdminCompanyPageDetailPage({
                   }}
                 />
               ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] px-4 py-4 text-[var(--cms-text-muted)]">
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                   Hero секция компании пока не найдена.
                 </div>
               )}
@@ -182,30 +182,30 @@ export default async function AdminCompanyPageDetailPage({
         </div>
 
         <div>
-          <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">Статус страницы</h2>
 
             <div className="mt-6 space-y-4">
-              <div className="rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3">
                 <div className="text-sm text-[var(--cms-text-muted)]">Slug</div>
                 <div className="mt-1 font-medium text-[var(--cms-text)]">{page.slug}</div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3">
                 <div className="text-sm text-[var(--cms-text-muted)]">Статус</div>
                 <div className="mt-1 font-medium text-[var(--cms-text)]">
                   {getStatusLabel(page.status)}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3">
                 <div className="text-sm text-[var(--cms-text-muted)]">Primary page</div>
                 <div className="mt-1 font-medium text-[var(--cms-text)]">
                   {page.is_primary ? "Да, основная страница" : "Нет"}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--cms-border-primary)] px-4 py-3">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3">
                 <div className="text-sm text-[var(--cms-text-muted)]">Дата публикации</div>
                 <div className="mt-1 font-medium text-[var(--cms-text)]">
                   {page.published_at ?? "Не опубликовано"}
@@ -214,7 +214,7 @@ export default async function AdminCompanyPageDetailPage({
             </div>
           </div>
 
-          <div className="mt-6 rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-6 text-[var(--cms-text-muted)]">
+          <div className="mt-6 rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-[var(--cms-text-muted)]">
             Следующим шагом сюда можно добавить новые типы секций главного сайта компании и расширить управление содержимым.
           </div>
         </div>

@@ -44,10 +44,10 @@ export default async function AdminEmployeesPage({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-sm">
+      <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
         <CreateEmployeeForm currentRole={currentUser.role} />
 
-        <div className="mt-6 border-t border-[var(--cms-border-primary)] pt-5">
+        <div className="mt-6 border-t border-[var(--cms-border)] pt-5">
           <EmployeesToolbar
             selectedRole={selectedRole}
             selectedStatus={selectedStatus}
@@ -57,7 +57,7 @@ export default async function AdminEmployeesPage({
       </section>
 
       {employees.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-6 text-[var(--cms-text-muted)]">
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-6 text-[var(--cms-text-muted)]">
           За поточними фільтрами співробітників не знайдено.
         </div>
       ) : (

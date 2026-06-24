@@ -147,7 +147,7 @@ function getSectionLabel(sectionKey: string) {
 
 function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-5 py-8 text-center text-sm leading-6 text-[var(--cms-text-muted)]">
+    <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-5 py-8 text-center text-sm leading-6 text-[var(--cms-text-muted)]">
       {children}
     </div>
   );
@@ -163,7 +163,7 @@ function KpiCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-5 shadow-sm">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 shadow-[var(--cms-shadow-sm)]">
       <div className="text-sm text-[var(--cms-text-muted)]">{label}</div>
       <div className="mt-2 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
         {value}
@@ -220,10 +220,10 @@ export default async function AdminAnalyticsPage({
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-sm">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
+            <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
               NEW
             </div>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
@@ -235,7 +235,7 @@ export default async function AdminAnalyticsPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm text-[var(--cms-text-muted)]">
             Будинок:{" "}
             <span className="font-semibold text-[var(--cms-text)]">
               {activeHouseName}
@@ -254,7 +254,7 @@ export default async function AdminAnalyticsPage({
       </div>
 
       <div className="sticky top-4 z-20 space-y-3">
-        <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 shadow-sm backdrop-blur">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 shadow-[var(--cms-shadow-sm)] backdrop-blur">
           <div className="flex flex-wrap gap-2">
             {ANALYTICS_TABS.map((tab) => {
               const isActive = activeTab === tab.key;
@@ -267,10 +267,10 @@ export default async function AdminAnalyticsPage({
                   key={tab.key}
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`inline-flex items-center rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
+                  className={`inline-flex items-center rounded-[var(--r-lg)] border px-4 py-2.5 text-sm font-medium transition ${
                     isActive
-                      ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
-                      : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-tertiary)]"
+                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
+                      : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
                   }`}
                 >
                   {tab.label}
@@ -280,7 +280,7 @@ export default async function AdminAnalyticsPage({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 shadow-sm backdrop-blur">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 shadow-[var(--cms-shadow-sm)] backdrop-blur">
           <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <div className="text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
               Фільтри аналітики
@@ -293,7 +293,7 @@ export default async function AdminAnalyticsPage({
                 to: defaults.to,
                 tab: "overview",
               })}`}
-              className="text-sm text-[var(--cms-text-muted)] underline decoration-[var(--cms-border-secondary)] underline-offset-4 transition hover:text-[var(--cms-text)]"
+              className="text-sm text-[var(--cms-text-muted)] underline decoration-[var(--cms-border-strong)] underline-offset-4 transition hover:text-[var(--cms-text)]"
             >
               Скинути
             </Link>
@@ -309,7 +309,7 @@ export default async function AdminAnalyticsPage({
               <select
                 name="houseId"
                 defaultValue={filter.houseId ?? ""}
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               >
                 <option value="">Усі будинки</option>
                 {houses.map((house) => (
@@ -328,7 +328,7 @@ export default async function AdminAnalyticsPage({
                 type="date"
                 name="from"
                 defaultValue={filter.from}
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               />
             </div>
 
@@ -340,14 +340,14 @@ export default async function AdminAnalyticsPage({
                 type="date"
                 name="to"
                 defaultValue={filter.to}
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-2.5 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               />
             </div>
 
             <div className="flex items-end">
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] px-5 py-2.5 text-sm font-semibold text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)] transition hover:bg-[var(--cms-bg-secondary)]"
+                className="inline-flex w-full items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-5 py-2.5 text-sm font-semibold text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)] transition hover:bg-[var(--cms-surface-muted)]"
               >
                 Застосувати
               </button>
@@ -367,10 +367,10 @@ export default async function AdminAnalyticsPage({
                 <Link
                   key={preset}
                   href={href}
-                  className={`inline-flex rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
+                  className={`inline-flex rounded-[var(--r-lg)] border px-4 py-2 text-sm font-semibold transition ${
                     isActive
-                      ? "border-[var(--cms-border-secondary)] bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-secondary)]"
-                      : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-tertiary)] hover:text-[var(--cms-text)]"
+                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] text-[var(--cms-text)] shadow-[inset_0_1px_0_var(--cms-border-strong)]"
+                      : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                   }`}
                 >
                   {preset} днів
@@ -397,7 +397,7 @@ export default async function AdminAnalyticsPage({
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
-            <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
               <h2 className="text-xl font-semibold text-[var(--cms-text)]">
                 Динаміка по днях
               </h2>
@@ -407,7 +407,7 @@ export default async function AdminAnalyticsPage({
                   overview.daily.slice(-14).map((item) => (
                     <div
                       key={item.date}
-                      className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                      className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="font-medium text-[var(--cms-text)]">
@@ -432,7 +432,7 @@ export default async function AdminAnalyticsPage({
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
               <h2 className="text-xl font-semibold text-[var(--cms-text)]">
                 Топ будинків
               </h2>
@@ -442,7 +442,7 @@ export default async function AdminAnalyticsPage({
                   overview.topHouses.map((house) => (
                     <div
                       key={house.houseId}
-                      className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                      className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                     >
                       <div className="font-medium text-[var(--cms-text)]">
                         {house.houseName}
@@ -466,7 +466,7 @@ export default async function AdminAnalyticsPage({
       ) : null}
 
       {activeTab === "sections" ? (
-        <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <h2 className="text-xl font-semibold text-[var(--cms-text)]">
             Популярність розділів
           </h2>
@@ -483,9 +483,9 @@ export default async function AdminAnalyticsPage({
                       {formatNumber(section.views)} · {section.share}%
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[var(--cms-bg-secondary)]">
+                  <div className="h-3 overflow-hidden rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)]">
                     <div
-                      className="h-full rounded-full bg-[var(--cms-border-secondary)]"
+                      className="h-full rounded-[var(--r-pill)] bg-[var(--cms-accent-primary)]"
                       style={{ width: `${Math.max(section.share, 2)}%` }}
                     />
                   </div>
@@ -500,7 +500,7 @@ export default async function AdminAnalyticsPage({
 
       {activeTab === "access" ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Входи по днях
             </h2>
@@ -510,7 +510,7 @@ export default async function AdminAnalyticsPage({
                 access.daily.map((item) => (
                   <div
                     key={item.date}
-                    className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                   >
                     <div className="font-medium text-[var(--cms-text)]">
                       {formatDate(item.date)}
@@ -527,7 +527,7 @@ export default async function AdminAnalyticsPage({
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <h2 className="text-xl font-semibold text-[var(--cms-text)]">
               Активні години
             </h2>
@@ -537,7 +537,7 @@ export default async function AdminAnalyticsPage({
                 access.hourly.slice(0, 12).map((item) => (
                   <div
                     key={item.hour}
-                    className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                   >
                     <div className="font-medium text-[var(--cms-text)]">
                       {String(item.hour).padStart(2, "0")}:00
@@ -557,7 +557,7 @@ export default async function AdminAnalyticsPage({
       ) : null}
 
       {activeTab === "requests" ? (
-        <div className="rounded-[28px] border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[var(--cms-text)]">
@@ -574,7 +574,7 @@ export default async function AdminAnalyticsPage({
               requests.latest.map((request) => (
                 <div
                   key={request.id}
-                  className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4"
+                  className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
                 >
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                     <div>

@@ -135,8 +135,8 @@ function HouseTechnicalPlaceholder({
   description: string;
 }) {
   return (
-    <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-      <div className="inline-flex rounded-full border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+      <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
         CMS заповнювач
       </div>
 
@@ -148,7 +148,7 @@ function HouseTechnicalPlaceholder({
         {description}
       </p>
 
-      <div className="mt-6 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
+      <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
         <div className="text-sm font-medium text-[var(--cms-text)]">
           Технічна заглушка
         </div>
@@ -301,7 +301,7 @@ export default async function AdminHouseDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
@@ -325,23 +325,23 @@ export default async function AdminHouseDetailPage({
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 {house.slug}
               </span>
               {!house.is_active ? (
-                <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                   Архів
                 </span>
               ) : null}
               {house.district ? (
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-medium text-[var(--cms-text)]"
+                  className="rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
                 </span>
               ) : null}
-              <span className="rounded-full bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+              <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 Розділ: {
                   {
                     announcements: "Оголошення",
@@ -366,7 +366,7 @@ export default async function AdminHouseDetailPage({
                 href={publicPreviewHref}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
                 aria-label={`Відкрити сайт будинку ${house.name}`}
                 title="Відкрити сайт будинку"
               >
@@ -387,7 +387,7 @@ export default async function AdminHouseDetailPage({
 
               <Link
                 href={ROUTES.admin.houses}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
                 aria-label="Назад до реєстру будинків"
                 title="Назад до реєстру"
               >
