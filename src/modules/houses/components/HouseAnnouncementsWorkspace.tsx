@@ -317,7 +317,7 @@ export function HouseAnnouncementsWorkspace({
       </div>
 
       {workspaceError ?? lastError ? (
-        <div className="mt-6 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {workspaceError ?? lastError}
         </div>
       ) : null}
@@ -397,7 +397,7 @@ export function HouseAnnouncementsWorkspace({
                 key={section.id}
                 type="button"
                 onClick={() => openEditMode(section.id)}
-                className={`block w-full rounded-2xl border p-4 text-left transition ${
+                className={`block w-full rounded-[var(--r-lg)] border p-4 text-left transition ${
                   isSelected
                     ? "border-[var(--cms-primary)] bg-[var(--cms-pill-bg)]"
                     : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"

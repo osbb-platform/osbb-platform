@@ -486,7 +486,7 @@ export function EditBoardSectionForm({
         onSubmit={(event) => event.preventDefault()}
         className="space-y-6"
       >
-        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -528,7 +528,7 @@ export function EditBoardSectionForm({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-[var(--cms-text)]">
@@ -583,14 +583,14 @@ export function EditBoardSectionForm({
               </button>
             </div>
           ) : (
-            <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-sm leading-7 text-[var(--cms-text-muted)]">
+            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-sm leading-7 text-[var(--cms-text-muted)]">
               {intro || "Звернення поки не заповнено"}
             </div>
           )}
         </div>
 
         {workspaceMode !== "idle" && draft ? (
-          <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -617,7 +617,7 @@ export function EditBoardSectionForm({
             {workspaceError ?? lastError ? (
               <div
                 role="alert"
-                className="mb-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+                className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
                 {workspaceError ?? lastError}
               </div>
@@ -728,7 +728,7 @@ export function EditBoardSectionForm({
                   <button
                     type="button"
                     onClick={handleSaveDraft}
-                    className={[adminPrimaryButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ") }
+                    className={[adminPrimaryButtonClass, "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ") }
                   >
                     Зберегти
                   </button>
@@ -737,7 +737,7 @@ export function EditBoardSectionForm({
                     <button
                       type="button"
                       onClick={() => setIsDeleteConfirmOpen(true)}
-                      className={[adminDangerButtonClass, "rounded-3xl px-8 py-4 text-base"].join(" ")}
+                      className={[adminDangerButtonClass, "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ")}
                     >
                       Видалити
                     </button>
@@ -748,7 +748,7 @@ export function EditBoardSectionForm({
           </div>
         ) : null}
 
-        <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-[var(--cms-text)]">
               {activeTabConfig?.label ?? "Ролі правління"}
@@ -766,7 +766,7 @@ export function EditBoardSectionForm({
                   key={role.id}
                   type="button"
                   onClick={() => openEditMode(role.id)}
-                  className="w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-left transition hover:border-[var(--cms-border)] hover:bg-[var(--cms-surface-muted)]/70"
+                  className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-left transition hover:border-[var(--cms-border)] hover:bg-[var(--cms-surface-muted)]/70"
                 >
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -794,7 +794,7 @@ export function EditBoardSectionForm({
                 </button>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
+              <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
                 {activeTabConfig?.emptyText ?? "У цій вкладці поки немає карток."}
               </div>
             )}
@@ -802,7 +802,7 @@ export function EditBoardSectionForm({
         </div>
 
         {lastError ? (
-          <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {lastError}
           </div>
         ) : null}

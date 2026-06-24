@@ -812,7 +812,7 @@ export function HouseMeetingsWorkspace({
       </div>
 
       {mode !== "idle" ? (
-        <div className="mt-6 rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
+        <div className="mt-6 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="text-lg font-semibold text-[var(--cms-text)]">
               {mode === "create" ? "Нові збори" : "Редагування"}
@@ -821,7 +821,7 @@ export function HouseMeetingsWorkspace({
             <button
               type="button"
               onClick={closeWorkspace}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
               aria-label="Закрити форму"
             >
               ×
@@ -921,7 +921,7 @@ export function HouseMeetingsWorkspace({
             />
 
             {mode === "edit" && draft.status === "review" ? (
-              <div className="rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-4">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-4">
                 <div className="text-sm font-semibold text-[var(--cms-text)]">
                   Ручне внесення голосів
                 </div>
@@ -948,7 +948,7 @@ export function HouseMeetingsWorkspace({
                   {draft.questions.map((question, index) => (
                     <div
                       key={`manual-${question.id}`}
-                      className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+                      className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                     >
                       <div className="text-sm font-medium text-[var(--cms-text)]">
                         {question.title || `Питання ${index + 1}`}
@@ -969,7 +969,7 @@ export function HouseMeetingsWorkspace({
                                 [question.id]: value as ManualVoteChoice,
                               }))
                             }
-                            className={`rounded-xl border px-3 py-2 text-xs transition ${
+                            className={`rounded-[var(--r-md)] border px-3 py-2 text-xs transition ${
                               manualVoteAnswers[question.id] === value
                                 ? "border-[var(--cms-border-strong)] bg-[var(--cms-primary)] text-[var(--cms-primary-contrast)]"
                                 : "border-[var(--cms-border)] text-[var(--cms-text-muted)]"
@@ -1074,7 +1074,7 @@ export function HouseMeetingsWorkspace({
                       setManualVoteAnswers({});
                     }}
                     disabled={isPending}
-                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Зберегти голос квартири
                   </button>
@@ -1088,7 +1088,7 @@ export function HouseMeetingsWorkspace({
                       {(draft.manualVotes ?? []).map((vote) => (
                         <div
                           key={vote.apartmentId}
-                          className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+                          className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                         >
                           <div className="text-sm font-medium text-[var(--cms-text)]">
                             {formatRecordedApartmentVoteLabel(vote, apartments)}
@@ -1144,7 +1144,7 @@ export function HouseMeetingsWorkspace({
                 {draft.questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                   >
                     <input
                       value={question.title}
@@ -1160,7 +1160,7 @@ export function HouseMeetingsWorkspace({
                       }
                       disabled={isContentLocked || isPending}
                       placeholder={`Питання ${index + 1}`}
-                      className="w-full rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                      className="w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
                     />
 
                     <textarea
@@ -1178,7 +1178,7 @@ export function HouseMeetingsWorkspace({
                       rows={3}
                       disabled={isContentLocked || isPending}
                       placeholder="Опис питання"
-                      className="mt-3 w-full rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                      className="mt-3 w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
                     />
 
                     {mode === "edit" &&
@@ -1238,21 +1238,21 @@ export function HouseMeetingsWorkspace({
                       return (
                         <div className="mt-3 space-y-3">
                           <div className="grid gap-2 sm:grid-cols-4">
-                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               За: {votesFor} ({forPercent}%)
                             </div>
-                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Проти: {votesAgainst} ({againstPercent}%)
                             </div>
-                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Утрималися: {votesAbstained} ({abstainedPercent}%)
                             </div>
-                            <div className="rounded-xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
                               Проголосувало квартир: {votedApartments} / {totalVotes}
                             </div>
                           </div>
 
-                          <div className="rounded-xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-2 text-xs font-medium text-[var(--cms-text)]">
+                          <div className="rounded-[var(--r-md)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-2 text-xs font-medium text-[var(--cms-text)]">
                             Підсумок: {outcome}
                           </div>
                         </div>
@@ -1279,7 +1279,7 @@ export function HouseMeetingsWorkspace({
                 type="button"
                 onClick={addQuestion}
                 disabled={isPending}
-                className="mt-4 rounded-2xl border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
+                className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
               >
                 Додати питання
               </button>
@@ -1292,7 +1292,7 @@ export function HouseMeetingsWorkspace({
                   <button
                     type="button"
                     onClick={() => setConfirmAction("delete")}
-                    className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                   >
                     Видалити
                   </button>
@@ -1315,7 +1315,7 @@ export function HouseMeetingsWorkspace({
                     type="button"
                     onClick={() => setConfirmAction("publish")}
                     disabled={isPending}
-                    className="rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Підтвердити
                   </button>
@@ -1332,7 +1332,7 @@ export function HouseMeetingsWorkspace({
                       }
                     }}
                     disabled={isPending}
-                    className="rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Архівувати
                   </button>
@@ -1345,7 +1345,7 @@ export function HouseMeetingsWorkspace({
 
       <div className="mt-6 space-y-4">
         {visibleMeetings.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-6">
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-6">
             <div className="text-base font-semibold text-[var(--cms-text)]">
               {activeTab === "draft"
                 ? "Чернеток поки немає"
@@ -1366,7 +1366,7 @@ export function HouseMeetingsWorkspace({
             <article
               key={meeting.id}
               onClick={() => openEditMode(meeting)}
-              className="cursor-pointer rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 transition hover:border-[var(--cms-border-strong)]"
+              className="cursor-pointer rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 transition hover:border-[var(--cms-border-strong)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -1394,7 +1394,7 @@ export function HouseMeetingsWorkspace({
       {workspaceError ?? lastError ? (
         <div
           role="alert"
-          className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+          className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
         >
           {workspaceError ?? lastError}
         </div>

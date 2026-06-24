@@ -789,7 +789,7 @@ export function HousePlanWorkspace({
         active={isPending}
         delayMs={280}
         label={actionLabel}
-        className="rounded-3xl"
+        className="rounded-[var(--r-xl)]"
       />
 
       <div className={`${adminSurfaceClass} p-6`}>
@@ -817,7 +817,7 @@ export function HousePlanWorkspace({
                 key={key}
                 type="button"
                 onClick={() => setActiveTab(key as WorkspaceTab)}
-                className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
                   activeTab === key
                     ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
                     : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
@@ -869,7 +869,7 @@ export function HousePlanWorkspace({
                 type="button"
                 onClick={resetWorkspace}
                 aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
               >
                 ×
               </button>
@@ -996,21 +996,21 @@ export function HousePlanWorkspace({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+            <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">Фото завдання</div>
               <p className="mt-1 text-sm text-[var(--cms-text-muted)]">До 5 зображень.</p>
 
               {draft.images.length > 0 ? (
                 <div className="mt-4 space-y-2">
                   {draft.images.map((item, index) => (
-                    <div key={item.id} className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div key={item.id} className="flex flex-col gap-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="text-sm text-[var(--cms-text)]">
                         🖼 Фото {index + 1}: {getFileLabel(item.fileName, item.path)}
                       </div>
                       <button
                         type="button"
                         onClick={() => removeExistingImage(item.id)}
-                        className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                        className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                       >
                         Видалити
                       </button>
@@ -1031,7 +1031,7 @@ export function HousePlanWorkspace({
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-image-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadImageDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
@@ -1044,7 +1044,7 @@ export function HousePlanWorkspace({
                   <button
                     type="button"
                     onClick={clearSelectedImages}
-                    className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   >
                     Очистити вибір
                   </button>
@@ -1054,7 +1054,7 @@ export function HousePlanWorkspace({
               {selectedImageFiles.length > 0 ? (
                 <div className="mt-4 space-y-2">
                   {selectedImageFiles.map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
+                    <div key={`${file.name}-${index}`} className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
                       🖼 Новий файл: {file.name}
                     </div>
                   ))}
@@ -1062,21 +1062,21 @@ export function HousePlanWorkspace({
               ) : null}
             </div>
 
-            <div className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+            <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">PDF документи</div>
               <p className="mt-1 text-sm text-[var(--cms-text-muted)]">До 2 PDF файлів.</p>
 
               {draft.documents.length > 0 ? (
                 <div className="mt-4 space-y-2">
                   {draft.documents.map((item, index) => (
-                    <div key={item.id} className="flex flex-col gap-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div key={item.id} className="flex flex-col gap-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="text-sm text-[var(--cms-text)]">
                         📄 PDF {index + 1}: {getFileLabel(item.fileName, item.path)}
                       </div>
                       <button
                         type="button"
                         onClick={() => removeExistingDocument(item.id)}
-                        className="rounded-2xl border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                        className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-3 py-2 text-xs font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
                       >
                         Видалити
                       </button>
@@ -1097,7 +1097,7 @@ export function HousePlanWorkspace({
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-pdf-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadPdfDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
@@ -1110,7 +1110,7 @@ export function HousePlanWorkspace({
                   <button
                     type="button"
                     onClick={clearSelectedPdfs}
-                    className="rounded-2xl border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
                   >
                     Очистити вибір
                   </button>
@@ -1122,7 +1122,7 @@ export function HousePlanWorkspace({
               {selectedPdfFiles.length > 0 ? (
                 <div className="mt-4 space-y-2">
                   {selectedPdfFiles.map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
+                    <div key={`${file.name}-${index}`} className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-sm text-[var(--cms-text)]">
                       📄 Новий файл: {file.name}
                     </div>
                   ))}
@@ -1192,7 +1192,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-[var(--cms-danger-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-danger-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -1205,7 +1205,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("publish")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                     </button>
@@ -1218,7 +1218,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("archive")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-3xl border border-[var(--cms-warning-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-warning-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
                     >
                       {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
                     </button>
@@ -1228,7 +1228,7 @@ export function HousePlanWorkspace({
             </div>
 
             {lastError ? (
-              <div className="rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
                 {lastError}
               </div>
             ) : null}
@@ -1238,7 +1238,7 @@ export function HousePlanWorkspace({
 
       <div className="space-y-4">
         {visibleTasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
+          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
             {activeTab === "active"
               ? "Зараз немає активних завдань. Після підтвердження та запуску робіт картки з’являться тут."
               : activeTab === "draft"
@@ -1289,7 +1289,7 @@ export function HousePlanWorkspace({
                 key={task.id}
                 type="button"
                 onClick={() => openEditMode(task)}
-                className={`block w-full rounded-2xl border p-4 text-left transition ${
+                className={`block w-full rounded-[var(--r-lg)] border p-4 text-left transition ${
                   isSelected
                     ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                     : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"

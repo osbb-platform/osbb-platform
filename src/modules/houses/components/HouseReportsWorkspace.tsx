@@ -720,7 +720,7 @@ export function HouseReportsWorkspace({
         active={isPending}
         delayMs={280}
         label={actionLabel}
-        className="rounded-3xl"
+        className="rounded-[var(--r-xl)]"
       />
 
       <div className={`${adminSurfaceClass} p-6`}>
@@ -738,7 +738,7 @@ export function HouseReportsWorkspace({
                 type="button"
                 disabled={isPending}
                 onClick={() => setConfirmAction("delete_archive")}
-                className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
               >
                 {isPending && submitIntent === "delete"
                   ? "Видаляємо архів..."
@@ -772,7 +772,7 @@ export function HouseReportsWorkspace({
                   key={key}
                   type="button"
                   onClick={() => handleTabChange(key as TabKey)}
-                  className={`inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
                     isActive
                       ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
                       : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
@@ -797,7 +797,7 @@ export function HouseReportsWorkspace({
             type="button"
             disabled={readOnlyMode || isPending}
             onClick={() => void handleCategoriesSync()}
-            className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
           >
             Синхронізувати категорії
           </button>
@@ -844,7 +844,7 @@ export function HouseReportsWorkspace({
               <button
                 type="button"
                 onClick={() => resetWorkspace()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити форму"
               >
                 ×
@@ -853,7 +853,7 @@ export function HouseReportsWorkspace({
           </div>
 
           {actionError || lastError ? (
-            <div className="mt-5 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
+            <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
               {actionError ?? lastError}
             </div>
           ) : null}
@@ -994,12 +994,12 @@ export function HouseReportsWorkspace({
               </label>
             )}
 
-            <div className="xl:col-span-2 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+            <div className="xl:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">
                 PDF файл звіту
               </div>
 
-              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-3 flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--cms-text-soft)]">
                     Поточний файл
@@ -1020,7 +1020,7 @@ export function HouseReportsWorkspace({
                         reportPdfInputRef.current.value = "";
                       }
                     }}
-                    className="inline-flex items-center justify-center rounded-xl border border-[var(--cms-danger-border)] px-4 py-2 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-[var(--cms-danger-bg)] disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-danger-border)] px-4 py-2 text-sm font-medium text-[var(--cms-danger-text)] transition hover:bg-[var(--cms-danger-bg)] disabled:opacity-60"
                   >
                     Видалити PDF
                   </button>
@@ -1028,7 +1028,7 @@ export function HouseReportsWorkspace({
               </div>
 
               {removeReportPdf ? (
-                <div className="mt-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
+                <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm text-[var(--cms-warning-text)]">
                   Файл буде відʼєднано від звіту після натискання «Зберегти».
                 </div>
               ) : null}
@@ -1043,7 +1043,7 @@ export function HouseReportsWorkspace({
                   type="file"
                   accept="application/pdf,.pdf"
                   onChange={handleReportPdfChange}
-                  className="block w-full rounded-2xl border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
                 />
               </label>
 
@@ -1052,7 +1052,7 @@ export function HouseReportsWorkspace({
               </div>
 
               {reportPdfError ? (
-                <div className="mt-3 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {reportPdfError}
                 </div>
               ) : null}
@@ -1062,7 +1062,7 @@ export function HouseReportsWorkspace({
           {!isPastContext && !isArchiveContext ? (
             <>
               <div className="mt-5 flex flex-wrap gap-3">
-                <label className="inline-flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
+                <label className="inline-flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
                   <input
                     type="checkbox"
                     checked={Boolean(draft.isPinned)}
@@ -1077,7 +1077,7 @@ export function HouseReportsWorkspace({
                   Закріпити як важливий звіт
                 </label>
 
-                <label className="inline-flex items-center gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
+                <label className="inline-flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
                   <input
                     type="checkbox"
                     checked={Boolean(draft.isNew)}
@@ -1136,7 +1136,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -1149,7 +1149,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
                   </button>
@@ -1162,7 +1162,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "В архів"}
                   </button>
@@ -1175,7 +1175,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("restore")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
                   >
                     Відновити
                   </button>
@@ -1183,7 +1183,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
                   >
                     Видалити
                   </button>
@@ -1236,7 +1236,7 @@ export function HouseReportsWorkspace({
         </div>
 
         {visibleReports.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-sm text-[var(--cms-text-muted)]">
+          <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-sm text-[var(--cms-text-muted)]">
             У цьому списку поки немає звітів.
           </div>
         ) : (
@@ -1246,7 +1246,7 @@ export function HouseReportsWorkspace({
                 key={report.id}
                 type="button"
                 onClick={() => openEditMode(report)}
-                className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
+                className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={getStatusBadgeClasses(report.lifecycleStatus)}>
