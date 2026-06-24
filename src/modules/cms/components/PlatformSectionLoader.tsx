@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { Spinner } from "@/src/shared/ui/admin/Spinner";
+
 type PlatformSectionLoaderTone = "loading" | "success" | "error";
 
 type PlatformSectionLoaderProps = {
@@ -18,21 +20,58 @@ function getToneClasses(tone: PlatformSectionLoaderTone) {
     return {
       badge:
         "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]",
-      dot: "bg-[var(--cms-success-text)]",
     };
   }
 
   if (tone === "error") {
     return {
-      badge: "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]",
-      dot: "bg-[var(--cms-danger-text)]",
+      badge:
+        "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]",
     };
   }
 
   return {
-    badge: "border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] text-[var(--cms-text)]",
-    dot: "bg-[var(--cms-text)]",
+    badge:
+      "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text)]",
   };
+}
+
+function renderToneIcon(tone: PlatformSectionLoaderTone) {
+  if (tone === "loading") {
+    return <Spinner size="sm" className="text-[var(--cms-accent-primary)]" />;
+  }
+
+  if (tone === "success") {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[15px] w-[15px]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-[15px] w-[15px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  );
 }
 
 export function PlatformSectionLoader({
@@ -73,17 +112,16 @@ export function PlatformSectionLoader({
 
   return (
     <div
-      className={`absolute inset-0 z-20 flex items-start justify-center rounded-3xl bg-[rgba(15,23,42,0.42)] p-4 backdrop-blur-[2px] ${className}`}
+      className={`absolute inset-0 z-20 flex items-start justify-center rounded-[var(--r-xl)] bg-[var(--cms-overlay)] p-4 backdrop-blur-[2px] ${className}`}
       aria-live="polite"
       aria-busy={active}
     >
       <div
-        className={`mt-2 inline-flex max-w-xl items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium shadow-[0_18px_48px_rgba(2,6,23,0.35)] ${toneClasses.badge}`}
+        className={`mt-2 inline-flex max-w-xl items-center gap-3 rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium shadow-[var(--cms-shadow-md)] ${toneClasses.badge}`}
       >
-        <span
-          className={`h-2.5 w-2.5 shrink-0 rounded-full ${toneClasses.dot} ${tone === "loading" ? "animate-pulse" : ""}`}
-          aria-hidden="true"
-        />
+        <span className="shrink-0" aria-hidden={tone === "loading" ? undefined : true}>
+          {renderToneIcon(tone)}
+        </span>
 
         <div className="min-w-0">
           <div>{label}</div>

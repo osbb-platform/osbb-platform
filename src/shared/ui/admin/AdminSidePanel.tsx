@@ -3,10 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useId } from "react";
 
-import {
-  adminButtonDisabledClass,
-  adminFocusRingClass,
-} from "@/src/shared/ui/admin/adminStyles";
+import { IconButton } from "@/src/shared/ui/admin/IconButton";
 
 type AdminSidePanelProps = {
   title: ReactNode;
@@ -53,24 +50,24 @@ export function AdminSidePanel({
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-[rgba(15,23,42,0.50)] backdrop-blur-sm"
+      className="fixed inset-0 z-[110] bg-[var(--cms-overlay)] backdrop-blur-sm motion-safe:animate-[osbb-fade_.15s_ease]"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onMouseDown={onClose}
     >
       <aside
-        className="ml-auto flex h-full w-full max-w-2xl flex-col border-l border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] shadow-[0_24px_80px_rgba(2,6,23,0.55)]"
+        className="ml-auto flex h-full w-full max-w-2xl flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)] motion-safe:animate-[osbb-pop_.2s_ease]"
         onMouseDown={(event) => {
           event.stopPropagation();
         }}
       >
-        <div className="shrink-0 border-b border-[var(--cms-border-primary)] p-6">
+        <div className="shrink-0 border-b border-[var(--cms-border)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2
                 id={titleId}
-                className="text-xl font-semibold leading-7 text-[var(--cms-text)]"
+                className="font-[family-name:var(--font-serif)] text-[22px] font-semibold leading-7 tracking-[-0.01em] text-[var(--cms-text)]"
               >
                 {title}
               </h2>
@@ -82,18 +79,26 @@ export function AdminSidePanel({
               ) : null}
             </div>
 
-            <button
+            <IconButton
               type="button"
+              variant="ghost"
               onClick={onClose}
-              className={[
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-tertiary)]",
-                adminFocusRingClass,
-                adminButtonDisabledClass,
-              ].join(" ")}
               aria-label="Закрити"
+              className="shrink-0"
             >
-              ×
-            </button>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-[18px] w-[18px]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+              </svg>
+            </IconButton>
           </div>
         </div>
 
@@ -102,7 +107,7 @@ export function AdminSidePanel({
         </div>
 
         {footer ? (
-          <div className="fixed bottom-0 right-0 w-full max-w-2xl border-t border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6 shadow-[0_-18px_48px_rgba(2,6,23,0.18)]">
+          <div className="fixed bottom-0 right-0 w-full max-w-2xl border-t border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-up)]">
             {footer}
           </div>
         ) : null}

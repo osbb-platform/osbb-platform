@@ -11,7 +11,9 @@ export type ModalProps = {
   closeOnOverlay?: boolean;
   children: React.ReactNode;
   className?: string;
+  overlayClassName?: string;
   "aria-label"?: string;
+  "aria-labelledby"?: string;
 };
 
 const SIZE: Record<NonNullable<ModalProps["size"]>, string> = {
@@ -20,7 +22,16 @@ const SIZE: Record<NonNullable<ModalProps["size"]>, string> = {
   lg: "w-[720px]",
 };
 
-export function Modal({ open, onClose, size = "md", closeOnOverlay = true, children, className, ...aria }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  size = "md",
+  closeOnOverlay = true,
+  children,
+  className,
+  overlayClassName,
+  ...aria
+}: ModalProps) {
   React.useEffect(() => {
     if (!open) return;
 
@@ -42,7 +53,10 @@ export function Modal({ open, onClose, size = "md", closeOnOverlay = true, child
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--cms-overlay)] p-6 motion-safe:animate-[osbb-fade_.15s_ease]"
+      className={cx(
+        "fixed inset-0 z-[120] flex items-center justify-center bg-[var(--cms-overlay)] p-6 motion-safe:animate-[osbb-fade_.15s_ease]",
+        overlayClassName
+      )}
       onMouseDown={(e) => {
         if (closeOnOverlay && e.target === e.currentTarget) onClose();
       }}
