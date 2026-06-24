@@ -12,25 +12,38 @@ export type FormFieldProps = {
   children: React.ReactNode;
 };
 
-export function FormField({ label, htmlFor, hint, error, required, className, children }: FormFieldProps) {
+export function FormField({
+  label,
+  htmlFor,
+  hint,
+  error,
+  required,
+  className,
+  children,
+}: FormFieldProps) {
   const descId = React.useId();
 
   return (
     <div className={cx("flex flex-col gap-2", className)}>
       <label
         htmlFor={htmlFor}
-        className={cx("text-sm font-medium", error ? "text-[var(--cms-danger-text)]" : "text-[var(--cms-text)]")}
+        className={cx(
+          "text-sm font-semibold",
+          error ? "text-[var(--cms-danger-text)]" : "text-[var(--cms-text)]",
+        )}
       >
         {label}
-        {required && <span className="ml-1 text-[var(--cms-danger-text)]">*</span>}
+        {required ? <span className="ml-1 text-[var(--cms-danger-text)]">*</span> : null}
       </label>
+
       {children}
+
       {error ? (
-        <span id={descId} role="alert" className="text-xs text-[var(--cms-danger-text)]">
+        <span id={descId} role="alert" className="text-xs font-medium text-[var(--cms-danger-text)]">
           {error}
         </span>
       ) : hint ? (
-        <span id={descId} className="text-xs text-[var(--cms-text-soft)]">
+        <span id={descId} className="text-xs leading-[1.5] text-[var(--cms-text-soft)]">
           {hint}
         </span>
       ) : null}

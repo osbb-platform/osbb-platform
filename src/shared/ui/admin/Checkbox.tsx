@@ -2,32 +2,44 @@ import * as React from "react";
 
 const cx = (...c: Array<string | false | null | undefined>) => c.filter(Boolean).join(" ");
 
-export type CheckboxProps = { label?: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>;
+export type CheckboxProps = {
+  label?: React.ReactNode;
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, className, id, ...rest },
-  ref
+  { label, className, id, disabled, ...rest },
+  ref,
 ) {
   const autoId = React.useId();
   const inputId = id ?? autoId;
 
   return (
-    <label htmlFor={inputId} className="group inline-flex items-center gap-2.5 cursor-pointer select-none">
+    <label
+      htmlFor={inputId}
+      className={cx(
+        "group inline-flex items-center gap-2.5 select-none",
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+      )}
+    >
       <span className="relative inline-flex h-[22px] w-[22px] flex-none">
         <input
           ref={ref}
           id={inputId}
           type="checkbox"
-          className={cx("peer absolute inset-0 m-0 cursor-pointer appearance-none rounded-[6px]", className)}
+          disabled={disabled}
+          className={cx(
+            "peer absolute inset-0 m-0 cursor-inherit appearance-none rounded-[6px]",
+            className,
+          )}
           {...rest}
         />
         <span
           aria-hidden="true"
           className={cx(
             "pointer-events-none absolute inset-0 flex items-center justify-center rounded-[6px] transition-colors",
-            "border-[1.5px] border-[var(--cms-border-strong)]",
+            "border-[1.5px] border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)]",
             "peer-checked:border-transparent peer-checked:bg-[var(--cms-accent-primary)]",
-            "peer-focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]"
+            "peer-focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]",
           )}
         >
           <svg
@@ -43,7 +55,8 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(functi
           </svg>
         </span>
       </span>
-      {label && <span className="text-sm text-[var(--cms-text)]">{label}</span>}
+
+      {label ? <span className="text-sm text-[var(--cms-text)]">{label}</span> : null}
     </label>
   );
 });

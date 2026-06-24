@@ -23,58 +23,44 @@ export const adminMetaClass =
 /* Existing legacy names — keep alive */
 export const adminMetaTextClass = adminMetaClass;
 
-export const adminLabelClass = "text-[14px] font-medium text-[var(--cms-text)]";
+export const adminLabelClass = "text-[14px] font-semibold text-[var(--cms-text)]";
 
 export const adminTextLabelClass = adminLabelClass;
 
-/* ── Поверхні ── */
 export const adminSurfaceClass = cx(
-  "bg-[var(--cms-surface)] border border-[var(--cms-border)]",
-  "rounded-[var(--r-xl)] shadow-[var(--cms-shadow-sm)]"
+  "rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-sm)]",
 );
 
 export const adminInsetSurfaceClass = cx(
-  "bg-[var(--cms-surface-muted)] border border-[var(--cms-border)]",
-  "rounded-[var(--r-lg)]"
+  "rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]",
 );
 
 export const adminMutedSurfaceClass = cx(
-  "bg-[var(--cms-surface-muted)] border border-[var(--cms-border)]",
-  "rounded-[var(--r-xl)] shadow-[var(--cms-shadow-sm)]"
+  "rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)]",
 );
 
 export const adminCardPaddingClass = "p-6";
 
 export const adminInsetPaddingClass = "p-4";
 
-/* ── Fields — legacy aliases ── */
 export const adminInputClass = cx(
-  "h-11 w-full px-3.5 text-sm rounded-[var(--r-lg)]",
-  "bg-[var(--cms-surface-elevated)] border border-[var(--cms-border-strong)] text-[var(--cms-text)]",
-  "placeholder:text-[var(--cms-text-soft)] transition-colors",
-  "focus:outline-none focus:border-[var(--cms-accent-primary)]",
-  "focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
-  "disabled:opacity-60"
+  "h-11 w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-3.5 text-sm text-[var(--cms-text)] shadow-none transition-colors placeholder:text-[var(--cms-text-soft)]",
+  "focus:border-[var(--cms-accent-primary)] focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
+  "disabled:cursor-not-allowed disabled:opacity-60",
 );
 
 export const adminTextareaClass = cx(
-  "w-full p-3 text-sm leading-[1.6] rounded-[var(--r-lg)] resize-y",
-  "bg-[var(--cms-surface-elevated)] border border-[var(--cms-border-strong)] text-[var(--cms-text)]",
-  "placeholder:text-[var(--cms-text-soft)] transition-colors",
-  "focus:outline-none focus:border-[var(--cms-accent-primary)]",
-  "focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
-  "disabled:opacity-60"
+  "min-h-[112px] w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-3.5 py-3 text-sm leading-[1.6] text-[var(--cms-text)] shadow-none transition-colors placeholder:text-[var(--cms-text-soft)]",
+  "focus:border-[var(--cms-accent-primary)] focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
+  "disabled:cursor-not-allowed disabled:opacity-60",
 );
 
 export const adminSelectClass = cx(
-  "h-11 w-full pl-3.5 pr-9 text-sm rounded-[var(--r-lg)] appearance-none cursor-pointer",
-  "bg-[var(--cms-surface-elevated)] border border-[var(--cms-border-strong)] text-[var(--cms-text)]",
-  "transition-colors focus:outline-none focus:border-[var(--cms-accent-primary)]",
-  "focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
-  "disabled:opacity-60"
+  "h-11 w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-3.5 text-sm text-[var(--cms-text)] shadow-none transition-colors",
+  "focus:border-[var(--cms-accent-primary)] focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",
+  "disabled:cursor-not-allowed disabled:opacity-60",
 );
 
-/* ── Buttons — legacy aliases ── */
 export const adminButtonDisabledClass = "disabled:opacity-60 disabled:pointer-events-none";
 
 export const adminPrimaryButtonClass = cx(
