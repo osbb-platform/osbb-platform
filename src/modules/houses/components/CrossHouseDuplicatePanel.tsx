@@ -35,11 +35,11 @@ type CrossHouseDuplicatePanelProps = {
 };
 
 function formatTargetLabel(target: CrossHouseDuplicateTarget) {
-  const district = target.districtName?.trim() || "Без району";
-  const title = target.name?.trim() || target.slug;
-  const address = target.address?.trim();
+  const districtName = (target.districtName ?? "").trim();
+  const houseName = (target.name ?? "").trim();
 
-  return address ? `${district} — ${title} (${address})` : `${district} — ${title}`;
+  if (districtName && houseName) return `${districtName} — ${houseName}`;
+  return districtName || houseName || "Будинок без назви";
 }
 
 function formatHouseCount(count: number) {
@@ -105,16 +105,24 @@ export function CrossHouseDuplicatePanel({
   }, [availableTargets, selectedTargetIds]);
 
   const confirmDescription = useMemo(() => {
-    const targetList = selectedTargets
+    const previewLimit = 8;
+    const previewTargets = selectedTargets.slice(0, previewLimit);
+    const previewList = previewTargets
       .map((target) => `• ${formatTargetLabel(target)}`)
       .join("\n");
+    const hiddenTargetsCount = Math.max(
+      selectedTargets.length - previewTargets.length,
+      0,
+    );
+    const hiddenLine =
+      hiddenTargetsCount > 0
+        ? `• …ще ${formatHouseCount(hiddenTargetsCount)}`
+        : "";
+    const targetList = [previewList, hiddenLine].filter(Boolean).join("\n");
 
-    return [
-      "У кожному вибраному будинку зʼявиться нова чернетка. Оригінал у поточному будинку не зміниться.",
-      "",
-      "Копії буде створено в:",
-      targetList || "• Будинки не вибрано",
-    ].join("\n");
+    return targetList
+      ? `У кожному обраному будинку зʼявиться нова чернетка. Оригінал у поточному будинку не зміниться.\n\nОбрані будинки (${selectedTargets.length}):\n${targetList}`
+      : "Оберіть хоча б один будинок для створення чернеток.";
   }, [selectedTargets]);
 
   const totalPages = Math.max(1, Math.ceil(visibleTargets.length / TARGETS_PAGE_SIZE));
