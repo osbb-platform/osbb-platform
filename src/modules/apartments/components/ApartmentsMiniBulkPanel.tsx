@@ -162,7 +162,7 @@ export function ApartmentsMiniBulkPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(2,6,23,0.72)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[var(--cms-overlay)] backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0"
