@@ -175,7 +175,7 @@ export function ChangeHouseDashboardWidgetsForm({
         {widgets.map((widget, index) => (
           <div
             key={widget.id}
-            className="space-y-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-4"
+            className="space-y-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-4"
           >
             <div className="flex items-center justify-between gap-3">
               <div className={`text-sm font-medium ${adminTextLabelClass}`}>
@@ -250,25 +250,25 @@ export function ChangeHouseDashboardWidgetsForm({
         </div>
 
         {readOnlyMode ? (
-          <div className="mt-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-2.5 text-sm text-[var(--cms-text-muted)]">
+          <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-2.5 text-sm text-[var(--cms-text-muted)]">
             У вас немає прав на редагування цього блоку.
           </div>
         ) : null}
 
         {cleaned.length < 1 ? (
-          <div className="mt-3 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
+          <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
             Заповніть щонайменше 1 показник, щоб показати блок на головній сторінці.
           </div>
         ) : null}
 
         {lastError ? (
-          <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {lastError}
           </div>
         ) : null}
 
         {successMessage ? (
-          <div className="mt-4 rounded-2xl border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+          <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
             {successMessage}
           </div>
         ) : null}

@@ -312,7 +312,7 @@ function HouseEditorCard({
 
       {isAnnouncementOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] p-4 backdrop-blur-sm">
-          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)]">
+          <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)]">
             <div className="flex items-center justify-between border-b border-[var(--cms-border)] px-5 py-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">
                 Оголошення для мешканців

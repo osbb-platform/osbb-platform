@@ -90,7 +90,7 @@ export function EmployeesToolbar({
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder="Ім’я, email, посада"
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
           />
         </div>
 
@@ -101,7 +101,7 @@ export function EmployeesToolbar({
           <select
             value={roleValue}
             onChange={(event) => setRoleValue(event.target.value)}
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
           >
             <option value="">Усі ролі</option>
             <option value="admin">Admin</option>
@@ -116,7 +116,7 @@ export function EmployeesToolbar({
           <select
             value={statusValue}
             onChange={(event) => setStatusValue(event.target.value)}
-            className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+            className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-sm text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
           >
             <option value="">Усі статуси</option>
             <option value="invited">Запрошено</option>
@@ -132,7 +132,7 @@ export function EmployeesToolbar({
           type="button"
           onClick={handleReset}
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text)] disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-surface-muted)] hover:text-[var(--cms-text)] disabled:opacity-60"
         >
           Скинути
         </button>

@@ -49,7 +49,7 @@ export function EditCompanyHeroSectionForm({
           name="title"
           type="text"
           defaultValue={section.title ?? ""}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -60,7 +60,7 @@ export function EditCompanyHeroSectionForm({
         <select
           name="status"
           defaultValue={section.status}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         >
           <option value="draft">Чернетка</option>
           <option value="in_review">На модерації</option>
@@ -77,7 +77,7 @@ export function EditCompanyHeroSectionForm({
           name="headline"
           type="text"
           defaultValue={headline}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -89,7 +89,7 @@ export function EditCompanyHeroSectionForm({
           name="subheadline"
           defaultValue={subheadline}
           rows={4}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
@@ -101,12 +101,12 @@ export function EditCompanyHeroSectionForm({
           name="ctaLabel"
           type="text"
           defaultValue={ctaLabel}
-          className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none"
+          className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none"
         />
       </div>
 
       {state.error ? (
-        <div className="md:col-span-2 rounded-2xl border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]">
+        <div className="md:col-span-2 rounded-[var(--r-lg)] border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]">
           {state.error}
         </div>
       ) : null}

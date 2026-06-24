@@ -115,10 +115,10 @@ export function ApartmentsImportPanel({
         aria-label="Закрити панель імпорту квартир"
       />
 
-      <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-2xl">
+      <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-5 py-4">
           <div>
-            <div className="inline-flex rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+            <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
               Імпорт квартир
             </div>
 
@@ -134,7 +134,7 @@ export function ApartmentsImportPanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
             aria-label="Закрити"
           >
             ×
@@ -146,7 +146,7 @@ export function ApartmentsImportPanel({
           <input type="hidden" name="rows" value={rowsPayload} />
 
           <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
-            <div className="rounded-3xl border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
                   <label className={`mb-2 block ${adminTextLabelClass}`}>
@@ -158,7 +158,7 @@ export function ApartmentsImportPanel({
                     type="file"
                     accept=".csv,.xls,.xlsx"
                     onChange={handleFileChange}
-                    className="block w-full rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--cms-bg-tertiary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-text)]"
+                    className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-md)] file:border-0 file:bg-[var(--cms-pill-bg)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-text)]"
                   />
 
                   <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
@@ -167,40 +167,40 @@ export function ApartmentsImportPanel({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                     Усього рядків: {previewSummary.rows}
                   </span>
-                  <span className="rounded-full bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                     З площею: {previewSummary.withArea}
                   </span>
                 </div>
               </div>
 
               {isParsing ? (
-                <div className="mt-4 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text-muted)]">
+                <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text-muted)]">
                   Читаємо файл і перевіряємо структуру...
                 </div>
               ) : null}
 
               {parseError ? (
-                <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {parseError}
                 </div>
               ) : null}
 
               {state.error ? (
-                <div className="mt-4 rounded-2xl border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+                <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
                   {state.error}
                 </div>
               ) : null}
 
               {previewRows.length > 0 ? (
                 <>
-                  <div className="mt-4 rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
+                  <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
                     Після підтвердження поточний активний список квартир обраного будинку буде переміщено в архів. У зборах, боржниках та інших розділах буде використовуватись тільки новий активний список.
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-3xl border border-[var(--cms-border)]">
+                  <div className="mt-4 overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
                     <div className="max-h-[58vh] overflow-auto">
                       <table className="min-w-full border-collapse">
                         <thead className="sticky top-0 z-10 bg-[var(--cms-surface-elevated)]">
@@ -257,7 +257,7 @@ export function ApartmentsImportPanel({
 
           <div className="border-t border-[var(--cms-border)] px-5 py-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <label className="flex items-start gap-3 rounded-2xl border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] lg:max-w-[720px]">
+              <label className="flex items-start gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)] lg:max-w-[720px]">
                 <input
                   type="checkbox"
                   checked={confirmReplace}

@@ -94,8 +94,8 @@ function CreateEmployeeActionForm({
           id={flash.type === "success" ? "employee-create-success" : undefined}
           className={
             flash.type === "success"
-              ? "rounded-2xl border px-4 py-3 text-sm border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-              : "rounded-2xl border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
+              ? "rounded-[var(--r-lg)] border px-4 py-3 text-sm border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+              : "rounded-[var(--r-lg)] border px-4 py-3 text-sm border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
           }
         >
           {flash.message}
@@ -106,9 +106,9 @@ function CreateEmployeeActionForm({
         <form
           ref={formRef}
           action={handleSubmit}
-          className="rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-6"
+          className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6"
         >
-          <div className="inline-flex rounded-full border border-[var(--cms-border-primary)] bg-[var(--cms-bg-tertiary)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+          <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
             Новий співробітник
           </div>
 
@@ -130,7 +130,7 @@ function CreateEmployeeActionForm({
                 type="text"
                 name="fullName"
                 placeholder="Наприклад, Анна Коваль"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               />
             </div>
 
@@ -142,7 +142,7 @@ function CreateEmployeeActionForm({
                 type="email"
                 name="email"
                 placeholder="employee@company.ua"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               />
             </div>
 
@@ -154,7 +154,7 @@ function CreateEmployeeActionForm({
                 type="text"
                 name="jobTitle"
                 placeholder="Наприклад, Контент-менеджер"
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               />
             </div>
 
@@ -165,7 +165,7 @@ function CreateEmployeeActionForm({
               <select
                 name="role"
                 defaultValue={ROLES.MANAGER}
-                className="w-full rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-secondary)]"
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               >
                 {canCreateAdmins ? (
                   <option value={ROLES.ADMIN}>Admin</option>
@@ -187,7 +187,7 @@ function CreateEmployeeActionForm({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-bg-secondary)] hover:text-[var(--cms-text)]"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-5 py-3 text-sm font-medium text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-surface-muted)] hover:text-[var(--cms-text)]"
             >
               Скасувати
             </button>

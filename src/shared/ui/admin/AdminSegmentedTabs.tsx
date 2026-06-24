@@ -48,7 +48,6 @@ export function AdminSegmentedTabs({
             type="button"
             role="tab"
             aria-selected={isActive}
-            aria-pressed={isActive}
             onClick={() => onChange(item.key)}
             className={[
               adminTabBaseClass,

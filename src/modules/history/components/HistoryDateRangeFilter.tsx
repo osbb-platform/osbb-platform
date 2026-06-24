@@ -210,10 +210,10 @@ export function HistoryDateRangeFilter({
           }
           setIsOpen((prev) => !prev);
         }}
-        className={`flex min-h-[56px] w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
+        className={`flex min-h-[56px] w-full items-center justify-between rounded-[var(--r-lg)] border px-4 py-3 text-left text-sm font-medium transition ${
           disabled
-            ? "cursor-not-allowed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text-muted)]"
-            : "border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] text-[var(--cms-text)] hover:border-[var(--cms-border-secondary)]"
+            ? "cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
+            : "border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)] hover:border-[var(--cms-border-strong)]"
         }`}
       >
         <span className="pr-3">{formatLabel(from, to)}</span>
@@ -221,12 +221,12 @@ export function HistoryDateRangeFilter({
       </button>
 
       {isOpen && !disabled ? (
-        <div className="absolute left-0 top-[calc(100%+12px)] z-50 w-[320px] rounded-3xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-primary)] p-4 shadow-2xl">
+        <div className="absolute left-0 top-[calc(100%+12px)] z-50 w-[320px] rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 shadow-[var(--cms-shadow-lg)]">
           <div className="mb-4 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setVisibleMonth((prev) => addMonths(prev, -1))}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--cms-border-primary)] text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
               aria-label="Попередній місяць"
             >
               ‹
@@ -254,11 +254,11 @@ export function HistoryDateRangeFilter({
 
                 setVisibleMonth(next);
               }}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border transition ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-[var(--r-md)] border transition ${
                 visibleMonth.getFullYear() === today.getFullYear() &&
                 visibleMonth.getMonth() === today.getMonth()
-                  ? "cursor-not-allowed border-[var(--cms-border-primary)] text-[var(--cms-text-muted)]"
-                  : "border-[var(--cms-border-primary)] text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
+                  ? "cursor-not-allowed border-[var(--cms-border)] text-[var(--cms-text-muted)]"
+                  : "border-[var(--cms-border)] text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
               }`}
               aria-label="Наступний місяць"
             >
@@ -285,16 +285,16 @@ export function HistoryDateRangeFilter({
                   type="button"
                   disabled={day.disabled}
                   onClick={() => handleDayClick(day.date)}
-                  className={`inline-flex h-10 items-center justify-center rounded-xl text-sm transition ${
+                  className={`inline-flex h-10 items-center justify-center rounded-[var(--r-md)] text-sm transition ${
                     day.disabled
                       ? "cursor-not-allowed text-[var(--cms-text-muted)]"
                       : isStart || isEnd
                         ? "bg-[var(--cms-primary)] font-semibold text-[var(--cms-primary-contrast)]"
                         : isInRange
-                          ? "bg-[var(--cms-bg-tertiary)] text-[var(--cms-text)]"
+                          ? "bg-[var(--cms-pill-bg)] text-[var(--cms-text)]"
                           : day.inCurrentMonth
-                            ? "text-[var(--cms-text)] hover:bg-[var(--cms-bg-secondary)]"
-                            : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-bg-secondary)]"
+                            ? "text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
+                            : "text-[var(--cms-text-muted)] hover:bg-[var(--cms-surface-muted)]"
                   }`}
                 >
                   {day.date.getDate()}
@@ -307,7 +307,7 @@ export function HistoryDateRangeFilter({
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center justify-center rounded-2xl border border-[var(--cms-border-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-bg-secondary)]"
+              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
             >
               Очистить
             </button>
