@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+
 import type { AdminDashboardLinkItem } from "@/src/modules/houses/services/getAdminDashboardV1";
+import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type Props = {
   items: AdminDashboardLinkItem[];
@@ -77,27 +80,30 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
 
   if (!activeItem) {
     return (
-      <div className="rounded-2xl border border-dashed border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-4 text-sm text-[var(--cms-text-muted)]">
-        Зараз немає матеріалів, що очікують підтвердження.
-      </div>
+      <EmptyState
+        title="Немає матеріалів на перевірку"
+        description="Зараз немає матеріалів, що очікують підтвердження."
+      />
     );
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--cms-border-primary)] bg-[var(--cms-bg-secondary)] p-5">
+    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 shadow-[var(--cms-shadow-sm)]">
       <div className="flex h-full flex-col gap-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--cms-warning-text)]">
-              <span className="rounded-full border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-2.5 py-1">
-                Потребує уваги
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminStatusBadge tone="warning">Потребує уваги</AdminStatusBadge>
+              <span className="text-xs font-semibold uppercase tracking-[0.06em] text-[var(--cms-text-soft)]">
+                {activeItem.houseName}
               </span>
-              <span>{activeItem.houseName}</span>
-              <span className="text-[var(--cms-warning-text)] opacity-70">•</span>
-              <span>{getSectionLabel(activeItem.section)}</span>
+              <span className="text-[var(--cms-text-soft)]">•</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.06em] text-[var(--cms-text-soft)]">
+                {getSectionLabel(activeItem.section)}
+              </span>
             </div>
 
-            <div className="mt-3 text-lg font-semibold text-[var(--cms-text)] sm:text-xl">
+            <div className="mt-3 font-[family-name:var(--font-serif)] text-[20px] font-semibold tracking-[-0.01em] text-[var(--cms-text)]">
               {activeItem.title}
             </div>
 
@@ -108,7 +114,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
 
           <Link
             href={activeItem.href}
-            className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 text-sm font-semibold text-[var(--cms-warning-text)] transition-[filter,transform] hover:brightness-[1.04] active:translate-y-px focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]"
           >
             Перейти до розділу
           </Link>
@@ -120,12 +126,12 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             onClick={handlePrev}
             disabled={!canGoPrev}
             aria-label="Попередній матеріал"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] text-base font-semibold text-[var(--cms-text)] transition-colors hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             ←
           </button>
 
-          <div className="min-w-[72px] text-center text-sm text-[var(--cms-warning-text)]">
+          <div className="min-w-[72px] text-center text-sm font-medium text-[var(--cms-text-muted)]">
             {safeIndex + 1} із {visibleItems.length}
           </div>
 
@@ -134,7 +140,7 @@ export function AdminDashboardAttentionCarousel({ items }: Props) {
             onClick={handleNext}
             disabled={!canGoNext}
             aria-label="Наступний матеріал"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-base font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[var(--cms-border-primary)] disabled:bg-[var(--cms-bg-secondary)] disabled:text-[var(--cms-text-muted)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] text-base font-semibold text-[var(--cms-text)] transition-colors hover:bg-[var(--cms-pill-bg)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             →
           </button>

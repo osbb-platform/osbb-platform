@@ -28,10 +28,10 @@ export function AdminShell({
           activeTasksCount={activeTasksCount}
         />
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--cms-surface-muted)]">
           <AdminTopbar />
 
-          <main className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
             <div className="mx-auto max-w-7xl">{children}</div>
           </main>
         </div>
