@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PubButton } from "@/src/shared/ui/public/PubButton";
 
 type DebtorItem = {
   apartmentId: string;
@@ -51,13 +52,13 @@ export function PublicDebtorsPaymentBlock({
   }, [accountQuery, items]);
 
   return (
-    <section className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8] p-6">
-      <h2 className="mt-3 text-2xl font-semibold text-[#1F2A37]">
+    <section className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-sm)]">
+      <h2 className="font-[var(--font-serif)] text-2xl font-semibold text-[var(--pub-text)]">
         {payment.title}
       </h2>
 
       {payment.note ? (
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5B6B7C]">
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--pub-text-muted)]">
           {payment.note}
         </p>
       ) : null}
@@ -68,23 +69,20 @@ export function PublicDebtorsPaymentBlock({
           value={accountQuery}
           onChange={(event) => setAccountQuery(event.target.value)}
           placeholder="Введіть повний особовий рахунок"
-          className="w-full rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition hover:border-[#CBBBAA] focus:border-[#CBBBAA] focus:ring-2 focus:ring-[#E5DBCF]"
+          className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 text-[15px] text-[var(--pub-text)] outline-none transition-shadow placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]"
         />
-        <button
-          type="button"
-          className="rounded-2xl bg-[#DDD1C3] px-5 py-3 text-sm font-medium text-[#1F2A37] transition hover:bg-[#E5DBCF]"
-        >
+        <PubButton type="button" variant="secondary">
           Перевірити
-        </button>
+        </PubButton>
       </div>
 
       {accountQuery.trim() ? (
         match ? (
-          <div className="mt-5 rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] p-4">
-            <div className="text-sm text-[#7A746B]">
+          <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4">
+            <div className="text-sm text-[var(--pub-text-soft)]">
               Квартира {match.apartmentLabel}
             </div>
-            <div className="mt-2 text-lg font-semibold text-[#1F2A37]">
+            <div className="mt-2 font-[var(--font-serif)] text-lg font-semibold text-[var(--pub-text)]">
               {formatCurrency(normalizeAmount(match.amount))} ₴
             </div>
 
@@ -93,18 +91,18 @@ export function PublicDebtorsPaymentBlock({
                 href={payment.url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex rounded-2xl bg-[#DDD1C3] px-5 py-3 text-sm font-medium text-[#1F2A37] transition hover:bg-[#E5DBCF]"
+                className="mt-4 inline-flex min-h-[48px] items-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-5 text-sm font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
               >
                 {payment.buttonLabel}
               </a>
             ) : (
-              <div className="mt-4 inline-flex rounded-2xl border border-[#DDD4CA] bg-[#ECE6DF] px-5 py-3 text-sm text-[#7A746B]">
+              <div className="mt-4 inline-flex min-h-[48px] items-center rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-5 text-sm text-[var(--pub-text-muted)]">
                 Посилання на оплату ще не додано
               </div>
             )}
           </div>
         ) : (
-          <div className="mt-5 rounded-2xl border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-4 text-sm text-[#7A746B]">
+          <div className="mt-5 rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-4 text-sm text-[var(--pub-text-muted)]">
             За вказаним рахунком заборгованість не знайдена.
           </div>
         )
