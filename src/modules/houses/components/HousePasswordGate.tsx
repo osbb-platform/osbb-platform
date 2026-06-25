@@ -43,7 +43,6 @@ export function HousePasswordGate({
   publicDescription,
   houseCoverImageUrl,
   districtName,
-  districtColor,
 }: HousePasswordGateProps) {
   const [state, formAction, isPending] = useActionState(
     loginToHouse,
@@ -279,10 +278,10 @@ export function HousePasswordGate({
 
   function getDigitClassName(index: number) {
     const baseClassName =
-      "h-14 w-11 rounded-[22px] border bg-[#FAF7F2] text-center text-[2rem] font-semibold leading-none text-[var(--foreground)] outline-none transition-all duration-200 sm:h-16 sm:w-12 lg:h-[72px] lg:w-[56px]";
+      "h-14 w-11 rounded-[var(--r-lg)] border-2 bg-[var(--pub-surface-elevated)] text-center font-[var(--font-serif)] text-[2rem] font-semibold leading-none text-[var(--pub-text)] outline-none transition-all duration-200 sm:h-16 sm:w-12 lg:h-[72px] lg:w-[56px]";
 
     if (state.error) {
-      return `${baseClassName} border-red-300 bg-red-50/60 shadow-[0_0_0_1px_rgba(220,38,38,0.05)]`;
+      return `${baseClassName} border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)]`;
     }
 
     const isFilled = Boolean(digits[index]);
@@ -290,54 +289,43 @@ export function HousePasswordGate({
     const isNextTarget = !isFilled && nextEmptyIndex === index;
 
     if (isActive) {
-      return `${baseClassName} border-[var(--accent-color)] shadow-[0_0_0_3px_var(--accent-soft)]`;
+      return `${baseClassName} border-[var(--pub-accent)] shadow-[0_0_0_3px_var(--pub-accent-soft)]`;
     }
 
     if (isNextTarget) {
-      return `${baseClassName} border-[var(--accent-color)]/60 shadow-[0_0_0_1px_var(--accent-soft)]`;
+      return `${baseClassName} border-[var(--pub-accent-border)] shadow-[0_0_0_1px_var(--pub-accent-soft)]`;
     }
 
     if (isFilled) {
-      return `${baseClassName} border-[var(--accent-color)]/50 bg-[#F1EBE4]`;
+      return `${baseClassName} border-[var(--pub-accent-border)] bg-[var(--pub-accent-tint)]`;
     }
 
-    return `${baseClassName} border-[var(--border)] hover:border-[var(--accent-color)]/40`;
+    return `${baseClassName} border-[var(--pub-border-strong)] hover:border-[var(--pub-accent-border)]`;
   }
 
   return (
-    <main
-      className="min-h-screen bg-[var(--background)] text-[var(--foreground)]"
-      style={
-        {
-          "--accent-color": districtColor,
-          "--accent-soft": `${districtColor}22`,
-        } as React.CSSProperties
-      }
-    >
-      <section className="mx-auto flex min-h-screen max-w-[1600px] items-center px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
-        <div className="grid w-full gap-4 xl:grid-cols-[1.06fr_0.94fr] xl:gap-6">
-          <div className="relative min-h-[300px] overflow-hidden rounded-[30px] border border-[var(--border)] bg-slate-200 xl:min-h-[calc(100vh-3rem)]">
+    <main className="min-h-screen bg-[var(--pub-bg)] text-[var(--pub-text)]">
+      <section className="mx-auto flex min-h-screen max-w-[1280px] items-center px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+        <div className="grid w-full gap-4 xl:grid-cols-[1.06fr_0.94fr] xl:gap-5">
+          <div className="relative min-h-[300px] overflow-hidden rounded-[var(--r-3xl)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] xl:min-h-[calc(100vh-3rem)]">
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url("${houseImageUrl}")` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-slate-900/8" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--pub-overlay)] via-black/10 to-black/5" />
 
             <div className="relative flex h-full flex-col justify-between p-5 sm:p-6 lg:p-8">
               <div>
-                <div
-                  className="inline-flex rounded-full px-5 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-sm"
-                  style={{ backgroundColor: districtColor }}
-                >
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-5 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]">
                   {districtName ?? houseCopy.common.houseFallback}
                 </div>
               </div>
 
-              <div className="hidden sm:block w-full rounded-[28px] border border-white/10 bg-gradient-to-br from-black/55 via-black/35 to-black/20 p-5 text-white shadow-[0_10px_40px_rgba(0,0,0,0.25)] sm:p-6 lg:p-7">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
+              <div className="hidden w-full rounded-[var(--r-2xl)] border border-white/12 bg-gradient-to-br from-black/55 via-black/35 to-black/20 p-5 text-white shadow-[var(--pub-shadow-lg)] backdrop-blur-[3px] sm:block sm:p-6 lg:p-7">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/72">
                   {houseCopy.passwordGate.heroBadge}
                 </div>
-                <div className="mt-3 text-2xl font-semibold leading-[1.2] sm:text-3xl lg:text-[2.4rem]">
+                <div className="mt-3 font-[var(--font-serif)] text-2xl font-semibold leading-[1.18] sm:text-3xl lg:text-[2.4rem]">
                   {houseCopy.passwordGate.heroTitle}
                 </div>
                 <div className="mt-3 text-base leading-7 text-white/90 lg:text-[16px]">
@@ -347,49 +335,49 @@ export function HousePasswordGate({
             </div>
           </div>
 
-          <div className="flex rounded-[30px] border border-[#E4DCD2] bg-[#F1EBE4] p-5 shadow-[0_10px_34px_rgba(28,24,19,0.05)] sm:p-6 lg:p-8 xl:min-h-[calc(100vh-3rem)]">
+          <div className="flex rounded-[var(--r-3xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-lg)] sm:p-6 lg:p-8 xl:min-h-[calc(100vh-3rem)]">
             <div className="flex w-full flex-col justify-between">
               <div>
                 <header>
-                  <div className="text-[clamp(2.5rem,4vw,4.4rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-[#141A24]">
+                  <div className="font-[var(--font-serif)] text-[clamp(2.4rem,4vw,4rem)] font-semibold leading-[0.98] tracking-[-0.03em] text-[var(--pub-text)]">
                     {houseCopy.passwordGate.cabinetTitle}
                   </div>
 
-                  <div className="mt-3 text-[clamp(1.35rem,2vw,2rem)] font-semibold leading-tight tracking-[-0.03em] text-[#141A24]">
+                  <div className="mt-3 text-[clamp(1.25rem,2vw,1.7rem)] font-semibold leading-tight tracking-[-0.02em] text-[var(--pub-text)]">
                     {houseName}
                   </div>
 
-                  <div className="mt-5 rounded-[24px] border border-[#E4DCD2] bg-[#F3EEE8] px-5 py-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5F5A54]">
+                  <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
                       {houseCopy.passwordGate.address}
                     </div>
-                    <div className="mt-2 text-base font-medium leading-7 text-[#1F2937] lg:text-[1.15rem]">
+                    <div className="mt-2 text-base font-medium leading-7 text-[var(--pub-text)] lg:text-[1.1rem]">
                       {houseAddress}
                     </div>
                   </div>
                 </header>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[24px] border border-[#E4DCD2] bg-[#F6F1EB] px-5 py-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5F5A54]">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
                       {houseCopy.passwordGate.access}
                     </div>
-                    <div className="mt-2 text-[15px] font-medium leading-7 text-[#1F2937]">
+                    <div className="mt-2 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
                       {houseCopy.passwordGate.accessDescription}
                     </div>
                   </div>
 
-                  <div className="rounded-[24px] border border-[#E4DCD2] bg-[#F6F1EB] px-5 py-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5F5A54]">
+                  <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
                       {houseCopy.passwordGate.loginFormat}
                     </div>
-                    <div className="mt-2 text-[15px] font-medium leading-7 text-[#1F2937]">
+                    <div className="mt-2 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
                       {houseCopy.passwordGate.loginFormatDescription}
                     </div>
                   </div>
                 </div>
 
-                <p className="mt-5 text-base leading-7 text-[#606773] lg:text-[1.02rem]">
+                <p className="mt-5 text-base leading-7 text-[var(--pub-text-muted)] lg:text-[1.02rem]">
                   {description}
                 </p>
 
@@ -399,20 +387,22 @@ export function HousePasswordGate({
 
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-lg font-semibold leading-tight text-[#171a21]">
+                      <div className="text-lg font-semibold leading-tight text-[var(--pub-text)]">
                         {houseCopy.passwordGate.enterCode}
                       </div>
-                      <div className="mt-2 text-[15px] leading-6 text-[#6A7280]">
+                      <div className="mt-2 text-[15px] leading-6 text-[var(--pub-text-muted)]">
                         {houseCopy.passwordGate.enterCodeHint}
                       </div>
                     </div>
 
-                    <div className="shrink-0 rounded-full border border-[#D8CEC2] bg-[#F3EEE8] px-4 py-2 text-sm font-semibold text-[#5F5A54]">
+                    <div className="shrink-0 rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-2 text-sm font-semibold text-[var(--pub-text-muted)]">
                       {normalizeDigits(code).length} / 6
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-wrap gap-2.5 sm:gap-3">
+                  <div
+                    className={`mt-5 flex flex-wrap gap-2.5 sm:gap-3 ${state.error ? "pub-code-shake" : ""}`}
+                  >
                     {digits.map((digit, index) => (
                       <input
                         key={index}
@@ -444,13 +434,13 @@ export function HousePasswordGate({
 
                   <div className="mt-5">
                     {uiMessage ? (
-                      <div className="rounded-[24px] border border-red-200 bg-red-50 px-5 py-4 text-[15px] leading-7 text-red-700">
+                      <div className="rounded-[var(--r-lg)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] px-5 py-4 text-[15px] leading-7 text-[var(--pub-danger-text)]">
                         {isLocked
-                          ? `З міркувань безпеки вхід тимчасово призупинено. Осталось ${Math.floor(lockRemaining / 60000)}:${String(Math.floor((lockRemaining % 60000) / 1000)).padStart(2, "0")}`
+                          ? `З міркувань безпеки вхід тимчасово призупинено. Залишилось ${Math.floor(lockRemaining / 60000)}:${String(Math.floor((lockRemaining % 60000) / 1000)).padStart(2, "0")}`
                           : uiMessage}
                       </div>
                     ) : (
-                      <div className="rounded-[24px] border border-[#DDD4CA] bg-[#F1EBE4] px-5 py-4 text-[15px] leading-7 text-[#606773]">
+                      <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4 text-[15px] leading-7 text-[var(--pub-text-muted)]">
                         Немає коду доступу або він не підходить? Зверніться до
                         керуючої компанії вашого будинку.
                       </div>
@@ -461,15 +451,7 @@ export function HousePasswordGate({
                     <button
                       type="submit"
                       disabled={isButtonDisabled || isLocked}
-                      className="inline-flex min-w-[260px] items-center justify-center rounded-[26px] px-6 py-4 text-base font-semibold text-white shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-200 hover:translate-y-[-2px] hover:shadow-[0_10px_28px_rgba(0,0,0,0.16)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:text-[#7b8190] disabled:opacity-100"
-                      style={
-                        isPending || !isCodeComplete
-                          ? undefined
-                          : {
-                              background: `linear-gradient(180deg, ${districtColor}D9 0%, ${districtColor}BF 100%)`,
-                              boxShadow: "0 12px 28px rgba(28,24,19,0.14), inset 0 1px 0 rgba(255,255,255,0.18)",
-                            }
-                      }
+                      className="inline-flex min-w-[260px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 py-4 text-base font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-md)] transition-all duration-200 hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--pub-bg-quiet)] disabled:text-[var(--pub-text-soft)] disabled:shadow-none"
                     >
                       {isPending ? "Перевіряємо код..." : "Увійти до кабінету"}
                     </button>

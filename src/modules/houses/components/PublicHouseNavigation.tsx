@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { PublicHouseSidePanel } from "@/src/modules/houses/components/PublicHouseSidePanel";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type ChairmanPreview = {
   name: string;
@@ -50,8 +51,8 @@ export function PublicHouseNavigation({
 
   return (
     <>
-      <div className="flex items-center gap-3">
-        <nav className="hidden items-center gap-2 xl:flex">
+      <div className="flex items-center gap-2.5">
+        <nav className="hidden items-center gap-1.5 xl:flex">
           {primaryItems.map((item) => {
             const href = item.href();
             const isActive =
@@ -60,23 +61,14 @@ export function PublicHouseNavigation({
 
             return (
               <Link
-            prefetch={false}
+                prefetch={false}
                 key={item.label}
                 href={href}
-                className={`inline-flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm font-semibold transition ${
+                className={`inline-flex min-h-[44px] items-center justify-center rounded-[var(--r-pill)] px-4 text-sm font-semibold transition ${
                   isActive
-                    ? "shadow-sm border"
-                    : "border border-[#DDD6CE] bg-[#F7F5F2] text-slate-700 hover:border-[#D8CEC2] hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
+                    ? "bg-[var(--pub-accent)] text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]"
+                    : "text-[var(--pub-text-muted)] hover:bg-[var(--pub-accent-tint)] hover:text-[var(--pub-text)]"
                 }`}
-                style={
-                  isActive
-                    ? {
-                        backgroundColor: `${districtColor}20`,
-                        borderColor: `${districtColor}55`,
-                        color: districtColor,
-                      }
-                    : undefined
-                }
               >
                 {item.label}
               </Link>
@@ -87,22 +79,11 @@ export function PublicHouseNavigation({
         <button
           type="button"
           onClick={() => setIsPanelOpen(true)}
-          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#DDD6CE] bg-[#F7F5F2] text-slate-800 transition hover:border-[#D8CEC2] hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
+          className="inline-flex h-12 items-center gap-2 rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface)] px-4 text-sm font-semibold text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
           aria-label={houseCopy.navigation.openMenu}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M4 7h16" />
-            <path d="M4 12h16" />
-            <path d="M4 17h16" />
-          </svg>
+          <PubIcon name="menu" className="h-5 w-5" />
+          <span className="hidden sm:inline">Розділи</span>
         </button>
       </div>
 

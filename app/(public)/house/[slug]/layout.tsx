@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import "../../public-theme.css";
 import { HousePasswordGate } from "@/src/modules/houses/components/HousePasswordGate";
 import { PublicHouseBell } from "@/src/modules/houses/components/PublicHouseBell";
 import { PublicHouseFooter } from "@/src/modules/houses/components/PublicHouseFooter";
@@ -14,6 +15,13 @@ import { getPublicHouseBellFeed } from "@/src/modules/houses/services/getPublicH
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
 import { houseCopy } from "@/src/shared/publicCopy/house";
+import { getDistrictAccentStyle } from "@/src/modules/houses/utils/resolveDistrictAccent";
+import {
+  PublicThemeProvider,
+  PublicThemeScript,
+  PublicThemeSwitch,
+} from "@/src/shared/ui/public";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type PublicHouseLayoutProps = {
   children: ReactNode;
@@ -51,7 +59,13 @@ export default async function PublicHouseLayout({
 
   if (!hasAccess) {
     return (
-      <>
+      <div
+        id="pub-theme-root"
+        className="pub-theme-root"
+        data-house-theme="light"
+        style={getDistrictAccentStyle(districtColor)}
+      >
+        <PublicThemeScript slug={slug} />
         <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
         <HousePasswordGate
           initialLockedUntil={initialLockedUntil}
@@ -64,7 +78,7 @@ export default async function PublicHouseLayout({
           districtName={house.district?.name ?? null}
           districtColor={districtColor}
         />
-      </>
+      </div>
     );
   }
 
@@ -87,82 +101,76 @@ export default async function PublicHouseLayout({
   });
 
   return (
-    <main className="min-h-screen bg-[#F7F5F2] text-[var(--foreground)]">
-      <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
+    <div
+      id="pub-theme-root"
+      className="pub-theme-root min-h-screen bg-[var(--pub-bg)] text-[var(--pub-text)]"
+      data-house-theme="light"
+      style={getDistrictAccentStyle(districtColor)}
+    >
+      <PublicThemeScript slug={slug} />
+      <PublicThemeProvider slug={slug}>
+        <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
 
-      <header className="sticky top-0 z-50 border-b border-[#E2D9CF] bg-[#F1ECE6]">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
-          <Link
-            prefetch={false}
-            href={"/"}
-            className="flex min-w-0 items-center gap-4 rounded-full pr-3 transition-all duration-200 hover:bg-[#F0E9E1] hover:-translate-y-[1px] hover:shadow-sm"
-          >
-            <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
-              style={{ backgroundColor: districtColor }}
+        <header className="sticky top-0 z-50 border-b border-[var(--pub-border)] bg-[var(--pub-header-bg)]/90 backdrop-blur-md">
+          <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
+            <Link
+              prefetch={false}
+              href={"/"}
+              className="flex min-w-0 items-center gap-4 rounded-[var(--r-lg)] pr-3 transition-all duration-200 hover:bg-[var(--pub-bg-quiet)]"
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 11.5L12 4l9 7.5" />
-                <path d="M5.5 10.5V20h13V10.5" />
-                <path d="M9.5 20v-5h5v5" />
-              </svg>
-            </div>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--r-lg)] bg-[var(--pub-accent)] text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]">
+                <PubIcon name="home" className="h-6 w-6" />
+              </span>
 
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="truncate text-lg font-semibold text-slate-950">
-                  {house.name}
-                </div>
+              <span className="min-w-0">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="truncate text-lg font-semibold text-[var(--pub-text)]">
+                    {house.name}
+                  </span>
 
-                <div
-                  className="inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
-                  style={{ backgroundColor: districtColor }}
-                >
-                  {house.district?.name ?? houseCopy.common.houseFallback}
-                </div>
+                  <span className="inline-flex rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
+                    {house.district?.name ?? houseCopy.common.houseFallback}
+                  </span>
+                </span>
+
+                <span className="block truncate text-sm text-[var(--pub-text-muted)]">
+                  {house.address}
+                </span>
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-2.5">
+              <PublicHouseBell feed={bellFeed} />
+
+              <div className="hidden lg:block">
+                <PublicThemeSwitch />
               </div>
 
-              <div className="truncate text-sm text-slate-500">
-                {house.address}
-              </div>
+              <PublicHouseNavigation
+                chairman={chairman}
+                slug={slug}
+                houseName={house.name}
+                houseAddress={house.address}
+                districtName={house.district?.name ?? houseCopy.common.houseFallback}
+                districtColor={districtColor}
+              />
             </div>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <PublicHouseBell feed={bellFeed} />
-
-            <PublicHouseNavigation
-              chairman={chairman}
-              slug={slug}
-              houseName={house.name}
-              houseAddress={house.address}
-              districtName={house.district?.name ?? houseCopy.common.houseFallback}
-              districtColor={districtColor}
-            />
           </div>
+        </header>
+
+        <div className="mx-auto w-full max-w-[1280px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+          {children}
         </div>
-      </header>
 
-      <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        {children}
-      </div>
-
-      <PublicHouseFooter
-        districtColor={districtColor}
-        houseId={house.id}
-        houseSlug={house.slug}
-        houseName={house.name}
-        apartmentOptions={apartmentOptions}
-        managementCompany={house.management_company}
-      />
-    </main>
+        <PublicHouseFooter
+          districtColor={districtColor}
+          houseId={house.id}
+          houseSlug={house.slug}
+          houseName={house.name}
+          apartmentOptions={apartmentOptions}
+          managementCompany={house.management_company}
+        />
+      </PublicThemeProvider>
+    </div>
   );
 }
