@@ -336,7 +336,7 @@ export default async function AdminHouseDetailPage({
               ) : null}
               {house.district ? (
                 <span
-                  className="inline-flex h-9 items-center rounded-[var(--r-pill)] px-3.5 text-[13px] font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
+                  className="inline-flex h-8 items-center rounded-[var(--r-pill)] px-3 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
