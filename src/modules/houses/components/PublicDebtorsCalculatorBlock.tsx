@@ -30,6 +30,9 @@ type Props = {
   hasPublishedDebtors: boolean;
 };
 
+const INFO_TILE =
+  "rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4 text-sm text-[var(--pub-text-muted)]";
+
 export function PublicDebtorsCalculatorBlock({
   calculator,
   hasPublishedDebtors,
@@ -67,18 +70,18 @@ export function PublicDebtorsCalculatorBlock({
   }
 
   return (
-    <section className="mt-10 rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8] p-6 sm:p-8">
+    <section className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-sm)] sm:p-8">
       <div className="mx-auto max-w-4xl">
-        <h2 className="text-2xl font-semibold text-[#1F2A37]">
+        <h2 className="font-[var(--font-serif)] text-2xl font-semibold text-[var(--pub-text)]">
           {calculator.title}
         </h2>
 
-        <p className="mt-3 text-sm leading-7 text-[#6F685F]">
+        <p className="mt-3 text-sm leading-7 text-[var(--pub-text-muted)]">
           {calculator.note}
         </p>
 
         <div className="mt-6">
-          <label className="block text-sm font-medium text-[#2A3642]">
+          <label className="block text-sm font-medium text-[var(--pub-text-muted)]">
             Введіть суму основної заборгованості
           </label>
 
@@ -90,49 +93,49 @@ export function PublicDebtorsCalculatorBlock({
               setDebtAmount(event.target.value.replace(/[^\d.,]/g, ""))
             }
             placeholder="Наприклад: 5000"
-            className="mt-2 w-full rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition hover:border-[#CBBBAA] focus:border-[#CBBBAA] focus:ring-2 focus:ring-[#E5DBCF]"
+            className="mt-2 h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 text-[15px] text-[var(--pub-text)] outline-none transition-shadow placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]"
           />
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] p-4">
+          <div className={INFO_TILE}>
             Судовий збір: {formatCurrency(parseNumber(calculator.courtFee))} ₴
           </div>
-          <div className="rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] p-4">
+          <div className={INFO_TILE}>
             Правнича допомога: {formatCurrency(parseNumber(calculator.legalAid))} ₴
           </div>
-          <div className="rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] p-4">
+          <div className={INFO_TILE}>
             Інфляційні / 3% річних: {calculator.inflationRate}%
           </div>
-          <div className="rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] p-4">
+          <div className={INFO_TILE}>
             Виконавчий збір: {calculator.enforcementRate}%
           </div>
         </div>
 
         {debtAmount.trim() && result ? (
-          <div className="mt-8 rounded-[24px] border border-[#D7C8B7] bg-[#EAE2D8] p-6">
-            <div className="space-y-3 text-sm text-[#2A3642]">
+          <div className="mt-8 rounded-[var(--r-2xl)] border border-[var(--pub-accent-border)] bg-[var(--pub-accent-soft)] p-6">
+            <div className="space-y-3 text-sm text-[var(--pub-text-muted)]">
               <div>Основний борг: {formatCurrency(result.baseDebt)} ₴</div>
               <div>Інфляційні / 3%: {formatCurrency(result.inflationAmount)} ₴</div>
               <div>Виконавчий збір: {formatCurrency(result.enforcementAmount)} ₴</div>
             </div>
 
-            <div className="mt-5 border-t border-[#D7C8B7] pt-5">
-              <div className="text-sm text-[#2A3642]">
+            <div className="mt-5 border-t border-[var(--pub-accent-border)] pt-5">
+              <div className="text-sm text-[var(--pub-text-muted)]">
                 Орієнтовна загальна сума до сплати
               </div>
-              <div className="mt-2 text-3xl font-semibold text-[#1F2A37]">
+              <div className="mt-2 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-accent-strong)]">
                 {formatCurrency(result.total)} ₴
               </div>
             </div>
           </div>
         ) : (
-          <div className="mt-8 rounded-[24px] border border-dashed border-[#D7C8B7] bg-[#F6F2EC] p-6 text-sm text-[#6F685F]">
+          <div className="mt-8 rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
             Введіть суму боргу, щоб побачити орієнтовний розрахунок.
           </div>
         )}
 
-        <p className="mt-6 text-xs leading-6 text-[#7A746B]">
+        <p className="mt-6 text-xs leading-6 text-[var(--pub-text-soft)]">
           {calculator.disclaimer}
         </p>
       </div>
