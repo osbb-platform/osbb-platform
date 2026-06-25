@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+import type { PubTone } from "@/src/shared/ui/public/pubStyles";
+import { pubToneClass } from "@/src/shared/ui/public/pubStyles";
 
 type PlanTaskStatus =
   | "draft"
@@ -87,10 +90,10 @@ function getPriorityLabel(priority: PlanTaskPriority) {
   return "Звичайний";
 }
 
-function getPriorityClasses(priority: PlanTaskPriority) {
-  if (priority === "high") return "border-red-200 bg-red-50 text-red-700";
-  if (priority === "medium") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+function getPriorityTone(priority: PlanTaskPriority): PubTone {
+  if (priority === "high") return "danger";
+  if (priority === "medium") return "warning";
+  return "neutral";
 }
 
 function getDateSticker(task: PlanTask) {
@@ -108,6 +111,12 @@ function getDateSticker(task: PlanTask) {
     : "Кінцевий термін не вказано";
 }
 
+const META_BLOCK =
+  "rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4";
+const META_LABEL =
+  "text-[11px] font-medium uppercase tracking-wide text-[var(--pub-text-soft)]";
+const META_VALUE = "mt-2 text-sm font-medium text-[var(--pub-text)]";
+
 type PublicPlanTaskViewerProps = {
   task: PlanTask;
   houseId?: string;
@@ -120,125 +129,95 @@ export function PublicPlanTaskViewer({
   houseSlug,
 }: PublicPlanTaskViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const priorityChip = `inline-flex rounded-[var(--r-pill)] border px-3 py-1 text-xs font-medium ${pubToneClass[getPriorityTone(task.priority)]}`;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="block w-full rounded-[28px] border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:shadow-md hover:bg-slate-50"
+        className="block w-full rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 text-left shadow-[var(--pub-shadow-sm)] transition hover:bg-[var(--pub-bg-quiet)] hover:shadow-[var(--pub-shadow-md)]"
       >
         <div className="flex flex-wrap items-start gap-2">
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-semibold tracking-tight text-slate-900">
+            <div className="text-lg font-semibold tracking-tight text-[var(--pub-text)]">
               {task.title}
             </div>
           </div>
 
-          <span
-            className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getPriorityClasses(
-              task.priority,
-            )}`}
-          >
-            {getPriorityLabel(task.priority)}
-          </span>
+          <span className={priorityChip}>{getPriorityLabel(task.priority)}</span>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+          <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-3 py-1 text-xs font-medium text-[var(--pub-text-muted)]">
             {getDateSticker(task)}
           </span>
 
-          <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface-elevated)] px-3 py-1 text-xs font-medium text-[var(--pub-text-muted)]">
             Відкрити деталі
+            <PubIcon name="chevron-right" className="h-3.5 w-3.5" />
           </span>
         </div>
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div className="text-lg font-semibold tracking-tight text-slate-900">
+        <div className="pub-theme-root fixed inset-0 z-50 flex items-center justify-center bg-[var(--pub-overlay)] p-4 backdrop-blur-[2px]">
+          <div className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[var(--pub-border)] bg-[var(--pub-surface)] px-5 py-4">
+              <div className="font-[var(--font-serif)] text-lg font-semibold tracking-tight text-[var(--pub-text)]">
                 {task.title}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] text-[var(--pub-text-muted)] transition hover:bg-[var(--pub-bg-quiet)]"
                 aria-label="Закрити задачу"
               >
-                ×
+                <PubIcon name="close" className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-4 p-5">
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+                <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-3 py-1 text-xs font-medium text-[var(--pub-text-muted)]">
                   {getDateSticker(task)}
                 </span>
-                <span
-                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getPriorityClasses(
-                    task.priority,
-                  )}`}
-                >
-                  {getPriorityLabel(task.priority)}
-                </span>
+                <span className={priorityChip}>{getPriorityLabel(task.priority)}</span>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Статус
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-slate-800">
-                    {getStatusLabel(task.status)}
-                  </div>
+                <div className={META_BLOCK}>
+                  <div className={META_LABEL}>Статус</div>
+                  <div className={META_VALUE}>{getStatusLabel(task.status)}</div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Підрядник
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-slate-800">
-                    {task.contractor || "Не вказано"}
-                  </div>
+                <div className={META_BLOCK}>
+                  <div className={META_LABEL}>Підрядник</div>
+                  <div className={META_VALUE}>{task.contractor || "Не вказано"}</div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Створено
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-slate-800">
-                    {formatDateTime(task.createdAt)}
-                  </div>
+                <div className={META_BLOCK}>
+                  <div className={META_LABEL}>Створено</div>
+                  <div className={META_VALUE}>{formatDateTime(task.createdAt)}</div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Оновлено
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-slate-800">
-                    {formatDateTime(task.updatedAt)}
-                  </div>
+                <div className={META_BLOCK}>
+                  <div className={META_LABEL}>Оновлено</div>
+                  <div className={META_VALUE}>{formatDateTime(task.updatedAt)}</div>
                 </div>
               </div>
 
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Опис
-                </div>
-                <div className="mt-2 rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+                <div className={META_LABEL}>Опис</div>
+                <div className="mt-2 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4 text-sm leading-7 text-[var(--pub-text-muted)]">
                   {task.description || "Опис не додано."}
                 </div>
               </div>
 
               {task.images.length > 0 ? (
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Фото
-                  </div>
+                  <div className={META_LABEL}>Фото</div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.images.map((image, index) => {
                       const href = image.path
@@ -250,8 +229,9 @@ export function PublicPlanTaskViewer({
                           href={href}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-white"
+                          className="inline-flex items-center gap-2 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-4 py-3 text-sm font-medium text-[var(--pub-text)] transition hover:bg-[var(--pub-surface-elevated)]"
                         >
+                          <PubIcon name="doc" className="h-4 w-4" />
                           Відкрити фото {index + 1}
                         </a>
                       ) : null;
@@ -262,9 +242,7 @@ export function PublicPlanTaskViewer({
 
               {task.documents.length > 0 ? (
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Документи
-                  </div>
+                  <div className={META_LABEL}>Документи</div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.documents.map((document, index) => {
                       const filePath = document.path || "";
