@@ -14,13 +14,12 @@ export function PublicDocumentActionButton({
     <button
       type={type}
       className={[
-        "inline-flex min-h-[56px] items-center justify-center rounded-[var(--r-pill)]",
-        "border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-7 py-3.5",
+        "inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[var(--r-pill)]",
+        "border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-7",
         "text-[15px] font-semibold text-[var(--pub-text)]",
-        "shadow-[0_1px_0_rgba(255,255,255,0.45)_inset]",
-        "transition-all duration-200",
-        "hover:border-[var(--pub-accent-border)] hover:bg-[var(--pub-accent-tint)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pub-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--pub-bg)]",
+        "transition-colors duration-200",
+        "hover:bg-[var(--pub-bg-quiet)]",
+        "focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]",
         "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       ].join(" ")}
