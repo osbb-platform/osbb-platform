@@ -54,3 +54,5 @@ export type { PubEmptyStateProps } from "./PubEmptyState";
 // ── Іконки ──
 export { PubIcon } from "./PublicIcons";
 export type { PubIconName, PubIconProps } from "./PublicIcons";
+export * from "./PubSectionHeader";
+export * from "./PubFilterTabs";
