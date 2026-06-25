@@ -4,7 +4,7 @@ import { houseCopy } from "@/src/shared/publicCopy/house";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { PublicThemeSwitch } from "@/src/shared/ui/public";
+import { PublicThemeSwitch, PubCard, cx, PUB_FOCUS_RING, pubEyebrow } from "@/src/shared/ui/public";
 import { PubIcon, type PubIconName } from "@/src/shared/ui/public/PublicIcons";
 
 type NavigationItem = {
@@ -189,17 +189,20 @@ export function PublicHouseSidePanel({ chairman,
               const normalizedRole = normalizeBoardRoleLabel(chairman.role);
 
               return (
-                <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-4 shadow-[var(--pub-shadow-sm)]">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
-                    Голова правління
-                  </div>
+                <PubCard
+                  elevation="sm"
+                  elevated
+                  padding="md"
+                  className="rounded-[var(--r-lg)]"
+                >
+                  <div className={pubEyebrow}>Голова правління</div>
 
-                  <div className="mt-3 text-[16px] font-semibold text-[var(--pub-text)]">
+                  <div className="mt-3 text-[16px] font-semibold leading-tight text-[var(--pub-text)]">
                     {chairman.name}
                   </div>
 
                   {normalizedRole && normalizedRole !== "Голова правління" ? (
-                    <div className="mt-1 text-sm text-[var(--pub-text-muted)]">
+                    <div className="mt-1 text-sm leading-6 text-[var(--pub-text-muted)]">
                       {normalizedRole}
                     </div>
                   ) : null}
@@ -207,13 +210,16 @@ export function PublicHouseSidePanel({ chairman,
                   {chairman.phone ? (
                     <a
                       href={`tel:${chairman.phone}`}
-                      className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-4 text-sm font-semibold text-[var(--pub-accent-contrast)] transition hover:brightness-[1.04]"
+                      className={cx(
+                        "mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-5 text-sm font-semibold text-[var(--pub-accent-contrast)] transition hover:brightness-[1.04]",
+                        PUB_FOCUS_RING,
+                      )}
                     >
                       <PubIcon name="phone" className="h-4 w-4" />
                       {chairman.phone}
                     </a>
                   ) : null}
-                </div>
+                </PubCard>
               );
             })()}
           </div>
