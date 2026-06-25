@@ -3,6 +3,7 @@ import { houseCopy } from "@/src/shared/publicCopy/house";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { loginToHouse } from "@/src/modules/houses/actions/loginToHouse";
+import { PubButton } from "@/src/shared/ui/public";
 
 type HousePasswordGateProps = {
   initialLockedUntil?: number;
@@ -447,14 +448,16 @@ export function HousePasswordGate({
                     )}
                   </div>
 
-                  <div className="mt-6 flex justify-center">
-                    <button
+                  <div className="mt-6">
+                    <PubButton
                       type="submit"
                       disabled={isButtonDisabled || isLocked}
-                      className="inline-flex min-w-[260px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 py-4 text-base font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-md)] transition-all duration-200 hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--pub-bg-quiet)] disabled:text-[var(--pub-text-soft)] disabled:shadow-none"
+                      loading={isPending}
+                      fullWidth
+                      size="lg"
                     >
                       {isPending ? "Перевіряємо код..." : "Увійти до кабінету"}
-                    </button>
+                    </PubButton>
                   </div>
                 </form>
               </div>
