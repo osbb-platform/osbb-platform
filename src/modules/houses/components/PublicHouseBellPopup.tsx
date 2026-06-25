@@ -1,4 +1,6 @@
+"use client";
 import { houseCopy } from "@/src/shared/publicCopy/house";
+import { useState } from "react";
 import type { PublicHouseBellItem } from "@/src/modules/houses/services/getPublicHouseBellFeed";
 import { PubIcon, type PubIconName } from "@/src/shared/ui/public/PublicIcons";
 
@@ -52,7 +54,8 @@ function groupItems(items: PublicHouseBellItem[]) {
 }
 
 export function PublicHouseBellPopup({ items }: PublicHouseBellPopupProps) {
-  const visibleItems = items.slice(0, 3);
+  const [expanded, setExpanded] = useState(false);
+  const visibleItems = expanded ? items : items.slice(0, 3);
   const groups = groupItems(visibleItems);
   const countLabel = items.length > 9 ? "9+" : String(items.length);
 
@@ -123,9 +126,14 @@ export function PublicHouseBellPopup({ items }: PublicHouseBellPopupProps) {
           ))}
 
           {items.length > 3 ? (
-            <div className="border-t border-[var(--pub-border)] px-5 py-4 text-center text-sm font-semibold text-[var(--pub-accent-strong)]">
-              Переглянути всі оновлення
-            </div>
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              aria-expanded={expanded}
+              className="w-full border-t border-[var(--pub-border)] px-5 py-4 text-center text-sm font-semibold text-[var(--pub-accent-strong)] transition hover:bg-[var(--pub-accent-tint)] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
+            >
+              {expanded ? "Згорнути оновлення" : "Переглянути всі оновлення"}
+            </button>
           ) : null}
         </div>
       )}
