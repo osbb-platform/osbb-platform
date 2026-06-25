@@ -38,6 +38,14 @@ const CYRILLIC_TO_LATIN_MAP: Record<string, string> = {
   я: "ya",
 };
 
+function normalizeCyrillicHomoglyphs(value: string) {
+  return value
+    // Latin p/P inside Cyrillic text is visually identical to Ukrainian/ Cyrillic р/Р.
+    // Example: "Чаpівна" -> "Чарівна", so slug becomes charivna, not chapivna.
+    .replace(/([\u0400-\u04FF])p(?=[\u0400-\u04FF])/g, "$1р")
+    .replace(/([\u0400-\u04FF])P(?=[\u0400-\u04FF])/g, "$1Р");
+}
+
 function transliterate(value: string) {
   return value
     .trim()
@@ -48,7 +56,7 @@ function transliterate(value: string) {
 }
 
 export function slugify(value: string) {
-  return transliterate(value)
+  return transliterate(normalizeCyrillicHomoglyphs(value))
     .replace(/['’`"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")

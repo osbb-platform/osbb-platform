@@ -36,11 +36,40 @@ function resolveSubdomain(hostname: string): string | null {
   return null;
 }
 
+
+const LEGACY_HOUSE_SLUG_REDIRECTS: Record<string, string> = {
+  "osbb-chapivna-163": "osbb-charivna-163",
+};
+
+function buildLegacyHouseRedirectHostname(currentHostname: string, targetSlug: string) {
+  if (currentHostname.endsWith(".localhost")) {
+    return `${targetSlug}.localhost`;
+  }
+
+  if (currentHostname === ROOT_DOMAIN || currentHostname.endsWith(`.${ROOT_DOMAIN}`)) {
+    return `${targetSlug}.${ROOT_DOMAIN}`;
+  }
+
+  return `${targetSlug}.${ROOT_DOMAIN}`;
+}
+
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = getHostname(request.headers.get("host"));
   const pathname = url.pathname;
   const subdomain = resolveSubdomain(hostname);
+
+  const legacyHouseSlugTarget = subdomain
+    ? LEGACY_HOUSE_SLUG_REDIRECTS[subdomain]
+    : undefined;
+
+  if (legacyHouseSlugTarget) {
+    const url = request.nextUrl.clone();
+    url.hostname = buildLegacyHouseRedirectHostname(hostname, legacyHouseSlugTarget);
+
+    return NextResponse.redirect(url, 307);
+  }
+
 
   // API-запросы не должны создавать Supabase middleware client,
   // не должны обновлять auth-сессию через auth.getUser()
