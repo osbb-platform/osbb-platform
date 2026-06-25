@@ -1,0 +1,122 @@
+/* ════════════════════════════════════════════════════════════════════════
+   app/(public)/public-theme.css
+   Блок 0 — фундамент публічного кабінету мешканця.
+
+   Власний namespace --pub-*. НЕ чіпає --cms-* (адмінка) і не чіпає
+   публічні --background / --foreground лендінга.
+
+   Підключення (one-time, у layout публічного кабінету):
+       import "./public-theme.css";
+
+   Активація: будь-який вузол з класом .pub-theme-root вмикає всі токени.
+   Тема — атрибут data-house-theme="light|dark" на тому ж вузлі (світла = default).
+   Акцент району приходить інлайн-стилем --pub-accent (+ --pub-accent-contrast)
+   на той самий .pub-theme-root з layout.tsx (див. resolveDistrictAccent.ts).
+   ════════════════════════════════════════════════════════════════════════ */
+
+.pub-theme-root {
+  /* ── Радіуси / шрифти — спільні зі стеком (ті ж змінні, що в адмінці) ── */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-2xl: 22px;
+  --r-3xl: 28px;
+  --r-pill: 999px;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-serif: var(--font-serif-lora), "Iowan Old Style", Georgia, serif;
+
+  /* ── АКЦЕНТ РАЙОНУ ───────────────────────────────────────────────────
+     --pub-accent          → перебивається інлайн-стилем із layout.tsx (= district.theme_color)
+     --pub-accent-contrast → перебивається util'ом (чорний/білий) для AA-читабельності
+     Решта похідних рахується тут через color-mix, без JS. */
+  --pub-accent: #16a34a;                                              /* fallback дефолт-району */
+  --pub-accent-contrast: #ffffff;                                    /* перебивається getReadableForeground() */
+  --pub-accent-strong: color-mix(in srgb, var(--pub-accent) 82%, #000);
+  --pub-accent-soft:   color-mix(in srgb, var(--pub-accent) 14%, var(--pub-surface));
+  --pub-accent-tint:   color-mix(in srgb, var(--pub-accent) 8%, var(--pub-surface));
+  --pub-accent-border: color-mix(in srgb, var(--pub-accent) 32%, var(--pub-border));
+  --pub-ring: var(--pub-accent);
+
+  /* ── Семантика статусів (світлі дефолти; темна тема перевизначає нижче) ── */
+  --pub-success-bg: #E6EEE3; --pub-success-border: #BFD3BB; --pub-success-text: #3F6B47;
+  --pub-danger-bg:  #F4E4E0; --pub-danger-border:  #E1C2BA; --pub-danger-text:  #9E463C;
+  --pub-warning-bg: #F6ECD7; --pub-warning-border: #E4D2A8; --pub-warning-text: #8A6321;
+  --pub-info-bg:    #E7EAF0; --pub-info-border:    #C7CEDC; --pub-info-text:    #4C5C73;
+}
+
+/* ════════════════════════ СВІТЛА ТЕМА (default) ════════════════════════
+   Тепла кремова палітра «преміуму» — та сама механіка, що в адмінці,
+   але власні значення для публіки. */
+.pub-theme-root,
+[data-house-theme="light"] .pub-theme-root,
+.pub-theme-root[data-house-theme="light"] {
+  --pub-bg: #EFEADD;
+  --pub-bg-quiet: #F4EFE4;
+  --pub-surface: #FBF8F1;
+  --pub-surface-elevated: #FFFFFF;
+  --pub-header-bg: #F1ECE6;
+  --pub-border: #E3DACB;
+  --pub-border-strong: #D3C7B3;
+  --pub-text: #211D17;
+  --pub-text-muted: #5E5547;
+  --pub-text-soft: #8A7F6D;
+  --pub-overlay: rgba(40, 33, 22, 0.40);
+  --pub-shadow-sm: 0 1px 2px rgba(60, 48, 28, 0.06);
+  --pub-shadow-md: 0 12px 32px rgba(60, 48, 28, 0.10);
+  --pub-shadow-lg: 0 28px 70px rgba(60, 48, 28, 0.16);
+}
+
+/* ════════════════════════ ТЕМНА ТЕМА ════════════════════════
+   Теплий графіт (не navy). */
+[data-house-theme="dark"] .pub-theme-root,
+.pub-theme-root[data-house-theme="dark"] {
+  --pub-bg: #15120D;
+  --pub-bg-quiet: #1B1712;
+  --pub-surface: #221E18;
+  --pub-surface-elevated: #2A251D;
+  --pub-header-bg: #1A1611;
+  --pub-border: #38322A;
+  --pub-border-strong: #4A4236;
+  --pub-text: #F2ECDF;
+  --pub-text-muted: #B6AB97;
+  --pub-text-soft: #8A7F6B;
+  --pub-overlay: rgba(8, 6, 4, 0.66);
+  --pub-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --pub-shadow-md: 0 12px 32px rgba(0, 0, 0, 0.40);
+  --pub-shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.55);
+
+  /* Акцент у темній — трохи світліший для контрасту на темному холсті */
+  --pub-accent-strong: color-mix(in srgb, var(--pub-accent) 78%, #fff);
+  --pub-accent-soft:   color-mix(in srgb, var(--pub-accent) 22%, var(--pub-surface));
+  --pub-accent-tint:   color-mix(in srgb, var(--pub-accent) 14%, var(--pub-surface));
+
+  --pub-success-bg: rgba(80, 120, 80, .18); --pub-success-border: rgba(120, 160, 110, .40); --pub-success-text: #93B58E;
+  --pub-danger-bg:  rgba(150, 70, 60, .20); --pub-danger-border:  rgba(200, 110, 95, .40); --pub-danger-text:  #DB9289;
+  --pub-warning-bg: rgba(150, 110, 40, .20); --pub-warning-border: rgba(200, 160, 80, .40); --pub-warning-text: #E0BC72;
+  --pub-info-bg:    rgba(80, 95, 120, .20); --pub-info-border:    rgba(130, 150, 180, .40); --pub-info-text:    #9DAFC6;
+}
+
+/* М'який shake для помилки коду входу (Блок 2). */
+@keyframes pub-code-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.pub-code-shake { animation: pub-code-shake .5s ease; }
+
+/* Тепле мерехтіння для скелетонів (Блок 9). */
+@keyframes pubShimmer {
+  0% { background-position: -380px 0; }
+  100% { background-position: 380px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pub-theme-root * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
