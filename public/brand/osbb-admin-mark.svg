@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="OSBB Admin">
+  <rect x="1.25" y="1.25" width="45.5" height="45.5" rx="12.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.28"></rect>
+
+    <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 23 L24 11 L39 23"></path>
+      <path d="M13.5 23 V37.5"></path>
+      <path d="M34.5 23 V37.5"></path>
+      <path d="M10.5 37.5 H37.5"></path>
+      <path d="M24 37.5 V19.5"></path>
+      <path d="M16 29 H20"></path>
+      <path d="M28 29 H32"></path>
+    </g>
+</svg>

@@ -19,6 +19,7 @@ import {
   TaskListIcon,
   UsersIcon,
 } from "@/src/shared/ui/icons/AdminInlineIcons";
+import { AdminLogo } from "@/src/shared/ui/admin/AdminLogo";
 
 type NavigationItem = {
   href: string;
@@ -202,19 +203,11 @@ export function AdminSidebar({
           }`}
         >
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
-            <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-sidebar-card)] text-[var(--cms-accent-primary)] shadow-[var(--cms-shadow-sm)]"
-              aria-label="OSBB Platform"
-              title="OSBB Platform"
-            >
-              <BuildingIcon className="h-6 w-6" />
-            </div>
-
-            {isCollapsed ? null : (
-              <h2 className="min-w-0 truncate text-xl font-semibold text-[var(--cms-text)]">
-                OSBB Platform
-              </h2>
-            )}
+            <AdminLogo
+              variant={isCollapsed ? "mark" : "full"}
+              size="sm"
+              className={isCollapsed ? "" : "min-w-0"}
+            />
           </div>
         </div>
 
