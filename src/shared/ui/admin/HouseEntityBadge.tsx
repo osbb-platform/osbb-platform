@@ -20,7 +20,7 @@ function SlugIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-[15px] w-[15px] flex-none text-current"
+      className="h-[13px] w-[13px] flex-none text-current"
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -38,7 +38,7 @@ function CompanyIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-[15px] w-[15px] flex-none text-current"
+      className="h-[13px] w-[13px] flex-none text-current"
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -55,7 +55,7 @@ function CompanyIcon() {
 }
 
 const BASE =
-  "inline-flex h-11 max-w-full items-center gap-2 rounded-[var(--r-pill)] px-5 text-sm shadow-[var(--cms-shadow-sm)]";
+  "inline-flex h-9 max-w-full items-center gap-1.5 rounded-[var(--r-pill)] px-3.5 text-[13px] leading-none shadow-[var(--cms-shadow-sm)]";
 
 const VARIANT: Record<HouseEntityBadgeVariant, string> = {
   slug:
@@ -82,11 +82,11 @@ export function HouseEntityBadge({
           type="button"
           aria-label="Скопіювати"
           onClick={onCopy}
-          className="ml-0.5 flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full text-[var(--cms-text-soft)] transition-colors hover:bg-[var(--cms-border-strong)] hover:text-[var(--cms-text)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]"
+          className="ml-0.5 flex h-4 w-4 flex-none items-center justify-center rounded-full text-[var(--cms-text-soft)] transition-colors hover:bg-[var(--cms-border-strong)] hover:text-[var(--cms-text)] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--cms-ring)_35%,transparent)]"
         >
           <svg
             viewBox="0 0 24 24"
-            className="h-3 w-3"
+            className="h-[10px] w-[10px]"
             fill="none"
             stroke="currentColor"
             strokeWidth={2.2}
