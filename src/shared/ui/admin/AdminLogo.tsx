@@ -73,7 +73,7 @@ export function AdminLogo({
 
   if (variant === "mark") {
     return (
-      <span className={cx("inline-flex", className)} role="img" aria-label="OSBB Admin">
+      <span className={cx("inline-flex", className)} role="img" aria-label="OSBB Platform">
         <Mark px={px} />
       </span>
     );
@@ -83,7 +83,7 @@ export function AdminLogo({
     <span
       className={cx("inline-flex items-center gap-3", className)}
       role="img"
-      aria-label="OSBB Admin"
+      aria-label="OSBB Platform"
     >
       <Mark px={px} />
       <span className="flex flex-col leading-[1.05]">
@@ -98,9 +98,9 @@ export function AdminLogo({
         </span>
         <span
           className={cx("font-semibold uppercase", text.sub)}
-          style={{ fontSize: px * 0.25, letterSpacing: "0.22em" }}
+          style={{ fontSize: px * 0.25, letterSpacing: "0.08em" }}
         >
-          Admin
+          Platform
         </span>
       </span>
     </span>
