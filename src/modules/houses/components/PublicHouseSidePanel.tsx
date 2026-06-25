@@ -112,8 +112,8 @@ export function PublicHouseSidePanel({ chairman,
         onClick={onClose}
       />
 
-      <aside className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-[420px] flex-col border-l border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
-        <div className="border-b border-[var(--pub-accent-border)] bg-[var(--pub-accent-soft)] px-5 py-5">
+      <aside className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-[390px] flex-col border-l border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
+        <div className="border-b border-[var(--pub-border)] bg-[var(--pub-accent-soft)] px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
@@ -128,8 +128,11 @@ export function PublicHouseSidePanel({ chairman,
                 {houseAddress}
               </div>
 
-              <div className="mt-3 inline-flex rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
-                {districtName}
+              <div className="mt-3 flex items-center gap-3">
+                <span className="inline-flex max-w-[210px] truncate rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
+                  {districtName}
+                </span>
+                <PublicThemeSwitch className="shrink-0" />
               </div>
             </div>
 
@@ -141,13 +144,6 @@ export function PublicHouseSidePanel({ chairman,
             >
               <PubIcon name="close" className="h-5 w-5" />
             </button>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-[var(--pub-text-muted)]">
-              Тема кабінету
-            </span>
-            <PublicThemeSwitch />
           </div>
         </div>
 
@@ -188,12 +184,12 @@ export function PublicHouseSidePanel({ chairman,
         </div>
 
         {chairman ? (
-          <div className="border-t border-[var(--pub-border)] px-5 py-5">
+          <div className="border-t border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-5">
             {(() => {
               const normalizedRole = normalizeBoardRoleLabel(chairman.role);
 
               return (
-                <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-5">
+                <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-4 shadow-[var(--pub-shadow-sm)]">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
                     Голова правління
                   </div>
@@ -211,7 +207,7 @@ export function PublicHouseSidePanel({ chairman,
                   {chairman.phone ? (
                     <a
                       href={`tel:${chairman.phone}`}
-                      className="mt-3 inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-4 py-2 text-sm font-semibold text-[var(--pub-accent-contrast)] transition hover:brightness-[1.04]"
+                      className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-4 text-sm font-semibold text-[var(--pub-accent-contrast)] transition hover:brightness-[1.04]"
                     >
                       <PubIcon name="phone" className="h-4 w-4" />
                       {chairman.phone}

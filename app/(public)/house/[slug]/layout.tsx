@@ -112,7 +112,7 @@ export default async function PublicHouseLayout({
         <PublicHouseAnalyticsTracker houseId={house.id} houseSlug={house.slug} />
 
         <header className="sticky top-0 z-50 border-b border-[var(--pub-border)] bg-[var(--pub-header-bg)]/90 backdrop-blur-md">
-          <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
+          <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 py-2.5 sm:gap-4 sm:px-6 lg:px-8">
             <Link
               prefetch={false}
               href={"/"}
@@ -123,18 +123,12 @@ export default async function PublicHouseLayout({
               </span>
 
               <span className="min-w-0">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-lg font-semibold text-[var(--pub-text)]">
-                    {house.name}
-                  </span>
-
-                  <span className="inline-flex rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
-                    {house.district?.name ?? houseCopy.common.houseFallback}
-                  </span>
+                <span className="block max-w-[360px] truncate text-lg font-semibold leading-tight text-[var(--pub-text)]">
+                  {house.name}
                 </span>
 
-                <span className="block truncate text-sm text-[var(--pub-text-muted)]">
-                  {house.address}
+                <span className="mt-1 inline-flex max-w-[260px] truncate rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
+                  {house.district?.name ?? houseCopy.common.houseFallback}
                 </span>
               </span>
             </Link>

@@ -79,11 +79,11 @@ export function PublicHouseNavigation({
         <button
           type="button"
           onClick={() => setIsPanelOpen(true)}
-          className="inline-flex h-12 items-center gap-2 rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface)] px-4 text-sm font-semibold text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface)] text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
           aria-label={houseCopy.navigation.openMenu}
         >
           <PubIcon name="menu" className="h-5 w-5" />
-          <span className="hidden sm:inline">Розділи</span>
+          
         </button>
       </div>
 
