@@ -1,7 +1,6 @@
 import { houseOrigin } from "@/src/shared/config/app/domains";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import Link from "next/link";
-import { ArrowLeftIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
@@ -36,6 +35,8 @@ import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 
 import { getAdminHouses, type AdminHouseListItem } from "@/src/modules/houses/services/getAdminHouses";
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
+import { AdminActionIconLink } from "@/src/shared/ui/admin/AdminActionIconButton";
+import { HouseEntityBadge } from "@/src/shared/ui/admin/HouseEntityBadge";
 
 
 function mapCrossHouseDuplicateTargets(
@@ -307,7 +308,7 @@ export default async function AdminHouseDetailPage({
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
               <Link
                 href={ROUTES.admin.houses}
-                className="transition hover:text-[var(--cms-text)]"
+                className="text-[var(--cms-text-muted)] transition hover:text-[var(--cms-text)]"
               >
                 Будинки
               </Link>
@@ -325,9 +326,9 @@ export default async function AdminHouseDetailPage({
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+              <HouseEntityBadge variant="slug" title={house.slug}>
                 {house.slug}
-              </span>
+              </HouseEntityBadge>
               {!house.is_active ? (
                 <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                   Архів
@@ -340,6 +341,14 @@ export default async function AdminHouseDetailPage({
                 >
                   {house.district.name}
                 </span>
+              ) : null}
+              {house.management_company?.name ? (
+                <HouseEntityBadge
+                  variant="managementCompany"
+                  title={house.management_company.name}
+                >
+                  {house.management_company.name}
+                </HouseEntityBadge>
               ) : null}
               <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
                 Розділ: {
@@ -362,37 +371,24 @@ export default async function AdminHouseDetailPage({
 
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
             <div className="flex w-full flex-wrap items-center justify-end gap-3">
-              <Link
-                href={publicPreviewHref}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
-                aria-label={`Відкрити сайт будинку ${house.name}`}
-                title="Відкрити сайт будинку"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z" />
-                  <circle cx="12" cy="12" r="3.25" />
-                </svg>
-              </Link>
+              <AdminActionIconLink
+                  href={publicPreviewHref}
+                  icon="publicPage"
+                  label={`Відкрити сайт будинку ${house.name}`}
+                  tooltip="Відкрити сайт будинку"
+                  target="_blank"
+                  rel="noreferrer"
+                  size="lg"
+                  tone="accent"
+                />
 
-              <Link
+              <AdminActionIconLink
                 href={ROUTES.admin.houses}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
-                aria-label="Назад до реєстру будинків"
-                title="Назад до реєстру"
-              >
-                <ArrowLeftIcon className="h-5 w-5" />
-              </Link>
+                icon="back"
+                label="Назад до реєстру будинків"
+                tooltip="Назад до реєстру"
+                size="lg"
+              />
             </div>
 
             <div className="w-full min-w-[260px] xl:max-w-[360px]">
