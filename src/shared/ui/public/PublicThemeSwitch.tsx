@@ -6,14 +6,17 @@ import {
   usePublicTheme,
 } from "@/src/shared/ui/public/PublicThemeProvider";
 
+const cx = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(" ");
+
 function SunIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-4 w-4"
+      className="h-[18px] w-[18px]"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2.1"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -35,15 +38,15 @@ function MoonIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-4 w-4"
+      className="h-[18px] w-[18px]"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2.1"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M21 12.6A8.5 8.5 0 1 1 11.4 3 6.5 6.5 0 0 0 21 12.6Z" />
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
     </svg>
   );
 }
@@ -68,27 +71,35 @@ function ThemeOption({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={isActive}
+      aria-label={label}
+      title={label}
       onClick={() => onChange(value)}
-      aria-pressed={isActive}
-      className={`inline-flex min-h-10 items-center gap-2 rounded-[var(--r-pill)] px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] ${
+      className={cx(
+        "flex h-9 w-9 items-center justify-center rounded-[var(--r-pill)] transition-colors",
+        "focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]",
         isActive
-          ? "bg-[var(--pub-accent)] text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]"
-          : "text-[var(--pub-text-muted)] hover:bg-[var(--pub-accent-tint)] hover:text-[var(--pub-text)]"
-      }`}
+          ? "bg-[var(--pub-surface-elevated)] text-[var(--pub-text)] shadow-[var(--pub-shadow-sm)]"
+          : "text-[var(--pub-text-soft)] hover:text-[var(--pub-text)]",
+      )}
     >
       {icon}
-      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
 
-export function PublicThemeSwitch() {
+export function PublicThemeSwitch({ className }: { className?: string }) {
   const { theme, setTheme } = usePublicTheme();
 
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-1 shadow-[var(--pub-shadow-sm)]"
-      aria-label="Перемикач теми"
+      role="radiogroup"
+      aria-label="Тема кабінету"
+      className={cx(
+        "inline-flex items-center gap-1 rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-1",
+        className,
+      )}
     >
       <ThemeOption
         value="light"
