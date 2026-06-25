@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { PublicDocumentActionButton } from "@/src/shared/ui/public/PublicDocumentActionButton";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   filePath: string;
@@ -78,17 +79,20 @@ export function PublicReportPdfViewer({
 
   if (!filePath.trim()) {
     return (
-      <div className="mt-5 rounded-2xl border border-dashed border-[#D8CEC2] bg-[#F3EEE8] px-4 py-3 text-sm text-[#5F5A54]">
+      <div className="mt-5 rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-3 text-sm text-[var(--pub-text-muted)]">
         PDF файл буде підключено наступним кроком через CMS upload.
       </div>
     );
   }
 
-  const modal =
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4">
-      <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div className="text-sm font-medium text-slate-900">
+  const modal = (
+    <div className="pub-theme-root fixed inset-0 z-[100] flex items-center justify-center bg-[var(--pub-overlay)] p-4 backdrop-blur-[2px]">
+      <div className="relative h-[85vh] w-full max-w-5xl overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4">
+          <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--pub-text)]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] bg-[var(--pub-info-bg)] text-[var(--pub-info-text)]">
+              <PubIcon name="doc" className="h-[17px] w-[17px]" />
+            </span>
             {fileName || "Перегляд звіту"}
           </div>
 
@@ -98,21 +102,22 @@ export function PublicReportPdfViewer({
               setIsOpen(false);
               setIsLoading(false);
             }}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] transition hover:bg-[var(--pub-bg-quiet)]"
             aria-label="Закрити PDF"
           >
-            ×
+            <PubIcon name="close" className="h-5 w-5" />
           </button>
         </div>
 
         <iframe
           src={viewerUrl}
           title={fileName || "PDF report"}
-          className="h-[calc(85vh-73px)] w-full"
+          className="h-[calc(85vh-73px)] w-full bg-[var(--pub-surface-elevated)]"
           onLoad={() => setIsLoading(false)}
         />
       </div>
-    </div>;
+    </div>
+  );
 
   return (
     <>
@@ -123,13 +128,14 @@ export function PublicReportPdfViewer({
           setIsLoading(true);
           setIsOpen(true);
         }}
-        className="mt-5"
+        className="mt-5 w-full"
       >
+        <PubIcon name="doc" className="h-[18px] w-[18px]" />
         {isLoading ? "Відкриваємо..." : "Ознайомитися"}
       </PublicDocumentActionButton>
 
       {loadError ? (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] px-4 py-3 text-sm text-[var(--pub-danger-text)]">
           {loadError}
         </div>
       ) : null}
