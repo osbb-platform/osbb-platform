@@ -1,79 +1,72 @@
 import Link from "next/link";
 import type { PublicHouseHomeWidget } from "@/src/modules/houses/services/getPublicHouseHomeDashboard";
+import { PubIcon, type PubIconName } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   widget: PublicHouseHomeWidget;
 };
 
-const widgetToneMap = {
+/** Семантика розділу: тон акцент-смужки/іконки + іконка. Форма картки — єдина. */
+const widgetLook: Record<
+  PublicHouseHomeWidget["kind"],
+  { strip: string; iconBg: string; iconFg: string; icon: PubIconName }
+> = {
   announcements: {
-    shell: "bg-[#FDFCFB] border-[#DDD4CA] hover:border-[#CFEED1] hover:bg-white",
-    pill: "border-[#CFEED1] bg-[#F3FBF3] text-[#3F7A3D]",
-    dot: "bg-[#85E874]",
-    badge: "border-[#CFEED1] bg-[#F6FCF5] text-[#4A6A47]",
-    freshness: "bg-[#22C55E] text-white",
-    meta: "border-[#D7E8D5] bg-[#F6FBF4] text-[#53634F]",
-    cta: "border-[#CFEED1] bg-[#F3FBF3] text-[#2F5E2E] group-hover:bg-[#EAF8EA]",
+    strip: "bg-[var(--pub-accent)]",
+    iconBg: "bg-[var(--pub-accent-soft)]",
+    iconFg: "text-[var(--pub-accent-strong)]",
+    icon: "megaphone",
   },
   plan: {
-    shell: "bg-[#FDFCFB] border-[#DDD4CA] hover:border-[#EADFBF] hover:bg-white",
-    pill: "border-[#EADFBF] bg-[#FBF7EC] text-[#8A6B1F]",
-    dot: "bg-[#E7C873]",
-    badge: "border-[#EADFBF] bg-[#FCF8EF] text-[#7A6430]",
-    freshness: "bg-[#22C55E] text-white",
-    meta: "border-[#E8DFC7] bg-[#FBF7EF] text-[#6E6248]",
-    cta: "border-[#EADFBF] bg-[#FBF7EC] text-[#6F5717] group-hover:bg-[#F6EFD9]",
+    strip: "bg-[var(--pub-warning-text)]",
+    iconBg: "bg-[var(--pub-warning-bg)]",
+    iconFg: "text-[var(--pub-warning-text)]",
+    icon: "wrench",
   },
   meetings: {
-    shell: "bg-[#FDFCFB] border-[#DDD4CA] hover:border-[#D4E1F7] hover:bg-white",
-    pill: "border-[#D4E1F7] bg-[#F2F6FD] text-[#466694]",
-    dot: "bg-[#7FA8E8]",
-    badge: "border-[#D4E1F7] bg-[#F4F7FD] text-[#526A8C]",
-    freshness: "bg-[#22C55E] text-white",
-    meta: "border-[#DCE5F4] bg-[#F5F8FD] text-[#536277]",
-    cta: "border-[#D4E1F7] bg-[#F2F6FD] text-[#36547E] group-hover:bg-[#EAF1FB]",
+    strip: "bg-[var(--pub-info-text)]",
+    iconBg: "bg-[var(--pub-info-bg)]",
+    iconFg: "text-[var(--pub-info-text)]",
+    icon: "calendar",
   },
   debtors: {
-    shell: "bg-[#FDFCFB] border-[#DDD4CA] hover:border-[#F0D0D0] hover:bg-white",
-    pill: "border-[#F0D0D0] bg-[#FDF3F3] text-[#9A5757]",
-    dot: "bg-[#E8A4A4]",
-    badge: "border-[#F0D0D0] bg-[#FDF6F6] text-[#8A6666]",
-    freshness: "bg-[#22C55E] text-white",
-    meta: "border-[#F0DEDE] bg-[#FCF7F7] text-[#735F5F]",
-    cta: "border-[#F0D0D0] bg-[#FDF3F3] text-[#7E4242] group-hover:bg-[#F9E9E9]",
+    strip: "bg-[var(--pub-danger-text)]",
+    iconBg: "bg-[var(--pub-danger-bg)]",
+    iconFg: "text-[var(--pub-danger-text)]",
+    icon: "coin",
   },
-} as const;
+};
 
 export function PublicHouseDashboardCard({ widget }: Props) {
-  const tone = widgetToneMap[widget.kind];
+  const look = widgetLook[widget.kind];
 
   return (
     <Link
-            prefetch={false}
+      prefetch={false}
       href={widget.href}
-      className={`group flex h-full min-h-[220px] flex-col rounded-[28px] border p-4 shadow-[0_10px_30px_rgba(28,24,19,0.05)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(28,24,19,0.08)] sm:min-h-[320px] sm:rounded-[32px] sm:p-6 ${tone.shell}`}
+      className="group relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 pl-6 shadow-[var(--pub-shadow-sm)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--pub-shadow-md)] sm:min-h-[300px] sm:p-6 sm:pl-7"
     >
+      <span
+        aria-hidden="true"
+        className={`absolute left-0 top-5 bottom-5 w-1 rounded-[var(--r-pill)] ${look.strip}`}
+      />
+
       <div className="flex items-start justify-between gap-3">
-        <div
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] ${tone.pill}`}
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] ${look.iconBg} ${look.iconFg}`}
         >
-          <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
-          {widget.title}
-        </div>
+          <PubIcon name={look.icon} className="h-[22px] w-[22px]" />
+        </span>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {widget.badge ? (
-            <span
-              className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${tone.badge}`}
-            >
+            <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--pub-text-muted)]">
               {widget.badge}
             </span>
           ) : null}
 
           {widget.freshnessLabel ? (
-            <span
-              className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${tone.freshness}`}
-            >
+            <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--pub-success-text)]">
               {widget.freshnessLabel}
             </span>
           ) : null}
@@ -81,11 +74,11 @@ export function PublicHouseDashboardCard({ widget }: Props) {
       </div>
 
       <div className="mt-5 flex-1">
-        <h3 className="max-w-[22ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.03em] text-slate-950 sm:text-[36px]">
+        <h3 className="max-w-[22ch] font-[var(--font-serif)] text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--pub-text)] sm:text-[32px]">
           {widget.headline}
         </h3>
 
-        <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+        <p className="mt-3 text-sm leading-6 text-[var(--pub-text-muted)] sm:text-base sm:leading-7">
           {widget.description}
         </p>
 
@@ -94,7 +87,7 @@ export function PublicHouseDashboardCard({ widget }: Props) {
             {widget.meta.map((item) => (
               <div
                 key={item}
-                className={`rounded-2xl border px-4 py-2.5 text-xs font-medium leading-5 ${tone.meta}`}
+                className="rounded-[var(--r-md)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-4 py-2.5 text-xs font-medium leading-5 text-[var(--pub-text-muted)]"
               >
                 {item}
               </div>
@@ -103,10 +96,12 @@ export function PublicHouseDashboardCard({ widget }: Props) {
         ) : null}
       </div>
 
-      <div
-        className={`mt-5 inline-flex min-h-[46px] items-center justify-center rounded-full border px-4 text-sm font-semibold transition sm:mt-6 sm:min-h-[48px] sm:px-5 ${tone.cta}`}
-      >
+      <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--pub-accent-strong)] sm:mt-6">
         {widget.ctaLabel}
+        <PubIcon
+          name="chevron-right"
+          className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-0.5"
+        />
       </div>
     </Link>
   );

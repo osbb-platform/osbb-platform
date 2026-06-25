@@ -10,24 +10,24 @@ export function PublicHouseDashboardStatusStrip({ items }: Props) {
   }
 
   return (
-    <section className="rounded-[32px] border border-[#DDD4CA] bg-[#EEE8E1] p-4 shadow-sm sm:p-5">
+    <section className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
       <div className="mb-4 text-center">
-        <h2 className="text-[24px] font-semibold tracking-tight text-[#1F2A37] sm:text-[28px]">
+        <h2 className="font-[var(--font-serif)] text-[22px] font-semibold tracking-tight text-[var(--pub-text)] sm:text-[26px]">
           Актуальний розмір внеску
         </h2>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         {items.map((item) => (
           <div
             key={item.id}
-            className="rounded-[26px] border border-[#DDD4CA] bg-[#F6F2EC] px-5 py-6 text-center shadow-[0_1px_0_rgba(255,255,255,0.55)_inset]"
+            className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-6 text-center"
           >
-            <div className="text-[15px] font-semibold leading-snug text-[#3F3A34] sm:text-[16px]">
+            <div className="text-[13px] font-semibold uppercase leading-snug tracking-[0.08em] text-[var(--pub-text-soft)]">
               {item.label}
             </div>
 
-            <div className="mt-2 text-[18px] font-medium leading-snug text-[#1F2A37] sm:text-[20px] break-words">
+            <div className="mt-2 break-words font-[var(--font-serif)] text-[20px] font-semibold leading-snug text-[var(--pub-text)] sm:text-[22px]">
               {item.value}
             </div>
           </div>
