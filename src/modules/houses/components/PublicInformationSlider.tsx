@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type ArticleItem = {
   id: string;
@@ -109,9 +110,9 @@ export function PublicInformationSlider({
 
   return (
     <div className="mt-6">
-      <div className="overflow-hidden rounded-[32px] border border-[#E4DBD1] bg-[#F9F6F2] shadow-[0_8px_24px_rgba(31,42,55,0.05)]">
+      <div className="overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-sm)]">
         <div className="grid min-h-[280px] sm:min-h-[420px] lg:grid-cols-2">
-          <div className="relative min-h-[280px] bg-[#ECE6DF]">
+          <div className="relative min-h-[280px] bg-[var(--pub-bg-quiet)]">
             {coverImageUrl ? (
               <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -124,21 +125,21 @@ export function PublicInformationSlider({
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 {categoryLabel ? (
-                  <span className="inline-flex rounded-full border border-[#D8CEC2] bg-[#F3EEE8] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5B6B7C]">
+                  <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-muted)]">
                     {categoryLabel}
                   </span>
                 ) : null}
 
-                <div className="text-xs font-medium uppercase tracking-[0.2em] text-[#7B8A9A]">
+                <div className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--pub-text-soft)]">
                   {publishedAt}
                 </div>
               </div>
 
-              <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:mt-4 sm:text-3xl">
+              <h2 className="mt-3 font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[var(--pub-text)] sm:mt-4 sm:text-3xl">
                 {headline}
               </h2>
 
-              <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#42546A] sm:mt-6 sm:text-base sm:leading-8">
+              <div className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--pub-text-muted)] sm:mt-6 sm:text-base sm:leading-8">
                 {body}
               </div>
             </div>
@@ -150,10 +151,10 @@ export function PublicInformationSlider({
                     key={item.id}
                     type="button"
                     onClick={() => setActiveIndex(index)}
-                    className={`h-2.5 w-2.5 rounded-full transition ${
+                    className={`h-2.5 w-2.5 rounded-[var(--r-pill)] transition ${
                       index === activeIndex
-                        ? "bg-[#1F2A37]"
-                        : "bg-[#D6CEC2]"
+                        ? "bg-[var(--pub-accent)]"
+                        : "bg-[var(--pub-border-strong)]"
                     }`}
                     aria-label={`Перейти до матеріалу ${index + 1}`}
                   />
@@ -164,17 +165,19 @@ export function PublicInformationSlider({
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D8CEC2] bg-[#F5F1EB] text-lg text-[#1F2A37] transition-all duration-200 hover:border-[#CFC3B6] hover:bg-[#EEE7DE]"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)]"
+                  aria-label="Попередній матеріал"
                 >
-                  ←
+                  <PubIcon name="chevron-right" className="h-5 w-5 rotate-180" />
                 </button>
 
                 <button
                   type="button"
                   onClick={goNext}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D8CEC2] bg-[#F5F1EB] text-lg text-[#1F2A37] transition-all duration-200 hover:border-[#CFC3B6] hover:bg-[#EEE7DE]"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)]"
+                  aria-label="Наступний матеріал"
                 >
-                  →
+                  <PubIcon name="chevron-right" className="h-5 w-5" />
                 </button>
               </div>
             </div>
