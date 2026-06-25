@@ -81,7 +81,7 @@ export function PublicHouseBell({
             return next;
           });
         }}
-        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border transition duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] ${
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-[var(--r-lg)] border transition duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] ${
           open
             ? "border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] text-[var(--pub-text)] shadow-[var(--pub-shadow-sm)]"
             : "border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] hover:bg-[var(--pub-bg-quiet)]"
@@ -92,7 +92,7 @@ export function PublicHouseBell({
         <PubIcon name="bell" className="h-5 w-5" />
 
         {badge ? (
-          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-[var(--r-pill)] border-2 border-[var(--pub-surface)] bg-[var(--pub-accent)] px-1 text-[10px] font-semibold text-[var(--pub-accent-contrast)]">
+          <span className="absolute -right-1 -top-1 inline-flex min-h-[22px] min-w-[22px] items-center justify-center rounded-[var(--r-pill)] border-2 border-[var(--pub-surface)] bg-[var(--pub-accent)] px-1.5 text-[11px] font-semibold text-[var(--pub-accent-contrast)]">
             {badge}
           </span>
         ) : null}
