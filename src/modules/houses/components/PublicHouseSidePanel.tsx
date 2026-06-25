@@ -3,7 +3,9 @@ import { houseCopy } from "@/src/shared/publicCopy/house";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { CSSProperties } from "react";
+import { useEffect } from "react";
+import { PublicThemeSwitch } from "@/src/shared/ui/public";
+import { PubIcon, type PubIconName } from "@/src/shared/ui/public/PublicIcons";
 
 type NavigationItem = {
   label: string;
@@ -30,6 +32,20 @@ function normalizeBoardRoleLabel(value: string | null | undefined) {
   return map[normalized] ?? normalized;
 }
 
+/** Іконка розділу за маршрутом (тема-агностична, на currentColor). */
+function sectionIcon(href: string): PubIconName {
+  if (href.startsWith("/announcements")) return "megaphone";
+  if (href.startsWith("/reports")) return "doc";
+  if (href.startsWith("/plan")) return "wrench";
+  if (href.startsWith("/meetings")) return "calendar";
+  if (href.startsWith("/board")) return "users";
+  if (href.startsWith("/information")) return "info";
+  if (href.startsWith("/requisites")) return "bank";
+  if (href.startsWith("/specialists")) return "phone";
+  if (href.startsWith("/debtors")) return "coin";
+  if (href.startsWith("/founding-documents")) return "doc";
+  return "home";
+}
 
 type ChairmanPreview = {
   name: string;
@@ -60,7 +76,30 @@ export function PublicHouseSidePanel({ chairman,
   items,
 }: PublicHouseSidePanelProps) {
   void slug;
+  void districtColor;
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
 
   if (!open) {
     return null;
@@ -69,65 +108,51 @@ export function PublicHouseSidePanel({ chairman,
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-slate-950/30 transition"
+        className="fixed inset-0 z-40 bg-[var(--pub-overlay)] backdrop-blur-[2px] transition"
         onClick={onClose}
       />
 
-      <aside className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-[420px] flex-col border-l border-[#DDD4CA] bg-[#F7F5F2] shadow-2xl">
-        <div
-          className="flex items-start justify-between border-b px-5 py-5"
-          style={{
-            backgroundColor: `${districtColor}26`,
-            borderColor: `${districtColor}30`,
-          }}
-        >
-          <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66758A]">
-              {houseCopy.sidePanel.allSections}
+      <aside className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-[420px] flex-col border-l border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
+        <div className="border-b border-[var(--pub-accent-border)] bg-[var(--pub-accent-soft)] px-5 py-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
+                {houseCopy.sidePanel.allSections}
+              </div>
+
+              <div className="mt-2 text-[18px] font-semibold leading-tight text-[var(--pub-text)]">
+                {houseName}
+              </div>
+
+              <div className="mt-2 truncate text-sm font-medium text-[var(--pub-text-muted)]">
+                {houseAddress}
+              </div>
+
+              <div className="mt-3 inline-flex rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-contrast)]">
+                {districtName}
+              </div>
             </div>
 
-            <div className="mt-2 text-[18px] font-semibold leading-tight text-[#1F2A37]">
-              {houseName}
-            </div>
-
-            <div className="mt-2 truncate text-sm font-medium text-[#5B6B7C]">
-              {houseAddress}
-            </div>
-
-            <div
-              className="mt-3 inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1F2A37]"
-              style={{
-                backgroundColor: `${districtColor}18`,
-                borderColor: `${districtColor}45`,
-              }}
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] shadow-[var(--pub-shadow-sm)] transition hover:bg-[var(--pub-bg-quiet)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
+              aria-label={houseCopy.sidePanel.closeMenu}
             >
-              {districtName}
-            </div>
+              <PubIcon name="close" className="h-5 w-5" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#DDD4CA] bg-[#F7F5F2] text-slate-700 shadow-sm transition hover:bg-[#F0E9E1] hover:-translate-y-[1px]"
-            aria-label={houseCopy.sidePanel.closeMenu}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 6l12 12" />
-              <path d="M18 6L6 18" />
-            </svg>
-          </button>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[var(--pub-text-muted)]">
+              Тема кабінету
+            </span>
+            <PublicThemeSwitch />
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {items.map((item) => {
               const href = item.href();
               const isActive =
@@ -136,57 +161,67 @@ export function PublicHouseSidePanel({ chairman,
 
               return (
                 <Link
-            prefetch={false}
+                  prefetch={false}
                   key={item.label}
                   href={href}
                   onClick={onClose}
-                  className={`rounded-[22px] border px-4 py-3 transition ${
+                  className={`group flex items-center gap-3.5 rounded-[var(--r-lg)] px-4 py-3 transition ${
                     isActive
-                      ? "border-transparent text-slate-900 shadow-sm"
-                      : "border-[#DDD6CE] bg-[#F7F5F2] text-slate-900 hover:bg-[#F0E9E1] hover:-translate-y-[1px]"
+                      ? "bg-[var(--pub-accent)] text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]"
+                      : "text-[var(--pub-text)] hover:bg-[var(--pub-accent-tint)]"
                   }`}
-                  style={
-                    isActive
-                      ? ({ backgroundColor: districtColor } as CSSProperties)
-                      : undefined
-                  }
                 >
-                  <div className="text-base font-semibold">{item.label}</div>
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--r-md)] ${
+                      isActive
+                        ? "bg-[color-mix(in_srgb,var(--pub-accent-contrast)_20%,transparent)] text-[var(--pub-accent-contrast)]"
+                        : "bg-[var(--pub-bg-quiet)] text-[var(--pub-text-muted)]"
+                    }`}
+                  >
+                    <PubIcon name={sectionIcon(href)} className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="text-base font-semibold">{item.label}</span>
                 </Link>
               );
             })}
           </div>
         </div>
 
-        <div className="border-t border-[#DDD4CA] px-5 py-5">
-          {chairman ? (() => {
-            const normalizedRole = normalizeBoardRoleLabel(chairman.role);
+        {chairman ? (
+          <div className="border-t border-[var(--pub-border)] px-5 py-5">
+            {(() => {
+              const normalizedRole = normalizeBoardRoleLabel(chairman.role);
 
-            return (
-              <div className="rounded-[24px] border border-[#DDD4CA] bg-[#ECE6DF] p-5 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#66758A]">
-                  Голова правління
-                </div>
-
-                <div className="mt-3 text-[16px] font-semibold text-[#1F2A37]">
-                  {chairman.name}
-                </div>
-
-                {normalizedRole && normalizedRole !== "Голова правління" ? (
-                  <div className="mt-1 text-sm text-[#5B6B7C]">
-                    {normalizedRole}
+              return (
+                <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
+                    Голова правління
                   </div>
-                ) : null}
 
-                {chairman.phone ? (
-                  <div className="mt-3 text-sm font-medium text-[#2F3A4F]">
-                    {chairman.phone}
+                  <div className="mt-3 text-[16px] font-semibold text-[var(--pub-text)]">
+                    {chairman.name}
                   </div>
-                ) : null}
-              </div>
-            );
-          })() : null}
-        </div>
+
+                  {normalizedRole && normalizedRole !== "Голова правління" ? (
+                    <div className="mt-1 text-sm text-[var(--pub-text-muted)]">
+                      {normalizedRole}
+                    </div>
+                  ) : null}
+
+                  {chairman.phone ? (
+                    <a
+                      href={`tel:${chairman.phone}`}
+                      className="mt-3 inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-4 py-2 text-sm font-semibold text-[var(--pub-accent-contrast)] transition hover:brightness-[1.04]"
+                    >
+                      <PubIcon name="phone" className="h-4 w-4" />
+                      {chairman.phone}
+                    </a>
+                  ) : null}
+                </div>
+              );
+            })()}
+          </div>
+        ) : null}
       </aside>
     </>
   );
