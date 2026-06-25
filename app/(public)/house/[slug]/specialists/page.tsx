@@ -76,11 +76,9 @@ function ContactRow({
 
 function SpecialistCardView({
   item,
-  slug,
   activeCategory,
 }: {
   item: SpecialistCard;
-  slug: string;
   activeCategory: string;
 }) {
   return (
@@ -163,6 +161,7 @@ export default async function SpecialistsPage({
   searchParams,
 }: Props) {
   const { slug } = await params;
+  void slug;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const activeCategory =
     resolvedSearchParams.category ?? houseSpecialistsCopy.filters.all;
@@ -301,7 +300,6 @@ export default async function SpecialistsPage({
                 <SpecialistCardView
                   key={item.id}
                   item={item}
-                  slug={slug}
                   activeCategory={activeCategory}
                 />
               ))}

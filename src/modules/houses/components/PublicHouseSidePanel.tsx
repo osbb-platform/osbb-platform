@@ -59,6 +59,7 @@ export function PublicHouseSidePanel({ chairman,
   onClose,
   items,
 }: PublicHouseSidePanelProps) {
+  void slug;
   const pathname = usePathname();
 
   if (!open) {

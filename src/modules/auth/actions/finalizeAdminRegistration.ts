@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseActionClient } from "@/src/integrations/supabase/server/action";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
-import { INTERNAL_ROUTES, ROUTES } from "@/src/shared/config/routes/routes.config";
-
+import { INTERNAL_ROUTES } from "@/src/shared/config/routes/routes.config";
 type FinalizeAdminRegistrationResult = {
   error: string | null;
 };

@@ -545,6 +545,7 @@ export function HouseDebtorsWorkspace({
   const draftDebtorsCount = draftItems.filter((item) =>
     isDebtBalance(item.amount),
   ).length;
+  void draftDebtorsCount;
   const isDraftEmpty = draftBalanceRowsCount === 0;
   const isPublishedEmpty = publishedBalanceRowsCount === 0;
   const isPreviewEmpty = previewItems.length === 0;
