@@ -20,7 +20,7 @@ function SlugIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-[15px] w-[15px] flex-none text-[var(--cms-text-soft)]"
+      className="h-[15px] w-[15px] flex-none text-current"
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -38,7 +38,7 @@ function CompanyIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-[15px] w-[15px] flex-none text-[var(--cms-text-soft)]"
+      className="h-[15px] w-[15px] flex-none text-current"
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -55,13 +55,13 @@ function CompanyIcon() {
 }
 
 const BASE =
-  "inline-flex h-10 max-w-full items-center gap-2 rounded-[var(--r-pill)] px-4 text-sm";
+  "inline-flex h-11 max-w-full items-center gap-2 rounded-[var(--r-pill)] px-5 text-sm shadow-[var(--cms-shadow-sm)]";
 
 const VARIANT: Record<HouseEntityBadgeVariant, string> = {
   slug:
-    "border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] font-medium tracking-[-0.01em] text-[var(--cms-text-muted)]",
+    "border border-[var(--cms-border-strong)] bg-[var(--cms-sidebar-card)] font-semibold tracking-[-0.01em] text-[var(--cms-accent-primary)]",
   managementCompany:
-    "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] font-medium text-[var(--cms-text)]",
+    "border-2 border-[var(--cms-border-strong)] bg-[var(--cms-bg)] font-semibold text-[var(--cms-text)]",
 };
 
 export function HouseEntityBadge({

@@ -372,15 +372,15 @@ export default async function AdminHouseDetailPage({
           <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
             <div className="flex w-full flex-wrap items-center justify-end gap-3">
               <AdminActionIconLink
-                  href={publicPreviewHref}
-                  icon="publicPage"
-                  label={`Відкрити сайт будинку ${house.name}`}
-                  tooltip="Відкрити сайт будинку"
-                  target="_blank"
-                  rel="noreferrer"
-                  size="lg"
-                  tone="accent"
-                />
+                href={publicPreviewHref}
+                icon="publicPage"
+                label={`Відкрити сайт будинку ${house.name}`}
+                tooltip="Відкрити сайт будинку"
+                target="_blank"
+                rel="noreferrer"
+                size="lg"
+                tone="accent"
+              />
 
               <AdminActionIconLink
                 href={ROUTES.admin.houses}

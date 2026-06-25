@@ -11,11 +11,9 @@ import type { HouseHomeWidgetsSnapshot } from "@/src/modules/houses/services/get
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
-import {
-  adminIconButtonClass,
-  adminSecondaryButtonClass,
-  adminSurfaceClass,
-} from "@/src/shared/ui/admin/adminStyles";
+import { adminSecondaryButtonClass, adminSurfaceClass } from "@/src/shared/ui/admin/adminStyles";
+import { AdminActionIconButton, AdminActionIconLink } from "@/src/shared/ui/admin/AdminActionIconButton";
+import { HouseEntityBadge } from "@/src/shared/ui/admin/HouseEntityBadge";
 
 type HouseRegistryCardProps = {
   house: {
@@ -78,80 +76,9 @@ function formatCreatedAt(value: string) {
   });
 }
 
-function EyeIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z" />
-      <circle cx="12" cy="12" r="3.25" />
-    </svg>
-  );
-}
 
-function KeyIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="8" cy="12" r="3.5" />
-      <path d="M11.5 12H21" />
-      <path d="M17 12v3" />
-      <path d="M19.5 12v2" />
-    </svg>
-  );
-}
 
-function SettingsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .98 1.7 1.7 0 0 1-3.24 0A1.7 1.7 0 0 0 9.76 19a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.98-1 1.7 1.7 0 0 1 0-3.24A1.7 1.7 0 0 0 4.6 9.76a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.98 1.7 1.7 0 0 1 3.24 0A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .41.16.8.46 1.09.29.29.68.46 1.09.46a1.7 1.7 0 0 1 0 3.24A1.7 1.7 0 0 0 19.4 15z" />
-    </svg>
-  );
-}
 
-function MessageIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M7 10h10" />
-      <path d="M7 14h6" />
-      <path d="M5.25 20.25V6A2.25 2.25 0 0 1 7.5 3.75h9A2.25 2.25 0 0 1 18.75 6v8.25A2.25 2.25 0 0 1 16.5 16.5H9.31l-4.06 3.75Z" />
-    </svg>
-  );
-}
 
 function formatMessageDate(value: string) {
   const date = new Date(value);
@@ -244,9 +171,7 @@ export function HouseRegistryCard({
               </h3>
 
               <div className="flex flex-wrap gap-2">
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  {house.slug}
-                </span>
+                <HouseEntityBadge variant="slug" title={house.slug}>{house.slug}</HouseEntityBadge>
 
                 {house.district ? (
                   <span
@@ -258,11 +183,9 @@ export function HouseRegistryCard({
                 ) : null}
 
                 {house.management_company ? (
-                  <span className="rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                    {house.management_company.name}
-                  </span>
+                  <HouseEntityBadge variant="managementCompany" title={house.management_company?.name ?? house.management_company?.slug}>{house.management_company?.name ?? house.management_company?.slug}</HouseEntityBadge>
                 ) : null}
-                
+
               </div>
             </div>
 
@@ -276,68 +199,61 @@ export function HouseRegistryCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-  {canManageSensitiveSettings ? (
-    <button
-      type="button"
-      onClick={() => setIsPasswordOpen(true)}
-      className={`${adminIconButtonClass} h-11 w-11`}
-      aria-label={`Змінити код доступу дома ${house.name}`}
-      title="Змінити код доступу"
-    >
-      <KeyIcon />
-    </button>
-  ) : null}
+            {canManageSensitiveSettings ? (
+              <AdminActionIconButton
+                icon="password"
+                label={`Змінити код доступу дома ${house.name}`}
+                tooltip="Змінити код доступу"
+                size="md"
+                onClick={() => setIsPasswordOpen(true)}
+              />
+            ) : null}
 
-  {canManageSensitiveSettings ? (
-    <button
-      type="button"
-      onClick={() => setIsTariffOpen(true)}
-      className={`${adminIconButtonClass} h-11 w-11`}
-      aria-label={`Налаштувати віджети дома ${house.name}`}
-      title="Налаштувати віджети"
-    >
-      💰
-    </button>
-  ) : null}
+            {canManageSensitiveSettings ? (
+              <AdminActionIconButton
+                icon="tariffs"
+                label={`Налаштувати віджети дома ${house.name}`}
+                tooltip="Налаштувати віджети"
+                size="md"
+                onClick={() => setIsTariffOpen(true)}
+              />
+            ) : null}
 
-  <button
-    type="button"
-    onClick={openMessagesPanel}
-    className={`relative ${adminIconButtonClass} h-11 w-11`}
-    aria-label={`Відкрити центр звернень дома ${house.name}`}
-    title="Центр звернень"
-  >
-    <MessageIcon />
-    {localUnreadCount > 0 ? (
-      <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
-        {localUnreadCount > 9 ? "9+" : localUnreadCount}
-      </span>
-    ) : null}
-  </button>
+            <div className="relative">
+              <AdminActionIconButton
+                icon="messages"
+                label={`Відкрити центр звернень дома ${house.name}`}
+                tooltip="Центр звернень"
+                size="md"
+                onClick={openMessagesPanel}
+              />
+              {localUnreadCount > 0 ? (
+                <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--cms-danger-bg)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-[var(--cms-danger-text)]">
+                  {localUnreadCount > 9 ? "9+" : localUnreadCount}
+                </span>
+              ) : null}
+            </div>
 
-  {canManageSettings ? (
-    <button
-      type="button"
-      onClick={() => onOpenSettings(house)}
-      className={`${adminIconButtonClass} h-11 w-11`}
-      aria-label={`Налаштування дома ${house.name}`}
-      title="Налаштування"
-    >
-      <SettingsIcon />
-    </button>
-  ) : null}
+            {canManageSettings ? (
+              <AdminActionIconButton
+                icon="settings"
+                label={`Налаштування дома ${house.name}`}
+                tooltip="Налаштування"
+                size="md"
+                onClick={() => onOpenSettings(house)}
+              />
+            ) : null}
 
-  <Link
-    href={houseOrigin(house.slug)}
-    target="_blank"
-    rel="noreferrer"
-    className={`${adminIconButtonClass} h-11 w-11`}
-    aria-label={`Відкрити сайт будинку ${house.name}`}
-    title="Відкрити сайт будинку"
-  >
-    <EyeIcon />
-  </Link>
-</div>
+            <AdminActionIconLink
+              href={houseOrigin(house.slug)}
+              icon="view"
+              label={`Відкрити сайт будинку ${house.name}`}
+              tooltip="Відкрити сайт будинку"
+              target="_blank"
+              rel="noreferrer"
+              size="md"
+            />
+          </div>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
