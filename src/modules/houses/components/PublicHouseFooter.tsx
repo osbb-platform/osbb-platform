@@ -2,12 +2,12 @@
 import { houseCopy } from "@/src/shared/publicCopy/house";
 
 import Image from "next/image";
-import type { CSSProperties } from "react";
 import { useActionState, useMemo, useState } from "react";
 import {
   createFooterHouseMessage,
   type CreateFooterHouseMessageState,
 } from "@/src/modules/houses/actions/createFooterHouseMessage";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type FooterSubject = "contact" | "improvement";
 
@@ -40,6 +40,9 @@ const initialState: CreateFooterHouseMessageState = {
   successMessage: null,
 };
 
+const FIELD_CLASS =
+  "h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 text-[15px] text-[var(--pub-text)] outline-none transition-shadow duration-150 placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]";
+
 function FooterMessageForm({
   districtColor,
   houseId,
@@ -55,17 +58,18 @@ function FooterMessageForm({
   subject: FooterSubject;
   apartmentOptions: ApartmentOption[];
 }) {
+  void districtColor;
   const [state, formAction, isPending] = useActionState(
     createFooterHouseMessage,
     initialState,
   );
 
   return state.successMessage ? (
-    <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-6">
-      <div className="text-lg font-semibold text-slate-950">
+    <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] p-6">
+      <div className="text-lg font-semibold text-[var(--pub-text)]">
         {houseCopy.footer.successTitle}
       </div>
-      <div className="mt-2 text-sm leading-7 text-slate-600">
+      <div className="mt-2 text-sm leading-7 text-[var(--pub-text-muted)]">
         {houseCopy.footer.successText}
       </div>
     </div>
@@ -76,26 +80,30 @@ function FooterMessageForm({
       <input type="hidden" name="houseName" value={houseName} />
       <div>
         <label className="block">
-          <span className="mb-2 block text-sm font-medium text-slate-900">
+          <span className="mb-2 block text-sm font-medium text-[var(--pub-text-muted)]">
             {houseCopy.footer.subject}
           </span>
-          <select
-            name="subjectType"
-            defaultValue={
-              subject === "improvement"
-                ? "improvement"
-                : "footer_contact"
-            }
-            className="min-h-[54px] w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900"
-          >
-            <option value="footer_contact">
-              {houseCopy.footer.subjectManagementCompany}
-            </option>
-            <option value="improvement">
-              {houseCopy.footer.subjectImprovement}
-            </option>
-            <option value="other">{houseCopy.footer.subjectOther}</option>
-          </select>
+          <div className="relative">
+            <select
+              name="subjectType"
+              defaultValue={
+                subject === "improvement" ? "improvement" : "footer_contact"
+              }
+              className={`${FIELD_CLASS} cursor-pointer appearance-none pr-11`}
+            >
+              <option value="footer_contact">
+                {houseCopy.footer.subjectManagementCompany}
+              </option>
+              <option value="improvement">
+                {houseCopy.footer.subjectImprovement}
+              </option>
+              <option value="other">{houseCopy.footer.subjectOther}</option>
+            </select>
+            <PubIcon
+              name="chevron-down"
+              className="pointer-events-none absolute right-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--pub-text-soft)]"
+            />
+          </div>
         </label>
       </div>
 
@@ -104,7 +112,7 @@ function FooterMessageForm({
           type="text"
           name="requesterName"
           required
-          className="min-h-[54px] rounded-[20px] border border-slate-200 bg-slate-50 px-4 text-sm"
+          className={FIELD_CLASS}
           placeholder={houseCopy.footer.namePlaceholder}
         />
 
@@ -112,33 +120,39 @@ function FooterMessageForm({
           type="email"
           name="requesterEmail"
           required
-          className="min-h-[54px] rounded-[20px] border border-slate-200 bg-slate-50 px-4 text-sm"
+          className={FIELD_CLASS}
           placeholder="E-mail"
         />
       </div>
 
       <div>
         <label className="block">
-          <span className="mb-2 block text-sm font-medium text-slate-900">
+          <span className="mb-2 block text-sm font-medium text-[var(--pub-text-muted)]">
             {houseCopy.footer.apartment}
           </span>
-          <select
-            name="apartment"
-            required
-            defaultValue=""
-            className="min-h-[54px] w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900"
-          >
-            <option value="" disabled>
-              {houseCopy.footer.selectApartment}
-            </option>
-            {apartmentOptions.map((option) => (
-              <option key={option.id} value={option.label}>
-                {option.ownerName
-                  ? `${houseCopy.footer.apartmentShort} ${option.label} — ${option.ownerName}`
-                  : `${houseCopy.footer.apartmentShort} ${option.label}`}
+          <div className="relative">
+            <select
+              name="apartment"
+              required
+              defaultValue=""
+              className={`${FIELD_CLASS} cursor-pointer appearance-none pr-11`}
+            >
+              <option value="" disabled>
+                {houseCopy.footer.selectApartment}
               </option>
-            ))}
-          </select>
+              {apartmentOptions.map((option) => (
+                <option key={option.id} value={option.label}>
+                  {option.ownerName
+                    ? `${houseCopy.footer.apartmentShort} ${option.label} — ${option.ownerName}`
+                    : `${houseCopy.footer.apartmentShort} ${option.label}`}
+                </option>
+              ))}
+            </select>
+            <PubIcon
+              name="chevron-down"
+              className="pointer-events-none absolute right-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--pub-text-soft)]"
+            />
+          </div>
         </label>
       </div>
 
@@ -146,7 +160,7 @@ function FooterMessageForm({
         rows={5}
         name="comment"
         required
-        className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm"
+        className="w-full resize-y rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 py-3.5 text-[15px] leading-relaxed text-[var(--pub-text)] outline-none transition-shadow duration-150 placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]"
         placeholder={
           subject === "improvement"
             ? houseCopy.footer.improvementPlaceholder
@@ -155,7 +169,7 @@ function FooterMessageForm({
       />
 
       {state.error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-[var(--r-lg)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] px-4 py-3 text-sm text-[var(--pub-danger-text)]">
           {state.error}
         </div>
       ) : null}
@@ -164,8 +178,7 @@ function FooterMessageForm({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex min-h-[52px] items-center justify-center rounded-[20px] px-5 text-sm font-semibold text-white"
-          style={{ backgroundColor: districtColor } as CSSProperties}
+          className="inline-flex min-h-[52px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 text-sm font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? houseCopy.footer.sendPending : houseCopy.footer.send}
         </button>
@@ -220,88 +233,88 @@ export function PublicHouseFooter({
 
   return (
     <>
-      <footer
-        className="border-t border-white/10"
-        style={{
-          background: `linear-gradient(180deg, ${districtColor} 0%, ${districtColor}DD 100%)`,
-        }}
-      >
-        <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-          <div className="grid gap-10 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start">
+      <footer className="border-t border-[var(--pub-border)] bg-[var(--pub-bg-quiet)]">
+        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          <div className="grid items-center gap-6 rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-md)] sm:p-7 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <div className="min-w-0">
-              <div className="flex items-start gap-5">
-                <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[24px] bg-white/90 shadow-sm ring-1 ring-white/20 backdrop-blur">
+              <div className="flex items-center gap-5">
+                <div className="relative h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[var(--r-lg)] bg-[var(--pub-accent-soft)] ring-1 ring-[var(--pub-accent-border)]">
                   <Image
                     src="/uk-logo.png"
                     alt={houseCopy.footer.companyLogoAlt}
                     fill
-                    className="object-contain p-3"
-                    sizes="72px"
+                    className="object-contain p-2.5"
+                    sizes="64px"
                     priority={false}
                   />
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-2xl font-semibold tracking-tight text-white">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                    {houseCopy.footer.companyLogoAlt}
+                  </div>
+                  <div className="mt-1 font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)]">
                     {companyName}
                   </div>
-                  <div className="mt-1 text-base text-white/90">
+                  <div className="mt-1 text-base text-[var(--pub-text-muted)]">
                     {companySlogan}
                   </div>
                 </div>
               </div>
 
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                    Телефон
+                  </div>
+                  <div className="mt-1.5 text-[15px] font-medium text-[var(--pub-text)]">
+                    {companyPhone}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                    E-mail
+                  </div>
+                  <div className="mt-1.5 break-all text-[15px] font-medium text-[var(--pub-text)]">
+                    {companyEmail}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                    Адреса
+                  </div>
+                  <div className="mt-1.5 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
+                    {companyAddress}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                    {houseCopy.footer.schedule}
+                  </div>
+                  <div className="mt-1.5 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
+                    {companyWorkSchedule}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[var(--r-xl)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-6 text-center">
+              <div className="text-[15px] font-semibold text-[var(--pub-text)]">
+                {houseCopy.footer.modalTitle}
+              </div>
+              <div className="mt-1.5 text-sm leading-6 text-[var(--pub-text-muted)]">
+                {houseCopy.footer.modalDescriptionDefault}
+              </div>
               <button
                 type="button"
                 onClick={() => openModal("contact")}
-                className="mt-6 inline-flex min-h-[58px] w-full items-center justify-center rounded-[22px] border border-white/30 px-6 text-base font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_14px_36px_rgba(15,23,42,0.28)]"
-                style={{
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))",
-                  backdropFilter: "blur(6px)",
-                  boxShadow:
-                    "0 10px 30px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
-                }}
+                className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 text-base font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
               >
                 {houseCopy.footer.writeUs}
               </button>
-            </div>
-
-            <div className="grid gap-6 text-white sm:grid-cols-2">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                  Телефон
-                </div>
-                <div className="mt-2 text-lg font-semibold text-white">
-                  {companyPhone}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                  E-mail
-                </div>
-                <div className="mt-2 break-all text-base text-white">
-                  {companyEmail}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                  Адрес
-                </div>
-                <div className="mt-2 text-lg leading-8 text-white">
-                  {companyAddress}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                  {houseCopy.footer.schedule}
-                </div>
-                <div className="mt-2 text-lg leading-8 text-white">
-                  {companyWorkSchedule}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -310,24 +323,24 @@ export function PublicHouseFooter({
       {isModalOpen ? (
         <>
           <div
-            className="fixed inset-0 z-40 bg-slate-950/30 transition"
+            className="fixed inset-0 z-40 bg-[var(--pub-overlay)] backdrop-blur-[2px] transition"
             onClick={closeModal}
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div
-              className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-white p-6 shadow-2xl sm:p-7"
+              className="w-full max-w-2xl rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-lg)] sm:p-7"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
                     {houseCopy.footer.modalEyebrow}
                   </div>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                  <h3 className="mt-2 font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-[28px]">
                     {modalTitle}
                   </h3>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--pub-text-muted)]">
                     {modalDescription}
                   </p>
                 </div>
@@ -335,9 +348,10 @@ export function PublicHouseFooter({
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  aria-label="Закрити"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] transition hover:bg-[var(--pub-bg-quiet)] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
                 >
-                  ✕
+                  <PubIcon name="close" className="h-5 w-5" />
                 </button>
               </div>
 
