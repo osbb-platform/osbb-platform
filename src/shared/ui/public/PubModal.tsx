@@ -38,7 +38,15 @@ export function PubModal({
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setMounted(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;

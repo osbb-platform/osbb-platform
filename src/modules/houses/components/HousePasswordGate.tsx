@@ -43,7 +43,6 @@ export function HousePasswordGate({
   publicDescription,
   houseCoverImageUrl,
   districtName,
-  districtColor,
 }: HousePasswordGateProps) {
   const [state, formAction, isPending] = useActionState(
     loginToHouse,
