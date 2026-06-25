@@ -4,6 +4,7 @@ import { houseCopy } from "@/src/shared/publicCopy/house";
 import { useEffect, useRef, useState } from "react";
 import type { PublicHouseBellFeed } from "@/src/modules/houses/services/getPublicHouseBellFeed";
 import { PublicHouseBellPopup } from "@/src/modules/houses/components/PublicHouseBellPopup";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type PublicHouseBellProps = {
   feed: PublicHouseBellFeed;
@@ -80,30 +81,18 @@ export function PublicHouseBell({
             return next;
           });
         }}
-        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border text-slate-800 transition duration-200 ${
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-[var(--r-lg)] border transition duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)] ${
           open
-            ? "border-[#D5CCC3] bg-white shadow-[0_6px_20px_rgba(28,24,19,0.08)]"
-            : hasUnread
-              ? "border-[#E6D8D8] bg-[#FDF3F3] text-[#7A3E3E] shadow-[0_4px_16px_rgba(120,40,40,0.08)] hover:bg-[#FBEAEA]"
-              : "border-[#DDD6CE] bg-[#F3EFEA] hover:bg-white hover:-translate-y-[1px] hover:shadow-[0_6px_20px_rgba(28,24,19,0.06)]"
+            ? "border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] text-[var(--pub-text)] shadow-[var(--pub-shadow-sm)]"
+            : "border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] hover:bg-[var(--pub-bg-quiet)]"
         }`}
         aria-label={houseCopy.bell.aria}
+        aria-expanded={open}
       >
-        <svg
-          viewBox="0 0 24 24"
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
-          <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />
-        </svg>
+        <PubIcon name="bell" className="h-5 w-5" />
 
         {badge ? (
-          <span className="absolute -right-1 -top-1 inline-flex min-h-[22px] min-w-[22px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-semibold text-white shadow-sm">
+          <span className="absolute -right-1 -top-1 inline-flex min-h-[22px] min-w-[22px] items-center justify-center rounded-[var(--r-pill)] border-2 border-[var(--pub-surface)] bg-[var(--pub-accent)] px-1.5 text-[11px] font-semibold text-[var(--pub-accent-contrast)]">
             {badge}
           </span>
         ) : null}
