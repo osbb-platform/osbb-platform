@@ -60,16 +60,16 @@ export default async function RequisitesPage({ params }: Props) {
     .replaceAll("{{period}}", "травень 2026");
 
   return (
-    <div className="relative overflow-hidden">
-      <section className="relative border-b border-[var(--color-public-border)] bg-[var(--color-public-hero-bg)] px-4 py-14 text-[var(--color-public-text)] md:px-8">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-public-text-muted)]">
+    <div className="grid min-w-0 gap-6">
+      <section className="relative overflow-hidden rounded-[var(--r-3xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-sm)] sm:p-8 lg:p-10">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
             {house.name}
           </span>
-          <h1 className="text-3xl font-semibold tracking-tight text-[var(--color-public-text)] md:text-5xl">
+          <h1 className="font-[var(--font-serif)] text-3xl font-semibold tracking-tight text-[var(--pub-text)] md:text-5xl">
             {houseRequisitesCopy.page.title}
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-[var(--color-public-text-soft)] md:text-lg">
+          <p className="max-w-3xl text-base leading-7 text-[var(--pub-text-muted)] md:text-lg">
             {houseRequisitesCopy.page.description}
           </p>
         </div>
