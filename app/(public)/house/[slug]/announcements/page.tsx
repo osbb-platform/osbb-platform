@@ -1,42 +1,38 @@
 import { houseAnnouncementsCopy } from "@/src/shared/publicCopy/house";
-import Link from "next/link";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseAnnouncements } from "@/src/modules/houses/services/getPublishedHouseAnnouncements";
+import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
+import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
+import { PubBadge } from "@/src/shared/ui/public/PubBadge";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+import type { PubTone } from "@/src/shared/ui/public/pubStyles";
 
 type AnnouncementsPageProps = {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ filter?: string }>;
 };
 
-const LEVEL_META = {
+// Семантика рівня: тон бейджа + колір лівої смужки. Лейбли — з copy.
+const LEVEL_META: Record<
+  "danger" | "warning" | "info",
+  { label: string; tone: PubTone; strip: string }
+> = {
   danger: {
     label: houseAnnouncementsCopy.levels.danger,
-    shell: "border-red-200 bg-red-50/80",
-    accent: "bg-red-500",
-    title: "text-red-900",
-    body: "text-red-950",
-    meta: "text-red-700/80",
-    badge: "bg-red-100 text-red-700",
+    tone: "danger",
+    strip: "bg-[var(--pub-danger-text)]",
   },
   warning: {
     label: houseAnnouncementsCopy.levels.warning,
-    shell: "border-amber-200 bg-amber-50/80",
-    accent: "bg-amber-500",
-    title: "text-amber-900",
-    body: "text-amber-950",
-    meta: "text-amber-700/80",
-    badge: "bg-amber-100 text-amber-700",
+    tone: "warning",
+    strip: "bg-[var(--pub-warning-text)]",
   },
   info: {
     label: houseAnnouncementsCopy.levels.info,
-    shell: "border-[#85e874]/30 bg-[#85e874]/10",
-    accent: "bg-[#85e874]",
-    title: "text-[#2f5e2a]",
-    body: "text-[#2f5e2a]",
-    meta: "text-[#4b7d45]",
-    badge: "bg-[#85e874]/20 text-[#2f5e2a]",
+    tone: "accent",
+    strip: "bg-[var(--pub-accent)]",
   },
-} as const;
+};
 
 type AnnouncementLevel = keyof typeof LEVEL_META;
 type AnnouncementFilter = "all" | AnnouncementLevel;
@@ -86,7 +82,6 @@ function formatPublishedAt(value: unknown) {
   });
 }
 
-
 function getAnnouncementBody(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
     return houseAnnouncementsCopy.empty.noText;
@@ -108,8 +103,6 @@ export default async function PublicHouseAnnouncementsPage({
   if (!house) {
     return null;
   }
-
-  const districtColor = house.district?.theme_color ?? "#16a34a";
 
   const allAnnouncements = (await getPublishedHouseAnnouncements(house.id))
     .map((announcement) => ({
@@ -162,12 +155,20 @@ export default async function PublicHouseAnnouncementsPage({
     }).length,
   };
 
-  const filterItems = [
-    { key: "all" as const, label: houseAnnouncementsCopy.filters.all, count: allAnnouncements.length },
+  const filterItems: PubFilterTabItem[] = [
+    {
+      key: "all",
+      href: "/announcements?filter=all",
+      label: houseAnnouncementsCopy.filters.all,
+      count: allAnnouncements.length,
+      active: filter === "all",
+    },
     ...levels.map((level) => ({
       key: level,
+      href: `/announcements?filter=${level}`,
       label: LEVEL_META[level].label,
       count: levelCounts[level],
+      active: filter === level,
     })),
   ];
 
@@ -198,186 +199,116 @@ export default async function PublicHouseAnnouncementsPage({
     ? filteredAnnouncements.filter((section) => section.id !== pinnedAnnouncement.id)
     : filteredAnnouncements;
 
-  
-
   return (
-    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid min-w-0 gap-6">
-        <section className="w-full min-w-0 rounded-[36px] border border-[#E3D9CD] bg-[#F3EEE7] p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="min-w-0 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A44] sm:text-5xl lg:text-6xl">
-              {houseAnnouncementsCopy.page.title}
-            </h1>
+    <div className="grid min-w-0 gap-6">
+      <PubSectionHeader
+        title={houseAnnouncementsCopy.page.title}
+        description={houseAnnouncementsCopy.page.description}
+      >
+        <PubFilterTabs items={filterItems} ariaLabel={houseAnnouncementsCopy.page.title} />
+      </PubSectionHeader>
 
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5B667A] sm:text-lg">
-              {houseAnnouncementsCopy.page.description}
-            </p>
+      <section className="min-w-0">
+        <div className="mb-4 flex flex-col items-start gap-2 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+          <h2 className="font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-2xl">
+            {houseAnnouncementsCopy.page.feedTitle}
+          </h2>
+          <div className="text-sm text-[var(--pub-text-soft)]">
+            {houseAnnouncementsCopy.page.shown}: {filteredAnnouncements.length}
           </div>
+        </div>
 
-          <div className="mt-8 w-full min-w-0 rounded-[28px] border border-[#DDD2C6] bg-[#ECE5DC] p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {filterItems.map((item) => {
-                const isActive = filter === item.key;
+        {pinnedAnnouncement
+          ? (() => {
+              const content =
+                typeof pinnedAnnouncement.content === "object" && pinnedAnnouncement.content
+                  ? (pinnedAnnouncement.content as Record<string, unknown>)
+                  : {};
 
-                return (
-                  <Link
-            prefetch={false}
-                    key={item.key}
-                    href={`/announcements?filter=${item.key}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                      isActive
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#4F5B6C] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={
-                      isActive
-                        ? {
-                            "--tab-active-bg": `${districtColor}20`,
-                            "--tab-active-text": districtColor,
-                            borderColor: districtColor,
-                          } as React.CSSProperties
-                        : undefined
-                    }
-                  >
-                    <span>{item.label}</span>
-                    <span
-                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                        isActive
-                          ? "bg-[#D9CFC3] text-[#1F2A44] border-[#C4B7A7]"
-                          : "bg-[#E7DED3] text-[#2F3A4F] border-[#D2C6B8]"
-                      }`}
-                    >
-                      {item.count}
+              const level = normalizeLevel(content.level);
+              const meta = LEVEL_META[level];
+              const publishedAt = formatPublishedAt(content.publishedAt);
+
+              return (
+                <article className="relative mb-5 w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 pl-6 shadow-[var(--pub-shadow-md)] sm:p-7 sm:pl-8">
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-0 top-5 bottom-5 w-1 rounded-[var(--r-pill)] ${meta.strip}`}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--pub-bg-quiet)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-muted)]">
+                      <PubIcon name="alert" className="h-3.5 w-3.5" />
+                      {houseAnnouncementsCopy.page.pinned}
                     </span>
-                  </Link>
-                );
-              })}
-            </div>
+                    <PubBadge tone={meta.tone} withDot>
+                      {meta.label}
+                    </PubBadge>
+                  </div>
+
+                  <h2 className="mt-4 break-words font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[var(--pub-text)] sm:mt-5 sm:text-3xl">
+                    {pinnedAnnouncement.title ?? houseAnnouncementsCopy.page.importantFallback}
+                  </h2>
+
+                  <div className="mt-2 text-sm text-[var(--pub-text-soft)]">{publishedAt}</div>
+
+                  <div className="mt-5 h-px bg-[var(--pub-border)]" />
+
+                  <div className="mt-4 whitespace-pre-wrap break-words text-sm leading-7 text-[var(--pub-text-muted)] sm:mt-5 sm:text-base sm:leading-8">
+                    {typeof content.body === "string" && content.body.trim()
+                      ? content.body
+                      : houseAnnouncementsCopy.empty.noText}
+                  </div>
+                </article>
+              );
+            })()
+          : null}
+
+        {filteredAnnouncements.length === 0 ? (
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-center text-sm text-[var(--pub-text-muted)]">
+            За обраним фільтром оголошення поки не знайдені.
           </div>
-        </section>
+        ) : (
+          <div className="space-y-4">
+            {feedAnnouncements.map((section) => {
+              const content =
+                typeof section.content === "object" && section.content
+                  ? (section.content as Record<string, unknown>)
+                  : {};
 
-        <section className="min-w-0">
-          <div className="mb-4 flex flex-col items-start gap-2 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-            <h2 className="text-xl font-semibold tracking-tight text-[#1F2A44] sm:text-2xl">
-              {houseAnnouncementsCopy.page.feedTitle}
-            </h2>
-            <div className="text-sm text-slate-500">
-              {houseAnnouncementsCopy.page.shown}: {filteredAnnouncements.length}
-            </div>
+              const level = normalizeLevel(content.level);
+              const meta = LEVEL_META[level];
+              const publishedAt = formatPublishedAt(content.publishedAt);
+
+              return (
+                <article
+                  key={section.id}
+                  className="relative w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 pl-6 shadow-[var(--pub-shadow-sm)] transition hover:shadow-[var(--pub-shadow-md)]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-0 top-5 bottom-5 w-1 rounded-[var(--r-pill)] ${meta.strip}`}
+                  />
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words text-lg font-semibold tracking-tight text-[var(--pub-text)]">
+                        {section.title ?? houseAnnouncementsCopy.page.importantFallback}
+                      </h3>
+                      <div className="mt-1.5 text-sm text-[var(--pub-text-soft)]">{publishedAt}</div>
+                    </div>
+                    <PubBadge tone={meta.tone} withDot>
+                      {meta.label}
+                    </PubBadge>
+                  </div>
+
+                  <div className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[var(--pub-text-muted)] sm:mt-4 sm:text-[15px] sm:leading-7">
+                    {getAnnouncementBody(content.body)}
+                  </div>
+                </article>
+              );
+            })}
           </div>
-
-          {pinnedAnnouncement ? (
-            <div className="mb-5 min-w-0">
-              {(() => {
-                const content =
-                  typeof pinnedAnnouncement.content === "object" && pinnedAnnouncement.content
-                    ? (pinnedAnnouncement.content as Record<string, unknown>)
-                    : {};
-
-                const level = normalizeLevel(content.level);
-                const styles = LEVEL_META[level];
-                const publishedAt = formatPublishedAt(content.publishedAt);
-
-                return (
-                  <article
-                    className={`w-full min-w-0 overflow-hidden rounded-[24px] border shadow-sm sm:rounded-[32px] ${styles.shell}`}
-                  >
-                    <div className="flex min-w-0">
-                      <div className={`hidden w-2 shrink-0 ${styles.accent} sm:block`} />
-
-                      <div className="flex-1 p-4 sm:p-6 lg:p-8">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                            <span>📌</span>
-                            <span>{houseAnnouncementsCopy.page.pinned}</span>
-                          </div>
-
-                          <div
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${styles.badge}`}
-                          >
-                            {styles.label}
-                          </div>
-                        </div>
-
-                        <h2
-                          className={`mt-4 break-words text-xl font-semibold tracking-tight sm:mt-5 sm:text-3xl ${styles.title}`}
-                        >
-                          {pinnedAnnouncement.title ?? houseAnnouncementsCopy.page.importantFallback}
-                        </h2>
-
-                        <div className={`mt-3 text-sm ${styles.meta}`}>{publishedAt}</div>
-
-                        <div className="mt-5 h-px bg-black/5" />
-
-                        <div
-                          className={`mt-4 whitespace-pre-wrap break-words text-sm leading-7 sm:mt-5 sm:text-base sm:leading-8 ${styles.body}`}
-                        >
-                          {typeof content.body === "string" && content.body.trim()
-                            ? content.body
-                            : houseAnnouncementsCopy.empty.noText}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })()}
-            </div>
-          ) : null}
-
-          {filteredAnnouncements.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#DDD2C6] bg-white p-4 text-sm text-slate-500 sm:rounded-[32px] sm:p-6">
-              За обраним фільтром оголошення поки не знайдені.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {feedAnnouncements.map((section) => {
-                const content =
-                  typeof section.content === "object" && section.content
-                    ? (section.content as Record<string, unknown>)
-                    : {};
-
-                const level = normalizeLevel(content.level);
-                const styles = LEVEL_META[level];
-                const publishedAt = formatPublishedAt(content.publishedAt);
-
-                return (
-                  <article
-                    key={section.id}
-                    className={`w-full min-w-0 overflow-hidden rounded-[22px] border shadow-sm transition hover:shadow-md sm:rounded-[28px] ${styles.shell}`}
-                  >
-                    <div className="flex min-w-0">
-                      <div className={`hidden w-1.5 shrink-0 ${styles.accent} sm:block`} />
-
-                      <div className="flex-1 p-4 sm:p-5 lg:p-6">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <h3 className={`break-words text-lg font-semibold tracking-tight ${styles.title}`}>
-                              {section.title ?? houseAnnouncementsCopy.page.importantFallback}
-                            </h3>
-                            <div className={`mt-2 text-sm ${styles.meta}`}>{publishedAt}</div>
-                          </div>
-
-                          <div
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${styles.badge}`}
-                          >
-                            {styles.label}
-                          </div>
-                        </div>
-
-                        <div
-                          className={`mt-3 whitespace-pre-wrap break-words text-sm leading-6 sm:mt-4 sm:text-[15px] sm:leading-7 ${styles.body}`}
-                        >
-                          {getAnnouncementBody(content.body)}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </div>
-    </section>
+        )}
+      </section>
+    </div>
   );
 }
