@@ -1,3 +1,14 @@
+// ════════════════════════════════════════════════════════════════════════
+// src/modules/company/components/PublicPlatformLandingClient.tsx
+// Блок 3 · Розвідний лендінг головного домену.
+//
+// ПОВНА ПЕРЕРОБКА ВИГЛЯДУ; уся логіка — 1-в-1 (резолв дому, пошук, debounce,
+// logCompanySearchEvent, houseUrl, createCompanyContactRequest, імена полів,
+// імена експортів). Платформений рівень → акцент нейтральний брендовий;
+// КРІМ бейджа району в картці результату — там колір конкретного дому.
+//
+// Оформлення лише через токени --pub-* і примітиви @/src/shared/ui/public.
+// ════════════════════════════════════════════════════════════════════════
 "use client";
 
 import { houseUrl } from "@/src/shared/config/app/domains";
@@ -6,16 +17,35 @@ import Link from "next/link";
 import {
   useActionState,
   useEffect,
-  
   useRef,
   useState,
   useTransition,
 } from "react";
+import type { CSSProperties } from "react";
 import {
   createCompanyContactRequest,
   type CreateCompanyContactRequestState,
 } from "@/src/modules/company/actions/createCompanyContactRequest";
 import { logCompanySearchEvent } from "@/src/modules/company/actions/logCompanySearchEvent";
+import {
+  PubButton,
+  PubCard,
+  PubEmptyState,
+  PubFormField,
+  PubInput,
+  PubModal,
+  PubSkeleton,
+  PubTextarea,
+} from "@/src/shared/ui/public";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+
+// Нейтральний бренд-акцент платформи (немає дому → немає кольору району).
+const PLATFORM_ACCENT = "#16a34a";
+
+const platformThemeStyle = {
+  ["--pub-accent" as string]: PLATFORM_ACCENT,
+  ["--pub-accent-contrast" as string]: "#ffffff",
+} as CSSProperties;
 
 type SearchItem = {
   id: string;
@@ -40,42 +70,6 @@ const initialRequestState: CreateCompanyContactRequestState = {
   successMessage: null,
 };
 
-function SearchIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 6l12 12" />
-      <path d="M18 6 6 18" />
-    </svg>
-  );
-}
-
 function getHouseWord(count: number) {
   if (count === 1) return "будинок";
   if (count >= 2 && count <= 4) return "будинки";
@@ -95,160 +89,143 @@ function ConnectHouseModal({ onClose }: ConnectHouseModalProps) {
   const isSuccess = Boolean(requestState.successMessage);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
-      <div className="w-full max-w-3xl rounded-[32px] border border-[#e7dfd2] bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-              Підключення будинку
-            </h2>
+    <PubModal
+      open
+      onClose={onClose}
+      eyebrow="OSBB Platform"
+      title="Підключення будинку"
+      size="lg"
+      disableOverlayClose={isRequestPending}
+    >
+      {!isSuccess ? (
+        <form action={requestAction} className="grid gap-5">
+          <p className="text-[15px] leading-7 text-[var(--pub-text-muted)]">
+            Залиште заявку, і ми зв’яжемося з вами для обговорення підключення
+            будинку до платформи.
+          </p>
 
-            {!isSuccess ? (
-              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-                Залиште заявку, і ми зв’яжемося з вами для обговорення підключення
-                будинку до платформи.
-              </p>
-            ) : null}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <PubFormField label="Ваше ім’я">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="requesterName"
+                  type="text"
+                  placeholder="Наприклад, Ірина"
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Email">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="requesterEmail"
+                  type="email"
+                  placeholder="you@example.com"
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Телефон">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="requesterPhone"
+                  type="text"
+                  placeholder="+380..."
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Назва будинку">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="houseName"
+                  type="text"
+                  placeholder="Назва будинку"
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Назва ОСББ">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="osbbName"
+                  type="text"
+                  placeholder="За наявності"
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Адреса будинку">
+              {(id) => (
+                <PubInput
+                  id={id}
+                  name="address"
+                  type="text"
+                  placeholder="Місто, вулиця, номер будинку"
+                />
+              )}
+            </PubFormField>
+
+            <PubFormField label="Коментар" className="sm:col-span-2">
+              {(id) => (
+                <PubTextarea
+                  id={id}
+                  name="comment"
+                  rows={4}
+                  placeholder="Коротко опишіть ваш запит"
+                />
+              )}
+            </PubFormField>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрити"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
-          >
-            <CloseIcon />
-          </button>
+          {requestState.error ? (
+            <div
+              role="alert"
+              className="rounded-[var(--r-lg)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--pub-danger-text)]"
+            >
+              {requestState.error}
+            </div>
+          ) : null}
+
+          <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
+            <PubButton type="button" variant="secondary" onClick={onClose}>
+              Скасувати
+            </PubButton>
+            <PubButton type="submit" variant="primary" loading={isRequestPending}>
+              {isRequestPending ? "Надсилаємо..." : "Надіслати заявку"}
+            </PubButton>
+          </div>
+        </form>
+      ) : (
+        <div className="py-2 text-center">
+          <div className="flex justify-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-success-bg)] text-[var(--pub-success-text)]">
+              <PubIcon name="check" className="h-7 w-7" />
+            </span>
+          </div>
+
+          <h3 className="mt-4 font-[var(--font-serif)] text-[24px] font-semibold text-[var(--pub-text)]">
+            Дякуємо!
+          </h3>
+
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-[var(--pub-text-muted)]">
+            Заявку надіслано. Ми зв’яжемося з вами для обговорення підключення
+            будинку.
+          </p>
+
+          <div className="mt-7 flex justify-center">
+            <PubButton variant="primary" onClick={onClose}>
+              Закрити
+            </PubButton>
+          </div>
         </div>
-
-        {!isSuccess ? (
-          <form action={requestAction} className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Ваше ім’я
-              </label>
-              <input
-                name="requesterName"
-                type="text"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="Наприклад, Ірина"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Email
-              </label>
-              <input
-                name="requesterEmail"
-                type="email"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Телефон
-              </label>
-              <input
-                name="requesterPhone"
-                type="text"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="+380..."
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Назва будинку
-              </label>
-              <input
-                name="houseName"
-                type="text"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="Назва будинку"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Назва ОСББ
-              </label>
-              <input
-                name="osbbName"
-                type="text"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="За наявності"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Адреса будинку
-              </label>
-              <input
-                name="address"
-                type="text"
-                className="h-12 w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="Місто, вулиця, номер будинку"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Коментар
-              </label>
-              <textarea
-                name="comment"
-                rows={4}
-                className="w-full rounded-2xl border border-[#ddd3c1] bg-white px-4 py-3 text-slate-950 outline-none transition focus:border-slate-900"
-                placeholder="Коротко опишіть ваш запит"
-              />
-            </div>
-
-            {requestState.error ? (
-              <div className="sm:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {requestState.error}
-              </div>
-            ) : null}
-
-            <div className="sm:col-span-2 pt-1">
-              <button
-                type="submit"
-                disabled={isRequestPending}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:opacity-60"
-              >
-                {isRequestPending ? "Надсилаємо..." : "Надіслати заявку"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="py-8 sm:py-12">
-            <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-8 text-center sm:px-8 sm:py-10">
-              <h3 className="text-2xl font-semibold text-slate-950 sm:text-3xl">
-                Дякуємо!
-              </h3>
-
-              <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600">
-                Заявку надіслано. Ми зв’яжемося з вами для обговорення підключення
-                будинку.
-              </p>
-
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
-                >
-                  Закрити
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </PubModal>
   );
 }
 
@@ -328,114 +305,140 @@ export function PublicPlatformLandingClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-[#e7dfd2] bg-[#f7f4ee]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/favicon.ico"
-              alt="OSBB Platform"
-              width={36}
-              height={36}
-              className="rounded-lg"
-              priority
-            />
-            <span className="text-sm font-medium text-slate-900 sm:text-base">
-              OSBB Platform
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsRegisterOpen(true)}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 sm:px-5"
-          >
-            Підключити будинок
-          </button>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8 lg:px-8 lg:pb-16">
-        <div className="rounded-[32px] border border-[#e7dfd2] bg-white px-5 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.06)] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-          <div className="mx-auto max-w-4xl">
-            <div className="inline-flex rounded-full bg-[#eef4ec] px-3 py-1 text-sm font-medium text-emerald-700">
-              OSBB Platform
+    <div
+      className="pub-theme-root"
+      data-house-theme="light"
+      style={platformThemeStyle}
+    >
+      <main className="min-h-[100dvh] bg-[var(--pub-bg)] text-[var(--pub-text)]">
+        {/* ── Шапка ── */}
+        <header className="sticky top-0 z-30 border-b border-[var(--pub-border)] bg-[var(--pub-header-bg)]/90 backdrop-blur-md">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--r-lg)] bg-[var(--pub-accent)] font-[var(--font-serif)] text-[18px] font-semibold leading-none text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)]">
+                О
+              </span>
+              <span className="font-[var(--font-serif)] text-[17px] font-semibold tracking-[-0.01em] text-[var(--pub-text)] sm:text-lg">
+                OSBB Platform
+              </span>
             </div>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
-              Усе про ваш будинок
-              <br className="hidden sm:block" />— в одному кабінеті
-            </h1>
+            <PubButton
+              variant="primary"
+              size="sm"
+              onClick={() => setIsRegisterOpen(true)}
+            >
+              Підключити будинок
+            </PubButton>
+          </div>
+        </header>
 
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Знайдіть свій будинок за адресою, назвою ОСББ або назвою будинку та
-              перейдіть до особистого кабінету.
-            </p>
+        <section className="mx-auto max-w-6xl px-4 pb-12 pt-7 sm:px-6 sm:pb-14 sm:pt-9 lg:px-8 lg:pb-20">
+          {/* ── Hero + пошук ── */}
+          <PubCard
+            elevated
+            elevation="lg"
+            padding="none"
+            className="rounded-[var(--r-3xl)] px-5 py-9 sm:px-8 sm:py-11 lg:px-14 lg:py-14"
+          >
+            <div className="mx-auto max-w-4xl">
+              <div className="inline-flex items-center rounded-[var(--r-pill)] border border-[var(--pub-accent-border)] bg-[var(--pub-accent-soft)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-accent-strong)]">
+                OSBB Platform
+              </div>
 
-            <div className="mt-10">
-              <label
-                htmlFor="public-house-search"
-                className="mb-3 block text-sm font-medium text-slate-700"
-              >
-                Пошук будинку
-              </label>
+              <h1 className="mt-5 font-[var(--font-serif)] text-[36px] font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--pub-text)] sm:text-5xl lg:text-[68px]">
+                Усе про ваш будинок
+                <br className="hidden sm:block" />— в одному кабінеті
+              </h1>
 
-              <div className="relative">
-                <div className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
-                  <SearchIcon />
-                </div>
+              <p className="mt-5 max-w-3xl text-[17px] leading-8 text-[var(--pub-text-muted)] sm:text-xl">
+                Знайдіть свій будинок за адресою, назвою ОСББ або назвою будинку
+                та перейдіть до особистого кабінету.
+              </p>
 
-                <input
+              <div className="mt-9">
+                <label
+                  htmlFor="public-house-search"
+                  className="mb-3 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-text-soft)]"
+                >
+                  Пошук будинку
+                </label>
+
+                <PubInput
                   id="public-house-search"
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Введіть адресу, назву ОСББ, будинку або slug"
-                  className="h-16 w-full rounded-[28px] border border-[#ddd3c1] bg-white pl-14 pr-5 text-lg text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-slate-900"
+                  leftIcon={<PubIcon name="search" className="h-5 w-5" />}
+                  className="h-16 rounded-[var(--r-2xl)] !pl-14 text-base sm:text-lg"
                 />
+
+                <p className="mt-3 text-[13px] text-[var(--pub-text-soft)]">
+                  Щоб побачити результат, введіть щонайменше 3 символи.
+                </p>
               </div>
-
-              <p className="mt-3 text-sm text-slate-500">
-                Щоб побачити результат, введіть щонайменше 3 символи.
-              </p>
             </div>
-          </div>
-        </div>
+          </PubCard>
 
-        {(isLoading || hasSearched) ? (
-          <section className="mt-8">
-            <div className="rounded-[32px] border border-[#e7dfd2] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)] sm:p-8">
+          {/* ── Результати / стани ── */}
+          {isLoading || hasSearched ? (
+            <div className="mt-8">
               {isLoading ? (
                 <div className="grid gap-5">
                   {Array.from({ length: 2 }).map((_, index) => (
-                    <div
+                    <PubCard
                       key={index}
-                      className="overflow-hidden rounded-[28px] border border-[#e7dfd2] bg-white"
+                      elevated
+                      elevation="sm"
+                      padding="none"
+                      className="overflow-hidden rounded-[var(--r-3xl)]"
                     >
-                      <div className="h-56 animate-pulse bg-slate-200" />
+                      <PubSkeleton
+                        variant="block"
+                        width="100%"
+                        height={208}
+                        className="rounded-none"
+                      />
                       <div className="space-y-3 p-6">
-                        <div className="h-7 w-2/3 animate-pulse rounded bg-slate-200" />
-                        <div className="h-5 w-5/6 animate-pulse rounded bg-slate-200" />
-                        <div className="h-12 w-44 animate-pulse rounded-2xl bg-slate-200" />
+                        <PubSkeleton variant="block" width="66%" height={28} />
+                        <PubSkeleton variant="block" width="83%" height={20} />
+                        <PubSkeleton
+                          variant="block"
+                          width={176}
+                          height={48}
+                          className="rounded-[var(--r-pill)]"
+                        />
                       </div>
-                    </div>
+                    </PubCard>
                   ))}
                 </div>
               ) : null}
 
               {showResults ? (
                 <div>
-                  <div className="mb-6 text-xl font-semibold text-slate-950 sm:text-2xl">
-                    За запитом “{query}” знайдено {items.length} {getHouseWord(items.length)}
+                  <div className="mb-6 text-[15px] text-[var(--pub-text-muted)]">
+                    За запитом{" "}
+                    <span className="font-semibold text-[var(--pub-text)]">
+                      «{query}»
+                    </span>{" "}
+                    знайдено{" "}
+                    <span className="font-semibold text-[var(--pub-text)]">
+                      {items.length} {getHouseWord(items.length)}
+                    </span>
                   </div>
 
                   <div className="flex flex-col gap-5">
                     {items.map((item) => (
-                      <article
+                      <PubCard
                         key={item.id}
-                        className="overflow-hidden rounded-[28px] border border-[#e7dfd2] bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                        elevated
+                        elevation="md"
+                        padding="none"
+                        interactive
+                        className="overflow-hidden rounded-[var(--r-3xl)]"
                       >
-                        <div className="relative aspect-[16/7] bg-[#f3efe8]">
+                        <div className="relative aspect-[16/7] bg-[var(--pub-bg-quiet)]">
                           {item.cover_image_url ? (
                             <Image
                               src={item.cover_image_url}
@@ -446,7 +449,7 @@ export function PublicPlatformLandingClient() {
                               unoptimized
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
+                            <div className="flex h-full w-full items-center justify-center text-sm text-[var(--pub-text-soft)]">
                               Фото будинку буде додано пізніше
                             </div>
                           )}
@@ -455,25 +458,28 @@ export function PublicPlatformLandingClient() {
                         <div className="p-6 sm:p-8">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0">
-                              <h3 className="text-2xl font-semibold text-slate-950 sm:text-3xl">
+                              <h3 className="font-[var(--font-serif)] text-[24px] font-semibold leading-tight text-[var(--pub-text)] sm:text-[28px]">
                                 {item.name}
                               </h3>
 
-                              <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
+                              <p className="mt-3 text-[15px] leading-7 text-[var(--pub-text-muted)] sm:text-base">
                                 {item.address}
                               </p>
 
                               {item.osbb_name ? (
-                                <p className="mt-2 text-sm text-slate-500 sm:text-base">
+                                <p className="mt-2 text-[13px] text-[var(--pub-text-soft)] sm:text-sm">
                                   ОСББ: {item.osbb_name}
                                 </p>
                               ) : null}
                             </div>
 
+                            {/* Бейдж району — колір конкретного дому (доречно тут). */}
                             {item.district ? (
                               <span
-                                className="inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-medium text-white"
-                                style={{ backgroundColor: item.district.theme_color }}
+                                className="inline-flex shrink-0 items-center rounded-[var(--r-pill)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-white"
+                                style={{
+                                  backgroundColor: item.district.theme_color,
+                                }}
                               >
                                 {item.district.name}
                               </span>
@@ -484,48 +490,53 @@ export function PublicPlatformLandingClient() {
                             <Link
                               href={houseUrl(item.slug)}
                               onClick={() => handleResultClick(item)}
-                              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
                             >
-                              Перейти в кабінет
+                              <PubButton
+                                variant="primary"
+                                rightIcon={
+                                  <PubIcon
+                                    name="chevron-right"
+                                    className="h-5 w-5"
+                                  />
+                                }
+                              >
+                                Перейти в кабінет
+                              </PubButton>
                             </Link>
                           </div>
                         </div>
-                      </article>
+                      </PubCard>
                     ))}
                   </div>
                 </div>
               ) : null}
 
               {showEmptyState ? (
-                <div className="rounded-[28px] border border-dashed border-[#ddd3c1] bg-[#fbfaf7] px-6 py-12 text-center sm:px-10 sm:py-16">
-                  <h3 className="text-2xl font-semibold text-slate-950 sm:text-3xl">
-                    Будинок не знайдено
-                  </h3>
-
-                  <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                    Можливо, ви ввели дані з помилкою або такого будинку ще немає в системі.
-                    Спробуйте уточнити запит або залиште заявку на підключення.
-                  </p>
-
-                  <div className="mt-8">
-                    <button
-                      type="button"
+                <PubEmptyState
+                  icon={<PubIcon name="search" className="h-7 w-7" />}
+                  title="Будинок не знайдено"
+                  description="Можливо, ви ввели дані з помилкою або такого будинку ще немає в системі. Спробуйте уточнити запит або зверніться до голови ОСББ."
+                  action={
+                    <PubButton
+                      variant="primary"
                       onClick={() => setIsRegisterOpen(true)}
-                      className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
                     >
                       Підключити будинок
-                    </button>
-                  </div>
-                </div>
+                    </PubButton>
+                  }
+                  className="rounded-[var(--r-3xl)] py-14"
+                />
               ) : null}
             </div>
-          </section>
-        ) : null}
-      </section>
+          ) : null}
+        </section>
+      </main>
 
       {isRegisterOpen ? (
         <ConnectHouseModal onClose={() => setIsRegisterOpen(false)} />
       ) : null}
-    </main>
+    </div>
   );
 }
+
+export { ConnectHouseModal };
