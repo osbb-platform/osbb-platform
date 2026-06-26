@@ -3,6 +3,11 @@ import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
 
 import { useActionState, useState } from "react";
 import { createSpecialistContactRequest } from "@/src/modules/houses/actions/createSpecialistContactRequest";
+import { PubFormField } from "@/src/shared/ui/public/PubFormField";
+import { PubInput } from "@/src/shared/ui/public/PubInput";
+import { PubSelect } from "@/src/shared/ui/public/PubSelect";
+import { PubTextarea } from "@/src/shared/ui/public/PubTextarea";
+import { PubButton } from "@/src/shared/ui/public/PubButton";
 
 type Props = {
   houseId: string;
@@ -61,11 +66,11 @@ export function SpecialistContactRequestForm({
 
   if (state.successMessage) {
     return (
-      <div className="rounded-2xl border border-[#CFE3D6] bg-[#EAF4EE] px-5 py-4">
-        <div className="text-base font-semibold text-[#1F2A37]">
+      <div className="rounded-[var(--r-lg)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] px-5 py-4">
+        <div className="text-base font-semibold text-[var(--pub-text)]">
           {houseSpecialistsCopy.form.successTitle}
         </div>
-        <div className="mt-2 text-sm leading-7 text-emerald-800">
+        <div className="mt-2 text-sm leading-7 text-[var(--pub-success-text)]">
           {houseSpecialistsCopy.form.successText}
         </div>
       </div>
@@ -81,94 +86,80 @@ export function SpecialistContactRequestForm({
       <input type="hidden" name="specialistId" value={specialistId} />
       <input type="hidden" name="specialistLabel" value={specialistLabel} />
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
-          {houseSpecialistsCopy.form.name}
-        </label>
-        <input
-          name="requesterName"
-          type="text"
-          required
-          placeholder={houseSpecialistsCopy.form.namePlaceholder}
-          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
-        />
-      </div>
+      <PubFormField label={houseSpecialistsCopy.form.name}>
+        {(id) => (
+          <PubInput
+            id={id}
+            name="requesterName"
+            type="text"
+            required
+            placeholder={houseSpecialistsCopy.form.namePlaceholder}
+          />
+        )}
+      </PubFormField>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
-          Email
-        </label>
-        <input
-          name="requesterEmail"
-          type="email"
-          required
-          placeholder="you@example.com"
-          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
-        />
-      </div>
+      <PubFormField label="Email">
+        {(id) => (
+          <PubInput
+            id={id}
+            name="requesterEmail"
+            type="email"
+            required
+            placeholder="you@example.com"
+          />
+        )}
+      </PubFormField>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
-          {houseSpecialistsCopy.form.phone}
-        </label>
-        <input
-          name="requesterPhone"
-          type="tel"
-          value={phone}
-          onChange={(event) => setPhone(formatPhone(event.target.value))}
-          placeholder="+380 67 123 45 67 або 0800 00 00 00"
-          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
-        />
-      </div>
+      <PubFormField label={houseSpecialistsCopy.form.phone}>
+        {(id) => (
+          <PubInput
+            id={id}
+            name="requesterPhone"
+            type="tel"
+            value={phone}
+            onChange={(event) => setPhone(formatPhone(event.target.value))}
+            placeholder="+380 67 123 45 67 або 0800 00 00 00"
+          />
+        )}
+      </PubFormField>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
-          {houseSpecialistsCopy.form.apartment}
-        </label>
-        <select
-          name="apartment"
-          required
-          defaultValue=""
-          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
-        >
-          <option value="" disabled>
-            {houseSpecialistsCopy.form.selectApartment}
-          </option>
-          {apartmentOptions.map((option) => (
-            <option key={option.id} value={option.label}>
-              {option.ownerName
-                ? `Кв. ${option.label} — ${option.ownerName}`
-                : `Кв. ${option.label}`}
+      <PubFormField label={houseSpecialistsCopy.form.apartment}>
+        {(id) => (
+          <PubSelect id={id} name="apartment" required defaultValue="">
+            <option value="" disabled>
+              {houseSpecialistsCopy.form.selectApartment}
             </option>
-          ))}
-        </select>
-      </div>
+            {apartmentOptions.map((option) => (
+              <option key={option.id} value={option.label}>
+                {option.ownerName
+                  ? `Кв. ${option.label} — ${option.ownerName}`
+                  : `Кв. ${option.label}`}
+              </option>
+            ))}
+          </PubSelect>
+        )}
+      </PubFormField>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-[#2A3642]">
-          {houseSpecialistsCopy.form.comment}
-        </label>
-        <textarea
-          name="comment"
-          rows={4}
-          placeholder={houseSpecialistsCopy.form.commentPlaceholder}
-          className="w-full rounded-2xl border border-[#D8CEC2] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition focus:border-[#BFAE9F]"
-        />
-      </div>
+      <PubFormField label={houseSpecialistsCopy.form.comment}>
+        {(id) => (
+          <PubTextarea
+            id={id}
+            name="comment"
+            rows={4}
+            placeholder={houseSpecialistsCopy.form.commentPlaceholder}
+          />
+        )}
+      </PubFormField>
 
       {state.error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[var(--r-lg)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] px-4 py-3 text-sm text-[var(--pub-danger-text)]">
           {state.error}
         </div>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="inline-flex w-full items-center justify-center rounded-2xl bg-[#2F3A4F] px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#1F2A37] disabled:opacity-60"
-      >
+      <PubButton type="submit" variant="primary" fullWidth loading={isPending}>
         {isPending ? houseSpecialistsCopy.form.sending : houseSpecialistsCopy.form.send}
-      </button>
+      </PubButton>
     </form>
   );
 }
