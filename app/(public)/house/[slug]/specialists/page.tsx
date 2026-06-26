@@ -1,4 +1,3 @@
-import type React from "react";
 import Link from "next/link";
 
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
@@ -7,6 +6,10 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
 import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
+import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
+import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
+import { PubBadge } from "@/src/shared/ui/public/PubBadge";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -64,10 +67,10 @@ function ContactRow({
 
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-[#7A746B] sm:w-[112px]">
+      <div className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)] sm:w-[112px]">
         {label}
       </div>
-      <div className="min-w-0 break-words text-sm leading-7 text-[#34465B]">
+      <div className="min-w-0 break-words text-sm leading-7 text-[var(--pub-text)]">
         {value}
       </div>
     </div>
@@ -82,23 +85,23 @@ function SpecialistCardView({
   activeCategory: string;
 }) {
   return (
-    <article className="w-full min-w-0 rounded-[30px] border border-[#E4DBD1] bg-[#F6F2EC] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7">
+    <article className="w-full min-w-0 rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--pub-shadow-md)] sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
         {item.category ? (
-          <span className="inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F3A4F]">
+          <PubBadge tone="accent" size="sm">
             {item.category}
-          </span>
+          </PubBadge>
         ) : null}
       </div>
 
-      <h2 className="mt-5 break-words text-3xl font-semibold tracking-tight text-[#1F2A37]">
+      <h2 className="mt-5 break-words font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-3xl">
         {item.title}
       </h2>
 
       <div className="mt-6 space-y-3">
         {item.phones.length > 0 ? (
           <div className="flex min-w-0 items-start gap-3">
-            <div className="w-20 shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-[#7A746B] sm:w-[112px]">
+            <div className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)] sm:w-[112px]">
               {houseSpecialistsCopy.card.phone}
             </div>
             <div className="grid min-w-0 gap-2">
@@ -109,9 +112,9 @@ function SpecialistCardView({
                   <a
                     key={`${item.id}-${phone}-tel`}
                     href={getTelHref(phone)}
-                    className="min-w-0 break-words text-sm font-semibold leading-7 text-[#1F2A37] underline decoration-[#C9B9A6] underline-offset-4 transition hover:text-[#3F7A3D]"
+                    className="min-w-0 break-words text-sm font-semibold leading-7 text-[var(--pub-text)] underline decoration-[var(--pub-border-strong)] underline-offset-4 transition hover:text-[var(--pub-accent-strong)]"
                   >
-                    <span className="text-[#7A746B]">{getPhoneTypeLabel(phoneType)}: </span>
+                    <span className="text-[var(--pub-text-soft)]">{getPhoneTypeLabel(phoneType)}: </span>
                     {phone}
                   </a>
                 );
@@ -146,7 +149,7 @@ function SpecialistCardView({
             prefetch={false}
             href={`/specialists?category=${encodeURIComponent(activeCategory)}&specialist=${encodeURIComponent(item.id)}`}
             scroll={false}
-            className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#E4DBD1] bg-[#EFE7DD] px-5 text-sm font-semibold text-[#2A3642] transition hover:bg-[#E5DBCF]"
+            className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-5 text-sm font-semibold text-[var(--pub-text)] transition hover:bg-[var(--pub-bg-quiet)]"
           >
             {houseSpecialistsCopy.card.request}
           </Link>
@@ -177,7 +180,6 @@ export default async function SpecialistsPage({
   }
   const specialistsData = await getPublishedHouseSpecialists(house.id);
 
-  const districtColor = house.district?.theme_color ?? "#16a34a";
   const apartmentOptions = await getPublicHouseApartmentOptions({
     houseId: house.id,
   });
@@ -223,6 +225,14 @@ export default async function SpecialistsPage({
     })),
   ];
 
+  const filterTabs: PubFilterTabItem[] = filterItems.map((item) => ({
+    key: item.key,
+    label: item.label,
+    href: `/specialists?category=${encodeURIComponent(item.key)}`,
+    count: item.count,
+    active: activeCategory === item.key,
+  }));
+
   const filteredSpecialists =
     activeCategory === houseSpecialistsCopy.filters.all
       ? activeSpecialists
@@ -236,81 +246,32 @@ export default async function SpecialistsPage({
 
   return (
     <>
-      <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="grid min-w-0 gap-6">
-          <section className="w-full min-w-0 rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-            <div className="min-w-0 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-4xl lg:text-6xl">
-                {houseSpecialistsCopy.page.title}
-              </h1>
+      <div className="grid min-w-0 gap-6">
+        <PubSectionHeader
+          title={houseSpecialistsCopy.page.title}
+          description={houseSpecialistsCopy.page.description}
+        >
+          {filterTabs.length > 1 ? (
+            <PubFilterTabs items={filterTabs} ariaLabel={houseSpecialistsCopy.page.title} />
+          ) : null}
+        </PubSectionHeader>
 
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#606773] sm:mt-5 sm:text-lg sm:leading-8">
-                {houseSpecialistsCopy.page.description}
-              </p>
-            </div>
-
-            {filterItems.length > 1 ? (
-              <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm backdrop-blur-sm">
-                <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-                  {filterItems.map((item) => {
-                    const isActive = activeCategory === item.key;
-
-                    return (
-                      <Link
-                        prefetch={false}
-                        key={item.key}
-                        href={`/specialists?category=${encodeURIComponent(item.key)}`}
-                        scroll={false}
-                        className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
-                          isActive
-                            ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                            : "border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] hover:bg-[#F0E9E1]"
-                        }`}
-                        style={
-                          isActive
-                            ? ({
-                                "--tab-active-bg": `${districtColor}20`,
-                                "--tab-active-text": "#1F2A37",
-                                borderColor: districtColor,
-                              } as React.CSSProperties)
-                            : undefined
-                        }
-                      >
-                        <span>{item.label}</span>
-                        <span
-                          className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            isActive
-                              ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]"
-                              : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
-                          }`}
-                        >
-                          {item.count}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          {filteredSpecialists.length > 0 ? (
-            <div className="grid min-w-0 gap-4 md:grid-cols-2">
-              {filteredSpecialists.map((item) => (
-                <SpecialistCardView
-                  key={item.id}
-                  item={item}
-                  activeCategory={activeCategory}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[24px] border border-dashed border-[#DDD4CA] bg-white p-4 text-center text-sm text-[#7A746B] shadow-sm sm:rounded-[32px] sm:p-8">
-              {houseSpecialistsCopy.page.empty}
-            </div>
-          )}
-        </div>
-      </section>
+        {filteredSpecialists.length > 0 ? (
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            {filteredSpecialists.map((item) => (
+              <SpecialistCardView
+                key={item.id}
+                item={item}
+                activeCategory={activeCategory}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-surface)] p-6 text-center text-sm text-[var(--pub-text-muted)] shadow-[var(--pub-shadow-sm)] sm:p-8">
+            {houseSpecialistsCopy.page.empty}
+          </div>
+        )}
+      </div>
 
       {canOpenModal && selectedSpecialist ? (
         <>
@@ -318,18 +279,18 @@ export default async function SpecialistsPage({
             prefetch={false}
             href={`/specialists?category=${encodeURIComponent(activeCategory)}`}
             scroll={false}
-            className="fixed inset-0 z-40 bg-[#1F2A37]/30 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-[var(--pub-overlay)] backdrop-blur-[2px]"
             aria-label={houseSpecialistsCopy.page.closeModal}
           />
 
           <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-6">
-            <div className="max-h-[85vh] w-full max-w-[720px] overflow-y-auto rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:rounded-[32px]">
-              <div className="flex items-start justify-between gap-3 border-b border-[#E4DBD1] px-4 py-4 sm:px-7 sm:py-6">
+            <div className="max-h-[85vh] w-full max-w-[720px] overflow-y-auto rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] shadow-[var(--pub-shadow-lg)]">
+              <div className="flex items-start justify-between gap-3 border-b border-[var(--pub-border)] px-4 py-4 sm:px-7 sm:py-6">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-3xl">
+                  <h2 className="font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-3xl">
                     Заявка спеціалісту
                   </h2>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-[#606773]">
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--pub-text-muted)]">
                     Телефон спеціаліста приховано. Залиште заявку — і ми передамо звернення в управляючу компанію.
                   </p>
                 </div>
@@ -338,9 +299,9 @@ export default async function SpecialistsPage({
                   prefetch={false}
                   href={`/specialists?category=${encodeURIComponent(activeCategory)}`}
                   scroll={false}
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#D8CEC2] bg-[#EFE7DD] text-[#2A3642] transition hover:bg-[#F0E9E1]"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] transition hover:bg-[var(--pub-bg-quiet)]"
                 >
-                  ✕
+                  <PubIcon name="close" className="h-5 w-5" />
                 </Link>
               </div>
 
