@@ -28,7 +28,7 @@ export default async function PublicHouseHomePage({ params }: Props) {
   const subheadline = dashboard.heroContent.subheadline;
 
   return (
-    <div className="grid gap-6 lg:gap-8">
+    <div className="grid gap-6 lg:gap-7">
       <PublicHouseHeroCarousel
         slug={slug}
         districtColor={districtColor}
@@ -43,19 +43,13 @@ export default async function PublicHouseHomePage({ params }: Props) {
 
       <section className="grid gap-4 md:hidden">
         {dashboard.widgets.map((widget) => (
-          <PublicHouseDashboardCard
-            key={widget.kind}
-            widget={widget}
-          />
+          <PublicHouseDashboardCard key={widget.kind} widget={widget} />
         ))}
       </section>
 
-      <section className="hidden gap-4 md:grid md:grid-cols-2 lg:gap-6">
+      <section className="hidden gap-5 md:grid md:grid-cols-2">
         {dashboard.widgets.map((widget) => (
-          <PublicHouseDashboardCard
-            key={widget.kind}
-            widget={widget}
-          />
+          <PublicHouseDashboardCard key={widget.kind} widget={widget} />
         ))}
       </section>
     </div>

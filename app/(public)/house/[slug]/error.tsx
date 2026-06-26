@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { ErrorState } from "@/src/shared/ui/feedback/ErrorState";
+import { PubEmptyState } from "@/src/shared/ui/public/PubEmptyState";
+import { PubButton } from "@/src/shared/ui/public/PubButton";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   error: Error & { digest?: string };
@@ -18,14 +20,20 @@ export default function PublicHouseError({ error, reset }: Props) {
 
   return (
     <div className="px-4 py-8">
-      <ErrorState
+      <PubEmptyState
+        tone="error"
+        icon={<PubIcon name="alert" className="h-7 w-7" />}
         title="Сторінку тимчасово не вдалося завантажити"
         description={
           error.digest
             ? `Спробуйте ще раз. Код помилки для підтримки: ${error.digest}`
             : "Спробуйте оновити сторінку або поверніться пізніше."
         }
-        onRetry={reset}
+        action={
+          <PubButton variant="primary" onClick={reset}>
+            Спробувати знову
+          </PubButton>
+        }
       />
     </div>
   );
