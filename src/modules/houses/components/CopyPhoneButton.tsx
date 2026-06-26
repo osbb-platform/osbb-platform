@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { Button } from "@/src/shared/ui/admin/Button";
+import { PubButton } from "@/src/shared/ui/public/PubButton";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   phone: string;
@@ -22,13 +23,14 @@ export function CopyPhoneButton({ phone }: Props) {
   }
 
   return (
-    <Button
+    <PubButton
       type="button"
-      variant={copied ? "success" : "secondary"}
+      variant={copied ? "accent-soft" : "secondary"}
       size="sm"
       onClick={handleCopy}
+      leftIcon={<PubIcon name={copied ? "check" : "copy"} className="h-4 w-4" />}
     >
       {copied ? "Скопійовано" : "Копіювати телефон"}
-    </Button>
+    </PubButton>
   );
 }
