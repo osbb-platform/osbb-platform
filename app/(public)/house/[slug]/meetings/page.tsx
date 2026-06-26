@@ -1,9 +1,11 @@
 import { houseMeetingsCopy, houseSystemCopy } from "@/src/shared/publicCopy/house";
-import Link from "next/link";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
+import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
+import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
+import { PubBadge } from "@/src/shared/ui/public/PubBadge";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -151,7 +153,6 @@ function getNotVotedApartmentLabels(
   );
 }
 
-
 export default async function PublicMeetingsPage({
   params,
   searchParams,
@@ -165,12 +166,10 @@ export default async function PublicMeetingsPage({
     return null;
   }
 
-  const districtColor = house.district?.theme_color ?? "#0f172a";
   const apartments =
     house?.id
       ? await getPublicHouseApartmentOptions({ houseId: house.id })
       : [];
-
 
   const meetingsSnapshot = await getPublishedHouseMeetings(house.id);
 
@@ -277,175 +276,128 @@ export default async function PublicMeetingsPage({
           return false;
         });
 
-  return (
-    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid min-w-0 gap-6">
-        <section className="w-full min-w-0 rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-          <div className="min-w-0 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight text-[#1F2A37] sm:text-4xl lg:text-6xl">
-              {houseMeetingsCopy.page.title}
-            </h1>
+  const modeTabs: PubFilterTabItem[] = (
+    [
+      ["scheduled", houseMeetingsCopy.tabs.scheduled],
+      ["active", houseMeetingsCopy.tabs.active],
+      ["review", houseMeetingsCopy.tabs.review],
+      ["completed", houseMeetingsCopy.tabs.completed],
+      ["archive", houseMeetingsCopy.tabs.archive],
+    ] as const
+  ).map(([mode, label]) => ({
+    key: mode,
+    label,
+    href: `/meetings?mode=${mode}`,
+    count: counts[mode as keyof typeof counts],
+    active: selectedMode === mode,
+  }));
 
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#5B6B7C] sm:mt-5 sm:text-lg sm:leading-8">
-              {houseMeetingsCopy.page.description}
+  const monthTabs: PubFilterTabItem[] = [
+    {
+      key: "all",
+      label: houseMeetingsCopy.archive.all,
+      href: "/meetings?mode=archive&month=all",
+      active: selectedMonth === "all",
+    },
+    ...availableMonths.map((month) => ({
+      key: String(month),
+      label: new Date(2026, month - 1, 1).toLocaleString(
+        houseMeetingsCopy.archive.locale,
+        { month: "long" },
+      ),
+      href: `/meetings?mode=archive&month=${month}`,
+      active: selectedMonth === String(month),
+    })),
+  ];
+
+  return (
+    <div className="grid min-w-0 gap-6">
+      <PubSectionHeader
+        title={houseMeetingsCopy.page.title}
+        description={houseMeetingsCopy.page.description}
+      >
+        <div className="grid gap-4">
+          <PubFilterTabs items={modeTabs} ariaLabel={houseMeetingsCopy.page.title} />
+          {selectedMode === "archive" ? (
+            <PubFilterTabs items={monthTabs} framed={false} ariaLabel="Місяць архіву" />
+          ) : null}
+        </div>
+      </PubSectionHeader>
+
+      {selectedMode === "scheduled" && nearestMeeting ? (
+        <section className="relative w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] p-5 pl-6 sm:p-6 sm:pl-7">
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-5 bottom-5 w-1 rounded-[var(--r-pill)] bg-[var(--pub-success-text)]"
+          />
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-success-text)]">
+            {houseMeetingsCopy.page.nearest}
+          </div>
+          <h2 className="mt-3 font-[var(--font-serif)] text-xl font-semibold text-[var(--pub-text)] sm:mt-4 sm:text-3xl">
+            {nearestMeeting.title}
+          </h2>
+          <div className="mt-3 text-sm text-[var(--pub-success-text)]">
+            {formatDate(nearestMeeting.meetingDateTime)}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="min-w-0 space-y-4">
+        {filteredMeetings.length === 0 ? (
+          <div className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 text-center shadow-[var(--pub-shadow-sm)] sm:p-8">
+            <div className="text-base font-semibold text-[var(--pub-text)] sm:text-xl">
+              {selectedMode === "scheduled"
+                ? houseMeetingsCopy.empty.scheduled
+                : selectedMode === "active"
+                  ? houseMeetingsCopy.empty.active
+                  : selectedMode === "review"
+                    ? houseMeetingsCopy.empty.review
+                    : selectedMode === "completed"
+                      ? houseMeetingsCopy.empty.completed
+                      : houseMeetingsCopy.empty.archive}
+            </div>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[var(--pub-text-muted)]">
+              {selectedMode === "scheduled"
+                ? houseMeetingsCopy.empty.scheduledDesc
+                : selectedMode === "active"
+                  ? houseMeetingsCopy.empty.activeDesc
+                  : selectedMode === "review"
+                    ? houseMeetingsCopy.empty.reviewDesc
+                    : selectedMode === "completed"
+                      ? houseMeetingsCopy.empty.completedDesc
+                      : houseMeetingsCopy.empty.archiveDesc}
             </p>
           </div>
-
-          <div className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-sm backdrop-blur-sm">
-            <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {[
-                ["scheduled", houseMeetingsCopy.tabs.scheduled],
-                ["active", houseMeetingsCopy.tabs.active],
-                ["review", houseMeetingsCopy.tabs.review],
-                ["completed", houseMeetingsCopy.tabs.completed],
-                ["archive", houseMeetingsCopy.tabs.archive],
-              ].map(([mode, label]) => {
-                const isActive = selectedMode === mode;
-                const count = counts[mode as keyof typeof counts];
-
-                return (
-                  <Link
-            prefetch={false}
-                    key={mode}
-                    href={`/meetings?mode=${mode}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
-                      isActive
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={isActive ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
-                  >
-                    <span>{label}</span>
-                    <span
-                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        isActive ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]" : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {selectedMode === "archive" ? (
-            <div className="mt-4 w-full min-w-0">
-              <div className="flex w-full min-w-0 justify-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-                <Link
-            prefetch={false}
-                  href={"/meetings?mode=archive&month=all"}
-                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                    selectedMonth === "all"
-                      ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                      : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                  }`}
-                  style={selectedMonth === "all" ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
-                >
-                  {houseMeetingsCopy.archive.all}
-                </Link>
-                {availableMonths.map((month) => {
-                  const isActive = selectedMonth === String(month);
-
-                  return (
-                    <Link
-            prefetch={false}
-                      key={month}
-                      href={`/meetings?mode=archive&month=${month}`}
-                      className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                        isActive
-                          ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                          : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                      }`}
-                      style={isActive ? { "--tab-active-bg": `${districtColor}20`, "--tab-active-text": "#1F2A37", "borderColor": districtColor } as React.CSSProperties : undefined}
-                    >
-                      {new Date(2026, month - 1, 1).toLocaleString(houseMeetingsCopy.archive.locale, {
-                        month: "long",
-                      })}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </section>
-
-        {selectedMode === "scheduled" && nearestMeeting ? (
-          <section className="w-full min-w-0 rounded-[24px] border border-[#D4E3D8] bg-[#E6EFE8] p-4 sm:rounded-[32px] sm:p-6">
-            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1D5E44]">
-              {houseMeetingsCopy.page.nearest}
-            </div>
-            <h2 className="mt-3 text-xl font-semibold text-[#1F2A37] sm:mt-4 sm:text-3xl">
-              {nearestMeeting.title}
-            </h2>
-            <div className="mt-3 text-sm text-[#1D5E44]">
-              {formatDate(nearestMeeting.meetingDateTime)}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="min-w-0 space-y-4">
-          {filteredMeetings.length === 0 ? (
-            <div className="rounded-[24px] border border-[#E4DBD1] bg-[#F3EEE8] p-4 text-center shadow-sm sm:rounded-[32px] sm:p-8">
-              <div className="text-base font-semibold text-slate-900 sm:text-xl">
-                {selectedMode === "scheduled"
-                  ? houseMeetingsCopy.empty.scheduled
-                  : selectedMode === "active"
-                    ? houseMeetingsCopy.empty.active
-                    : selectedMode === "review"
-                      ? houseMeetingsCopy.empty.review
-                      : selectedMode === "completed"
-                        ? houseMeetingsCopy.empty.completed
-                        : houseMeetingsCopy.empty.archive}
-              </div>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5B6B7C]">
-                {selectedMode === "scheduled"
-                  ? houseMeetingsCopy.empty.scheduledDesc
-                  : selectedMode === "active"
-                    ? houseMeetingsCopy.empty.activeDesc
-                    : selectedMode === "review"
-                      ? houseMeetingsCopy.empty.reviewDesc
-                      : selectedMode === "completed"
-                        ? houseMeetingsCopy.empty.completedDesc
-                        : houseMeetingsCopy.empty.archiveDesc}
-              </p>
-            </div>
-          ) : (
-            filteredMeetings.map((meeting) => (
+        ) : (
+          filteredMeetings.map((meeting) => (
             <article
               key={meeting.id}
-              className="w-full min-w-0 rounded-[22px] border border-[#E2D8CC] bg-[#F9F6F2] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:rounded-[28px] sm:p-6"
+              className="w-full min-w-0 rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] transition hover:shadow-[var(--pub-shadow-md)] sm:p-6"
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0 break-words text-lg font-semibold text-[#1F2A37] sm:text-2xl">
+                <div className="min-w-0 break-words font-[var(--font-serif)] text-lg font-semibold text-[var(--pub-text)] sm:text-2xl">
                   {meeting.title}
                 </div>
-                <span
-                  className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                    meeting.status === "review"
-                      ? "border-[#D4E3D8] bg-[#E6EFE8] text-[#2F6F4F]"
-                      : "border-[#D2C6B8] bg-[#E7DED3] text-[#2F3A4F]"
-                  }`}
-                >
+                <PubBadge tone={meeting.status === "review" ? "success" : "neutral"} size="sm">
                   {getMeetingStatusLabel(meeting.status)}
-                </span>
+                </PubBadge>
               </div>
 
-              <div className="mt-3 text-sm text-[#5F5A54]">
+              <div className="mt-3 text-sm text-[var(--pub-text-muted)]">
                 {formatDate(meeting.meetingDateTime)}
               </div>
 
               {meeting.questions.map((question) => (
                 <div
                   key={question.id}
-                  className="mt-3 rounded-xl border border-[#E4DBD1] bg-[#F3EEE8] p-3 sm:mt-4 sm:rounded-2xl sm:p-4"
+                  className="mt-3 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-3 sm:mt-4 sm:p-4"
                 >
-                  <div className="break-words font-medium text-[#1F2A37]">
+                  <div className="break-words font-medium text-[var(--pub-text)]">
                     {question.title}
                   </div>
 
                   {question.description ? (
-                    <div className="mt-2 break-words text-sm text-[#5B6B7C]">
+                    <div className="mt-2 break-words text-sm text-[var(--pub-text-muted)]">
                       {question.description}
                     </div>
                   ) : null}
@@ -453,24 +405,23 @@ export default async function PublicMeetingsPage({
                   {(meeting.status === "review" ||
                     meeting.status === "completed" ||
                     meeting.status === "archived") ? (
-                    <div className="mt-3 space-y-2 sm:grid sm:gap-2 sm:grid-cols-3 sm:space-y-0">
-                      <div className="rounded-xl border border-[#E4DBD1] bg-[#FBF8F4] p-3 text-xs text-[#5B6B7C]">
+                    <div className="mt-3 space-y-2 sm:grid sm:grid-cols-3 sm:gap-2 sm:space-y-0">
+                      <div className="rounded-[var(--r-md)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-3 text-xs text-[var(--pub-text-muted)]">
                         {houseMeetingsCopy.votes.for}: {getVotePercent(question.votesFor, question.totalApartmentsVoted)}%
                       </div>
-                      <div className="rounded-xl border border-[#E4DBD1] bg-[#FBF8F4] p-3 text-xs text-[#5B6B7C]">
+                      <div className="rounded-[var(--r-md)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-3 text-xs text-[var(--pub-text-muted)]">
                         {houseMeetingsCopy.votes.against}: {getVotePercent(question.votesAgainst, question.totalApartmentsVoted)}%
                       </div>
-                      <div className="rounded-xl border border-[#E4DBD1] bg-[#FBF8F4] p-3 text-xs text-[#5B6B7C]">
+                      <div className="rounded-[var(--r-md)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-3 text-xs text-[var(--pub-text-muted)]">
                         {houseMeetingsCopy.votes.abstained}: {getVotePercent(question.votesAbstained, question.totalApartmentsVoted)}%
                       </div>
                     </div>
                   ) : null}
-
                 </div>
               ))}
 
               {meeting.status === "active" ? (
-                <div className="mt-4 rounded-2xl border border-[#E6D7C6] bg-[#F5EFE6] p-4 text-sm text-[#7A5C3E]">
+                <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--pub-warning-border)] bg-[var(--pub-warning-bg)] p-4 text-sm text-[var(--pub-warning-text)]">
                   {houseMeetingsCopy.activeNote}
                 </div>
               ) : null}
@@ -480,11 +431,11 @@ export default async function PublicMeetingsPage({
                 meeting.status === "completed" ||
                 meeting.status === "archived") ? (
                 <div className="mt-3 space-y-3 sm:mt-4 sm:grid sm:gap-4 lg:grid-cols-2 sm:space-y-0">
-                  <div className="min-w-0 rounded-2xl border border-[#E4DBD1] bg-[#F3EEE8] p-4">
-                    <div className="text-sm font-semibold text-[#1F2A37]">
+                  <div className="min-w-0 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4">
+                    <div className="text-sm font-semibold text-[var(--pub-text)]">
                       {houseMeetingsCopy.voters.voted}
                     </div>
-                    <div className="mt-3 max-h-80 space-y-2 overflow-y-auto overscroll-contain pr-2 text-sm text-[#5B6B7C]">
+                    <div className="mt-3 max-h-80 space-y-2 overflow-y-auto overscroll-contain pr-2 text-sm text-[var(--pub-text-muted)]">
                       {(meeting.manualVotes ?? []).length > 0 ? (
                         (meeting.manualVotes ?? []).map((vote) => (
                           <div key={vote.apartmentId}>
@@ -497,13 +448,13 @@ export default async function PublicMeetingsPage({
                     </div>
                   </div>
 
-                  <div className="min-w-0 rounded-2xl border border-[#E4DBD1] bg-[#F3EEE8] p-4">
-                    <div className="text-sm font-semibold text-[#1F2A37]">
+                  <div className="min-w-0 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4">
+                    <div className="text-sm font-semibold text-[var(--pub-text)]">
                       {meeting.status === "completed" || meeting.status === "archived"
                         ? houseMeetingsCopy.voters.notVoted
                         : houseMeetingsCopy.voters.notYet}
                     </div>
-                    <div className="mt-3 max-h-80 overflow-y-auto overscroll-contain whitespace-pre-wrap break-words pr-2 text-sm text-[#5B6B7C]">
+                    <div className="mt-3 max-h-80 overflow-y-auto overscroll-contain whitespace-pre-wrap break-words pr-2 text-sm text-[var(--pub-text-muted)]">
                       {getNotVotedApartmentLabels(meeting, apartments).join(",\n") ||
                         "Усі квартири вже враховані"}
                     </div>
@@ -525,9 +476,8 @@ export default async function PublicMeetingsPage({
               ) : null}
             </article>
           ))
-          )}
-        </section>
-      </div>
-    </section>
+        )}
+      </section>
+    </div>
   );
 }
