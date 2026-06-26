@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { houseReportsCopy } from "@/src/shared/publicCopy/house";
-import Link from "next/link";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseReports } from "@/src/modules/houses/services/getPublishedHouseReports";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
+import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
+import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
+import { PubBadge } from "@/src/shared/ui/public/PubBadge";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,7 +15,6 @@ type Props = {
     year?: string;
   }>;
 };
-
 
 const MONTH_LABELS: Record<string, string> = houseReportsCopy.months;
 
@@ -79,7 +80,6 @@ function isStillNew(value?: string | null) {
   return date.getTime() >= Date.now();
 }
 
-
 export default async function ReportsPage({
   params,
   searchParams,
@@ -94,8 +94,6 @@ export default async function ReportsPage({
   }
 
   const { reports } = await getPublishedHouseReports(house.id);
-
-  const districtColor = house.district?.theme_color ?? "#16a34a";
 
   const visibleReports = reports.slice().sort((a, b) => {
     const aDate = new Date(a.reportDate ?? "").getTime() || 0;
@@ -112,7 +110,6 @@ export default async function ReportsPage({
   );
 
   const pastReports = visibleReports.filter((item) => item.periodType === "past");
-
 
   function sortReportsForGrid(items: typeof visibleReports) {
     return [...items].sort((left, right) => {
@@ -180,189 +177,105 @@ export default async function ReportsPage({
           ),
         );
 
+  const modeTabs: PubFilterTabItem[] = [
+    {
+      key: "current",
+      label: houseReportsCopy.tabs.current,
+      href: `/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
+      count: currentReports.length,
+      active: selectedMode === "current",
+    },
+    {
+      key: "past",
+      label: "Минулі роки",
+      href: `/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
+      count: pastReports.length,
+      active: selectedMode === "past" || selectedMode === "archive",
+    },
+  ];
+
+  const periodTabs: PubFilterTabItem[] =
+    selectedMode === "past" || selectedMode === "archive"
+      ? availableYears.map((year) => ({
+          key: String(year),
+          label: String(year),
+          href: `/reports?mode=past&year=${year}`,
+          active: selectedYear === String(year),
+        }))
+      : availableMonths.map((month) => ({
+          key: month,
+          label: getMonthLabel(month),
+          href: `/reports?mode=current&month=${month}`,
+          active: selectedMonth === month,
+        }));
+
   return (
-    <section className="mx-auto w-full min-w-0 max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="grid min-w-0 gap-6">
-        <section className="w-full min-w-0 rounded-[36px] border border-[#E4DBD1] bg-[#F3EEE8] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:p-8 lg:p-10">
-          <div className="min-w-0 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-[#1F2A37] sm:text-5xl lg:text-6xl">
-              {houseReportsCopy.page.title}
-            </h1>
+    <div className="grid min-w-0 gap-6">
+      <PubSectionHeader
+        title={houseReportsCopy.page.title}
+        description={`${houseReportsCopy.page.title} про виконані роботи та ключові оновлення будинку в одному місці.`}
+      >
+        <div className="grid gap-4">
+          <PubFilterTabs items={modeTabs} framed={false} ariaLabel="Період звітів" />
+          {periodTabs.length > 0 ? <PubFilterTabs items={periodTabs} /> : null}
+        </div>
+      </PubSectionHeader>
 
-            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5B6B7C] sm:text-lg">
-              {houseReportsCopy.page.title} про виконані роботи та ключові оновлення будинку в одному місці.
-            </p>
+      <section>
+        {filteredReports.length === 0 ? (
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
+            {selectedMode === "past"
+              ? "Звіти минулих років за обраний період поки відсутні."
+              : selectedMode === "archive"
+                ? "Архів звітів за обраний період поки порожній."
+                : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
           </div>
+        ) : (
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {filteredReports.map((report) => (
+              <article
+                key={report.id}
+                className="flex w-full min-w-0 flex-col rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] transition hover:shadow-[var(--pub-shadow-md)]"
+              >
+                <div className="flex flex-wrap gap-2">
+                  <PubBadge tone="neutral" size="sm">
+                    {normalizeReportCategoryLabel(report.categoryTitle)}
+                  </PubBadge>
 
-          <div className="mt-8">
-            <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {[
-                {
-                  key: "current",
-                  label: houseReportsCopy.tabs.current,
-                  href: `/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
-                  count: currentReports.length,
-                },
-                {
-                  key: "past",
-                  label: "Минулі роки",
-                  href: `/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
-                  count: pastReports.length,
-                },
-              ].map((item) => {
-                const isActive = selectedMode === item.key;
+                  {report.isPinned ? (
+                    <PubBadge tone="warning" size="sm">
+                      Важливе
+                    </PubBadge>
+                  ) : null}
 
-                return (
-                  <Link
-            prefetch={false}
-                    key={item.key}
-                    href={item.href}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                      isActive
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={
-                      isActive
-                        ? {
-                            "--tab-active-bg": `${districtColor}20`,
-                            "--tab-active-text": "#1F2A37",
-                            borderColor: districtColor,
-                          } as React.CSSProperties
-                        : undefined
-                    }
-                  >
-                    <span>{item.label}</span>
-                    <span
-                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                        isActive
-                          ? "bg-[#D9CFC3] text-[#1F2A44] border-[#C4B7A7]"
-                          : "bg-[#E7DED3] text-[#2F3A4F] border-[#D2C6B8]"
-                      }`}
-                    >
-                      {item.count}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+                  {report.isNew && isStillNew(report.newUntil) ? (
+                    <PubBadge tone="success" size="sm">
+                      Нове
+                    </PubBadge>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 break-words text-base font-semibold text-[var(--pub-text)] sm:text-lg">
+                  {report.title}
+                </div>
+
+                <p className="mt-3 break-words text-sm leading-7 text-[var(--pub-text-muted)]">
+                  {report.description}
+                </p>
+
+                <PublicReportPdfViewer
+                  filePath={report.pdf?.path ?? ""}
+                  fileName={report.pdf?.originalName ?? undefined}
+                  analyticsHouseId={house.id}
+                  analyticsHouseSlug={house.slug}
+                  analyticsEntityId={report.id}
+                  analyticsDocumentType="report"
+                />
+              </article>
+            ))}
           </div>
-
-          <div className="mt-5 w-full min-w-0 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-3 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
-            <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {selectedMode === "past" || selectedMode === "archive" ? (
-              <>
-                {availableYears.map((year) => (
-                  <Link
-            prefetch={false}
-                    key={year}
-                    href={`/reports?mode=past&year=${year}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                      selectedYear === String(year)
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={
-                      selectedYear === String(year)
-                        ? {
-                            "--tab-active-bg": `${districtColor}20`,
-                            "--tab-active-text": "#1F2A37",
-                            borderColor: districtColor,
-                          } as React.CSSProperties
-                        : undefined
-                    }
-                  >
-                    {year}
-                  </Link>
-                ))}
-              </>
-            ) : (
-              <>
-                {availableMonths.map((month) => (
-                  <Link
-            prefetch={false}
-                    key={month}
-                    href={`/reports?mode=current&month=${month}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-all duration-200 ${
-                      selectedMonth === month
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={
-                      selectedMonth === month
-                        ? {
-                            "--tab-active-bg": `${districtColor}20`,
-                            "--tab-active-text": "#1F2A37",
-                            borderColor: districtColor,
-                          } as React.CSSProperties
-                        : undefined
-                    }
-                  >
-                    {getMonthLabel(month)}
-                  </Link>
-                ))}
-              </>
-            )}
-            </div>
-          </div>
-        </section>
-
-        <section>
-          {filteredReports.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#E2D8CC] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
-              {selectedMode === "past"
-                ? "Звіти минулих років за обраний період поки відсутні."
-                : selectedMode === "archive"
-                  ? "Архів звітів за обраний період поки порожній."
-                  : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
-            </div>
-          ) : (
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {filteredReports.map((report) => (
-                <article
-                  key={report.id}
-                  className="w-full min-w-0 rounded-[22px] border border-[#E2D8CC] bg-[#F9F6F2] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)] transition-all duration-200  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:rounded-[28px] sm:p-5"
-                >
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-[#E7DED3] px-3 py-1 text-xs font-medium">
-                      {normalizeReportCategoryLabel(report.categoryTitle)}
-                    </span>
-
-                    {report.isPinned ? (
-                      <span className="rounded-full bg-[#F1E7DF] px-3 py-1 text-xs font-medium text-[#7A4B2F] border border-[#E2D3C2]">
-                        Важливе
-                      </span>
-                    ) : null}
-
-                    {report.isNew && isStillNew(report.newUntil) ? (
-                      <span className="rounded-full bg-[#E6EFE8] px-3 py-1 text-xs font-medium text-[#2F6F4F] border border-[#D4E3D8]">
-                        Нове
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 break-words text-base font-semibold sm:text-lg">
-                    {report.title}
-                  </div>
-
-                  <p className="mt-3 break-words text-sm leading-7 text-[#5B6B7C]">
-                    {report.description}
-                  </p>
-
-                  <PublicReportPdfViewer
-                    filePath={report.pdf?.path ?? ""}
-                    fileName={report.pdf?.originalName ?? undefined}
-                    analyticsHouseId={house.id}
-                    analyticsHouseSlug={house.slug}
-                    analyticsEntityId={report.id}
-                    analyticsDocumentType="report"
-                  />
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-    </section>
+        )}
+      </section>
+    </div>
   );
 }
