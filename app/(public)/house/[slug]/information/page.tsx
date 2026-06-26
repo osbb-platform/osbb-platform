@@ -6,7 +6,9 @@ import { getPublishedHouseFaq } from "@/src/modules/houses/services/getPublished
 import { getPublishedHouseInformationPosts } from "@/src/modules/houses/services/getPublishedHouseInformationPosts";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { PublicInformationSlider } from "@/src/modules/houses/components/PublicInformationSlider";
-import Link from "next/link";
+import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
+import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
+import { PubBadge } from "@/src/shared/ui/public/PubBadge";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -14,7 +16,6 @@ type Props = {
     year?: string;
   }>;
 };
-
 
 export default async function InformationPage({
   params,
@@ -27,8 +28,6 @@ export default async function InformationPage({
   if (!house) {
     notFound();
   }
-
-  const districtColor = house.district?.theme_color ?? "#22c55e";
 
   const [articles, documents, faq] = await Promise.all([
     getPublishedHouseInformationPosts(house.id),
@@ -58,84 +57,47 @@ export default async function InformationPage({
 
   const faqItems = faq?.items ?? [];
 
+  const yearTabs: PubFilterTabItem[] = documentYearsWithContent.map((year) => ({
+    key: year,
+    label: year,
+    href: `/information?year=${year}`,
+    count: documents.filter(
+      (document) => String(document.document_year ?? "") === year,
+    ).length,
+    active: selectedDocumentYear === year,
+  }));
+
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[36px] sm:p-8 lg:p-10">
-        <div className="text-center">
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#1F2A37] sm:mt-4 sm:text-6xl">
-            {houseInformationCopy.page.title}
-          </h1>
+    <div className="grid min-w-0 gap-8">
+      <PubSectionHeader
+        title={houseInformationCopy.page.title}
+        description={houseInformationCopy.page.description}
+      />
 
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#5B6B7C] sm:mt-5 sm:text-base sm:leading-8">
-            {houseInformationCopy.page.description}
-          </p>
-        </div>
-      </div>
-
-      <section className="mt-8">
-        <div className="rounded-[28px] border border-[#E4DBD1] bg-[#F3EEE8] p-3 shadow-[0_6px_20px_rgba(31,42,55,0.05)] sm:p-5">
+      <section>
+        <div className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-3 shadow-[var(--pub-shadow-sm)] sm:p-5">
           {articles.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)] sm:rounded-[32px] sm:p-6">
+            <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
               {houseInformationCopy.empty.noMaterials}
             </div>
           ) : (
-            <PublicInformationSlider
-              articles={articles}
-            />
+            <PublicInformationSlider articles={articles} />
           )}
         </div>
       </section>
 
       {documents.length > 0 ? (
-        <section className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
-          <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
+        <section className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+          <h2 className="font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-2xl">
             {houseInformationCopy.documents.subtitle}
           </h2>
 
           {documentYearsWithContent.length > 0 ? (
-            <div className="mt-6 rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8] p-3 shadow-sm backdrop-blur-sm">
-              <div className="flex w-full min-w-0 justify-center gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none]">
-              {documentYearsWithContent.map((year) => {
-                const isActive = selectedDocumentYear === year;
-                const count = documents.filter((document) => String(document.document_year ?? "") === year).length;
-
-                return (
-                  <Link
-            prefetch={false}
-                    key={year}
-                    href={`/information?year=${year}`}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition ${
-                      isActive
-                        ? "border-2 text-[color:var(--tab-active-text)] bg-[color:var(--tab-active-bg)]"
-                        : "border border-[#D8CEC2] bg-[#F6F2EC] text-[#2A3642] hover:bg-[#F0E9E1]"
-                    }`}
-                    style={
-                      isActive
-                        ? {
-                            "--tab-active-bg": `${districtColor}20`,
-                            "--tab-active-text": "#1F2A37",
-                            borderColor: districtColor,
-                          } as React.CSSProperties
-                        : undefined
-                    }
-                  >
-                    <span>{year}</span>
-                    <span
-                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        isActive
-                          ? "bg-[#D9CFC3] text-[#1F2A44] border border-[#C4B7A7]"
-                          : "bg-[#E7DED3] text-[#2F3A4F] border border-[#D2C6B8]"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </Link>
-                );
-              })}
-              </div>
+            <div className="mt-6">
+              <PubFilterTabs items={yearTabs} ariaLabel="Рік документів" />
             </div>
           ) : (
-            <div className="mt-6 rounded-[24px] border border-dashed border-[#D8CEC2] bg-[#F9F6F2] p-4 text-sm text-[#5F5A54] shadow-sm sm:rounded-[32px] sm:p-6">
+            <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
               Для матеріалів ще не вказано роки. Оновіть матеріали в CMS та виберіть рік для відображення.
             </div>
           )}
@@ -146,21 +108,21 @@ export default async function InformationPage({
                 {filteredDocuments.map((document) => (
                   <div
                     key={document.id}
-                    className="rounded-3xl border border-[#E4DBD1] bg-[#F3EEE8] p-5 shadow-sm"
+                    className="flex flex-col rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-5 shadow-[var(--pub-shadow-sm)]"
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      {document.document_year ? (
-                        <span className="rounded-full border border-[#D8CEC2] bg-[#F6F2EC] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5B6B7C]">
+                    {document.document_year ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <PubBadge tone="neutral" size="sm">
                           {document.document_year}
-                        </span>
-                      ) : null}
-                    </div>
+                        </PubBadge>
+                      </div>
+                    ) : null}
 
-                    <div className="mt-3 text-base font-semibold text-slate-900">
+                    <div className="mt-3 text-base font-semibold text-[var(--pub-text)]">
                       {document.title}
                     </div>
 
-                    <div className="mt-2 text-sm leading-6 text-[#5B6B7C]">
+                    <div className="mt-2 text-sm leading-6 text-[var(--pub-text-muted)]">
                       {document.description || houseInformationCopy.documents.pdfFallback}
                     </div>
 
@@ -178,34 +140,34 @@ export default async function InformationPage({
               </div>
             </div>
           ) : (
-            <div className="mt-6 rounded-[24px] border border-dashed border-[#D8CEC2] bg-[#F9F6F2] p-4 text-sm text-[#5F5A54] shadow-sm sm:rounded-[32px] sm:p-6">
+            <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
               Матеріали за {selectedDocumentYear} рік поки не додані.
             </div>
           )}
         </section>
       ) : null}
 
-      <section className="mt-8 rounded-[28px] border border-[#DDD4CA] bg-[#ECE6DF] p-4 shadow-sm sm:rounded-[32px] sm:p-6">
-        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
+      <section className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+        <h2 className="font-[var(--font-serif)] text-xl font-semibold tracking-tight text-[var(--pub-text)] sm:text-2xl">
           {houseInformationCopy.faq.title}
         </h2>
 
-        <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
+        <div className="mt-4 space-y-3 sm:mt-6">
           {faqItems.map((item, index) => (
             <details
               key={index}
-              className="group rounded-2xl border border-[#E4DBD1] bg-[#F9F6F2] px-5 py-4 transition-all duration-200 hover:border-[#D8CEC2] hover:bg-[#F5F1EB]"
+              className="group rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4 transition hover:border-[var(--pub-border-strong)]"
             >
-              <summary className="cursor-pointer list-none text-base font-semibold text-[#1F2A37]">
+              <summary className="cursor-pointer list-none text-base font-semibold text-[var(--pub-text)]">
                 {item.question || houseInformationCopy.faq.questionFallback}
               </summary>
-              <div className="mt-4 rounded-xl border border-[#E4DBD1] bg-[#F3EEE8] px-4 py-3 text-sm leading-7 text-[#42546A]">
+              <div className="mt-4 rounded-[var(--r-md)] border border-[var(--pub-border)] bg-[var(--pub-surface)] px-4 py-3 text-sm leading-7 text-[var(--pub-text-muted)]">
                 {item.answer}
               </div>
             </details>
           ))}
         </div>
       </section>
-    </section>
+    </div>
   );
 }
