@@ -2,6 +2,8 @@
 import { houseRequisitesCopy } from "@/src/shared/publicCopy/house";
 
 import { useState } from "react";
+import { PubButton } from "@/src/shared/ui/public/PubButton";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Requisites = {
   recipient: string;
@@ -33,29 +35,30 @@ function RequisiteCard({
   helper,
 }: RequisiteCardProps) {
   return (
-    <div className="rounded-[20px] border border-[#E3D9CE] bg-[#F7F3EE] p-4 text-[var(--foreground)] shadow-sm sm:rounded-[24px] sm:p-5">
-      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+    <div className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 text-[var(--pub-text)] shadow-[var(--pub-shadow-sm)]">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--pub-text-soft)]">
         {label}
       </div>
 
-      <div className="mt-3 break-all text-base font-semibold tracking-wide sm:text-lg">
+      <div className="mt-3 break-all text-base font-semibold tracking-wide text-[var(--pub-text)] sm:text-lg">
         {value || houseRequisitesCopy.card.empty}
       </div>
 
       {helper ? (
-        <div className="mt-2 text-sm text-[var(--muted)]">
-          {helper}
-        </div>
+        <div className="mt-2 text-sm text-[var(--pub-text-muted)]">{helper}</div>
       ) : null}
 
-      <button
+      <PubButton
         type="button"
+        variant="secondary"
+        size="sm"
+        className="mt-4"
         onClick={() => onCopy(label, value)}
         disabled={!value}
-        className="mt-4 rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3] disabled:cursor-not-allowed disabled:opacity-50"
+        leftIcon={<PubIcon name="copy" className="h-4 w-4" />}
       >
         {value ? houseRequisitesCopy.card.copy : houseRequisitesCopy.card.noData}
-      </button>
+      </PubButton>
     </div>
   );
 }
@@ -69,27 +72,30 @@ type TextBlockProps = {
 
 function TextBlock({ label, value, onCopy, helper }: TextBlockProps) {
   return (
-    <div className="rounded-[24px] border border-[#DED3C6] bg-[#F3EEE8] p-5 shadow-sm sm:rounded-[30px] sm:p-6">
-      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7A746B]">
+    <div className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--pub-text-soft)]">
         {label}
       </div>
 
       {helper ? (
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6B7280]">{helper}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--pub-text-muted)]">{helper}</p>
       ) : null}
 
-      <div className="mt-5 rounded-[26px] border border-[#D8CCBE] bg-[#F8F3EC] p-5 text-base leading-8 text-[#1F2A37] sm:text-[1.05rem]">
+      <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-5 text-base leading-8 text-[var(--pub-text)] sm:text-[1.05rem]">
         {value || houseRequisitesCopy.card.empty}
       </div>
 
-      <button
+      <PubButton
         type="button"
+        variant="secondary"
+        size="sm"
+        className="mt-5"
         onClick={() => onCopy(label, value)}
         disabled={!value}
-        className="mt-5 inline-flex rounded-full border border-[#D2C6B8] bg-[#E7DED3] px-4 py-2 text-sm font-medium text-[#1F2A37] transition hover:bg-[#DDD1C3] disabled:cursor-not-allowed disabled:opacity-50"
+        leftIcon={<PubIcon name="copy" className="h-4 w-4" />}
       >
         {value ? houseRequisitesCopy.card.copy : houseRequisitesCopy.card.noData}
-      </button>
+      </PubButton>
     </div>
   );
 }
@@ -117,7 +123,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
 
   if (!requisites.hasPublishedSnapshot) {
     return (
-      <div className="mt-8 rounded-[28px] border border-dashed border-[#DDD1C3] bg-[#F6F1EB] p-6 text-[var(--muted)]">
+      <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
         {houseRequisitesCopy.page.empty}
         з’являться дані для ручної оплати та копіювання.
       </div>
@@ -126,7 +132,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
 
   return (
     <>
-      <section className="mt-6 grid gap-3 md:grid-cols-2 sm:mt-8 sm:gap-4">
+      <section className="grid gap-4 md:grid-cols-2">
         <RequisiteCard
           label={houseRequisitesCopy.card.recipient}
           value={requisites.recipient}
@@ -139,7 +145,6 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
           value={requisites.iban}
           helper={houseRequisitesCopy.card.helperIban}
           onCopy={handleCopy}
-          
         />
 
         <RequisiteCard
@@ -157,7 +162,7 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         />
       </section>
 
-      <section className="mt-6 grid gap-3 lg:grid-cols-2 sm:mt-8 sm:gap-4">
+      <section className="grid gap-4 lg:grid-cols-2">
         <TextBlock
           label={houseRequisitesCopy.blocks.purpose}
           value={requisites.purposeTemplate}
@@ -173,12 +178,12 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
         />
       </section>
 
-      <div className="mt-6 rounded-[26px] border border-[#D6C9B8] bg-[#E8DED1] p-5 shadow-[0_10px_28px_rgba(31,42,55,0.05)] sm:mt-8 sm:rounded-[32px] sm:p-7">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#73685D]">
+      <div className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-md)] sm:p-7">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--pub-text-soft)]">
           {houseRequisitesCopy.payment.title}
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5F5A54] sm:text-base">
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--pub-text-muted)] sm:text-base">
           {houseRequisitesCopy.payment.description}, ви можете перейти за
           кнопкою нижче. Або використовуйте реквізити вище для ручного переказу.
         </p>
@@ -189,14 +194,14 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
               href={requisites.paymentUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex rounded-[22px] border border-[#C7B9A8] bg-[#D8CABA] px-6 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#CFBEAC]"
+              className="inline-flex min-h-[52px] items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 text-sm font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
             >
               <span className="break-words text-center">
                 {requisites.paymentButtonLabel || houseRequisitesCopy.payment.buttonFallback}
               </span>
             </a>
           ) : (
-            <div className="inline-flex rounded-[22px] border border-[#D2C6B8] bg-[#EFE7DC] px-5 py-3 text-sm text-[#7A746B]">
+            <div className="inline-flex min-h-[52px] items-center rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-5 text-sm text-[var(--pub-text-muted)]">
               {houseRequisitesCopy.payment.disabled}
             </div>
           )}
@@ -204,7 +209,8 @@ export function PublicHouseRequisitesClient({ requisites }: Props) {
       </div>
 
       {copiedLabel ? (
-        <div className="fixed bottom-6 right-6 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white shadow-xl">
+        <div className="fixed bottom-6 right-6 z-[80] inline-flex items-center gap-2 rounded-[var(--r-lg)] bg-[var(--pub-accent)] px-4 py-3 text-sm font-medium text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-lg)]">
+          <PubIcon name="check" className="h-4 w-4" />
           {copiedLabel === houseRequisitesCopy.toast.error
             ? copiedLabel
             : `${houseRequisitesCopy.toast.copied}: ${copiedLabel}`}
