@@ -3,6 +3,7 @@ import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPubli
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
+import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -196,23 +197,24 @@ function getBalanceStatus(amount: number) {
   return "Баланс 0";
 }
 
+// Семантика рядка балансу через токени: борг → danger, плюс → success.
 function getBalanceRowClass(amount: number) {
   if (amount < 0) {
-    return "border-[#E6CFCF] bg-[#F8ECEC]";
+    return "border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)]";
   }
 
   if (amount > 0) {
-    return "border-[#CFE4D4] bg-[#EAF4EC]";
+    return "border-[var(--pub-success-border)] bg-[var(--pub-success-bg)]";
   }
 
-  return "border-[#E5DBCF]";
+  return "border-[var(--pub-border)]";
 }
 
 function getBalanceTextClass(amount: number) {
-  if (amount < 0) return "text-red-700";
-  if (amount > 0) return "text-emerald-700";
+  if (amount < 0) return "text-[var(--pub-danger-text)]";
+  if (amount > 0) return "text-[var(--pub-success-text)]";
 
-  return "text-[#1F2A37]";
+  return "text-[var(--pub-text)]";
 }
 
 export default async function DebtorsPage({
@@ -261,41 +263,39 @@ export default async function DebtorsPage({
     hasPublishedSnapshot && Boolean(searchQuery) && visibleItems.length === 0;
 
   return (
-    <section className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="w-full min-w-0 rounded-[24px] border border-[#DDD4CA] bg-[#F3EEE8] p-4 shadow-sm sm:rounded-[32px] sm:p-8">
-        <div className="min-w-0 text-center">
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-5xl">
-            Нарахування та боржники
-          </h1>
+    <div className="grid min-w-0 gap-6">
+      <section className="w-full min-w-0 rounded-[var(--r-3xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 text-center shadow-[var(--pub-shadow-sm)] sm:p-8 lg:p-10">
+        <h1 className="font-[var(--font-serif)] text-[clamp(2rem,4vw,3.4rem)] font-semibold tracking-[-0.01em] text-[var(--pub-text)]">
+          Нарахування та боржники
+        </h1>
 
-          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#7A746B]">
-            Актуальний баланс особових рахунків та список квартир із заборгованістю.
-          </p>
+        <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[var(--pub-text-muted)] sm:text-lg">
+          Актуальний баланс особових рахунків та список квартир із заборгованістю.
+        </p>
 
-          <div className="mt-6 inline-flex rounded-full border border-[#DDD4CA] bg-[#EAE2D8] px-4 py-2 text-sm font-medium text-[#2A3642]">
-            Дата актуальності: {updatedAtLabel}
-          </div>
+        <div className="mt-6 inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-2 text-sm font-medium text-[var(--pub-text-muted)]">
+          Дата актуальності: {updatedAtLabel}
         </div>
-      </div>
+      </section>
 
-      <section className="mt-8 mx-auto grid min-w-0 max-w-5xl justify-center gap-4 text-center lg:grid-cols-3">
-        <article className="rounded-[22px] border border-[#DDD4CA] bg-[#F6F2EC] p-4 sm:rounded-[28px] sm:p-6">
-          <div className="text-sm font-medium text-[#2A3642]">Кількість боржників</div>
-          <div className="mt-3 text-3xl font-semibold text-[#1F2A37]">
+      <section className="mx-auto grid min-w-0 w-full max-w-5xl justify-center gap-4 text-center lg:grid-cols-3">
+        <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+          <div className="text-sm font-medium text-[var(--pub-text-muted)]">Кількість боржників</div>
+          <div className="mt-3 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-text)]">
             {debtItems.length}
           </div>
         </article>
 
-        <article className="rounded-[22px] border border-[#DDD4CA] bg-[#F6F2EC] p-4 sm:rounded-[28px] sm:p-6">
-          <div className="text-sm font-medium text-[#2A3642]">Загальна сума заборгованості</div>
-          <div className="mt-3 text-3xl font-semibold text-[#1F2A37]">
+        <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+          <div className="text-sm font-medium text-[var(--pub-text-muted)]">Загальна сума заборгованості</div>
+          <div className="mt-3 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-text)]">
             {formatCurrency(totalDebtAmount)} ₴
           </div>
         </article>
 
-        <article className="rounded-[22px] border border-[#DDD4CA] bg-[#F6F2EC] p-4 sm:rounded-[28px] sm:p-6">
-          <div className="text-sm font-medium text-[#2A3642]">Статус публікації</div>
-          <div className="mt-3 text-lg font-semibold text-[#1F2A37]">
+        <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
+          <div className="text-sm font-medium text-[var(--pub-text-muted)]">Статус публікації</div>
+          <div className="mt-3 text-lg font-semibold text-[var(--pub-text)]">
             {noPublishedState
               ? "Баланси не опубліковано"
               : debtItems.length === 0
@@ -305,57 +305,62 @@ export default async function DebtorsPage({
         </article>
       </section>
 
-      <div className="mt-8 w-full min-w-0 rounded-[28px] border border-[#DDD4CA] bg-[#EAE2D8] p-6">
+      <div className="w-full min-w-0 rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-6">
         <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <input
-            type="text"
-            name="q"
-            defaultValue={searchQuery}
-            placeholder="Введіть квартиру або особовий рахунок"
-            className="w-full rounded-2xl border border-[#DDD4CA] bg-[#F6F2EC] px-4 py-3 text-[#1F2A37] outline-none transition hover:border-[#CBBBAA] focus:border-[#CBBBAA] focus:ring-2 focus:ring-[#E5DBCF]"
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--pub-text-soft)]">
+              <PubIcon name="search" className="h-[18px] w-[18px]" />
+            </span>
+            <input
+              type="text"
+              name="q"
+              defaultValue={searchQuery}
+              placeholder="Введіть квартиру або особовий рахунок"
+              className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] pl-11 pr-4 text-[15px] text-[var(--pub-text)] outline-none transition-shadow placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]"
+            />
+          </div>
           <button
             type="submit"
-            className="rounded-2xl bg-[#DDD1C3] px-5 py-3 text-sm font-medium text-[#1F2A37] transition hover:bg-[#E5DBCF]"
+            className="inline-flex h-12 items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 text-sm font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--pub-ring)_35%,transparent)]"
           >
             Знайти
           </button>
         </form>
 
-        <p className="mt-3 text-sm leading-6 text-[#7A746B]">
+        <p className="mt-3 text-sm leading-6 text-[var(--pub-text-muted)]">
           Без пошуку показуються тільки квартири із заборгованістю. Через пошук мешканець може перевірити актуальний баланс своєї квартири або особового рахунку.
         </p>
       </div>
 
-      <section className="mt-8 min-w-0">
+      <section className="min-w-0">
         {noPublishedState ? (
-          <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
             Немає опублікованого списку балансів.
           </div>
         ) : noDebtorsState ? (
-          <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
             На даний момент за опублікованими балансами боржників немає. Для перевірки конкретної квартири скористайтесь пошуком.
           </div>
         ) : noSearchResultsState ? (
-          <div className="rounded-[28px] border border-dashed border-[#DDD4CA] bg-[#F6F2EC] p-6 text-[#7A746B]">
+          <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
             За вашим запитом нічого не знайдено.
           </div>
         ) : (
-          <div className="w-full min-w-0 overflow-hidden rounded-[28px] border border-[#DDD4CA] bg-[#F3EEE8]">
+          <div className="w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)]">
             <div className="max-h-[520px] w-full overflow-x-auto overflow-y-auto overscroll-x-contain">
               <table className="w-full table-auto border-collapse">
-                <thead className="sticky top-0 z-10 bg-[#EAE2D8]">
-                  <tr className="border-b border-[#E5DBCF] text-left">
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
+                <thead className="sticky top-0 z-10 bg-[var(--pub-bg-quiet)]">
+                  <tr className="border-b border-[var(--pub-border)] text-left">
+                    <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Квартира
                     </th>
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
+                    <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Особовий рахунок
                     </th>
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
+                    <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Баланс
                     </th>
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#2A3642]">
+                    <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Статус
                     </th>
                   </tr>
@@ -368,18 +373,18 @@ export default async function DebtorsPage({
                     return (
                       <tr
                         key={item.apartmentId}
-                        className={`border-b border-[#E5DBCF] hover:bg-[#EDE3D9] ${getBalanceRowClass(amount)}`}
+                        className={`border-b ${getBalanceRowClass(amount)}`}
                       >
-                        <td className="px-5 py-4 text-sm font-medium text-[#1F2A37]">
+                        <td className="px-5 py-4 text-sm font-medium text-[var(--pub-text)]">
                           {item.apartmentLabel || "—"}
                         </td>
-                        <td className="px-5 py-4 text-sm text-[#5B6B7C]">
+                        <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
                           {item.accountNumber || "—"}
                         </td>
                         <td className={`px-5 py-4 text-sm font-semibold ${getBalanceTextClass(amount)}`}>
                           {formatSignedBalance(amount)}
                         </td>
-                        <td className="px-5 py-4 text-sm text-[#5B6B7C]">
+                        <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
                           {getBalanceStatus(amount)}
                         </td>
                       </tr>
@@ -406,6 +411,6 @@ export default async function DebtorsPage({
         calculator={calculator}
         hasPublishedDebtors={!noPublishedState && debtItems.length > 0}
       />
-    </section>
+    </div>
   );
 }
