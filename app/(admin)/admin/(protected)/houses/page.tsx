@@ -23,11 +23,17 @@ export default async function AdminHousesPage() {
 
   assertTopLevelAccess(currentUser.role, "houses");
 
+  const safeHouses = Array.isArray(houses) ? houses : [];
+  const safeDistricts = Array.isArray(districts) ? districts : [];
+  const safeManagementCompanies = Array.isArray(managementCompanies)
+    ? managementCompanies
+    : [];
+
   return (
     <HousesRegistryWorkspace
-      houses={houses}
-      districts={districts}
-      managementCompanies={managementCompanies}
+      houses={safeHouses}
+      districts={safeDistricts}
+      managementCompanies={safeManagementCompanies}
       currentUser={currentUser}
     />
   );
