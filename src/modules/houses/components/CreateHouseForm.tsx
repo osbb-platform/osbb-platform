@@ -85,9 +85,6 @@ export function CreateHouseForm({
   districts,
   managementCompanies,
 }: CreateHouseFormProps) {
-  const safeDistricts = Array.isArray(districts) ? districts : [];
-  const safeManagementCompanies = Array.isArray(managementCompanies) ? managementCompanies : [];
-
   const [state, formAction, isPending] = useActionState(
     createHouse,
     initialState,
@@ -105,21 +102,21 @@ export function CreateHouseForm({
   }, [name]);
 
   const orderedDistricts = useMemo(() => {
-    const defaultDistrict = safeDistricts.find(
+    const defaultDistrict = districts.find(
       (district) => district.slug === DEFAULT_DISTRICT_SLUG,
     );
 
-    const regularDistricts = safeDistricts.filter(
+    const regularDistricts = districts.filter(
       (district) => district.slug !== DEFAULT_DISTRICT_SLUG,
     );
 
     return defaultDistrict
       ? [defaultDistrict, ...regularDistricts]
       : regularDistricts;
-  }, [safeDistricts]);
+  }, [districts]);
 
   const defaultCompanyId =
-    safeManagementCompanies.find(
+    managementCompanies.find(
       (company) => company.slug === DEFAULT_COMPANY_SLUG,
     )?.id ?? "";
 
@@ -259,7 +256,7 @@ export function CreateHouseForm({
             Оберіть керуючу компанію
           </option>
 
-          {safeManagementCompanies.map((company) => (
+          {managementCompanies.map((company) => (
             <option key={company.id} value={company.id}>
               {company.name}
             </option>

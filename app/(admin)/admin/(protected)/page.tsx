@@ -108,15 +108,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 export default async function AdminDashboardPage() {
-  const dashboardRaw = await getAdminDashboardV1();
-  const dashboard = {
-    ...dashboardRaw,
-    reviewQueue: Array.isArray(dashboardRaw.reviewQueue) ? dashboardRaw.reviewQueue : [],
-    quickLinks: Array.isArray(dashboardRaw.quickLinks) ? dashboardRaw.quickLinks : [],
-    publications: Array.isArray(dashboardRaw.publications) ? dashboardRaw.publications : [],
-    problematicHouses: Array.isArray(dashboardRaw.problematicHouses) ? dashboardRaw.problematicHouses : [],
-    apartmentSetup: Array.isArray(dashboardRaw.apartmentSetup) ? dashboardRaw.apartmentSetup : [],
-  };
+  const dashboard = await getAdminDashboardV1();
 
   return (
     <div className="space-y-6">

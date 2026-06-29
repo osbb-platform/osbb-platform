@@ -562,10 +562,6 @@ export function HousesRegistryWorkspace({
   managementCompanies,
   currentUser,
 }: HousesRegistryWorkspaceProps) {
-  const safeHouses = Array.isArray(houses) ? houses : [];
-  const safeDistricts = Array.isArray(districts) ? districts : [];
-  const safeManagementCompanies = Array.isArray(managementCompanies) ? managementCompanies : [];
-
   const access = getResolvedAccess(currentUser.role);
   const canManageRegistry = access.housesRegistry.create || access.housesRegistry.edit;
   const canArchive = access.housesRegistry.archive;
@@ -578,13 +574,13 @@ export function HousesRegistryWorkspace({
   const [editingHouse, setEditingHouse] = useState<HouseItem | null>(null);
 
   const activeHouses = useMemo(
-    () => safeHouses.filter((house) => !house.archived_at),
-    [safeHouses],
+    () => houses.filter((house) => !house.archived_at),
+    [houses],
   );
 
   const archivedHouses = useMemo(
-    () => safeHouses.filter((house) => Boolean(house.archived_at)),
-    [safeHouses],
+    () => houses.filter((house) => Boolean(house.archived_at)),
+    [houses],
   );
 
   const [createOpenBaseline, setCreateOpenBaseline] = useState<number | null>(null);
@@ -650,7 +646,7 @@ export function HousesRegistryWorkspace({
                 В архіві: {archivedHouses.length}
               </span>
               <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                Усього: {safeHouses.length}
+                Усього: {houses.length}
               </span>
             </div>
           </div>
@@ -703,15 +699,15 @@ export function HousesRegistryWorkspace({
             </button>
           </div>
 
-          <CreateHouseForm districts={safeDistricts} managementCompanies={safeManagementCompanies} />
+          <CreateHouseForm districts={districts} managementCompanies={managementCompanies} />
         </div>
       ) : null}
 
       {editingHouse && canArchive ? (
         <HouseEditorCard
           house={editingHouse}
-          districts={safeDistricts}
-          managementCompanies={safeManagementCompanies}
+          districts={districts}
+          managementCompanies={managementCompanies}
           onClose={closeSettings}
         />
       ) : null}
@@ -756,7 +752,7 @@ export function HousesRegistryWorkspace({
               className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
             >
               <option value="">Усі райони</option>
-              {safeDistricts.map((district) => (
+              {districts.map((district) => (
                 <option key={district.id} value={district.id}>
                   {district.name}
                 </option>
