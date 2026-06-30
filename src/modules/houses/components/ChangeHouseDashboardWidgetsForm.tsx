@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type {
@@ -116,10 +116,7 @@ export function ChangeHouseDashboardWidgetsForm({
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const initialSnapshot = useMemo(
-    () => normalizeWidgets(initialWidgets),
-    [initialWidgets],
-  );
+  const initialSnapshot = normalizeWidgets(initialWidgets);
 
   const [widgets, setWidgets] = useState<Widget[]>(() => ensureAtLeastOne(initialSnapshot));
   const [lockVersion, setLockVersion] = useState(initialLockVersion);
@@ -161,7 +158,7 @@ export function ChangeHouseDashboardWidgetsForm({
     setSuccessMessage(null);
   }
 
-  const cleaned = useMemo(() => normalizeWidgets(widgets), [widgets]);
+  const cleaned = normalizeWidgets(widgets);
 
   const isDirty = JSON.stringify(cleaned) !== JSON.stringify(initialSnapshot);
 

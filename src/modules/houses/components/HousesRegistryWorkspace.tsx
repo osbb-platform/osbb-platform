@@ -1,7 +1,7 @@
 "use client";
 
 import { houseOrigin } from "@/src/shared/config/app/domains";
-import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CreateHouseForm } from "@/src/modules/houses/components/CreateHouseForm";
@@ -573,15 +573,9 @@ export function HousesRegistryWorkspace({
   const [districtFilter, setDistrictFilter] = useState("");
   const [editingHouse, setEditingHouse] = useState<HouseItem | null>(null);
 
-  const activeHouses = useMemo(
-    () => houses.filter((house) => !house.archived_at),
-    [houses],
-  );
-
-  const archivedHouses = useMemo(
-    () => houses.filter((house) => Boolean(house.archived_at)),
-    [houses],
-  );
+  const safeHouses = Array.isArray(houses) ? houses : [];
+  const activeHouses = safeHouses.filter((house) => !house.archived_at);
+  const archivedHouses = safeHouses.filter((house) => Boolean(house.archived_at));
 
   const [createOpenBaseline, setCreateOpenBaseline] = useState<number | null>(null);
   const shouldRenderCreate =
@@ -589,31 +583,29 @@ export function HousesRegistryWorkspace({
     isCreateOpen &&
     (createOpenBaseline === null || activeHouses.length <= createOpenBaseline);
 
-  const filteredHouses = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return activeHouses.filter((house) => {
-      const matchesDistrict = districtFilter
-        ? house.district?.id === districtFilter
-        : true;
+  const filteredHouses = activeHouses.filter((house) => {
+    const matchesDistrict = districtFilter
+      ? house.district?.id === districtFilter
+      : true;
 
-      const matchesSearch = normalizedQuery
-        ? [
-            house.name,
-            house.address,
-            house.slug,
-            house.osbb_name ?? "",
-            house.short_description ?? "",
-            house.public_description ?? "",
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery)
-        : true;
+    const matchesSearch = normalizedQuery
+      ? [
+          house.name,
+          house.address,
+          house.slug,
+          house.osbb_name ?? "",
+          house.short_description ?? "",
+          house.public_description ?? "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery)
+      : true;
 
-      return matchesDistrict && matchesSearch;
-    });
-  }, [activeHouses, searchQuery, districtFilter]);
+    return matchesDistrict && matchesSearch;
+  });
 
   function openSettings(house: HouseItem) {
     if (!access.housesRegistry.edit) return;
