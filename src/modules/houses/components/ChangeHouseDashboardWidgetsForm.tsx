@@ -172,7 +172,7 @@ export function ChangeHouseDashboardWidgetsForm({
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-3 px-6 py-5">
-        {widgets.map((widget, index) => (
+        {(Array.isArray(widgets) ? widgets : []).map((widget, index) => (
           <div
             key={widget.id}
             className="space-y-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-4"

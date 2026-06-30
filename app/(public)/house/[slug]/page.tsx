@@ -42,13 +42,13 @@ export default async function PublicHouseHomePage({ params }: Props) {
       <PublicHouseDashboardAlert alert={dashboard.topAlert} />
 
       <section className="grid gap-4 md:hidden">
-        {dashboard.widgets.map((widget) => (
+        {(Array.isArray(dashboard.widgets) ? dashboard.widgets : []).map((widget) => (
           <PublicHouseDashboardCard key={widget.kind} widget={widget} />
         ))}
       </section>
 
       <section className="hidden gap-5 md:grid md:grid-cols-2">
-        {dashboard.widgets.map((widget) => (
+        {(Array.isArray(dashboard.widgets) ? dashboard.widgets : []).map((widget) => (
           <PublicHouseDashboardCard key={widget.kind} widget={widget} />
         ))}
       </section>
