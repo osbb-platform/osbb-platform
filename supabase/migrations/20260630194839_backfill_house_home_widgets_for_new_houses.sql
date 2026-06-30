@@ -1,23 +1,31 @@
--- Hotfix: new houses must always have dashboard widget rows.
--- Safe backfill: inserts only missing rows, does not overwrite manager settings.
+-- Hotfix: every house must have one home widgets snapshot row.
+-- Safe backfill: inserts only missing rows and repairs malformed JSON,
+-- does not overwrite valid manager settings.
 
-insert into public.house_home_widgets (house_id, kind, is_enabled, sort_order)
-select h.id, v.kind, v.is_enabled, v.sort_order
+insert into public.house_home_widgets (
+  house_id,
+  status_widgets,
+  lock_version,
+  created_at,
+  updated_at
+)
+select
+  h.id,
+  '[]'::jsonb,
+  1,
+  now(),
+  now()
 from public.houses h
-cross join (
-  values
-    ('announcements', true, 10),
-    ('information', true, 20),
-    ('plan', true, 30),
-    ('meetings', true, 40),
-    ('debtors', true, 50),
-    ('reports', true, 60),
-    ('requisites', true, 70),
-    ('specialists', true, 80)
-) as v(kind, is_enabled, sort_order)
 where not exists (
   select 1
   from public.house_home_widgets w
   where w.house_id = h.id
-    and w.kind = v.kind
-);
+)
+on conflict (house_id) do nothing;
+
+update public.house_home_widgets
+set
+  status_widgets = '[]'::jsonb,
+  updated_at = now()
+where status_widgets is null
+   or jsonb_typeof(status_widgets) <> 'array';

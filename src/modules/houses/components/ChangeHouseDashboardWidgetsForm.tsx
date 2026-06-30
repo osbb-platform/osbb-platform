@@ -24,7 +24,7 @@ type Props = {
   sectionId?: string;
   houseId: string;
   houseSlug?: string;
-  initialWidgets: Widget[];
+  initialWidgets?: unknown;
   initialLockVersion?: number;
   readOnlyMode?: boolean;
   onSaved?: (snapshot: HouseHomeWidgetsSnapshot) => void;
@@ -41,19 +41,47 @@ function createEmptyWidget(index: number): Widget {
   };
 }
 
-function ensureAtLeastOne(widgets: Widget[]): Widget[] {
-  if (widgets.length >= 1) return widgets;
+function ensureAtLeastOne(value: unknown): Widget[] {
+  const widgets = Array.isArray(value) ? value : [];
+
+  if (widgets.length >= 1) {
+    return widgets as Widget[];
+  }
+
   return [createEmptyWidget(0)];
 }
 
-function normalizeWidgets(widgets: Widget[]): Widget[] {
-  return widgets
-    .map((widget) => ({
-      id: widget.id,
-      label: widget.label.trim().slice(0, 30),
-      value: widget.value.trim(),
-    }))
-    .filter((widget) => widget.label && widget.value)
+function normalizeWidget(item: unknown): Widget | null {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const record = item as Record<string, unknown>;
+  const id = typeof record.id === "string" && record.id.trim()
+    ? record.id.trim()
+    : "";
+  const label = typeof record.label === "string" ? record.label.trim().slice(0, 30) : "";
+  const value = typeof record.value === "string" ? record.value.trim() : "";
+
+  if (!label || !value) {
+    return null;
+  }
+
+  return {
+    id: id || `widget-${label}-${value}`,
+    label,
+    value,
+  };
+}
+
+function normalizeWidgets(value: unknown): Widget[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(normalizeWidget)
+    .filter((widget): widget is Widget => widget !== null)
     .slice(0, 6);
 }
 
@@ -93,35 +121,43 @@ export function ChangeHouseDashboardWidgetsForm({
     [initialWidgets],
   );
 
-  const [widgets, setWidgets] = useState<Widget[]>(ensureAtLeastOne(initialSnapshot));
+  const [widgets, setWidgets] = useState<Widget[]>(() => ensureAtLeastOne(initialSnapshot));
   const [lockVersion, setLockVersion] = useState(initialLockVersion);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   function addWidget() {
     if (widgets.length >= 6 || readOnlyMode) return;
-    setWidgets((current) => [...current, createEmptyWidget(current.length)]);
+    setWidgets((current) => {
+      const safeCurrent = Array.isArray(current) ? current : [];
+      return [...safeCurrent, createEmptyWidget(safeCurrent.length)];
+    });
     setSuccessMessage(null);
   }
 
   function updateWidget(index: number, field: keyof Widget, value: string) {
     if (readOnlyMode) return;
 
-    setWidgets((current) =>
-      current.map((widget, widgetIndex) =>
+    setWidgets((current) => {
+      const safeCurrent = Array.isArray(current) ? current : [];
+
+      return safeCurrent.map((widget, widgetIndex) =>
         widgetIndex === index
           ? {
               ...widget,
               [field]: field === "label" ? value.slice(0, 30) : value,
             }
           : widget,
-      ),
-    );
+      );
+    });
     setSuccessMessage(null);
   }
 
   function removeWidget(index: number) {
     if (widgets.length <= 1 || readOnlyMode) return;
-    setWidgets((current) => current.filter((_, widgetIndex) => widgetIndex !== index));
+    setWidgets((current) => {
+      const safeCurrent = Array.isArray(current) ? current : [];
+      return safeCurrent.filter((_, widgetIndex) => widgetIndex !== index);
+    });
     setSuccessMessage(null);
   }
 
