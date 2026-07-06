@@ -87,7 +87,7 @@ function setVisitorCookie(
     HOUSE_VISITOR_COOKIE_NAME,
     sessionId,
     {
-      httpOnly: false,
+      httpOnly: true,
       sameSite: "lax",
       secure:
         process.env.NODE_ENV === "production",

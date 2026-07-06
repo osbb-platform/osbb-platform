@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { getSupabaseAuthCookieOptions } from "@/src/integrations/supabase/shared/authCookieOptions";
 
 export function createSupabaseBrowserClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,5 +14,11 @@ export function createSupabaseBrowserClient() {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
   }
 
-  return createBrowserClient(supabaseUrl, supabasePublishableKey);
+  return createBrowserClient(
+    supabaseUrl,
+    supabasePublishableKey,
+    {
+      cookieOptions: getSupabaseAuthCookieOptions(),
+    },
+  );
 }
