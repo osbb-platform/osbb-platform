@@ -127,9 +127,11 @@ export default async function InformationPage({
                     </div>
 
                     <PublicReportPdfViewer
-                      filePath={document.storage_path || ""}
+                      entityType="house_document"
+                      entityId={document.id}
+                      fieldKey="pdf"
+                      houseSlug={house.slug}
                       fileName={document.original_file_name || document.title}
-                      bucket="house-documents"
                       analyticsHouseId={house.id}
                       analyticsHouseSlug={house.slug}
                       analyticsEntityId={document.id}

@@ -466,11 +466,14 @@ export default async function PublicMeetingsPage({
                 meeting.status === "archived") &&
               meeting.protocolPdf ? (
                 <PublicReportPdfViewer
-                  filePath={meeting.protocolPdf}
+                  entityType="house_meeting"
+                  entityId={meeting.id}
+                  fieldKey="protocol"
+                  houseSlug={house.slug}
                   fileName={`Протокол — ${meeting.title}`}
                   analyticsHouseId={house.id}
                   analyticsHouseSlug={house.slug}
-                  analyticsEntityId={meeting.protocolDocumentId ?? meeting.id}
+                  analyticsEntityId={meeting.protocolDocumentId || meeting.id}
                   analyticsDocumentType="meeting_protocol"
                 />
               ) : null}

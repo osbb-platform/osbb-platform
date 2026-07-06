@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
+
+import type { FileEntityType } from "@/src/modules/files/types/fileAccess";
 import { PublicDocumentActionButton } from "@/src/shared/ui/public/PublicDocumentActionButton";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
 type Props = {
-  filePath: string;
+  entityType: FileEntityType;
+  entityId: string;
+  fieldKey: string;
+  houseSlug?: string;
   fileName?: string;
-  bucket?: string;
   analyticsHouseId?: string;
   analyticsHouseSlug?: string;
   analyticsEntityId?: string | null;
@@ -16,26 +23,62 @@ type Props = {
 };
 
 export function PublicReportPdfViewer({
-  filePath,
+  entityType,
+  entityId,
+  fieldKey,
+  houseSlug,
   fileName,
-  bucket = "house-reports",
   analyticsHouseId,
   analyticsHouseSlug,
   analyticsEntityId,
   analyticsDocumentType,
 }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] =
+    useState(false);
+  const [isLoading, setIsLoading] =
+    useState(false);
+  const [loadError, setLoadError] =
+    useState<string | null>(null);
+
+  const hasFileReference = Boolean(
+    entityId.trim() &&
+    fieldKey.trim(),
+  );
 
   const viewerUrl = useMemo(() => {
-    if (!filePath.trim()) return "";
-    const params = new URLSearchParams({ path: filePath, bucket });
-    if (fileName?.trim()) {
-      params.set("filename", fileName);
+    if (!hasFileReference) {
+      return "";
     }
+
+    const params = new URLSearchParams({
+      entityType,
+      entityId,
+      fieldKey,
+    });
+
+    if (houseSlug?.trim()) {
+      params.set(
+        "houseSlug",
+        houseSlug.trim(),
+      );
+    }
+
+    if (fileName?.trim()) {
+      params.set(
+        "filename",
+        fileName.trim(),
+      );
+    }
+
     return `/api/reports/view?${params.toString()}#toolbar=0&navpanes=0&scrollbar=0`;
-  }, [bucket, fileName, filePath]);
+  }, [
+    entityId,
+    entityType,
+    fieldKey,
+    fileName,
+    hasFileReference,
+    houseSlug,
+  ]);
 
   function trackDocumentOpen() {
     try {
@@ -48,39 +91,66 @@ export function PublicReportPdfViewer({
         events: [
           {
             eventType: "document_open",
-            entityId: analyticsEntityId ?? null,
+            entityId:
+              analyticsEntityId ?? null,
             metadata: {
-              source: "public_pdf_viewer",
-              houseSlug: analyticsHouseSlug ?? null,
-              documentType: analyticsDocumentType ?? bucket,
+              source:
+                "public_pdf_viewer",
+              houseSlug:
+                analyticsHouseSlug ??
+                null,
+              documentType:
+                analyticsDocumentType ??
+                entityType,
             },
           },
         ],
       });
 
-      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: "application/json" });
-        navigator.sendBeacon("/api/analytics/track", blob);
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.sendBeacon
+      ) {
+        const blob = new Blob(
+          [payload],
+          {
+            type: "application/json",
+          },
+        );
+
+        navigator.sendBeacon(
+          "/api/analytics/track",
+          blob,
+        );
+
         return;
       }
 
-      void fetch("/api/analytics/track", {
-        method: "POST",
-        body: payload,
-        headers: {
-          "Content-Type": "application/json",
+      void fetch(
+        "/api/analytics/track",
+        {
+          method: "POST",
+          body: payload,
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          keepalive: true,
         },
-        keepalive: true,
-      });
+      );
     } catch (error) {
-      console.error("[analytics] Failed to track document open", error);
+      console.error(
+        "[analytics] Failed to track document open",
+        error,
+      );
     }
   }
 
-  if (!filePath.trim()) {
+  if (!hasFileReference) {
     return (
       <div className="mt-5 rounded-[var(--r-lg)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-3 text-sm text-[var(--pub-text-muted)]">
-        PDF файл буде підключено наступним кроком через CMS upload.
+        PDF файл буде підключено наступним
+        кроком через CMS upload.
       </div>
     );
   }
@@ -91,9 +161,13 @@ export function PublicReportPdfViewer({
         <div className="flex items-center justify-between gap-3 border-b border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] px-5 py-4">
           <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--pub-text)]">
             <span className="flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] bg-[var(--pub-info-bg)] text-[var(--pub-info-text)]">
-              <PubIcon name="doc" className="h-[17px] w-[17px]" />
+              <PubIcon
+                name="doc"
+                className="h-[17px] w-[17px]"
+              />
             </span>
-            {fileName || "Перегляд звіту"}
+            {fileName ||
+              "Перегляд звіту"}
           </div>
 
           <button
@@ -105,15 +179,23 @@ export function PublicReportPdfViewer({
             className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] text-[var(--pub-text-muted)] transition hover:bg-[var(--pub-bg-quiet)]"
             aria-label="Закрити PDF"
           >
-            <PubIcon name="close" className="h-5 w-5" />
+            <PubIcon
+              name="close"
+              className="h-5 w-5"
+            />
           </button>
         </div>
 
         <iframe
           src={viewerUrl}
-          title={fileName || "PDF report"}
+          title={
+            fileName ||
+            "PDF report"
+          }
           className="h-[calc(85vh-73px)] w-full bg-[var(--pub-surface-elevated)]"
-          onLoad={() => setIsLoading(false)}
+          onLoad={() =>
+            setIsLoading(false)
+          }
         />
       </div>
     </div>
@@ -130,8 +212,13 @@ export function PublicReportPdfViewer({
         }}
         className="mt-5 w-full"
       >
-        <PubIcon name="doc" className="h-[18px] w-[18px]" />
-        {isLoading ? "Відкриваємо..." : "Ознайомитися"}
+        <PubIcon
+          name="doc"
+          className="h-[18px] w-[18px]"
+        />
+        {isLoading
+          ? "Відкриваємо..."
+          : "Ознайомитися"}
       </PublicDocumentActionButton>
 
       {loadError ? (
@@ -140,8 +227,12 @@ export function PublicReportPdfViewer({
         </div>
       ) : null}
 
-      {isOpen && typeof window !== "undefined"
-        ? createPortal(modal, document.body)
+      {isOpen &&
+      typeof window !== "undefined"
+        ? createPortal(
+            modal,
+            document.body,
+          )
         : null}
     </>
   );

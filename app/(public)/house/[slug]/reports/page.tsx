@@ -264,7 +264,10 @@ export default async function ReportsPage({
                 </p>
 
                 <PublicReportPdfViewer
-                  filePath={report.pdf?.path ?? ""}
+                  entityType="house_report"
+                  entityId={report.id}
+                  fieldKey="pdf"
+                  houseSlug={house.slug}
                   fileName={report.pdf?.originalName ?? undefined}
                   analyticsHouseId={house.id}
                   analyticsHouseSlug={house.slug}

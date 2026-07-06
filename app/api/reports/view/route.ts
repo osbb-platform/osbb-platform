@@ -1,35 +1,71 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
+import {
+  parseSignedFileRequest,
+  resolveSignedFileUrl,
+} from "@/src/modules/files/services/resolveSignedFileUrl";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET(request: NextRequest) {
-  const filePath = request.nextUrl.searchParams.get("path")?.trim();
-  const bucket =
-    request.nextUrl.searchParams.get("bucket")?.trim() || "house-reports";
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+};
 
-  if (!filePath) {
-    return new NextResponse("Missing file path", {
-      status: 400,
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    });
-  }
+function errorResponse(
+  status: 400 | 401 | 403 | 404 | 500,
+) {
+  const message =
+    status === 400
+      ? "Invalid file request"
+      : status === 401
+        ? "Authentication required"
+        : status === 403
+          ? "File access denied"
+          : status === 404
+            ? "File not found"
+            : "Unable to open file";
 
-  const supabase = createSupabaseAdminClient();
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(filePath, 60 * 5); // 5 минут
-
-  if (error || !data?.signedUrl) {
-    return new NextResponse("Unable to open file", {
-      status: 404,
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    });
-  }
-
-  return NextResponse.redirect(data.signedUrl, {
-    headers: { "Cache-Control": "no-store, max-age=0" },
+  return new NextResponse(message, {
+    status,
+    headers: NO_STORE_HEADERS,
   });
+}
+
+type SignedFileResolver =
+  typeof resolveSignedFileUrl;
+
+export async function handleReportViewRequest(
+  request: NextRequest,
+  resolver: SignedFileResolver =
+    resolveSignedFileUrl,
+) {
+  const parsed = parseSignedFileRequest(
+    request.nextUrl.searchParams,
+  );
+
+  if (!parsed.ok) {
+    return errorResponse(parsed.status);
+  }
+
+  const result = await resolver(parsed.request);
+
+  if (!result.ok) {
+    return errorResponse(result.status);
+  }
+
+  return NextResponse.redirect(
+    result.signedUrl,
+    {
+      status: 302,
+      headers: NO_STORE_HEADERS,
+    },
+  );
+}
+
+export async function GET(request: NextRequest) {
+  return handleReportViewRequest(request);
 }
