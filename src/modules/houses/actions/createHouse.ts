@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
@@ -207,10 +208,22 @@ export async function createHouse(
     );
   }
 
-  const { error: accessUpsertError } = await supabase.rpc("upsert_house_access", {
-    target_house_id: createdHouse.id,
-    raw_password: defaultAccessCode,
-  });
+  /*
+   * House creation, storage and cleanup remain protected by the
+   * authenticated user client and existing RLS. Only password-hash
+   * initialization uses service_role with the ID returned by insert.
+   */
+  const accessAdminClient =
+    createSupabaseAdminClient();
+
+  const { error: accessUpsertError } =
+    await accessAdminClient.rpc(
+      "upsert_house_access",
+      {
+        target_house_id: createdHouse.id,
+        raw_password: defaultAccessCode,
+      },
+    );
 
   if (accessUpsertError) {
     await supabase.from("houses").delete().eq("id", createdHouse.id);
