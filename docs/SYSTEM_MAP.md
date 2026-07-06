@@ -127,17 +127,19 @@ Routes beginning with `/admin` and `/house/[slug]` are internal App Router paths
 
 ## 6. API route map
 
-Detected API routes: **3**.
+Detected API routes: **4**.
 
 | Method | Route | Source | Runtime | Authorization boundary |
 |---|---|---|---|---|
 | POST | /api/analytics/track | app/api/analytics/track/route.ts | default Next.js behavior | Route handler is responsible for its own authorization |
+| POST | /api/csp-report | app/api/csp-report/route.ts | force-dynamic | Bounded, sanitized browser CSP reporting endpoint; no database writes |
 | GET | /api/company/search-houses | app/api/company/search-houses/route.ts | default Next.js behavior | Route handler is responsible for its own authorization |
 | GET | /api/reports/view | app/api/reports/view/route.ts | force-dynamic | Route handler is responsible for its own authorization |
 
 ### API security notes
 
 - `POST /api/analytics/track` accepts analytics batches and returns no-content responses; proxy auth is intentionally absent.
+- `POST /api/csp-report` accepts bounded browser CSP violation reports, removes URL query/hash data, writes sanitized diagnostics to server logs and does not access the database.
 - `GET /api/company/search-houses` performs public search and logs the search event.
 - `GET /api/reports/view` uses the service-role client to create a signed Storage URL from caller-provided `bucket` and `path`. This is an existing high-priority security scope scheduled for S1.T2, not corrected by S0.T2.
 
@@ -493,7 +495,7 @@ Required regeneration checks:
 
 ```text
 page routes               = 31
-API route handlers         = 3
+API route handlers         = 4
 use-server files           = 59
 live use-server files      = 46
 legacy use-server files    = 13
