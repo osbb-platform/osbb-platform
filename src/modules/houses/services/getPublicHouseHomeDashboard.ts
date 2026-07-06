@@ -76,6 +76,7 @@ type PlanTask = {
 
 type GetPublicHouseHomeDashboardParams = {
   house: HouseRecord;
+  sessionToken: string;
 };
 
 const CTA_LABEL = houseSystemCopy.cta.open;
@@ -622,6 +623,7 @@ function buildFallbackPublicHouseHomeDashboard(
 
 export async function getPublicHouseHomeDashboard({
   house,
+  sessionToken,
 }: GetPublicHouseHomeDashboardParams): Promise<PublicHouseHomeDashboard> {
   try {
   const houseId = house.id;
@@ -638,8 +640,14 @@ export async function getPublicHouseHomeDashboard({
   ] = await Promise.all([
     getPublishedHouseHero(houseId),
     getPublishedHousePlan(houseId),
-    getPublishedHouseDebtors(houseId),
-    getPublishedHouseMeetings(houseId),
+    getPublishedHouseDebtors({
+      houseId,
+      sessionToken,
+    }),
+    getPublishedHouseMeetings({
+      houseId,
+      sessionToken,
+    }),
     getPublishedHouseAnnouncements(houseId),
     getPublishedHouseInformationPosts(houseId),
     getPublishedHouseHomeWidgets(house.id),

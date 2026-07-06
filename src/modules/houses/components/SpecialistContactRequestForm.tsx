@@ -19,7 +19,6 @@ type Props = {
   apartmentOptions: Array<{
     id: string;
     label: string;
-    ownerName: string;
   }>;
 };
 
@@ -131,9 +130,7 @@ export function SpecialistContactRequestForm({
             </option>
             {apartmentOptions.map((option) => (
               <option key={option.id} value={option.label}>
-                {option.ownerName
-                  ? `Кв. ${option.label} — ${option.ownerName}`
-                  : `Кв. ${option.label}`}
+                {`Кв. ${option.label}`}
               </option>
             ))}
           </PubSelect>

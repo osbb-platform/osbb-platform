@@ -3,6 +3,7 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
+import { readHouseSessionToken } from "@/src/modules/houses/services/readHouseSessionToken";
 import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
@@ -166,12 +167,21 @@ export default async function PublicMeetingsPage({
     return null;
   }
 
-  const apartments =
-    house?.id
-      ? await getPublicHouseApartmentOptions({ houseId: house.id })
-      : [];
+  const sessionToken =
+    (await readHouseSessionToken(slug)) ?? "";
 
-  const meetingsSnapshot = await getPublishedHouseMeetings(house.id);
+  const apartments = sessionToken
+    ? await getPublicHouseApartmentOptions({
+        houseId: house.id,
+        sessionToken,
+      })
+    : [];
+
+  const meetingsSnapshot =
+    await getPublishedHouseMeetings({
+      houseId: house.id,
+      sessionToken,
+    });
 
   const publicMeetings: MeetingItem[] = meetingsSnapshot.items
     .filter((item) => item.status !== "draft")

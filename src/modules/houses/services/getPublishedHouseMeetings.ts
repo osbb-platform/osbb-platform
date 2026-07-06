@@ -1,6 +1,3 @@
-import { unstable_cache } from "next/cache";
-import { cache } from "react";
-
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseMeeting,
@@ -12,65 +9,78 @@ import {
   type AdminHouseMeetingsSnapshot,
 } from "./getAdminHouseMeetings";
 
-async function loadPublishedHouseMeetings(
-  houseId: string,
-): Promise<AdminHouseMeetingsSnapshot> {
+type ResidentMeetingsPayload = {
+  meetings?: HouseMeeting[];
+  questions?: HouseMeetingQuestion[];
+  manual_votes?: HouseMeetingManualVote[];
+};
+
+export async function getPublishedHouseMeetings({
+  houseId,
+  sessionToken,
+}: {
+  houseId: string;
+  sessionToken: string;
+}): Promise<AdminHouseMeetingsSnapshot> {
+  if (!houseId.trim() || !sessionToken.trim()) {
+    return {
+      items: [],
+      updatedAt: null,
+    };
+  }
+
   const supabase = createSupabasePublicClient();
 
-  const { data: meetingsData, error: meetingsError } = await supabase
-    .from("house_meetings")
-    .select("*")
-    .eq("house_id", houseId)
-    .eq("lifecycle_status", "published")
-    .order("meeting_date", { ascending: false, nullsFirst: false })
-    .order("updated_at", { ascending: false });
+  const { data, error } = await supabase.rpc(
+    "get_resident_house_meetings",
+    {
+      target_house_id: houseId,
+      target_session_token: sessionToken,
+    },
+  );
 
-  if (meetingsError) {
-    console.error("Failed to load published house meetings:", {
-      houseId,
-      message: meetingsError.message,
-    });
-    return { items: [], updatedAt: null };
+  if (error) {
+    console.error(
+      "[resident-meetings] RPC failed",
+      {
+        houseId,
+        message: error.message,
+      },
+    );
+
+    return {
+      items: [],
+      updatedAt: null,
+    };
   }
 
-  const meetings = (meetingsData ?? []) as unknown as HouseMeeting[];
-  const meetingIds = meetings.map((meeting) => meeting.id);
-
-  if (meetingIds.length === 0) {
-    return { items: [], updatedAt: null };
+  if (!data || typeof data !== "object") {
+    return {
+      items: [],
+      updatedAt: null,
+    };
   }
 
-  const [questionsResult, manualVotesResult] = await Promise.all([
-    supabase
-      .from("house_meeting_questions")
-      .select("*")
-      .in("meeting_id", meetingIds)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("house_meeting_manual_votes")
-      .select("*")
-      .in("meeting_id", meetingIds)
-      .order("recorded_at", { ascending: true }),
-  ]);
+  const payload =
+    data as unknown as ResidentMeetingsPayload;
 
-  if (questionsResult.error) {
-    console.error("Failed to load published house meeting questions:", {
-      houseId,
-      message: questionsResult.error.message,
-    });
-    return { items: [], updatedAt: null };
-  }
+  const meetings = Array.isArray(
+    payload.meetings,
+  )
+    ? payload.meetings
+    : [];
 
-  if (manualVotesResult.error) {
-    console.error("Failed to load published house meeting manual votes:", {
-      houseId,
-      message: manualVotesResult.error.message,
-    });
-    return { items: [], updatedAt: null };
-  }
+  const questions = Array.isArray(
+    payload.questions,
+  )
+    ? payload.questions
+    : [];
 
-  const questions = (questionsResult.data ?? []) as unknown as HouseMeetingQuestion[];
-  const manualVotes = (manualVotesResult.data ?? []) as unknown as HouseMeetingManualVote[];
+  const manualVotes = Array.isArray(
+    payload.manual_votes,
+  )
+    ? payload.manual_votes
+    : [];
 
   const items = meetings.map((meeting) =>
     mapHouseMeetingSnapshot({
@@ -84,20 +94,10 @@ async function loadPublishedHouseMeetings(
     items,
     updatedAt:
       items.length > 0
-        ? items.map((item) => item.updatedAt).sort().at(-1) ?? null
+        ? items
+            .map((item) => item.updatedAt)
+            .sort()
+            .at(-1) ?? null
         : null,
   };
 }
-
-export const getPublishedHouseMeetings = cache(
-  async (houseId: string): Promise<AdminHouseMeetingsSnapshot> => {
-    return unstable_cache(
-      () => loadPublishedHouseMeetings(houseId),
-      ["published-house-meetings", houseId],
-      {
-        tags: [`house:${houseId}:meetings`, `house:${houseId}`],
-        revalidate: 300,
-      },
-    )();
-  },
-);

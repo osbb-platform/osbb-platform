@@ -1,76 +1,60 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
-import { cache } from "react";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
-type PublicHouseApartmentOption = {
+export type PublicHouseApartmentOption = {
   id: string;
   label: string;
-  ownerName: string;
 };
 
-function createPublicHouseApartmentReadClient(): SupabaseClient {
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    process.env.SUPABASE_URL ??
-    process.env.SUPABASE_PROJECT_URL;
+type ResidentApartmentOptionRow = {
+  id: string;
+  apartment_label: string;
+};
 
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_SERVICE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase env is not configured for public apartment options");
-  }
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-}
-
-async function loadPublicHouseApartmentOptions({
+export async function getPublicHouseApartmentOptions({
   houseId,
+  sessionToken,
 }: {
   houseId: string;
+  sessionToken: string;
 }): Promise<PublicHouseApartmentOption[]> {
-  const supabase = createPublicHouseApartmentReadClient();
-
-  const { data, error } = await supabase
-    .from("house_apartments")
-    .select("id, apartment_label, owner_name")
-    .eq("house_id", houseId)
-    .is("archived_at", null)
-    .order("apartment_label", { ascending: true });
-
-  if (error) {
-    console.error("[getPublicHouseApartmentOptions]", error);
+  if (!houseId.trim() || !sessionToken.trim()) {
     return [];
   }
 
-  return (data ?? []).map((item) => ({
-    id: String(item.id),
-    label: String(item.apartment_label ?? "").trim(),
-    ownerName: String(item.owner_name ?? "").trim(),
-  }));
-}
+  const supabase = createSupabasePublicClient();
 
-export const getPublicHouseApartmentOptions = cache(async ({
-  houseId,
-}: {
-  houseId: string;
-}) => {
-  return unstable_cache(
-    () => loadPublicHouseApartmentOptions({ houseId }),
-    ["public-house-apartment-options", houseId],
+  const { data, error } = await supabase.rpc(
+    "get_resident_house_apartment_options",
     {
-      tags: [`house:${houseId}:apartments`, `house:${houseId}`],
-      revalidate: 60,
+      target_house_id: houseId,
+      target_session_token: sessionToken,
     },
-  )();
-});
+  );
+
+  if (error) {
+    console.error(
+      "[resident-apartment-options] RPC failed",
+      {
+        houseId,
+        message: error.message,
+      },
+    );
+
+    return [];
+  }
+
+  return (
+    (data ?? []) as ResidentApartmentOptionRow[]
+  )
+    .map((item) => ({
+      id: String(item.id ?? "").trim(),
+      label: String(
+        item.apartment_label ?? "",
+      ).trim(),
+    }))
+    .filter(
+      (item) => Boolean(item.id && item.label),
+    );
+}

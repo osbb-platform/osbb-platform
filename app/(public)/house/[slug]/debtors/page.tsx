@@ -1,5 +1,6 @@
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
+import { readHouseSessionToken } from "@/src/modules/houses/services/readHouseSessionToken";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
@@ -17,7 +18,6 @@ type DebtorItem = {
   apartmentId: string;
   apartmentLabel: string;
   accountNumber: string;
-  ownerName: string;
   area: number | null;
   amount: string;
   days: string;
@@ -84,7 +84,6 @@ function itemMatchesQuery(item: DebtorItem, query: string) {
   return [
     item.apartmentLabel,
     item.accountNumber,
-    item.ownerName,
     item.apartmentLabel.replace(/^кв\.?\s*/i, ""),
   ].some((value) => normalizeSearchValue(value).includes(normalizedQuery));
 }
@@ -104,7 +103,6 @@ function normalizeItems(value: unknown): DebtorItem[] {
         apartmentId: String(raw.apartmentId ?? "").trim(),
         apartmentLabel: String(raw.apartmentLabel ?? "").trim(),
         accountNumber: String(raw.accountNumber ?? "").trim(),
-        ownerName: String(raw.ownerName ?? "").trim(),
         area:
           typeof raw.area === "number" && Number.isFinite(raw.area)
             ? raw.area
@@ -227,10 +225,16 @@ export default async function DebtorsPage({
   const searchQuery = String(resolvedSearchParams.q ?? "").trim();
 
   const house = await getHouseBySlug(slug);
+  const sessionToken =
+    (await readHouseSessionToken(slug)) ?? "";
 
-  const debtors = house
-    ? await getPublishedHouseDebtors(house.id)
-    : null;
+  const debtors =
+    house && sessionToken
+      ? await getPublishedHouseDebtors({
+          houseId: house.id,
+          sessionToken,
+        })
+      : null;
 
   const content = debtors
     ? {
