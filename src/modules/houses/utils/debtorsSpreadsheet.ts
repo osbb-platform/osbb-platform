@@ -1,5 +1,10 @@
 import * as XLSX from "xlsx";
 
+import {
+  escapeSpreadsheetFormula,
+  readSpreadsheetRows,
+} from "@/src/shared/utils/spreadsheets/spreadsheetSecurity";
+
 const HEADER_ALIASES = {
   apartmentLabel: ["Квартира"],
   accountNumber: ["Особовий рахунок", "Лицевой счет"],
@@ -119,9 +124,9 @@ export function exportDebtorsRegistry(params: {
   const { houseName, rows } = params;
 
   const sheetRows = rows.map((row) => ({
-    "Квартира": row.apartmentLabel,
-    "Особовий рахунок": row.accountNumber,
-    "Власник": row.ownerName,
+    "Квартира": escapeSpreadsheetFormula(row.apartmentLabel),
+    "Особовий рахунок": escapeSpreadsheetFormula(row.accountNumber),
+    "Власник": escapeSpreadsheetFormula(row.ownerName),
     "Площа": formatAreaForSheet(row.area),
     "Баланс": row.amount,
     "Термін боргу": row.days,
@@ -148,31 +153,8 @@ export async function parseDebtorsImportFile({
   file,
   referenceRows,
 }: ParseDebtorsImportParams): Promise<ParseDebtorsImportResult> {
-  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-
-  if (!["csv", "xls", "xlsx"].includes(extension)) {
-    throw new Error("Підтримуються лише файли CSV, XLS та XLSX.");
-  }
-
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, {
-    type: "array",
-    raw: false,
-  });
-
-  const firstSheetName = workbook.SheetNames[0];
-
-  if (!firstSheetName) {
-    throw new Error("Файл не містить аркушів для імпорту.");
-  }
-
-  const worksheet = workbook.Sheets[firstSheetName];
-
-  const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(worksheet, {
-    header: 1,
-    blankrows: false,
-    defval: "",
-  });
+  const rows =
+    await readSpreadsheetRows(file);
 
   if (!rows.length) {
     throw new Error("Файл порожній.");

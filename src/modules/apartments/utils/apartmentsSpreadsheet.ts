@@ -1,4 +1,8 @@
 import * as XLSX from "xlsx";
+
+import {
+  escapeSpreadsheetFormula,
+} from "@/src/shared/utils/spreadsheets/spreadsheetSecurity";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import { APARTMENTS_IMPORT_HEADERS } from "@/src/modules/apartments/utils/parseApartmentsImportFile";
 
@@ -34,14 +38,14 @@ export function exportApartmentsRegistry(params: {
   const { houseName, items } = params;
 
   const rows = items.map((item) => ({
-    "Квартира": item.apartment_label,
-    "Особовий рахунок": item.account_number,
-    "Власник": item.owner_name,
+    "Квартира": escapeSpreadsheetFormula(item.apartment_label),
+    "Особовий рахунок": escapeSpreadsheetFormula(item.account_number),
+    "Власник": escapeSpreadsheetFormula(item.owner_name),
     "Площа": formatAreaForSheet(item.area),
     "Джерело": item.source_type === "import" ? "Імпорт" : "Вручну",
-    "Дата створення": item.created_at,
-    "Дата оновлення": item.updated_at,
-    "Архівовано": item.archived_at ?? "",
+    "Дата створення": escapeSpreadsheetFormula(item.created_at),
+    "Дата оновлення": escapeSpreadsheetFormula(item.updated_at),
+    "Архівовано": escapeSpreadsheetFormula(item.archived_at ?? ""),
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
