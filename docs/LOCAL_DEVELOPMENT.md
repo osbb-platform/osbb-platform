@@ -194,7 +194,23 @@ Smoke локального запуска не включает:
 - применение миграций;
 - другие операции, изменяющие данные.
 
-## 10. Проверка production build
+## 10. Автоматические тесты
+
+Запустить test suite:
+
+```bash
+npm run test
+```
+
+Vitest работает в Node environment. Текущий smoke-тест не требует browser DOM, реальных env values или подключения к Supabase.
+
+Полный gate:
+
+```bash
+npm run verify
+```
+
+## 11. Проверка production build
 
 Собрать production bundle:
 
@@ -212,7 +228,7 @@ npm run start не заменяет npm run build и не выполняется
 
 Основной project gate описан в docs/GATE.md.
 
-## 11. Известные ограничения
+## 12. Известные ограничения
 
 На текущем baseline:
 
@@ -222,7 +238,7 @@ npm run start не заменяет npm run build и не выполняется
 - Vercel CLI не установлен;
 - локальная Vercel linkage не подтверждена;
 - local Supabase stack не описан;
-- test runner и npm test отсутствуют;
+- Vitest настроен для Node-based security tests; browser/DOM setup отсутствует;
 - CI отсутствует;
 - точный внешний Supabase environment нельзя доказать только по Git checkout.
 

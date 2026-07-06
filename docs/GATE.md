@@ -4,9 +4,9 @@
 |---|---|
 | Задача | S0.T4 — определение gate |
 | Пакетный менеджер | npm |
-| Текущий полный gate | lint → typecheck → build |
+| Текущий полный gate | lint → typecheck → test → build |
 | Канонический скрипт | npm run verify |
-| Автоматические тесты | отсутствуют на текущем baseline |
+| Автоматические тесты | Vitest 4.1.9, Node environment |
 
 ## 1. Назначение
 
@@ -28,6 +28,7 @@ npm run verify
 ```bash
 npm run lint
 npm run typecheck
+npm run test
 npm run build
 ```
 
@@ -35,7 +36,8 @@ npm run build
 
 1. lint;
 2. TypeScript typecheck;
-3. production build.
+3. Vitest test suite;
+4. production build.
 
 ## 3. Gate чистого checkout
 
@@ -149,30 +151,31 @@ Staged scope должен точно совпадать с согласован�
 
 ## 5. Тестовый этап
 
-На текущем baseline отсутствуют:
+S1.T0 добавляет минимальный test-runner:
 
-- npm test;
-- test runner;
-- unit tests;
-- integration tests;
-- E2E suite;
-- CI.
+- Vitest 4.1.9;
+- среда выполнения Node.js;
+- тестовые файлы tests/**/*.test.ts;
+- alias @/*, соответствующий корню проекта;
+- helper для вызова функций в форме server action;
+- helper для publishable/anon Supabase test client;
+- smoke-тест без реального сетевого или database-запроса.
 
-Поэтому текущий S0 gate:
+Команда:
 
-```text
-lint → typecheck → build
+```bash
+npm run test
 ```
 
-После появления test runner в S1.T0/S2 документ обновляется, а полный gate
-становится:
+Она выполняет vitest run.
+
+Полный gate после S1.T0:
 
 ```text
 lint → typecheck → test → build
 ```
 
-Отсутствие тестов является известным риском, а не основанием считать ручной
-smoke полноценной regression-защитой.
+Текущий smoke подтверждает только работоспособность runner, alias и helpers. Он не заменяет security regression tests следующих задач S1.
 
 ## 6. Documentation-only задачи
 
