@@ -10,6 +10,12 @@ import {
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import {
+  findMeetingApartmentForVote,
+  getAvailableMeetingApartments,
+  getMeetingApartmentKey,
+  normalizeMeetingApartmentLabel,
+} from "@/src/modules/houses/utils/meetingApartmentIdentity";
 
 type MeetingLifecycleStatus =
   | "draft"
@@ -319,14 +325,6 @@ function formatApartmentVoteLabel(apartment: {
     : normalizedLabel;
 }
 
-function normalizeApartmentVoteLabel(label: string) {
-  const trimmed = label.trim();
-  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
-  const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
-
-  return withoutOwner || withoutPrefix || trimmed;
-}
-
 function formatRecordedApartmentVoteLabel(
   vote: { apartmentId: string; apartmentLabel: string },
   apartments: Array<{
@@ -335,8 +333,8 @@ function formatRecordedApartmentVoteLabel(
     ownerName?: string | null;
   }>,
 ) {
-  const apartment = apartments.find((item) => item.id === vote.apartmentId);
-  const apartmentLabel = normalizeApartmentVoteLabel(
+  const apartment = findMeetingApartmentForVote(vote, apartments);
+  const apartmentLabel = normalizeMeetingApartmentLabel(
     apartment?.apartmentLabel ?? vote.apartmentLabel,
   );
 
@@ -347,24 +345,25 @@ function formatRecordedApartmentVoteLabel(
 }
 
 function getNotParticipatingApartments(
-  meeting: { manualVotes?: Array<{ apartmentId: string }> },
+  meeting: {
+    manualVotes?: Array<{ apartmentId: string; apartmentLabel: string }>;
+  },
   apartments: Array<{
     id: string;
     apartmentLabel: string;
     ownerName?: string | null;
   }>,
 ) {
-  const votedApartmentIds = new Set(
-    (meeting.manualVotes ?? [])
-      .map((vote) => vote.apartmentId)
-      .filter(Boolean),
+  return getAvailableMeetingApartments(
+    apartments,
+    meeting.manualVotes ?? [],
   );
-
-  return apartments.filter((apartment) => !votedApartmentIds.has(apartment.id));
 }
 
 function formatNotParticipatingApartments(
-  meeting: { manualVotes?: Array<{ apartmentId: string }> },
+  meeting: {
+    manualVotes?: Array<{ apartmentId: string; apartmentLabel: string }>;
+  },
   apartments: Array<{
     id: string;
     apartmentLabel: string;
@@ -469,15 +468,10 @@ export function HouseMeetingsWorkspace({
     [meetings],
   );
 
-  const availableVotingApartments = useMemo(() => {
-    const votedApartmentIds = new Set(
-      (draft.manualVotes ?? []).map((vote) => vote.apartmentId),
-    );
-
-    return apartments.filter(
-      (apartment) => !votedApartmentIds.has(apartment.id),
-    );
-  }, [apartments, draft.manualVotes]);
+  const availableVotingApartments = useMemo(
+    () => getAvailableMeetingApartments(apartments, draft.manualVotes ?? []),
+    [apartments, draft.manualVotes],
+  );
 
   const visibleMeetings = useMemo(() => {
     if (activeTab === "draft") {
@@ -1087,7 +1081,9 @@ export function HouseMeetingsWorkspace({
 
                       {(draft.manualVotes ?? []).map((vote) => (
                         <div
-                          key={vote.apartmentId}
+                          key={`${getMeetingApartmentKey(
+                            vote.apartmentLabel,
+                          )}-${vote.apartmentId}`}
                           className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                         >
                           <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -1115,7 +1111,12 @@ export function HouseMeetingsWorkspace({
                                     ...prev,
                                     manualVotes: (prev.manualVotes ?? []).filter(
                                       (entry) =>
-                                        entry.apartmentId !== vote.apartmentId,
+                                        getMeetingApartmentKey(
+                                          entry.apartmentLabel,
+                                        ) !==
+                                        getMeetingApartmentKey(
+                                          vote.apartmentLabel,
+                                        ),
                                     ),
                                   },
                                   apartments.length,

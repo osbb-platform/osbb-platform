@@ -9,6 +9,9 @@ import type {
   HouseMeetingQuestionOutcome,
   HouseMeetingVoteChoice,
 } from "@/src/modules/content-engine/v2/handlers/meetings";
+import {
+  collapseMeetingManualVoteRows,
+} from "@/src/modules/houses/utils/meetingApartmentIdentity";
 
 export type HouseMeetingsQuestionSnapshot = {
   id: string;
@@ -76,46 +79,10 @@ function mapQuestion(question: HouseMeetingQuestion): HouseMeetingsQuestionSnaps
   };
 }
 
-function normalizeMeetingApartmentLabel(label: string) {
-  const trimmed = label.trim();
-  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
-  const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
-
-  return withoutOwner || withoutPrefix || trimmed;
-}
-
 function mapManualVotes(
   votes: HouseMeetingManualVote[],
 ): HouseMeetingsManualVoteSnapshot[] {
-  const grouped = new Map<string, HouseMeetingsManualVoteSnapshot>();
-
-  for (const vote of votes) {
-    const existing =
-      grouped.get(vote.apartment_id) ??
-      {
-        apartmentId: vote.apartment_id,
-        apartmentLabel: normalizeMeetingApartmentLabel(vote.apartment_label),
-        submittedAt: vote.recorded_at,
-        answers: [],
-      };
-
-    existing.answers.push({
-      questionId: vote.question_id,
-      choice: vote.choice,
-    });
-
-    if (vote.recorded_at > existing.submittedAt) {
-      existing.submittedAt = vote.recorded_at;
-    }
-
-    grouped.set(vote.apartment_id, existing);
-  }
-
-  return Array.from(grouped.values()).sort((left, right) =>
-    left.apartmentLabel.localeCompare(right.apartmentLabel, "uk", {
-      numeric: true,
-    }),
-  );
+  return collapseMeetingManualVoteRows(votes);
 }
 
 function mapMeeting(params: {
