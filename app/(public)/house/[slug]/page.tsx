@@ -5,7 +5,6 @@ import { PublicHouseDashboardStatusStrip } from "@/src/modules/houses/components
 import { PublicHouseHeroCarousel } from "@/src/modules/houses/components/PublicHouseHeroCarousel";
 import { getPublicHouseHomeDashboard } from "@/src/modules/houses/services/getPublicHouseHomeDashboard";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
-import { readHouseSessionToken } from "@/src/modules/houses/services/readHouseSessionToken";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -20,12 +19,9 @@ export default async function PublicHouseHomePage({ params }: Props) {
   }
 
   const districtColor = house.district?.theme_color ?? "#16a34a";
-  const sessionToken =
-    (await readHouseSessionToken(slug)) ?? "";
 
   const dashboard = await getPublicHouseHomeDashboard({
     house,
-    sessionToken,
   });
 
   const headline = dashboard.heroContent.headline;

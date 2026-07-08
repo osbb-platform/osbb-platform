@@ -1,4 +1,4 @@
-import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 export type PublicHouseSearchResult = {
   id: string;
@@ -107,13 +107,13 @@ export async function searchPublicHouses(
     return [];
   }
 
-  const supabase = createSupabasePublicClient();
+  const supabase = await createSupabaseServerClient();
 
   const escaped = query.replace(/[%_]/g, "\\$&");
   const pattern = `%${escaped}%`;
 
   const { data, error } = await supabase
-    .from("public_houses")
+    .from("houses")
     .select(
       `
         id,
@@ -124,11 +124,18 @@ export async function searchPublicHouses(
         short_description,
         public_description,
         cover_image_path,
+        archived_at,
         is_active,
-        district
+        district:districts (
+          id,
+          name,
+          slug,
+          theme_color
+        )
       `,
     )
     .eq("is_active", true)
+    .is("archived_at", null)
     .or(
       [
         `name.ilike.${pattern}`,

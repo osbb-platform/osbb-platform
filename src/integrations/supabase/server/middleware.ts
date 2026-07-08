@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseAuthCookieOptions } from "@/src/integrations/supabase/shared/authCookieOptions";
 
 export function createSupabaseMiddlewareClient(request: NextRequest) {
   let response = NextResponse.next({
@@ -20,7 +19,6 @@ export function createSupabaseMiddlewareClient(request: NextRequest) {
   }
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
-    cookieOptions: getSupabaseAuthCookieOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();

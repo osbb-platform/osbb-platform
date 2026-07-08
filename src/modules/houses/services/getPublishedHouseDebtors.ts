@@ -1,3 +1,6 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseDebtorsItem,
@@ -10,29 +13,15 @@ import {
   type HouseDebtorsItemSnapshot,
 } from "./getAdminHouseDebtors";
 
-type ResidentDebtorsPayload = {
-  settings?: HouseDebtorsSettings | null;
-  items?: HouseDebtorsItem[];
-};
-
-function mapSettings(
-  settings: HouseDebtorsSettings | null,
-) {
+function mapSettings(settings: HouseDebtorsSettings | null) {
   return {
     settingsId: settings?.id ?? null,
-    settingsLockVersion:
-      settings?.lock_version ?? 1,
+    settingsLockVersion: settings?.lock_version ?? 1,
     updatedAt: settings?.updated_at ?? null,
     payment: {
-      url:
-        settings?.payment_url ??
-        DEFAULT_DEBTORS_PAYMENT.url,
-      title:
-        settings?.payment_title ??
-        DEFAULT_DEBTORS_PAYMENT.title,
-      note:
-        settings?.payment_note ??
-        DEFAULT_DEBTORS_PAYMENT.note,
+      url: settings?.payment_url ?? DEFAULT_DEBTORS_PAYMENT.url,
+      title: settings?.payment_title ?? DEFAULT_DEBTORS_PAYMENT.title,
+      note: settings?.payment_note ?? DEFAULT_DEBTORS_PAYMENT.note,
       buttonLabel:
         settings?.payment_button_label ??
         DEFAULT_DEBTORS_PAYMENT.buttonLabel,
@@ -76,18 +65,15 @@ function emptySnapshot(): AdminHouseDebtorsSnapshot {
   };
 }
 
-function mapItem(
-  item: HouseDebtorsItem,
-): HouseDebtorsItemSnapshot {
+function mapItem(item: HouseDebtorsItem): HouseDebtorsItemSnapshot {
   return {
     id: item.id,
     apartmentId: item.apartment_id,
     apartmentLabel: item.apartment_label,
     accountNumber: item.account_number,
-    ownerName: "",
+    ownerName: item.owner_name,
     area:
-      item.area === null ||
-      item.area === undefined
+      item.area === null || item.area === undefined
         ? null
         : Number(item.area),
     amount: item.amount,
@@ -102,66 +88,49 @@ function sortItems(
   left: HouseDebtorsItemSnapshot,
   right: HouseDebtorsItemSnapshot,
 ) {
-  return left.apartmentLabel.localeCompare(
-    right.apartmentLabel,
-    "uk",
-    {
-      numeric: true,
-    },
-  );
+  return left.apartmentLabel.localeCompare(right.apartmentLabel, "uk", {
+    numeric: true,
+  });
 }
 
-export async function getPublishedHouseDebtors({
-  houseId,
-  sessionToken,
-}: {
-  houseId: string;
-  sessionToken: string;
-}): Promise<AdminHouseDebtorsSnapshot> {
-  if (!houseId.trim() || !sessionToken.trim()) {
-    return emptySnapshot();
-  }
-
+async function loadPublishedHouseDebtors(
+  houseId: string,
+): Promise<AdminHouseDebtorsSnapshot> {
   const supabase = createSupabasePublicClient();
 
-  const { data, error } = await supabase.rpc(
-    "get_resident_house_debtors",
-    {
-      target_house_id: houseId,
-      target_session_token: sessionToken,
-    },
-  );
+  const [settingsResult, itemsResult] = await Promise.all([
+    supabase
+      .from("house_debtors_settings")
+      .select("*")
+      .eq("house_id", houseId)
+      .maybeSingle(),
+    supabase
+      .from("house_debtors_items")
+      .select("*")
+      .eq("house_id", houseId)
+      .eq("lifecycle_status", "published")
+      .order("apartment_label", { ascending: true })
+      .order("updated_at", { ascending: false }),
+  ]);
 
-  if (error) {
-    console.error(
-      "[resident-debtors] RPC failed",
-      {
-        houseId,
-        message: error.message,
-      },
-    );
-
+  if (settingsResult.error) {
+    console.error("Failed to load published debtors settings:", {
+      houseId,
+      message: settingsResult.error.message,
+    });
     return emptySnapshot();
   }
 
-  if (!data || typeof data !== "object") {
+  if (itemsResult.error) {
+    console.error("Failed to load published debtors items:", {
+      houseId,
+      message: itemsResult.error.message,
+    });
     return emptySnapshot();
   }
 
-  const payload =
-    data as unknown as ResidentDebtorsPayload;
-
-  const settings =
-    payload.settings &&
-    typeof payload.settings === "object"
-      ? payload.settings
-      : null;
-
-  const activeItems = (
-    Array.isArray(payload.items)
-      ? payload.items
-      : []
-  )
+  const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
+  const activeItems = ((itemsResult.data ?? []) as unknown as HouseDebtorsItem[])
     .map(mapItem)
     .sort(sortItems);
 
@@ -177,11 +146,22 @@ export async function getPublishedHouseDebtors({
 
   return {
     ...mappedSettings,
-    updatedAt:
-      latestItemsUpdatedAt ??
-      mappedSettings.updatedAt,
+    updatedAt: latestItemsUpdatedAt ?? mappedSettings.updatedAt,
     activeItems,
     draftItems: [],
     archivedItems: [],
   };
 }
+
+export const getPublishedHouseDebtors = cache(
+  async (houseId: string): Promise<AdminHouseDebtorsSnapshot> => {
+    return unstable_cache(
+      () => loadPublishedHouseDebtors(houseId),
+      ["published-house-debtors", houseId],
+      {
+        tags: [`house:${houseId}:debtors`, `house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
+  },
+);

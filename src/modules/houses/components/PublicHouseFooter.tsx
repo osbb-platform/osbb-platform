@@ -14,6 +14,7 @@ type FooterSubject = "contact" | "improvement";
 type ApartmentOption = {
   id: string;
   label: string;
+  ownerName: string;
 };
 
 type PublicHouseFooterCompany = {
@@ -141,7 +142,9 @@ function FooterMessageForm({
               </option>
               {apartmentOptions.map((option) => (
                 <option key={option.id} value={option.label}>
-                  {`${houseCopy.footer.apartmentShort} ${option.label}`}
+                  {option.ownerName
+                    ? `${houseCopy.footer.apartmentShort} ${option.label} — ${option.ownerName}`
+                    : `${houseCopy.footer.apartmentShort} ${option.label}`}
                 </option>
               ))}
             </select>

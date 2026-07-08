@@ -1,3 +1,6 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 
 type BellSourceKind =
@@ -105,29 +108,17 @@ function buildBellText(source: BellSourceKind, count: number) {
   }
 }
 
-export async function getPublicHouseBellFeed({
+async function loadPublicHouseBellFeed({
   houseId,
-  sessionToken,
 }: {
   houseId: string;
-  sessionToken: string;
 }): Promise<PublicHouseBellFeed> {
-  if (!houseId.trim() || !sessionToken.trim()) {
-    return {
-      total: 0,
-      items: [],
-    };
-  }
   const supabase = createSupabasePublicClient();
 
-  const { data, error } = await supabase.rpc(
-    "get_resident_house_bell_feed",
-    {
-      target_house_id: houseId,
-      target_session_token: sessionToken,
-      window_days: WINDOW_DAYS,
-    },
-  );
+  const { data, error } = await supabase.rpc("get_house_bell_feed", {
+    target_house_id: houseId,
+    window_days: WINDOW_DAYS,
+  });
 
   if (error) {
     console.error("Failed to load public house bell feed RPC:", {
@@ -169,3 +160,16 @@ export async function getPublicHouseBellFeed({
     items: items.slice(0, MAX_ITEMS),
   };
 }
+
+export const getPublicHouseBellFeed = cache(
+  async ({ houseId }: { houseId: string }): Promise<PublicHouseBellFeed> => {
+    return unstable_cache(
+      () => loadPublicHouseBellFeed({ houseId }),
+      ["public-house-bell-feed", houseId],
+      {
+        tags: [`house:${houseId}`],
+        revalidate: 300,
+      },
+    )();
+  },
+);

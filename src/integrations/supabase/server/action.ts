@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSupabaseAuthCookieOptions } from "@/src/integrations/supabase/shared/authCookieOptions";
 
 export async function createSupabaseActionClient() {
   const cookieStore = await cookies();
@@ -18,7 +17,6 @@ export async function createSupabaseActionClient() {
   }
 
   return createServerClient(supabaseUrl, supabasePublishableKey, {
-    cookieOptions: getSupabaseAuthCookieOptions(),
     cookies: {
       getAll() {
         return cookieStore.getAll();

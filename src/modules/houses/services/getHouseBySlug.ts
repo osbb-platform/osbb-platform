@@ -8,7 +8,7 @@ async function loadHouseBySlug(slug: string): Promise<HouseRecord | null> {
   const supabase = createSupabasePublicClient();
 
   const { data, error } = await supabase
-    .from("public_houses")
+    .from("houses")
     .select(
       `
         id,
@@ -23,8 +23,23 @@ async function loadHouseBySlug(slug: string): Promise<HouseRecord | null> {
         cover_image_path,
         tariff_amount,
         is_active,
-        district,
-        management_company
+        district:districts (
+          id,
+          name,
+          slug,
+          theme_color
+        ),
+        management_company:management_companies (
+          id,
+          slug,
+          name,
+          slogan,
+          phone,
+          email,
+          address,
+          work_schedule,
+          is_active
+        )
       `,
     )
     .eq("slug", slug)

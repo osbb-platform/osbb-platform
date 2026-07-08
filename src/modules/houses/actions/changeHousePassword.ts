@@ -2,25 +2,15 @@
 
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
-
-import { createSupabaseActionClient } from "@/src/integrations/supabase/server/action";
-import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
-import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
+import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 
 type ChangeHousePasswordState = {
   error: string | null;
   successMessage: string | null;
 };
-
-type HouseSessionVerificationResult = {
-  house_id?: unknown;
-  house_slug?: unknown;
-};
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function normalizeAccessCode(value: string) {
   return value.replace(/\D/g, "").slice(0, 6);
@@ -31,135 +21,58 @@ export async function changeHousePassword(
   formData: FormData,
 ): Promise<ChangeHousePasswordState> {
   const currentUser = await getCurrentAdminUser();
-
-  if (!currentUser) {
-    return {
-      error:
-        "Не удалось определить текущего администратора.",
-      successMessage: null,
-    };
-  }
-
   const accessError = assertRegistryActionAccess({
-    role: currentUser.role,
+    role: currentUser?.role,
     area: "houses",
     action: "security",
   });
 
   if (accessError) {
-    return {
-      error: accessError.error,
-      successMessage: null,
-    };
+    return { error: accessError.error, successMessage: null };
   }
 
-  const houseId =
-    String(formData.get("houseId") ?? "").trim();
-
-  const houseSlug =
-    String(formData.get("houseSlug") ?? "").trim();
-
+  const houseId = String(formData.get("houseId") ?? "").trim();
+  const houseSlug = String(formData.get("houseSlug") ?? "").trim();
   const oldAccessCode = normalizeAccessCode(
-    String(
-      formData.get("oldAccessCode") ?? "",
-    ).trim(),
+    String(formData.get("oldAccessCode") ?? "").trim(),
   );
-
   const newAccessCode = normalizeAccessCode(
-    String(
-      formData.get("newAccessCode") ?? "",
-    ).trim(),
+    String(formData.get("newAccessCode") ?? "").trim(),
   );
 
-  if (
-    !houseId
-    || !houseSlug
-    || !oldAccessCode
-    || !newAccessCode
-  ) {
+  if (!houseId || !houseSlug || !oldAccessCode || !newAccessCode) {
     return {
-      error:
-        "Введите текущий и новый 6-значный код доступа.",
+      error: "Введите текущий и новый 6-значный код доступа.",
       successMessage: null,
     };
   }
 
-  if (!UUID_PATTERN.test(houseId)) {
+  if (oldAccessCode.length !== 6 || newAccessCode.length !== 6) {
     return {
-      error: "Некорректный идентификатор дома.",
-      successMessage: null,
-    };
-  }
-
-  if (
-    oldAccessCode.length !== 6
-    || newAccessCode.length !== 6
-  ) {
-    return {
-      error:
-        "Оба кода должны содержать ровно 6 цифр.",
+      error: "Оба кода должны содержать ровно 6 цифр.",
       successMessage: null,
     };
   }
 
   if (oldAccessCode === newAccessCode) {
     return {
-      error:
-        "Новый код должен отличаться от текущего.",
+      error: "Новый код должен отличаться от текущего.",
       successMessage: null,
     };
   }
 
-  /*
-   * This client carries auth.uid(). The database predicate checks
-   * global scope or membership in this exact house before privileged
-   * operations start.
-   */
-  const scopeClient =
-    await createSupabaseActionClient();
-
-  const {
-    data: hasHouseAccess,
-    error: houseAccessError,
-  } = await scopeClient.rpc(
-    "admin_has_house_access",
-    {
-      target_house_id: houseId,
-    },
-  );
-
-  if (houseAccessError) {
-    console.error(
-      "[house-access] Exact scope check failed",
-      {
-        code: houseAccessError.code,
-        houseId,
-      },
-    );
-
+  if (!currentUser) {
     return {
-      error:
-        "Не удалось проверить права доступа к дому.",
+      error: "Не удалось определить текущего администратора.",
       successMessage: null,
     };
   }
 
-  if (hasHouseAccess !== true) {
-    return {
-      error:
-        "У вас недостаточно прав для изменения кода этого дома.",
-      successMessage: null,
-    };
-  }
+  const supabase = await createSupabaseServerClient();
 
-  const supabase = createSupabaseAdminClient();
-  const verificationToken =
-    `verify-${randomUUID()}`;
+  const verificationToken = `verify-${randomUUID()}`;
 
-  const {
-    data: verificationData,
-    error: verificationError,
-  } = await supabase.rpc(
+  const { data: verificationData, error: verificationError } = await supabase.rpc(
     "create_house_session",
     {
       target_house_slug: houseSlug,
@@ -171,88 +84,43 @@ export async function changeHousePassword(
 
   if (verificationError) {
     throw new Error(
-      "Failed to verify current house access code: "
-        + verificationError.message,
+      `Failed to verify current house access code: ${verificationError.message}`,
     );
   }
 
-  const verificationResult =
-    Array.isArray(verificationData)
-      ? (
-          verificationData[0] as
-            | HouseSessionVerificationResult
-            | undefined
-        ) ?? null
-      : null;
+  const verificationResult = Array.isArray(verificationData)
+    ? verificationData[0]
+    : null;
 
   if (!verificationResult) {
     return {
-      error:
-        "Текущий код доступа введен неверно.",
+      error: "Текущий код доступа введен неверно.",
       successMessage: null,
     };
   }
 
-  /*
-   * Hidden form fields are untrusted. Old-code verification must
-   * resolve to the exact same house ID and slug.
-   */
-  if (
-    verificationResult.house_id !== houseId
-    || verificationResult.house_slug !== houseSlug
-  ) {
-    console.error(
-      "[house-access] Verification target mismatch",
-      {
-        requestedHouseId: houseId,
-        requestedHouseSlug: houseSlug,
-        verifiedHouseId:
-          verificationResult.house_id,
-        verifiedHouseSlug:
-          verificationResult.house_slug,
-      },
-    );
+  const { error } = await supabase.rpc("upsert_house_access", {
+    target_house_id: houseId,
+    raw_password: newAccessCode,
+  });
 
+  if (error) {
     return {
-      error:
-        "Не удалось подтвердить соответствие дома и кода доступа.",
+      error: `Ошибка смены кода доступа: ${error.message}`,
       successMessage: null,
     };
   }
 
-  const { error: accessUpdateError } =
-    await supabase.rpc(
-      "upsert_house_access",
-      {
-        target_house_id: houseId,
-        raw_password: newAccessCode,
-      },
-    );
-
-  if (accessUpdateError) {
-    return {
-      error:
-        "Ошибка смены кода доступа: "
-        + accessUpdateError.message,
-      successMessage: null,
-    };
-  }
-
-  const { error: houseUpdateError } =
-    await supabase
-      .from("houses")
-      .update({
-        current_access_code: newAccessCode,
-      })
-      .eq("id", houseId)
-      .eq("slug", houseSlug);
+  const { error: houseUpdateError } = await supabase
+    .from("houses")
+    .update({
+      current_access_code: newAccessCode,
+    })
+    .eq("id", houseId);
 
   if (houseUpdateError) {
     return {
-      error:
-        "Код обновлен в доступе дома, "
-        + "но не сохранен в CMS-профиле: "
-        + houseUpdateError.message,
+      error: `Код обновлен в доступе дома, но не сохранен в CMS-профиле: ${houseUpdateError.message}`,
       successMessage: null,
     };
   }
@@ -266,11 +134,8 @@ export async function changeHousePassword(
     entityId: houseId,
     entityLabel: houseSlug,
     actionType: "change_access_code",
-    description:
-      `Изменен код доступа дома ${houseSlug}.`,
-    houseId,
+    description: `Изменен код доступа дома ${houseSlug}.`,
     metadata: {
-      houseId,
       houseSlug,
     },
   });
@@ -282,7 +147,6 @@ export async function changeHousePassword(
 
   return {
     error: null,
-    successMessage:
-      "Новый код доступа успешно сохранен.",
+    successMessage: "Новый код доступа успешно сохранен.",
   };
 }

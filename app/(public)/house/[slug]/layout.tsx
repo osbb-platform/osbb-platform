@@ -82,8 +82,6 @@ export default async function PublicHouseLayout({
     );
   }
 
-  const residentSessionToken = sessionToken ?? "";
-
   const rawChairman = await getChairmanForHouse(house.id);
 
   const chairman = rawChairman
@@ -96,12 +94,10 @@ export default async function PublicHouseLayout({
 
   const bellFeed = await getPublicHouseBellFeed({
     houseId: house.id,
-    sessionToken: residentSessionToken,
   });
 
   const apartmentOptions = await getPublicHouseApartmentOptions({
     houseId: house.id,
-    sessionToken: residentSessionToken,
   });
 
   return (

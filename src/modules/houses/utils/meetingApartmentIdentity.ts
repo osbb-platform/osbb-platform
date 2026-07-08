@@ -33,7 +33,7 @@ export function normalizeMeetingApartmentLabel(label: string) {
     .replace(/\u00a0/gu, " ")
     .trim();
   const withoutPrefix = trimmed
-    .replace(/^(кв\.?|квартира|прим\.?)\s*/iu, "")
+    .replace(/^(квартира|прим\.?|кв\.?)\s*/iu, "")
     .trim();
   const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
 

@@ -3,7 +3,6 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseMeetings } from "@/src/modules/houses/services/getPublishedHouseMeetings";
 import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
-import { readHouseSessionToken } from "@/src/modules/houses/services/readHouseSessionToken";
 import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
@@ -167,21 +166,12 @@ export default async function PublicMeetingsPage({
     return null;
   }
 
-  const sessionToken =
-    (await readHouseSessionToken(slug)) ?? "";
+  const apartments =
+    house?.id
+      ? await getPublicHouseApartmentOptions({ houseId: house.id })
+      : [];
 
-  const apartments = sessionToken
-    ? await getPublicHouseApartmentOptions({
-        houseId: house.id,
-        sessionToken,
-      })
-    : [];
-
-  const meetingsSnapshot =
-    await getPublishedHouseMeetings({
-      houseId: house.id,
-      sessionToken,
-    });
+  const meetingsSnapshot = await getPublishedHouseMeetings(house.id);
 
   const publicMeetings: MeetingItem[] = meetingsSnapshot.items
     .filter((item) => item.status !== "draft")
@@ -476,14 +466,11 @@ export default async function PublicMeetingsPage({
                 meeting.status === "archived") &&
               meeting.protocolPdf ? (
                 <PublicReportPdfViewer
-                  entityType="house_meeting"
-                  entityId={meeting.id}
-                  fieldKey="protocol"
-                  houseSlug={house.slug}
+                  filePath={meeting.protocolPdf}
                   fileName={`Протокол — ${meeting.title}`}
                   analyticsHouseId={house.id}
                   analyticsHouseSlug={house.slug}
-                  analyticsEntityId={meeting.protocolDocumentId || meeting.id}
+                  analyticsEntityId={meeting.protocolDocumentId ?? meeting.id}
                   analyticsDocumentType="meeting_protocol"
                 />
               ) : null}

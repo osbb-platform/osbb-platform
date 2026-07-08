@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { SpecialistContactRequestForm } from "@/src/modules/houses/components/SpecialistContactRequestForm";
 import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/services/public/getPublicHouseApartmentOptions";
-import { readHouseSessionToken } from "@/src/modules/houses/services/readHouseSessionToken";
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
@@ -181,15 +180,9 @@ export default async function SpecialistsPage({
   }
   const specialistsData = await getPublishedHouseSpecialists(house.id);
 
-  const sessionToken =
-    (await readHouseSessionToken(slug)) ?? "";
-
-  const apartmentOptions = sessionToken
-    ? await getPublicHouseApartmentOptions({
-        houseId: house.id,
-        sessionToken,
-      })
-    : [];
+  const apartmentOptions = await getPublicHouseApartmentOptions({
+    houseId: house.id,
+  });
 
   const activeSpecialists = sortSpecialists(
     specialistsData.specialists.map((item) => ({

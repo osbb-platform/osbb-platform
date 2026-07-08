@@ -117,11 +117,9 @@ export default async function FoundingDocumentsPage({
                 </p>
 
                 <PublicReportPdfViewer
-                  entityType="house_document"
-                  entityId={document.id}
-                  fieldKey="pdf"
-                  houseSlug={house.slug}
+                  filePath={document.storage_path ?? ""}
                   fileName={document.original_file_name || document.title}
+                  bucket="house-documents"
                   analyticsHouseId={house.id}
                   analyticsHouseSlug={house.slug}
                   analyticsEntityId={document.id}

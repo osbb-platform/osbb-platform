@@ -220,15 +220,9 @@ export function PublicPlanTaskViewer({
                   <div className={META_LABEL}>Фото</div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.images.map((image, index) => {
-                      const href =
-                        image.path && image.id && houseSlug
-                          ? `/api/reports/view?${new URLSearchParams({
-                              entityType: "house_plan_task",
-                              entityId: task.id,
-                              fieldKey: image.id,
-                              houseSlug,
-                            }).toString()}`
-                          : "";
+                      const href = image.path
+                        ? `/api/reports/view?path=${encodeURIComponent(image.path)}&bucket=house-plan-media`
+                        : "";
                       return href ? (
                         <a
                           key={image.id || `${task.id}-image-${index}`}
@@ -251,18 +245,16 @@ export function PublicPlanTaskViewer({
                   <div className={META_LABEL}>Документи</div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.documents.map((document, index) => {
-                      const fileFieldKey = document.id || "";
-                      return document.path && fileFieldKey && houseSlug ? (
+                      const filePath = document.path || "";
+                      return filePath ? (
                         <div key={document.id || `${task.id}-document-${index}`}>
                           <PublicReportPdfViewer
-                            entityType="house_plan_task"
-                            entityId={task.id}
-                            fieldKey={fileFieldKey}
-                            houseSlug={houseSlug}
+                            filePath={filePath}
                             fileName={`Документ ${index + 1}`}
+                            bucket="house-plan-documents"
                             analyticsHouseId={houseId}
                             analyticsHouseSlug={houseSlug}
-                            analyticsEntityId={task.id}
+                            analyticsEntityId={document.id || task.id}
                             analyticsDocumentType="plan_document"
                           />
                         </div>

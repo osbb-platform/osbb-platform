@@ -1,6 +1,4 @@
-import {
-  readSpreadsheetRows,
-} from "@/src/shared/utils/spreadsheets/spreadsheetSecurity";
+import * as XLSX from "xlsx";
 
 export const APARTMENTS_IMPORT_HEADERS = [
   "Особовий рахунок",
@@ -40,8 +38,31 @@ function isAreaValid(value: string) {
 export async function parseApartmentsImportFile(
   file: File,
 ): Promise<ApartmentsImportParseResult> {
-  const rows =
-    await readSpreadsheetRows(file);
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+  if (!["csv", "xls", "xlsx"].includes(extension)) {
+    throw new Error("Підтримуються лише файли CSV, XLS та XLSX.");
+  }
+
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, {
+    type: "array",
+    raw: false,
+  });
+
+  const firstSheetName = workbook.SheetNames[0];
+
+  if (!firstSheetName) {
+    throw new Error("Файл не містить аркушів для імпорту.");
+  }
+
+  const worksheet = workbook.Sheets[firstSheetName];
+
+  const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(worksheet, {
+    header: 1,
+    blankrows: false,
+    defval: "",
+  });
 
   if (!rows.length) {
     throw new Error("Файл порожній.");
