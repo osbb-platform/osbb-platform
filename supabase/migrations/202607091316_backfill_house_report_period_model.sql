@@ -33,14 +33,16 @@ begin
       and tablename = '_p01_manual_review'
       and policyname = 'p01_manual_review_admin_select'
   ) then
-    create policy p01_manual_review_admin_select
-      on public._p01_manual_review
-      for select
-      to authenticated
-      using (
-        public.get_my_admin_role() is not null
-        and public.get_my_admin_role() <> 'inactive'
-      );
+    execute $policy$
+      create policy p01_manual_review_admin_select
+        on public._p01_manual_review
+        for select
+        to authenticated
+        using (
+          public.get_my_admin_role() is not null
+          and public.get_my_admin_role() <> 'inactive'
+        )
+    $policy$;
   end if;
 end $$;
 
