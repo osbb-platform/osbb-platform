@@ -9,6 +9,11 @@ type Props = {
   filePath: string;
   fileName?: string;
   bucket?: string;
+  entityType?: string;
+  entityId?: string;
+  fieldKey?: string;
+  buttonLabel?: string;
+  modalTitle?: string;
   analyticsHouseId?: string;
   analyticsHouseSlug?: string;
   analyticsEntityId?: string | null;
@@ -19,6 +24,11 @@ export function PublicReportPdfViewer({
   filePath,
   fileName,
   bucket = "house-reports",
+  entityType,
+  entityId,
+  fieldKey,
+  buttonLabel = "Ознайомитися",
+  modalTitle,
   analyticsHouseId,
   analyticsHouseSlug,
   analyticsEntityId,
@@ -29,13 +39,27 @@ export function PublicReportPdfViewer({
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const viewerUrl = useMemo(() => {
-    if (!filePath.trim()) return "";
-    const params = new URLSearchParams({ path: filePath, bucket });
+    if (!filePath.trim() && !(entityType?.trim() && entityId?.trim())) return "";
+
+    const params = new URLSearchParams();
+
+    if (entityType?.trim() && entityId?.trim()) {
+      params.set("entityType", entityType.trim());
+      params.set("entityId", entityId.trim());
+      params.set("fieldKey", fieldKey?.trim() || "pdf");
+    }
+
+    if (filePath.trim()) {
+      params.set("path", filePath);
+      params.set("bucket", bucket);
+    }
+
     if (fileName?.trim()) {
       params.set("filename", fileName);
     }
+
     return `/api/reports/view?${params.toString()}#toolbar=0&navpanes=0&scrollbar=0`;
-  }, [bucket, fileName, filePath]);
+  }, [bucket, entityId, entityType, fieldKey, fileName, filePath]);
 
   function trackDocumentOpen() {
     try {
@@ -93,7 +117,7 @@ export function PublicReportPdfViewer({
             <span className="flex h-8 w-8 items-center justify-center rounded-[var(--r-md)] bg-[var(--pub-info-bg)] text-[var(--pub-info-text)]">
               <PubIcon name="doc" className="h-[17px] w-[17px]" />
             </span>
-            {fileName || "Перегляд звіту"}
+            {modalTitle || fileName || "Перегляд PDF"}
           </div>
 
           <button
@@ -111,7 +135,7 @@ export function PublicReportPdfViewer({
 
         <iframe
           src={viewerUrl}
-          title={fileName || "PDF report"}
+          title={modalTitle || fileName || "PDF"}
           className="h-[calc(85vh-73px)] w-full bg-[var(--pub-surface-elevated)]"
           onLoad={() => setIsLoading(false)}
         />
@@ -131,7 +155,7 @@ export function PublicReportPdfViewer({
         className="mt-5 w-full"
       >
         <PubIcon name="doc" className="h-[18px] w-[18px]" />
-        {isLoading ? "Відкриваємо..." : "Ознайомитися"}
+        {isLoading ? "Відкриваємо..." : buttonLabel}
       </PublicDocumentActionButton>
 
       {loadError ? (

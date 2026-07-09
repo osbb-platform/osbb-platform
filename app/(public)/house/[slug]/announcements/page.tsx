@@ -5,6 +5,7 @@ import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicReportPdfViewer";
 import type { PubTone } from "@/src/shared/ui/public/pubStyles";
 
 type AnnouncementsPageProps = {
@@ -34,6 +35,15 @@ const LEVEL_META: Record<
   },
 };
 
+type AnnouncementPdf = {
+  bucket: string;
+  path: string;
+  originalName: string | null;
+  mimeType: string | null;
+  size: number | null;
+  uploadedAt: string | null;
+};
+
 type AnnouncementLevel = keyof typeof LEVEL_META;
 type AnnouncementFilter = "all" | AnnouncementLevel;
 
@@ -41,6 +51,72 @@ function normalizeLevel(value: unknown): AnnouncementLevel {
   return value === "danger" || value === "warning" || value === "info"
     ? value
     : "info";
+}
+
+function normalizeAnnouncementPdf(value: unknown): AnnouncementPdf | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Partial<AnnouncementPdf>;
+  const bucket = typeof record.bucket === "string" ? record.bucket.trim() : "";
+  const path = typeof record.path === "string" ? record.path.trim() : "";
+
+  if (!bucket || !path) {
+    return null;
+  }
+
+  return {
+    bucket,
+    path,
+    originalName:
+      typeof record.originalName === "string" && record.originalName.trim()
+        ? record.originalName.trim()
+        : null,
+    mimeType:
+      typeof record.mimeType === "string" && record.mimeType.trim()
+        ? record.mimeType.trim()
+        : "application/pdf",
+    size:
+      typeof record.size === "number" && Number.isFinite(record.size)
+        ? record.size
+        : null,
+    uploadedAt:
+      typeof record.uploadedAt === "string" && record.uploadedAt.trim()
+        ? record.uploadedAt.trim()
+        : null,
+  };
+}
+
+function renderAnnouncementPdfViewer(params: {
+  content: Record<string, unknown>;
+  announcementId: string;
+  announcementTitle: string | null;
+  houseId: string;
+  houseSlug: string;
+}) {
+  const pdf = normalizeAnnouncementPdf(params.content.pdf);
+
+  if (!pdf) {
+    return null;
+  }
+
+  return (
+    <PublicReportPdfViewer
+      filePath={pdf.path}
+      fileName={pdf.originalName ?? "PDF оголошення"}
+      bucket={pdf.bucket}
+      entityType="house_announcement"
+      entityId={params.announcementId}
+      fieldKey="pdf"
+      buttonLabel="Переглянути PDF"
+      modalTitle={params.announcementTitle || "PDF оголошення"}
+      analyticsHouseId={params.houseId}
+      analyticsHouseSlug={params.houseSlug}
+      analyticsEntityId={params.announcementId}
+      analyticsDocumentType="house_announcement_pdf"
+    />
+  );
 }
 
 function normalizeFilter(value: unknown): AnnouncementFilter {
@@ -114,6 +190,7 @@ export default async function PublicHouseAnnouncementsPage({
         publishedAt: announcement.published_at,
         updatedAt: announcement.updated_at,
         createdAt: announcement.published_at ?? announcement.updated_at,
+        pdf: announcement.pdf ?? null,
       },
     }))
     .sort((a, b) => {
@@ -228,6 +305,13 @@ export default async function PublicHouseAnnouncementsPage({
               const level = normalizeLevel(content.level);
               const meta = LEVEL_META[level];
               const publishedAt = formatPublishedAt(content.publishedAt);
+              const pdfViewer = renderAnnouncementPdfViewer({
+                content,
+                announcementId: pinnedAnnouncement.id,
+                announcementTitle: pinnedAnnouncement.title,
+                houseId: house.id,
+                houseSlug: house.slug,
+              });
 
               return (
                 <article className="relative mb-5 w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 pl-6 shadow-[var(--pub-shadow-md)] sm:p-7 sm:pl-8">
@@ -258,6 +342,9 @@ export default async function PublicHouseAnnouncementsPage({
                       ? content.body
                       : houseAnnouncementsCopy.empty.noText}
                   </div>
+
+                  {pdfViewer}
+
                 </article>
               );
             })()
@@ -278,6 +365,13 @@ export default async function PublicHouseAnnouncementsPage({
               const level = normalizeLevel(content.level);
               const meta = LEVEL_META[level];
               const publishedAt = formatPublishedAt(content.publishedAt);
+              const pdfViewer = renderAnnouncementPdfViewer({
+                content,
+                announcementId: section.id,
+                announcementTitle: section.title,
+                houseId: house.id,
+                houseSlug: house.slug,
+              });
 
               return (
                 <article
@@ -303,6 +397,7 @@ export default async function PublicHouseAnnouncementsPage({
                   <div className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[var(--pub-text-muted)] sm:mt-4 sm:text-[15px] sm:leading-7">
                     {getAnnouncementBody(content.body)}
                   </div>
+                  {pdfViewer}
                 </article>
               );
             })}
