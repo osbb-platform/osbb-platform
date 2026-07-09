@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import { sortHouseReportSnapshots } from "@/src/modules/houses/utils/houseReportPeriodView";
 import type {
   HouseReportCategorySnapshot,
   HouseReportLifecycle,
@@ -124,62 +125,6 @@ function getLegacyYear(
     periodKind === "year"
     ? periodYear
     : null;
-}
-
-function getPeriodSortKey(report: HouseReportSnapshot) {
-  if (!report.periodYear) {
-    return -1;
-  }
-
-  if (report.periodKind === "year") {
-    return report.periodYear * 100 + 13;
-  }
-
-  if (report.periodKind === "quarter" && report.periodQuarter) {
-    return report.periodYear * 100 + report.periodQuarter * 3;
-  }
-
-  if (report.periodKind === "month" && report.periodMonth) {
-    return report.periodYear * 100 + report.periodMonth;
-  }
-
-  return -1;
-}
-
-function sortPublishedReports(reports: HouseReportSnapshot[]) {
-  return [...reports].sort((left, right) => {
-    const pinnedDiff =
-      Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned));
-
-    if (pinnedDiff !== 0) {
-      return pinnedDiff;
-    }
-
-    const periodDiff = getPeriodSortKey(right) - getPeriodSortKey(left);
-
-    if (periodDiff !== 0) {
-      return periodDiff;
-    }
-
-    const leftDate = new Date(left.reportDate ?? left.publishedAt ?? left.updatedAt).getTime() || 0;
-    const rightDate = new Date(right.reportDate ?? right.publishedAt ?? right.updatedAt).getTime() || 0;
-    const dateDiff = rightDate - leftDate;
-
-    if (dateDiff !== 0) {
-      return dateDiff;
-    }
-
-    const sortOrderDiff = left.sortOrder - right.sortOrder;
-
-    if (sortOrderDiff !== 0) {
-      return sortOrderDiff;
-    }
-
-    return left.title.localeCompare(right.title, "uk", {
-      numeric: true,
-      sensitivity: "base",
-    });
-  });
 }
 
 function mapReport(
@@ -333,7 +278,7 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
   }
 
   return {
-    reports: sortPublishedReports(
+    reports: sortHouseReportSnapshots(
       reports.map((report) => mapReport(report, filesByReportId.get(report.id))),
     ),
     categories: ((categoriesResult.data ?? []) as unknown as HouseReportCategoryRow[]).map(mapCategory),
