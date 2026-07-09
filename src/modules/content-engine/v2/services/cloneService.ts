@@ -49,6 +49,17 @@ type BuildInsertArgs<TSource extends object> = {
   copiedFiles: CopiedFileRef[];
 };
 
+type BuildTargetFilePathArgs = {
+  sourcePath: string;
+  targetHouse: TargetHouse;
+  targetEntityId: string;
+  fieldKey: string;
+  bucket: string;
+  originalName: string | null;
+  mimeType: string | null;
+  size: number | null;
+};
+
 type DuplicateTableRecordParams<TSource extends object> = {
   ctx: HandlerContext;
   sourceTable: string;
@@ -63,6 +74,7 @@ type DuplicateTableRecordParams<TSource extends object> = {
   }) => string;
   historyMetadata?: Record<string, unknown>;
   publicPathsForHouse?: (houseSlug: string) => string[];
+  buildTargetFilePath?: (args: BuildTargetFilePathArgs) => string;
 };
 
 type DuplicateResult<TSource extends object> = {
@@ -191,15 +203,29 @@ function createCopiedStoragePath(params: {
 async function copyStorageObject(
   supabase: SupabaseClient,
   file: TrackedFileRow,
-  targetHouseId: string,
-  targetEntityId: string,
+  params: {
+    targetHouse: TargetHouse;
+    targetEntityId: string;
+    buildTargetFilePath?: (args: BuildTargetFilePathArgs) => string;
+  },
 ): Promise<Result<CopiedFileRef>> {
-  const targetPath = createCopiedStoragePath({
-    sourcePath: file.storage_path,
-    targetHouseId,
-    targetEntityId,
-    fieldKey: file.field_key,
-  });
+  const targetPath = params.buildTargetFilePath
+    ? params.buildTargetFilePath({
+        sourcePath: file.storage_path,
+        targetHouse: params.targetHouse,
+        targetEntityId: params.targetEntityId,
+        fieldKey: file.field_key,
+        bucket: file.storage_bucket,
+        originalName: file.original_file_name,
+        mimeType: file.mime_type,
+        size: file.size_bytes,
+      })
+    : createCopiedStoragePath({
+        sourcePath: file.storage_path,
+        targetHouseId: params.targetHouse.id,
+        targetEntityId: params.targetEntityId,
+        fieldKey: file.field_key,
+      });
 
   const bucket = supabase.storage.from(file.storage_bucket);
   const copyCapableBucket = bucket as typeof bucket & {
@@ -284,8 +310,9 @@ async function copyTrackedFiles(
   supabase: SupabaseClient,
   params: {
     files: TrackedFileRow[];
-    targetHouseId: string;
+    targetHouse: TargetHouse;
     targetEntityId: string;
+    buildTargetFilePath?: (args: BuildTargetFilePathArgs) => string;
   },
 ): Promise<Result<CopiedFileRef[]>> {
   const copied: CopiedFileRef[] = [];
@@ -294,8 +321,11 @@ async function copyTrackedFiles(
     const copyResult = await copyStorageObject(
       supabase,
       file,
-      params.targetHouseId,
-      params.targetEntityId,
+      {
+        targetHouse: params.targetHouse,
+        targetEntityId: params.targetEntityId,
+        buildTargetFilePath: params.buildTargetFilePath,
+      },
     );
 
     if (!copyResult.ok) {
@@ -401,8 +431,9 @@ export async function duplicateTableRecordToDraft<TSource extends object>(
     const newId = randomUUID();
     const copiedFilesResult = await copyTrackedFiles(params.ctx.supabase, {
       files: filesResult.data,
-      targetHouseId: targetHouse.id,
+      targetHouse,
       targetEntityId: newId,
+      buildTargetFilePath: params.buildTargetFilePath,
     });
 
     if (!copiedFilesResult.ok) {

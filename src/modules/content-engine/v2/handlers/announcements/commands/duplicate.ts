@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { CommandSpec } from "../../../types/handler";
 import {
   duplicateTableRecordToDraft,
@@ -37,6 +39,14 @@ export const duplicateCommand: CommandSpec = {
         archived_at: null,
         created_by: actor.id,
       }),
+      buildTargetFilePath: ({ targetHouse, targetEntityId, fieldKey }) =>
+        [
+          "houses",
+          targetHouse.id,
+          "announcements",
+          targetEntityId,
+          `${fieldKey}-${Date.now()}-${randomUUID()}.pdf`,
+        ].join("/"),
       targetDescription: ({ source }) =>
         `Створено чернетку оголошення «${source.title}» з дублювання.`,
       historyMetadata: { subSectionKey: "announcements" },
