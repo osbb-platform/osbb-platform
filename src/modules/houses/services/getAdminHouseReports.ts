@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 
 export type HouseReportLifecycle = "draft" | "published" | "archived";
 export type HouseReportPeriodType = "current" | "past";
+export type HouseReportPeriodKind = "none" | "month" | "quarter" | "year";
 
 type HouseReportFileRow = {
   entity_id: string;
@@ -32,9 +33,19 @@ export type HouseReportSnapshot = {
   categoryId: string | null;
   categoryTitle: string;
   reportDate: string | null;
+
+  /**
+   * Legacy compatibility fields. Derived from periodKind after P01.T5.
+   */
   periodType: HouseReportPeriodType;
   month: string | null;
   year: number | null;
+
+  periodKind: HouseReportPeriodKind;
+  periodMonth: number | null;
+  periodQuarter: number | null;
+  periodYear: number | null;
+
   isPinned: boolean;
   isNew: boolean;
   newUntil: string | null;
@@ -72,6 +83,10 @@ type HouseReportRow = {
   period_type: HouseReportPeriodType;
   month: string | null;
   year: number | null;
+  period_kind: HouseReportPeriodKind | null;
+  period_month: number | null;
+  period_quarter: number | null;
+  period_year: number | null;
   is_pinned: boolean;
   is_new: boolean;
   new_until: string | null;
@@ -105,10 +120,61 @@ function mapCategory(row: HouseReportCategoryRow): HouseReportCategorySnapshot {
   };
 }
 
+function normalizePeriodKind(value: unknown): HouseReportPeriodKind {
+  if (value === "month" || value === "quarter" || value === "year") {
+    return value;
+  }
+
+  return "none";
+}
+
+function normalizePeriodNumber(
+  value: unknown,
+  min: number,
+  max: number,
+): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return null;
+  }
+
+  return value >= min && value <= max ? value : null;
+}
+
+function formatMonth(value: number | null) {
+  return value ? String(value).padStart(2, "0") : null;
+}
+
+function getLegacyPeriodType(periodKind: HouseReportPeriodKind): HouseReportPeriodType {
+  return periodKind === "quarter" || periodKind === "year" ? "past" : "current";
+}
+
+function getLegacyMonth(
+  periodKind: HouseReportPeriodKind,
+  periodMonth: number | null,
+) {
+  return periodKind === "month" ? formatMonth(periodMonth) : null;
+}
+
+function getLegacyYear(
+  periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
+) {
+  return periodKind === "month" ||
+    periodKind === "quarter" ||
+    periodKind === "year"
+    ? periodYear
+    : null;
+}
+
 function mapReport(
   row: HouseReportRow,
   file: HouseReportFileRow | undefined,
 ): HouseReportSnapshot {
+  const periodKind = normalizePeriodKind(row.period_kind);
+  const periodMonth = normalizePeriodNumber(row.period_month, 1, 12);
+  const periodQuarter = normalizePeriodNumber(row.period_quarter, 1, 4);
+  const periodYear = normalizePeriodNumber(row.period_year, 2000, 2100);
+
   return {
     id: row.id,
     houseId: row.house_id,
@@ -117,9 +183,13 @@ function mapReport(
     categoryId: row.category_id,
     categoryTitle: row.category_title,
     reportDate: row.report_date,
-    periodType: row.period_type,
-    month: row.month,
-    year: row.year,
+    periodType: getLegacyPeriodType(periodKind),
+    month: getLegacyMonth(periodKind, periodMonth),
+    year: getLegacyYear(periodKind, periodYear),
+    periodKind,
+    periodMonth: periodKind === "month" ? periodMonth : null,
+    periodQuarter: periodKind === "quarter" ? periodQuarter : null,
+    periodYear: getLegacyYear(periodKind, periodYear),
     isPinned: row.is_pinned,
     isNew: row.is_new,
     newUntil: row.new_until,
@@ -167,6 +237,10 @@ export async function getAdminHouseReports(params: {
           "period_type",
           "month",
           "year",
+          "period_kind",
+          "period_month",
+          "period_quarter",
+          "period_year",
           "is_pinned",
           "is_new",
           "new_until",

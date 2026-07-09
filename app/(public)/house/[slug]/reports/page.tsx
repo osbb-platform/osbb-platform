@@ -6,12 +6,17 @@ import { PublicReportPdfViewer } from "@/src/modules/houses/components/PublicRep
 import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
+import type { HouseReportSnapshot } from "@/src/modules/houses/services/getAdminHouseReports";
+
+type PeriodFilterMode = "all" | "month" | "quarter" | "year";
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{
     mode?: string;
+    period?: string;
     month?: string;
+    quarter?: string;
     year?: string;
   }>;
 };
@@ -36,6 +41,13 @@ const MONTH_ORDER = [
 const MONTH_INDEX = new Map(
   MONTH_ORDER.map((month, index) => [month, index]),
 );
+
+const QUARTER_LABELS: Record<number, string> = {
+  1: "I квартал",
+  2: "II квартал",
+  3: "III квартал",
+  4: "IV квартал",
+};
 
 function getMonthLabel(value: string) {
   const numericMonthLabels: Record<string, string> = {
@@ -80,6 +92,115 @@ function isStillNew(value?: string | null) {
   return date.getTime() >= Date.now();
 }
 
+function formatMonthValue(value: number | null) {
+  return value ? String(value).padStart(2, "0") : null;
+}
+
+function getReportPeriodLabel(report: HouseReportSnapshot) {
+  if (report.periodKind === "month" && report.periodMonth && report.periodYear) {
+    return `${getMonthLabel(formatMonthValue(report.periodMonth) ?? "")} ${report.periodYear}`;
+  }
+
+  if (report.periodKind === "quarter" && report.periodQuarter && report.periodYear) {
+    return `${QUARTER_LABELS[report.periodQuarter] ?? `${report.periodQuarter} квартал`} ${report.periodYear}`;
+  }
+
+  if (report.periodKind === "year" && report.periodYear) {
+    return String(report.periodYear);
+  }
+
+  return "Без періоду";
+}
+
+function getPeriodSortKey(report: HouseReportSnapshot) {
+  if (!report.periodYear) {
+    return -1;
+  }
+
+  if (report.periodKind === "year") {
+    return report.periodYear * 100 + 13;
+  }
+
+  if (report.periodKind === "quarter" && report.periodQuarter) {
+    return report.periodYear * 100 + report.periodQuarter * 3;
+  }
+
+  if (report.periodKind === "month" && report.periodMonth) {
+    return report.periodYear * 100 + report.periodMonth;
+  }
+
+  return -1;
+}
+
+function sortReportsForGrid(items: HouseReportSnapshot[]) {
+  return [...items].sort((left, right) => {
+    const pinnedDiff =
+      Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned));
+
+    if (pinnedDiff !== 0) {
+      return pinnedDiff;
+    }
+
+    const periodDiff = getPeriodSortKey(right) - getPeriodSortKey(left);
+
+    if (periodDiff !== 0) {
+      return periodDiff;
+    }
+
+    const leftDate = new Date(left.reportDate ?? left.publishedAt ?? left.updatedAt).getTime() || 0;
+    const rightDate = new Date(right.reportDate ?? right.publishedAt ?? right.updatedAt).getTime() || 0;
+    const dateDiff = rightDate - leftDate;
+
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+
+    return left.title.localeCompare(right.title, "uk", {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
+}
+
+function isPeriodFilterMode(value: unknown): value is PeriodFilterMode {
+  return value === "all" || value === "month" || value === "quarter" || value === "year";
+}
+
+function resolvePeriodFilterMode(params: {
+  period?: string;
+  mode?: string;
+}): PeriodFilterMode {
+  if (isPeriodFilterMode(params.period)) {
+    return params.period;
+  }
+
+  if (params.mode === "current") {
+    return "month";
+  }
+
+  if (params.mode === "past" || params.mode === "archive") {
+    return "year";
+  }
+
+  return "all";
+}
+
+function getEmptyMessage(periodMode: PeriodFilterMode) {
+  if (periodMode === "month") {
+    return "Місячні звіти за обраний період поки відсутні.";
+  }
+
+  if (periodMode === "quarter") {
+    return "Квартальні звіти за обраний період поки відсутні.";
+  }
+
+  if (periodMode === "year") {
+    return "Річні звіти за обраний період поки відсутні.";
+  }
+
+  return `${houseReportsCopy.page.title} поки не опубліковані.`;
+}
+
 export default async function ReportsPage({
   params,
   searchParams,
@@ -94,120 +215,171 @@ export default async function ReportsPage({
   }
 
   const { reports } = await getPublishedHouseReports(house.id);
+  const sortedReports = sortReportsForGrid(reports);
+  const selectedPeriodMode = resolvePeriodFilterMode(resolvedSearchParams);
 
-  const visibleReports = reports.slice().sort((a, b) => {
-    const aDate = new Date(a.reportDate ?? "").getTime() || 0;
-    const bDate = new Date(b.reportDate ?? "").getTime() || 0;
-    return bDate - aDate;
-  });
-
-  const currentYear = new Date().getFullYear();
-
-  const currentReports = visibleReports.filter(
-    (item) =>
-      item.periodType === "current" &&
-      new Date(item.reportDate ?? "").getFullYear() === currentYear,
+  const monthReports = sortedReports.filter(
+    (item) => item.periodKind === "month" && item.periodMonth && item.periodYear,
+  );
+  const quarterReports = sortedReports.filter(
+    (item) => item.periodKind === "quarter" && item.periodQuarter && item.periodYear,
+  );
+  const yearReports = sortedReports.filter(
+    (item) => item.periodKind === "year" && item.periodYear,
   );
 
-  const pastReports = visibleReports.filter((item) => item.periodType === "past");
-
-  function sortReportsForGrid(items: typeof visibleReports) {
-    return [...items].sort((left, right) => {
-      const pinnedDiff =
-        Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned));
-
-      if (pinnedDiff !== 0) {
-        return pinnedDiff;
-      }
-
-      const leftDate = new Date(left.reportDate ?? "").getTime() || 0;
-      const rightDate = new Date(right.reportDate ?? "").getTime() || 0;
-
-      return rightDate - leftDate;
-    });
-  }
-
-  const availableMonths = Array.from(
-    new Set(
-      currentReports
-        .map((item) => item.month)
-        .filter((item): item is string => typeof item === "string" && item.length > 0),
-    ),
+  const availableMonthPeriods = Array.from(
+    new Map(
+      monthReports.map((item) => {
+        const month = formatMonthValue(item.periodMonth);
+        return [
+          `${item.periodYear}-${month}`,
+          {
+            year: item.periodYear as number,
+            month: month as string,
+          },
+        ];
+      }),
+    ).values(),
   ).sort((left, right) => {
-    const leftIndex = MONTH_INDEX.get(left) ?? Number.MAX_SAFE_INTEGER;
-    const rightIndex = MONTH_INDEX.get(right) ?? Number.MAX_SAFE_INTEGER;
-    return leftIndex - rightIndex;
+    if (right.year !== left.year) return right.year - left.year;
+
+    const leftIndex = MONTH_INDEX.get(left.month) ?? -1;
+    const rightIndex = MONTH_INDEX.get(right.month) ?? -1;
+    return rightIndex - leftIndex;
+  });
+
+  const availableQuarterPeriods = Array.from(
+    new Map(
+      quarterReports.map((item) => [
+        `${item.periodYear}-${item.periodQuarter}`,
+        {
+          year: item.periodYear as number,
+          quarter: item.periodQuarter as number,
+        },
+      ]),
+    ).values(),
+  ).sort((left, right) => {
+    if (right.year !== left.year) return right.year - left.year;
+    return right.quarter - left.quarter;
   });
 
   const availableYears = Array.from(
     new Set(
-      pastReports
-        .map((item) => item.year)
+      yearReports
+        .map((item) => item.periodYear)
         .filter((item): item is number => typeof item === "number"),
     ),
-  ).sort((a, b) => b - a);
+  ).sort((left, right) => right - left);
 
-  const selectedMode =
-    resolvedSearchParams.mode === "archive"
-      ? "archive"
-      : resolvedSearchParams.mode === "past"
-        ? "past"
-        : "current";
+  const requestedMonthPeriod = availableMonthPeriods.find(
+    (item) =>
+      resolvedSearchParams.month === item.month &&
+      Number(resolvedSearchParams.year) === item.year,
+  );
+  const selectedMonthPeriod = requestedMonthPeriod ?? availableMonthPeriods[0] ?? null;
 
-  const selectedMonth =
-    resolvedSearchParams.month && availableMonths.includes(resolvedSearchParams.month)
-      ? resolvedSearchParams.month
-      : (availableMonths[0] ?? null);
+  const requestedQuarterPeriod = availableQuarterPeriods.find(
+    (item) =>
+      Number(resolvedSearchParams.quarter) === item.quarter &&
+      Number(resolvedSearchParams.year) === item.year,
+  );
+  const selectedQuarterPeriod = requestedQuarterPeriod ?? availableQuarterPeriods[0] ?? null;
 
-  const selectedYear =
-    resolvedSearchParams.year && availableYears.includes(Number(resolvedSearchParams.year))
-      ? resolvedSearchParams.year
-      : (availableYears[0] ? String(availableYears[0]) : null);
+  const requestedYear = availableYears.find(
+    (year) => Number(resolvedSearchParams.year) === year,
+  );
+  const selectedYear = requestedYear ?? availableYears[0] ?? null;
 
   const filteredReports =
-    selectedMode === "archive" || selectedMode === "past"
+    selectedPeriodMode === "month"
       ? sortReportsForGrid(
-          pastReports.filter((item) =>
-            selectedYear ? String(item.year ?? "") === selectedYear : false,
+          monthReports.filter(
+            (item) =>
+              selectedMonthPeriod &&
+              item.periodYear === selectedMonthPeriod.year &&
+              formatMonthValue(item.periodMonth) === selectedMonthPeriod.month,
           ),
         )
-      : sortReportsForGrid(
-          currentReports.filter((item) =>
-            selectedMonth ? item.month === selectedMonth : false,
-          ),
-        );
+      : selectedPeriodMode === "quarter"
+        ? sortReportsForGrid(
+            quarterReports.filter(
+              (item) =>
+                selectedQuarterPeriod &&
+                item.periodYear === selectedQuarterPeriod.year &&
+                item.periodQuarter === selectedQuarterPeriod.quarter,
+            ),
+          )
+        : selectedPeriodMode === "year"
+          ? sortReportsForGrid(
+              yearReports.filter((item) =>
+                selectedYear ? item.periodYear === selectedYear : false,
+              ),
+            )
+          : sortedReports;
 
-  const modeTabs: PubFilterTabItem[] = [
+  const periodModeTabs: PubFilterTabItem[] = [
     {
-      key: "current",
-      label: houseReportsCopy.tabs.current,
-      href: `/reports?mode=current${availableMonths[0] ? `&month=${availableMonths[0]}` : ""}`,
-      count: currentReports.length,
-      active: selectedMode === "current",
+      key: "all",
+      label: "Усі",
+      href: "/reports?period=all",
+      count: sortedReports.length,
+      active: selectedPeriodMode === "all",
     },
     {
-      key: "past",
-      label: "Минулі роки",
-      href: `/reports?mode=past${availableYears[0] ? `&year=${availableYears[0]}` : ""}`,
-      count: pastReports.length,
-      active: selectedMode === "past" || selectedMode === "archive",
+      key: "month",
+      label: "Місяць",
+      href: selectedMonthPeriod
+        ? `/reports?period=month&year=${selectedMonthPeriod.year}&month=${selectedMonthPeriod.month}`
+        : "/reports?period=month",
+      count: monthReports.length,
+      active: selectedPeriodMode === "month",
+    },
+    {
+      key: "quarter",
+      label: "Квартал",
+      href: selectedQuarterPeriod
+        ? `/reports?period=quarter&year=${selectedQuarterPeriod.year}&quarter=${selectedQuarterPeriod.quarter}`
+        : "/reports?period=quarter",
+      count: quarterReports.length,
+      active: selectedPeriodMode === "quarter",
+    },
+    {
+      key: "year",
+      label: "Рік",
+      href: selectedYear ? `/reports?period=year&year=${selectedYear}` : "/reports?period=year",
+      count: yearReports.length,
+      active: selectedPeriodMode === "year",
     },
   ];
 
-  const periodTabs: PubFilterTabItem[] =
-    selectedMode === "past" || selectedMode === "archive"
-      ? availableYears.map((year) => ({
-          key: String(year),
-          label: String(year),
-          href: `/reports?mode=past&year=${year}`,
-          active: selectedYear === String(year),
+  const valueTabs: PubFilterTabItem[] =
+    selectedPeriodMode === "month"
+      ? availableMonthPeriods.map((period) => ({
+          key: `${period.year}-${period.month}`,
+          label: `${getMonthLabel(period.month)} ${period.year}`,
+          href: `/reports?period=month&year=${period.year}&month=${period.month}`,
+          active:
+            selectedMonthPeriod?.year === period.year &&
+            selectedMonthPeriod.month === period.month,
         }))
-      : availableMonths.map((month) => ({
-          key: month,
-          label: getMonthLabel(month),
-          href: `/reports?mode=current&month=${month}`,
-          active: selectedMonth === month,
-        }));
+      : selectedPeriodMode === "quarter"
+        ? availableQuarterPeriods.map((period) => ({
+            key: `${period.year}-${period.quarter}`,
+            label: `${QUARTER_LABELS[period.quarter] ?? `${period.quarter} квартал`} ${period.year}`,
+            href: `/reports?period=quarter&year=${period.year}&quarter=${period.quarter}`,
+            active:
+              selectedQuarterPeriod?.year === period.year &&
+              selectedQuarterPeriod.quarter === period.quarter,
+          }))
+        : selectedPeriodMode === "year"
+          ? availableYears.map((year) => ({
+              key: String(year),
+              label: String(year),
+              href: `/reports?period=year&year=${year}`,
+              active: selectedYear === year,
+            }))
+          : [];
 
   return (
     <div className="grid min-w-0 gap-6">
@@ -216,19 +388,15 @@ export default async function ReportsPage({
         description={`${houseReportsCopy.page.title} про виконані роботи та ключові оновлення будинку в одному місці.`}
       >
         <div className="grid gap-4">
-          <PubFilterTabs items={modeTabs} framed={false} ariaLabel="Період звітів" />
-          {periodTabs.length > 0 ? <PubFilterTabs items={periodTabs} /> : null}
+          <PubFilterTabs items={periodModeTabs} framed={false} ariaLabel="Період звітів" />
+          {valueTabs.length > 0 ? <PubFilterTabs items={valueTabs} /> : null}
         </div>
       </PubSectionHeader>
 
       <section>
         {filteredReports.length === 0 ? (
           <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-sm text-[var(--pub-text-muted)]">
-            {selectedMode === "past"
-              ? "Звіти минулих років за обраний період поки відсутні."
-              : selectedMode === "archive"
-                ? "Архів звітів за обраний період поки порожній."
-                : `${houseReportsCopy.page.title} поточного року поки не опубліковані.`}
+            {getEmptyMessage(selectedPeriodMode)}
           </div>
         ) : (
           <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -240,6 +408,10 @@ export default async function ReportsPage({
                 <div className="flex flex-wrap gap-2">
                   <PubBadge tone="neutral" size="sm">
                     {normalizeReportCategoryLabel(report.categoryTitle)}
+                  </PubBadge>
+
+                  <PubBadge tone="neutral" size="sm">
+                    {getReportPeriodLabel(report)}
                   </PubBadge>
 
                   {report.isPinned ? (

@@ -4,6 +4,9 @@ import { cache } from "react";
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
 import type {
   HouseReportCategorySnapshot,
+  HouseReportLifecycle,
+  HouseReportPeriodKind,
+  HouseReportPeriodType,
   HouseReportSnapshot,
 } from "./getAdminHouseReports";
 
@@ -30,13 +33,17 @@ type HouseReportRow = {
   category_id: string | null;
   category_title: string;
   report_date: string | null;
-  period_type: "current" | "past";
+  period_type: HouseReportPeriodType;
   month: string | null;
   year: number | null;
+  period_kind: HouseReportPeriodKind | null;
+  period_month: number | null;
+  period_quarter: number | null;
+  period_year: number | null;
   is_pinned: boolean;
   is_new: boolean;
   new_until: string | null;
-  lifecycle_status: "published";
+  lifecycle_status: HouseReportLifecycle;
   lock_version: number;
   sort_order: number;
   created_at: string;
@@ -73,10 +80,117 @@ function mapCategory(row: HouseReportCategoryRow): HouseReportCategorySnapshot {
   };
 }
 
+function normalizePeriodKind(value: unknown): HouseReportPeriodKind {
+  if (value === "month" || value === "quarter" || value === "year") {
+    return value;
+  }
+
+  return "none";
+}
+
+function normalizePeriodNumber(
+  value: unknown,
+  min: number,
+  max: number,
+): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return null;
+  }
+
+  return value >= min && value <= max ? value : null;
+}
+
+function formatMonth(value: number | null) {
+  return value ? String(value).padStart(2, "0") : null;
+}
+
+function getLegacyPeriodType(periodKind: HouseReportPeriodKind): HouseReportPeriodType {
+  return periodKind === "quarter" || periodKind === "year" ? "past" : "current";
+}
+
+function getLegacyMonth(
+  periodKind: HouseReportPeriodKind,
+  periodMonth: number | null,
+) {
+  return periodKind === "month" ? formatMonth(periodMonth) : null;
+}
+
+function getLegacyYear(
+  periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
+) {
+  return periodKind === "month" ||
+    periodKind === "quarter" ||
+    periodKind === "year"
+    ? periodYear
+    : null;
+}
+
+function getPeriodSortKey(report: HouseReportSnapshot) {
+  if (!report.periodYear) {
+    return -1;
+  }
+
+  if (report.periodKind === "year") {
+    return report.periodYear * 100 + 13;
+  }
+
+  if (report.periodKind === "quarter" && report.periodQuarter) {
+    return report.periodYear * 100 + report.periodQuarter * 3;
+  }
+
+  if (report.periodKind === "month" && report.periodMonth) {
+    return report.periodYear * 100 + report.periodMonth;
+  }
+
+  return -1;
+}
+
+function sortPublishedReports(reports: HouseReportSnapshot[]) {
+  return [...reports].sort((left, right) => {
+    const pinnedDiff =
+      Number(Boolean(right.isPinned)) - Number(Boolean(left.isPinned));
+
+    if (pinnedDiff !== 0) {
+      return pinnedDiff;
+    }
+
+    const periodDiff = getPeriodSortKey(right) - getPeriodSortKey(left);
+
+    if (periodDiff !== 0) {
+      return periodDiff;
+    }
+
+    const leftDate = new Date(left.reportDate ?? left.publishedAt ?? left.updatedAt).getTime() || 0;
+    const rightDate = new Date(right.reportDate ?? right.publishedAt ?? right.updatedAt).getTime() || 0;
+    const dateDiff = rightDate - leftDate;
+
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+
+    const sortOrderDiff = left.sortOrder - right.sortOrder;
+
+    if (sortOrderDiff !== 0) {
+      return sortOrderDiff;
+    }
+
+    return left.title.localeCompare(right.title, "uk", {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
+}
+
 function mapReport(
   row: HouseReportRow,
   file: HouseReportFileRow | undefined,
 ): HouseReportSnapshot {
+  const periodKind = normalizePeriodKind(row.period_kind);
+  const periodMonth = normalizePeriodNumber(row.period_month, 1, 12);
+  const periodQuarter = normalizePeriodNumber(row.period_quarter, 1, 4);
+  const periodYear = normalizePeriodNumber(row.period_year, 2000, 2100);
+
   return {
     id: row.id,
     houseId: row.house_id,
@@ -85,9 +199,13 @@ function mapReport(
     categoryId: row.category_id,
     categoryTitle: row.category_title,
     reportDate: row.report_date,
-    periodType: row.period_type,
-    month: row.month,
-    year: row.year,
+    periodType: getLegacyPeriodType(periodKind),
+    month: getLegacyMonth(periodKind, periodMonth),
+    year: getLegacyYear(periodKind, periodYear),
+    periodKind,
+    periodMonth: periodKind === "month" ? periodMonth : null,
+    periodQuarter: periodKind === "quarter" ? periodQuarter : null,
+    periodYear: getLegacyYear(periodKind, periodYear),
     isPinned: row.is_pinned,
     isNew: row.is_new,
     newUntil: row.new_until,
@@ -131,6 +249,10 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
           "period_type",
           "month",
           "year",
+          "period_kind",
+          "period_month",
+          "period_quarter",
+          "period_year",
           "is_pinned",
           "is_new",
           "new_until",
@@ -145,9 +267,7 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
         ].join(", "),
       )
       .eq("house_id", houseId)
-      .eq("lifecycle_status", "published")
-      .order("is_pinned", { ascending: false })
-      .order("report_date", { ascending: false }),
+      .eq("lifecycle_status", "published"),
     supabase
       .from("house_report_categories")
       .select("id, house_id, title, sort_order, created_at, updated_at")
@@ -213,7 +333,9 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
   }
 
   return {
-    reports: reports.map((report) => mapReport(report, filesByReportId.get(report.id))),
+    reports: sortPublishedReports(
+      reports.map((report) => mapReport(report, filesByReportId.get(report.id))),
+    ),
     categories: ((categoriesResult.data ?? []) as unknown as HouseReportCategoryRow[]).map(mapCategory),
   };
 }
