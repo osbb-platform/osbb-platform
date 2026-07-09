@@ -4,7 +4,20 @@ export const HOUSE_REPORT_PDF_FIELD_KEY = "pdf";
 export const HOUSE_REPORT_BUCKET = "house-reports";
 
 export type HouseReportLifecycle = "draft" | "published" | "archived";
+
+/**
+ * Deprecated P01 legacy period type. Kept only for backward-compatible
+ * payloads and legacy columns period_type/month/year.
+ */
 export type HouseReportPeriodType = "current" | "past";
+
+export type HouseReportPeriodKind = "none" | "month" | "quarter" | "year";
+
+export type HouseReportPeriod =
+  | { kind: "none" }
+  | { kind: "month"; month: number; year: number }
+  | { kind: "quarter"; quarter: number; year: number }
+  | { kind: "year"; year: number };
 
 export type HouseReportFileInput = {
   bucket: string;
@@ -22,9 +35,20 @@ export type HouseReport = {
   category_id: string | null;
   category_title: string;
   report_date: string | null;
+
+  /**
+   * Deprecated P01 legacy fields. New code should prefer period_kind,
+   * period_month, period_quarter and period_year.
+   */
   period_type: HouseReportPeriodType;
   month: string | null;
   year: number | null;
+
+  period_kind: HouseReportPeriodKind;
+  period_month: number | null;
+  period_quarter: number | null;
+  period_year: number | null;
+
   is_pinned: boolean;
   is_new: boolean;
   new_until: string | null;
@@ -58,9 +82,17 @@ export type CreateReportPayload = {
   categoryId?: string | null;
   categoryTitle?: string | null;
   reportDate?: string | null;
+
+  period?: HouseReportPeriod | null;
+
+  /**
+   * Deprecated P01 legacy payload fields. Accepted during transition from
+   * the old admin form and inflight requests.
+   */
   periodType?: HouseReportPeriodType | null;
   month?: string | null;
   year?: number | null;
+
   isPinned?: boolean;
   isNew?: boolean;
   newUntil?: string | null;

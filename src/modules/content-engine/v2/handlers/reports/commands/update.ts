@@ -8,18 +8,18 @@ import {
   normalizeCategoryTitle,
   normalizeDateTime,
   normalizeDescription,
-  normalizeMonth,
   normalizePdf,
-  normalizePeriodType,
   normalizeReportDate,
   normalizeSortOrder,
   normalizeText,
-  normalizeYear,
   pdfDeleteRef,
   publicReportPaths,
+  readHouseReportPeriod,
   readIdAndLock,
   reportHistoryMetadata,
   toFileTrack,
+  toLegacyPeriodColumns,
+  toPeriodColumns,
   HOUSE_REPORT_ENTITY_TYPE,
 } from "./shared";
 
@@ -37,6 +37,9 @@ export const updateCommand: CommandSpec = {
       return err("Заповніть назву звіту.", "VALIDATION_FAILED");
     }
 
+    const period = readHouseReportPeriod(rawPayload);
+    if (!period.ok) return period;
+
     return ok(undefined);
   },
 
@@ -48,10 +51,17 @@ export const updateCommand: CommandSpec = {
       return beforeResult;
     }
 
+    const periodResult = readHouseReportPeriod(payload);
+    if (!periodResult.ok) {
+      return periodResult;
+    }
+
     const before = beforeResult.data;
     const pdf = normalizePdf(payload.pdf);
     const shouldRemovePdf = payload.removePdf === true || Boolean(pdf);
     const now = new Date().toISOString();
+    const legacyPeriod = toLegacyPeriodColumns(payload, periodResult.data);
+    const periodColumns = toPeriodColumns(periodResult.data);
 
     const { data, error } = await ctx.supabase
       .from("house_reports")
@@ -61,9 +71,13 @@ export const updateCommand: CommandSpec = {
         category_id: normalizeCategoryId(payload.categoryId),
         category_title: normalizeCategoryTitle(payload.categoryTitle),
         report_date: normalizeReportDate(payload.reportDate),
-        period_type: normalizePeriodType(payload.periodType),
-        month: normalizeMonth(payload.month),
-        year: normalizeYear(payload.year),
+        period_type: legacyPeriod.period_type,
+        month: legacyPeriod.month,
+        year: legacyPeriod.year,
+        period_kind: periodColumns.period_kind,
+        period_month: periodColumns.period_month,
+        period_quarter: periodColumns.period_quarter,
+        period_year: periodColumns.period_year,
         is_pinned: normalizeBoolean(payload.isPinned),
         is_new: normalizeBoolean(payload.isNew),
         new_until: normalizeDateTime(payload.newUntil),
