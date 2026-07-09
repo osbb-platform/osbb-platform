@@ -58,6 +58,7 @@ export default async function AdminHouseAnnouncementsPage({
       updatedAt: announcement.updated_at,
       publishedAt: announcement.published_at,
       lockVersion: announcement.lock_version,
+    pdf: announcement.pdf ?? null,
     },
   }));
 

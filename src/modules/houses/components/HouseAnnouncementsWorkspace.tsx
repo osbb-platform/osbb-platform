@@ -96,6 +96,17 @@ function getLevelDotClasses(level: string) {
   return "bg-[var(--cms-success-bg)]";
 }
 
+function hasAnnouncementPdf(content: Record<string, unknown>) {
+  const pdf = content.pdf;
+
+  return Boolean(
+    pdf &&
+      typeof pdf === "object" &&
+      typeof (pdf as { path?: unknown }).path === "string" &&
+      (pdf as { path: string }).path.trim(),
+  );
+}
+
 function getPreviewText(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
     return "Оголошення без тексту.";
@@ -426,6 +437,12 @@ export function HouseAnnouncementsWorkspace({
                     <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                       {bodyPreview}
                     </div>
+
+                    {hasAnnouncementPdf(section.content) ? (
+                      <div className="mt-3 inline-flex items-center rounded-full border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+                        PDF додано
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="shrink-0 rounded-full border border-[var(--cms-border-strong)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">

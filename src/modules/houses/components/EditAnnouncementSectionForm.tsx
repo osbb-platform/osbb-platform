@@ -10,9 +10,15 @@ import {
   adminSuccessButtonClass,
   adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useRef, useState, type ChangeEvent } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { AnnouncementPdfUploadBlock } from "@/src/modules/houses/components/AnnouncementPdfUploadBlock";
+import {
+  normalizeAnnouncementPdfFromContent,
+  uploadAnnouncementPdf,
+} from "@/src/modules/houses/components/announcementPdfUpload";
+import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 
 type EditAnnouncementSectionFormProps = {
   headerActions?: ReactNode;
@@ -64,8 +70,12 @@ export function EditAnnouncementSectionForm({
 }: EditAnnouncementSectionFormProps) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [removePdf, setRemovePdf] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
@@ -78,6 +88,7 @@ export function EditAnnouncementSectionForm({
   const level =
     typeof section.content.level === "string" ? section.content.level : "info";
 
+  const currentPdf = normalizeAnnouncementPdfFromContent(section.content.pdf);
   const publishedAt = formatDateTime(section.content.publishedAt);
   const updatedAt = formatDateTime(section.content.updatedAt);
 
@@ -96,6 +107,29 @@ export function EditAnnouncementSectionForm({
     return new FormData(formElement);
   }
 
+  function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+
+    if (!file) {
+      setSelectedPdf(null);
+      setPdfError(null);
+      return;
+    }
+
+    const validation = validateSinglePdfFile(file);
+
+    if (!validation.isValid) {
+      setSelectedPdf(null);
+      setPdfError(validation.error);
+      event.target.value = "";
+      return;
+    }
+
+    setPdfError(null);
+    setSelectedPdf(file);
+    setRemovePdf(false);
+  }
+
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -104,6 +138,11 @@ export function EditAnnouncementSectionForm({
 
     try {
       const formData = buildFormData();
+      const uploadedPdf = await uploadAnnouncementPdf({
+        houseId,
+        announcementId: section.id,
+        file: selectedPdf,
+      });
 
       await dispatch(
         {
@@ -118,6 +157,8 @@ export function EditAnnouncementSectionForm({
             title: String(formData.get("title") ?? ""),
             body: String(formData.get("body") ?? ""),
             level: String(formData.get("level") ?? "info"),
+            pdf: uploadedPdf,
+            removePdf,
           },
         },
         {
@@ -181,6 +222,7 @@ export function EditAnnouncementSectionForm({
 
   const combinedError = actionError ?? lastError;
   const buttonsDisabled = isPending || pendingAction !== null;
+  const saveDisabled = buttonsDisabled || isSaving || Boolean(pdfError);
 
   return (
     <div className="space-y-4">
@@ -268,6 +310,24 @@ export function EditAnnouncementSectionForm({
           />
         </div>
 
+        <AnnouncementPdfUploadBlock
+          inputId={`announcement-edit-pdf-${section.id}`}
+          currentPdf={currentPdf}
+          selectedFile={selectedPdf}
+          removePdf={removePdf}
+          disabled={buttonsDisabled || isSaving}
+          error={pdfError}
+          onChange={handlePdfChange}
+          onRemoveCurrent={() => {
+            setRemovePdf(true);
+            setSelectedPdf(null);
+            setPdfError(null);
+            if (pdfInputRef.current) {
+              pdfInputRef.current.value = "";
+            }
+          }}
+        />
+
         {combinedError ? (
           <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
             {combinedError}
@@ -279,7 +339,7 @@ export function EditAnnouncementSectionForm({
             <div className="flex flex-nowrap items-center gap-3">
               <button
                 type="button"
-                disabled={buttonsDisabled || isSaving}
+                disabled={saveDisabled}
                 onClick={() => {
                   setActionError(null);
                   formRef.current?.requestSubmit();
@@ -288,7 +348,11 @@ export function EditAnnouncementSectionForm({
                   isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
-                {isSaving ? "Зберігаємо..." : "Зберегти"}
+                {isSaving
+                  ? selectedPdf
+                    ? "Завантажуємо PDF..."
+                    : "Зберігаємо..."
+                  : "Зберегти"}
               </button>
 
               {isDraftLike ? (

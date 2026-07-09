@@ -12,6 +12,7 @@ export type HouseAnnouncementFileInput = {
   originalName?: string | null;
   mimeType?: string | null;
   size?: number | null;
+  uploadedAt?: string | null;
 };
 
 export type Announcement = {
