@@ -55,6 +55,26 @@ type ReportSortMode =
   | "year_desc"
   | "year_asc";
 
+type HouseReportPeriodKind = "none" | "month" | "quarter" | "year";
+
+type ReportPeriodDraft = {
+  periodKind: HouseReportPeriodKind;
+  periodMonth: string;
+  periodQuarter: string;
+  periodYear: number | null;
+};
+
+type HouseReportSnapshotWithPeriod = HouseReportSnapshot & {
+  periodKind?: HouseReportPeriodKind | null;
+  periodMonth?: number | null;
+  periodQuarter?: number | null;
+  periodYear?: number | null;
+  period_kind?: HouseReportPeriodKind | null;
+  period_month?: number | null;
+  period_quarter?: number | null;
+  period_year?: number | null;
+};
+
 const CURRENT_MONTH_OPTIONS = [
   { value: "01", label: "Січень" },
   { value: "02", label: "Лютий" },
@@ -69,6 +89,28 @@ const CURRENT_MONTH_OPTIONS = [
   { value: "11", label: "Листопад" },
   { value: "12", label: "Грудень" },
 ];
+
+const QUARTER_OPTIONS = [
+  { value: "1", label: "I квартал" },
+  { value: "2", label: "II квартал" },
+  { value: "3", label: "III квартал" },
+  { value: "4", label: "IV квартал" },
+];
+
+const PERIOD_KIND_OPTIONS: Array<{
+  value: HouseReportPeriodKind;
+  label: string;
+}> = [
+  { value: "none", label: "Без періоду" },
+  { value: "month", label: "Місяць" },
+  { value: "quarter", label: "Квартал" },
+  { value: "year", label: "Рік" },
+];
+
+const REPORT_YEAR_OPTIONS = Array.from(
+  { length: new Date().getFullYear() + 1 - 2000 + 1 },
+  (_, index) => new Date().getFullYear() + 1 - index,
+);
 
 const DEFAULT_CATEGORIES = [
   "Виконані роботи",
@@ -127,22 +169,86 @@ function getStatusBadgeClasses(status: HouseReportLifecycle) {
   return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
 }
 
+function isReportPeriodKind(value: unknown): value is HouseReportPeriodKind {
+  return (
+    value === "none" ||
+    value === "month" ||
+    value === "quarter" ||
+    value === "year"
+  );
+}
+
+function readNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+
+  return null;
+}
+
+function formatMonthValue(value: unknown) {
+  const month = readNumber(value);
+  if (!month || month < 1 || month > 12) return "";
+
+  return String(month).padStart(2, "0");
+}
+
+function getQuarterLabel(value: string | number | null | undefined) {
+  const quarter = String(readNumber(value) ?? "");
+  return (
+    QUARTER_OPTIONS.find((item) => item.value === quarter)?.label ??
+    "Квартал не вказано"
+  );
+}
+
 function getDefaultYear(tab: TabKey) {
   const year = new Date().getFullYear();
   return tab === "past" ? year - 1 : year;
 }
 
+function getLegacyPeriodType(
+  periodKind: HouseReportPeriodKind,
+): HouseReportPeriodType {
+  return periodKind === "quarter" || periodKind === "year"
+    ? "past"
+    : "current";
+}
+
+function getDefaultPeriodKind(tab: TabKey): HouseReportPeriodKind {
+  return tab === "past" ? "year" : "month";
+}
+
+function getEmptyPeriodDraft(tab: TabKey): ReportPeriodDraft {
+  const periodKind = getDefaultPeriodKind(tab);
+
+  return {
+    periodKind,
+    periodMonth: "",
+    periodQuarter: "1",
+    periodYear: periodKind === "none" ? null : getDefaultYear(tab),
+  };
+}
+
 function getEmptyDraft(tab: TabKey, firstCategory: string) {
   const now = new Date().toISOString();
+  const period = getEmptyPeriodDraft(tab);
 
   return {
     title: "",
     description: "",
     categoryTitle: firstCategory,
     reportDate: "",
-    periodType: tab === "past" ? "past" as HouseReportPeriodType : "current" as HouseReportPeriodType,
-    month: tab === "past" ? "" : "",
-    year: tab === "past" ? getDefaultYear(tab) : null as number | null,
+    periodType: getLegacyPeriodType(period.periodKind),
+    periodKind: period.periodKind,
+    periodMonth: period.periodMonth,
+    periodQuarter: period.periodQuarter,
+    periodYear: period.periodYear,
+    month: period.periodMonth,
+    year: period.periodYear,
     isPinned: false,
     isNew: false,
     newUntil: null as string | null,
@@ -151,21 +257,132 @@ function getEmptyDraft(tab: TabKey, firstCategory: string) {
   };
 }
 
+type ReportDraft = ReturnType<typeof getEmptyDraft>;
+
+function getReportPeriodDraft(report: HouseReportSnapshot): ReportPeriodDraft {
+  const snapshot = report as HouseReportSnapshotWithPeriod;
+  const explicitKind = snapshot.periodKind ?? snapshot.period_kind;
+
+  if (isReportPeriodKind(explicitKind)) {
+    const explicitYear =
+      readNumber(snapshot.periodYear ?? snapshot.period_year) ??
+      report.year ??
+      null;
+
+    return {
+      periodKind: explicitKind,
+      periodMonth:
+        explicitKind === "month"
+          ? formatMonthValue(snapshot.periodMonth ?? snapshot.period_month ?? report.month)
+          : "",
+      periodQuarter:
+        explicitKind === "quarter"
+          ? String(readNumber(snapshot.periodQuarter ?? snapshot.period_quarter) ?? 1)
+          : "1",
+      periodYear: explicitKind === "none" ? null : explicitYear,
+    };
+  }
+
+  if (report.periodType === "past" && report.year) {
+    return {
+      periodKind: "year",
+      periodMonth: "",
+      periodQuarter: "1",
+      periodYear: report.year,
+    };
+  }
+
+  if (report.periodType === "current" && report.month && report.year) {
+    return {
+      periodKind: "month",
+      periodMonth: formatMonthValue(report.month),
+      periodQuarter: "1",
+      periodYear: report.year,
+    };
+  }
+
+  return {
+    periodKind: "none",
+    periodMonth: "",
+    periodQuarter: "1",
+    periodYear: null,
+  };
+}
+
 function mapReportToDraft(report: HouseReportSnapshot) {
+  const period = getReportPeriodDraft(report);
+
   return {
     title: report.title,
     description: report.description,
     categoryTitle: report.categoryTitle,
     reportDate: report.reportDate ?? "",
-    periodType: report.periodType,
-    month: report.month ?? "",
-    year: report.year,
+    periodType: getLegacyPeriodType(period.periodKind),
+    periodKind: period.periodKind,
+    periodMonth: period.periodMonth,
+    periodQuarter: period.periodQuarter,
+    periodYear: period.periodYear,
+    month: period.periodMonth,
+    year: period.periodYear,
     isPinned: report.isPinned,
     isNew: report.isNew,
     newUntil: report.newUntil ? report.newUntil.slice(0, 10) : null,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
   };
+}
+
+function buildDraftPeriodPayload(draft: ReportDraft) {
+  if (draft.periodKind === "month") {
+    return {
+      kind: "month",
+      month: draft.periodMonth || null,
+      year: draft.periodYear,
+    };
+  }
+
+  if (draft.periodKind === "quarter") {
+    return {
+      kind: "quarter",
+      quarter: draft.periodQuarter || null,
+      year: draft.periodYear,
+    };
+  }
+
+  if (draft.periodKind === "year") {
+    return {
+      kind: "year",
+      year: draft.periodYear,
+    };
+  }
+
+  return {
+    kind: "none",
+  };
+}
+
+function getDraftTab(draft: ReportDraft): TabKey {
+  return draft.periodKind === "quarter" || draft.periodKind === "year"
+    ? "past"
+    : "current";
+}
+
+function formatReportPeriodLabel(report: HouseReportSnapshot) {
+  const period = getReportPeriodDraft(report);
+
+  if (period.periodKind === "month") {
+    return `${getMonthLabel(period.periodMonth)} ${period.periodYear ?? ""}`.trim();
+  }
+
+  if (period.periodKind === "quarter") {
+    return `${getQuarterLabel(period.periodQuarter)} ${period.periodYear ?? ""}`.trim();
+  }
+
+  if (period.periodKind === "year") {
+    return period.periodYear ?? "Рік не вказано";
+  }
+
+  return "Без періоду";
 }
 
 function normalizeNewUntil(value: string | null, isNew: boolean) {
@@ -343,8 +560,12 @@ export function HouseReportsWorkspace({
     });
   }, [baseVisibleReports, reportSearchQuery, reportSortMode]);
 
-  const isPastContext = draft.periodType === "past";
+  const isPastContext =
+    draft.periodKind === "quarter" || draft.periodKind === "year";
   const isArchiveContext = selectedReport?.lifecycleStatus === "archived";
+  const canHighlightReport =
+    (draft.periodKind === "month" || draft.periodKind === "none") &&
+    !isArchiveContext;
   const isDraftLikeEdit =
     workspaceMode === "edit" && selectedReport?.lifecycleStatus === "draft";
   const isPublishedEdit =
@@ -462,26 +683,29 @@ export function HouseReportsWorkspace({
   }
 
   function buildPayload(pdf: Awaited<ReturnType<typeof uploadSelectedPdf>>) {
+    const legacyPeriodType = getLegacyPeriodType(draft.periodKind);
+    const legacyMonth = draft.periodKind === "month" ? draft.periodMonth || null : null;
+    const legacyYear =
+      draft.periodKind === "month" ||
+      draft.periodKind === "quarter" ||
+      draft.periodKind === "year"
+        ? draft.periodYear
+        : null;
+
     return {
       title: draft.title,
       description: draft.description,
       categoryTitle: normalizeReportCategory(draft.categoryTitle),
       reportDate: draft.reportDate || null,
-      periodType: draft.periodType,
-      month: draft.periodType === "current" ? draft.month || null : null,
-      year: draft.periodType === "past" ? draft.year : null,
-      isPinned:
-        draft.periodType === "current" &&
-        !isArchiveContext &&
-        Boolean(draft.isPinned),
-      isNew:
-        draft.periodType === "current" &&
-        !isArchiveContext &&
-        Boolean(draft.isNew),
-      newUntil:
-        draft.periodType === "current"
-          ? normalizeNewUntil(draft.newUntil, Boolean(draft.isNew))
-          : null,
+      period: buildDraftPeriodPayload(draft),
+      periodType: legacyPeriodType,
+      month: legacyMonth,
+      year: legacyYear,
+      isPinned: canHighlightReport && Boolean(draft.isPinned),
+      isNew: canHighlightReport && Boolean(draft.isNew),
+      newUntil: canHighlightReport
+        ? normalizeNewUntil(draft.newUntil, Boolean(draft.isNew))
+        : null,
       pdf,
       removePdf: removeReportPdf,
     };
@@ -576,7 +800,11 @@ export function HouseReportsWorkspace({
           );
 
           if (!published) return;
-          resetWorkspace(getReportResultPeriodType(created, "current") === "past" ? "past" : "current");
+          resetWorkspace(
+            getReportResultPeriodType(created, getLegacyPeriodType(draft.periodKind)) === "past"
+              ? "past"
+              : "current",
+          );
           return;
         }
 
@@ -621,7 +849,7 @@ export function HouseReportsWorkspace({
 
         resetWorkspace(
           intent === "publish"
-            ? getReportResultPeriodType(updated, selectedReport.periodType) === "past"
+            ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
               ? "past"
               : "current"
             : "archive",
@@ -631,7 +859,7 @@ export function HouseReportsWorkspace({
 
       resetWorkspace(
         getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "published"
-          ? getReportResultPeriodType(updated, selectedReport.periodType) === "past"
+          ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
             ? "past"
             : "current"
           : getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "archived"
@@ -818,8 +1046,8 @@ export function HouseReportsWorkspace({
                 {workspaceMode === "edit"
                   ? "Редагування звіту"
                   : isPastContext
-                    ? "Новий звіт за минулий рік"
-                    : "Новий звіт поточного року"}
+                    ? "Новий звіт за період"
+                    : "Новий звіт"}
               </div>
 
               <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
@@ -932,67 +1160,180 @@ export function HouseReportsWorkspace({
                 Тип періоду
               </span>
               <select
-                value={draft.periodType}
-                onChange={(event) =>
+                value={draft.periodKind}
+                onChange={(event) => {
+                  const nextKind = event.target.value as HouseReportPeriodKind;
+
                   setDraft((prev) => ({
                     ...prev,
-                    periodType: event.target.value as HouseReportPeriodType,
+                    periodType: getLegacyPeriodType(nextKind),
+                    periodKind: nextKind,
+                    periodMonth: nextKind === "month" ? prev.periodMonth : "",
+                    periodQuarter:
+                      nextKind === "quarter" ? prev.periodQuarter || "1" : "1",
+                    periodYear:
+                      nextKind === "none"
+                        ? null
+                        : prev.periodYear ?? getDefaultYear(getDraftTab(prev)),
+                    month: nextKind === "month" ? prev.periodMonth : "",
                     year:
-                      event.target.value === "past"
-                        ? prev.year ?? getDefaultYear("past")
-                        : null,
-                  }))
-                }
+                      nextKind === "none"
+                        ? null
+                        : prev.periodYear ?? getDefaultYear(getDraftTab(prev)),
+                    isPinned:
+                      nextKind === "quarter" || nextKind === "year"
+                        ? false
+                        : prev.isPinned,
+                    isNew:
+                      nextKind === "quarter" || nextKind === "year"
+                        ? false
+                        : prev.isNew,
+                    newUntil:
+                      nextKind === "quarter" || nextKind === "year"
+                        ? null
+                        : prev.newUntil,
+                  }));
+                }}
                 className={adminInputClass}
               >
-                <option value="current">Поточний рік</option>
-                <option value="past">Минулий рік / архів років</option>
+                {PERIOD_KIND_OPTIONS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
               </select>
             </label>
 
-            {isPastContext ? (
+            {draft.periodKind === "month" ? (
+              <>
+                <label className="block">
+                  <span className={`mb-2 block ${adminTextLabelClass}`}>
+                    Місяць
+                  </span>
+                  <select
+                    value={draft.periodMonth}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        periodMonth: event.target.value,
+                        month: event.target.value,
+                      }))
+                    }
+                    className={adminInputClass}
+                  >
+                    <option value="">Оберіть місяць</option>
+                    {CURRENT_MONTH_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className={`mb-2 block ${adminTextLabelClass}`}>
+                    Рік
+                  </span>
+                  <select
+                    value={String(draft.periodYear ?? getDefaultYear("current"))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        periodYear: Number(event.target.value),
+                        year: Number(event.target.value),
+                      }))
+                    }
+                    className={adminInputClass}
+                  >
+                    {REPORT_YEAR_OPTIONS.map((item) => (
+                      <option key={item} value={String(item)}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : null}
+
+            {draft.periodKind === "quarter" ? (
+              <>
+                <label className="block">
+                  <span className={`mb-2 block ${adminTextLabelClass}`}>
+                    Квартал
+                  </span>
+                  <select
+                    value={draft.periodQuarter}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        periodQuarter: event.target.value,
+                      }))
+                    }
+                    className={adminInputClass}
+                  >
+                    {QUARTER_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className={`mb-2 block ${adminTextLabelClass}`}>
+                    Рік
+                  </span>
+                  <select
+                    value={String(draft.periodYear ?? getDefaultYear("past"))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        periodYear: Number(event.target.value),
+                        year: Number(event.target.value),
+                      }))
+                    }
+                    className={adminInputClass}
+                  >
+                    {REPORT_YEAR_OPTIONS.map((item) => (
+                      <option key={item} value={String(item)}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : null}
+
+            {draft.periodKind === "year" ? (
               <label className="block">
                 <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Рік
                 </span>
                 <select
-                  value={String(draft.year ?? getDefaultYear("past"))}
+                  value={String(draft.periodYear ?? getDefaultYear("past"))}
                   onChange={(event) =>
                     setDraft((prev) => ({
                       ...prev,
+                      periodYear: Number(event.target.value),
                       year: Number(event.target.value),
                     }))
                   }
                   className={adminInputClass}
                 >
-                  {Array.from({ length: 11 }, (_, index) => 2026 - index).map((item) => (
+                  {REPORT_YEAR_OPTIONS.map((item) => (
                     <option key={item} value={String(item)}>
                       {item}
                     </option>
                   ))}
                 </select>
               </label>
-            ) : (
-              <label className="block">
-                <span className={`mb-2 block ${adminTextLabelClass}`}>
-                  Місяць
-                </span>
-                <select
-                  value={draft.month ?? ""}
-                  onChange={(event) =>
-                    setDraft((prev) => ({ ...prev, month: event.target.value }))
-                  }
-                  className={adminInputClass}
-                >
-                  <option value="">Оберіть місяць</option>
-                  {CURRENT_MONTH_OPTIONS.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+            ) : null}
+
+            {draft.periodKind === "none" ? (
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-sm text-[var(--cms-text-muted)]">
+                Звіт буде збережено без місяця, кварталу або року.
+              </div>
+            ) : null}
 
             <div className="xl:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <div className="text-sm font-medium text-[var(--cms-text)]">
@@ -1059,7 +1400,7 @@ export function HouseReportsWorkspace({
             </div>
           </div>
 
-          {!isPastContext && !isArchiveContext ? (
+          {canHighlightReport ? (
             <>
               <div className="mt-5 flex flex-wrap gap-3">
                 <label className="inline-flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]">
@@ -1281,9 +1622,7 @@ export function HouseReportsWorkspace({
                   <span>{formatDate(report.reportDate)}</span>
                   <span>·</span>
                   <span>
-                    {report.periodType === "past"
-                      ? report.year ?? "Рік не вказано"
-                      : getMonthLabel(report.month)}
+                    {formatReportPeriodLabel(report)}
                   </span>
                   <span>·</span>
                   <span>{report.pdf ? report.pdf.originalName ?? "PDF додано" : "PDF не додано"}</span>
