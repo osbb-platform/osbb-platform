@@ -1,35 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { resolveSignedFileUrl } from "@/src/modules/files/services/resolveSignedFileUrl";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const NO_STORE_HEADERS = { "Cache-Control": "no-store, max-age=0" };
+
+function boolParam(value: string | null) {
+  return value === "1" || value === "true" || value === "yes";
+}
+
 export async function GET(request: NextRequest) {
-  const filePath = request.nextUrl.searchParams.get("path")?.trim();
-  const bucket =
-    request.nextUrl.searchParams.get("bucket")?.trim() || "house-reports";
+  const params = request.nextUrl.searchParams;
 
-  if (!filePath) {
-    return new NextResponse("Missing file path", {
-      status: 400,
-      headers: { "Cache-Control": "no-store, max-age=0" },
+  const result = await resolveSignedFileUrl({
+    entityType: params.get("entityType"),
+    entityId: params.get("entityId"),
+    fieldKey: params.get("fieldKey") || "pdf",
+    bucket: params.get("bucket"),
+    path: params.get("path"),
+    filename: params.get("filename"),
+    download: boolParam(params.get("download")),
+  });
+
+  if (!result.ok) {
+    return new NextResponse(result.message, {
+      status: result.status,
+      headers: NO_STORE_HEADERS,
     });
   }
 
-  const supabase = createSupabaseAdminClient();
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(filePath, 60 * 5); // 5 минут
-
-  if (error || !data?.signedUrl) {
-    return new NextResponse("Unable to open file", {
-      status: 404,
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    });
-  }
-
-  return NextResponse.redirect(data.signedUrl, {
-    headers: { "Cache-Control": "no-store, max-age=0" },
+  return NextResponse.redirect(result.signedUrl, {
+    headers: NO_STORE_HEADERS,
   });
 }
