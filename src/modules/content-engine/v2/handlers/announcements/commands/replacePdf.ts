@@ -1,21 +1,18 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
-import type { Announcement, UpdateAnnouncementPayload } from "../types";
+import type { Announcement, ReplaceAnnouncementPdfPayload } from "../types";
 import {
   HOUSE_ANNOUNCEMENT_ENTITY_TYPE,
   announcementHistoryMetadata,
   getAnnouncement,
   normalizeAnnouncementPdfInput,
-  normalizeBody,
-  normalizeLevel,
-  normalizeText,
   pdfDeleteRef,
   publicAnnouncementPaths,
   readIdAndLock,
   toFileTrack,
 } from "./shared";
 
-export const updateCommand: CommandSpec = {
+export const replacePdfCommand: CommandSpec = {
   actionKey: "edit",
   requiresLockCheck: true,
 
@@ -23,17 +20,11 @@ export const updateCommand: CommandSpec = {
     const idAndLock = readIdAndLock(rawPayload);
     if (!idAndLock.ok) return idAndLock;
 
-    const payload = rawPayload as Partial<UpdateAnnouncementPayload>;
-
-    if (!payload.title?.trim()) {
-      return err("Заповніть заголовок оголошення.", "VALIDATION_FAILED");
-    }
-
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
-    const payload = rawPayload as UpdateAnnouncementPayload;
+    const payload = rawPayload as ReplaceAnnouncementPdfPayload;
     const beforeResult = await getAnnouncement(ctx, payload.id);
 
     if (!beforeResult.ok) {
@@ -44,6 +35,7 @@ export const updateCommand: CommandSpec = {
     const pdfResult = normalizeAnnouncementPdfInput(payload.pdf, {
       houseId: ctx.house.id,
       announcementId: payload.id,
+      requirePdf: true,
     });
 
     if (!pdfResult.ok) {
@@ -51,15 +43,16 @@ export const updateCommand: CommandSpec = {
     }
 
     const pdf = pdfResult.data;
-    const shouldRemovePdf = payload.removePdf === true || Boolean(pdf);
+
+    if (!pdf) {
+      return err("PDF не завантажено.", "VALIDATION_FAILED");
+    }
+
     const now = new Date().toISOString();
 
     const { data, error } = await ctx.supabase
       .from("house_announcements")
       .update({
-        title: normalizeText(payload.title),
-        body: normalizeBody(payload.body),
-        level: normalizeLevel(payload.level),
         updated_at: now,
         lock_version: payload.lockVersion + 1,
       })
@@ -84,14 +77,14 @@ export const updateCommand: CommandSpec = {
       history: {
         entityType: HOUSE_ANNOUNCEMENT_ENTITY_TYPE,
         entityId: announcement.id,
-        action: "updated",
-        description: `Оновлено оголошення «${announcement.title}».`,
+        action: "pdf_replaced",
+        description: `Замінено PDF оголошення «${announcement.title}».`,
         beforeSnapshot: before,
         afterSnapshot: announcement,
         metadata: announcementHistoryMetadata(),
       },
-      filesToDelete: shouldRemovePdf ? [pdfDeleteRef(announcement.id)] : undefined,
-      filesToTrack: pdf ? [toFileTrack(pdf)] : undefined,
+      filesToDelete: [pdfDeleteRef(announcement.id)],
+      filesToTrack: [toFileTrack(pdf)],
       extraRevalidatePaths: publicAnnouncementPaths(ctx.house.slug),
     });
   },

@@ -5,6 +5,8 @@ import { createCommand } from "./commands/create";
 import { deleteCommand } from "./commands/delete";
 import { deleteAllArchivedCommand } from "./commands/deleteAllArchived";
 import { publishCommand } from "./commands/publish";
+import { removePdfCommand } from "./commands/removePdf";
+import { replacePdfCommand } from "./commands/replacePdf";
 import { restoreCommand } from "./commands/restore";
 import { updateCommand } from "./commands/update";
 import { duplicateCommand } from "./commands/duplicate";
@@ -21,6 +23,8 @@ export const announcementsHandler: ContentHandler = {
     restore: restoreCommand,
     delete: deleteCommand,
     deleteAllArchived: deleteAllArchivedCommand,
+    replacePdf: replacePdfCommand,
+    removePdf: removePdfCommand,
     duplicate: duplicateCommand,
   },
 

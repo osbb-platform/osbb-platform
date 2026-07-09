@@ -1,8 +1,17 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { Announcement, CreateAnnouncementPayload } from "../types";
-
-const validLevels = ["info", "warning", "danger"];
+import {
+  HOUSE_ANNOUNCEMENT_ENTITY_TYPE,
+  announcementHistoryMetadata,
+  normalizeAnnouncementPdfInput,
+  normalizeBody,
+  normalizeLevel,
+  normalizeOptionalAnnouncementId,
+  normalizeText,
+  publicAnnouncementPaths,
+  toFileTrack,
+} from "./shared";
 
 export const createCommand: CommandSpec = {
   actionKey: "create",
@@ -15,38 +24,54 @@ export const createCommand: CommandSpec = {
       return err("Заповніть заголовок оголошення.", "VALIDATION_FAILED");
     }
 
-    if (!payload.body?.trim()) {
-      return err("Заповніть текст оголошення.", "VALIDATION_FAILED");
-    }
-
-    if (!validLevels.includes(payload.level ?? "")) {
-      return err("Невірний тип оголошення.", "VALIDATION_FAILED");
-    }
-
     return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
     const payload = rawPayload as CreateAnnouncementPayload;
+    const now = new Date().toISOString();
+    const explicitId = normalizeOptionalAnnouncementId(payload.id);
+
+    const pdfResult = normalizeAnnouncementPdfInput(payload.pdf, {
+      houseId: ctx.house.id,
+      announcementId: explicitId,
+    });
+
+    if (!pdfResult.ok) {
+      return pdfResult;
+    }
+
+    const pdf = pdfResult.data;
+
+    const insertPayload: Record<string, unknown> = {
+      house_id: ctx.house.id,
+      title: normalizeText(payload.title),
+      body: normalizeBody(payload.body),
+      level: normalizeLevel(payload.level),
+      lifecycle_status: "draft",
+      published_at: null,
+      archived_at: null,
+      created_by: ctx.user.id,
+      created_at: now,
+      updated_at: now,
+    };
+
+    if (explicitId) {
+      insertPayload.id = explicitId;
+    }
 
     const { data, error } = await ctx.supabase
       .from("house_announcements")
-      .insert({
-        house_id: ctx.house.id,
-        title: payload.title.trim(),
-        body: payload.body.trim(),
-        level: payload.level,
-        lifecycle_status: "draft",
-        created_by: ctx.user.id,
-      })
+      .insert(insertPayload)
       .select("*")
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      return err(
-        `Не вдалося створити оголошення: ${error?.message ?? "невідома помилка"}`,
-        "INTERNAL",
-      );
+    if (error) {
+      return err(error.message, "INTERNAL");
+    }
+
+    if (!data) {
+      return err("Не вдалося створити оголошення.", "INTERNAL");
     }
 
     const announcement = data as Announcement;
@@ -54,19 +79,16 @@ export const createCommand: CommandSpec = {
     return ok({
       data: announcement,
       history: {
-        entityType: "house_announcement",
+        entityType: HOUSE_ANNOUNCEMENT_ENTITY_TYPE,
         entityId: announcement.id,
         action: "created",
         description: `Створено оголошення «${announcement.title}».`,
+        beforeSnapshot: null,
         afterSnapshot: announcement,
+        metadata: announcementHistoryMetadata(),
       },
-      tasks: {
-        ensure: {
-          entityType: "house_announcement",
-          entityId: announcement.id,
-          title: announcement.title,
-        },
-      },
+      filesToTrack: pdf ? [toFileTrack(pdf)] : undefined,
+      extraRevalidatePaths: publicAnnouncementPaths(ctx.house.slug),
     });
   },
 };
