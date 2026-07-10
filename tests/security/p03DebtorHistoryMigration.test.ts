@@ -1,0 +1,109 @@
+import {
+  readFileSync,
+  readdirSync,
+} from "node:fs";
+import { join } from "node:path";
+
+import {
+  describe,
+  expect,
+  it,
+} from "vitest";
+
+function loadMigration() {
+  const migrationsDir = join(
+    process.cwd(),
+    "supabase",
+    "migrations",
+  );
+
+  const matches = readdirSync(migrationsDir)
+    .filter((name) =>
+      /^\d{12}_create_house_debtor_history\.sql$/u.test(name),
+    );
+
+  expect(matches).toHaveLength(1);
+
+  return readFileSync(
+    join(migrationsDir, matches[0]),
+    "utf8",
+  );
+}
+
+describe("P03 debtor history migration", () => {
+  it("creates all three normalized history tables", () => {
+    const sql = loadMigration().toLowerCase();
+
+    expect(sql).toContain(
+      "create table if not exists public.house_debtor_month_snapshots",
+    );
+    expect(sql).toContain(
+      "create table if not exists public.house_debtor_month_rows",
+    );
+    expect(sql).toContain(
+      "create table if not exists public.house_debtor_series",
+    );
+  });
+
+  it("enforces revision, active snapshot and tenant-row invariants", () => {
+    const normalized = loadMigration()
+      .toLowerCase()
+      .replace(/\s+/gu, " ");
+
+    expect(normalized).toContain(
+      "unique ( house_id, period_year, period_month, revision )",
+    );
+
+    expect(normalized).toContain(
+      "where status = 'published'",
+    );
+
+    expect(normalized).toContain(
+      "foreign key (snapshot_id, house_id)",
+    );
+
+    expect(normalized).toContain(
+      "references public.house_debtor_month_snapshots ( id, house_id )",
+    );
+
+    expect(normalized).toContain(
+      "unique (snapshot_id, account_number)",
+    );
+  });
+
+  it("keeps the history layer private behind admin RLS", () => {
+    const normalized = loadMigration()
+      .toLowerCase()
+      .replace(/\s+/gu, " ");
+
+    const rlsStatements =
+      normalized.match(/enable row level security/gu) ?? [];
+
+    const adminPolicies =
+      normalized.match(/create policy house_debtor_[a-z_]+_admin_manage/gu) ?? [];
+
+    expect(rlsStatements).toHaveLength(3);
+    expect(adminPolicies).toHaveLength(3);
+
+    expect(normalized).toContain(
+      "public.get_my_admin_role() is not null",
+    );
+
+    expect(normalized).not.toContain("to anon");
+    expect(normalized).not.toContain("using (true)");
+  });
+
+  it("installs updated_at handling without destructive data changes", () => {
+    const normalized = loadMigration()
+      .toLowerCase()
+      .replace(/\s+/gu, " ");
+
+    expect(normalized).toContain(
+      "execute function public.set_updated_at()",
+    );
+
+    expect(normalized).not.toContain("drop table");
+    expect(normalized).not.toContain("truncate ");
+    expect(normalized).not.toContain("delete from public.");
+  });
+});
