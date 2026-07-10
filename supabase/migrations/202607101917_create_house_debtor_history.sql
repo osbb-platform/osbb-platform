@@ -1,14 +1,4 @@
 create table if not exists public.house_debtor_month_snapshots (
-  id uuid primary key default gen1
-fi
-
-git switch -c "$TARGET_BRANCH"
-
-echo
-echo "=== CREATE MIGRATION ==="
-
-cat > "$MIGRATION" <<'SQL'
-create table if not exists public.house_debtor_month_snapshots (
   id uuid primary key default gen_random_uuid(),
   house_id uuid not null
     references public.houses(id)

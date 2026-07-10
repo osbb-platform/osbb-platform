@@ -31,6 +31,19 @@ function loadMigration() {
 }
 
 describe("P03 debtor history migration", () => {
+  it("contains only executable SQL from the first statement", () => {
+    const migration = loadMigration();
+    const normalized = migration.trimStart().toLowerCase();
+
+    expect(normalized.startsWith(
+      "create table if not exists public.house_debtor_month_snapshots",
+    )).toBe(true);
+
+    expect(migration).not.toMatch(/\bgit\s+(switch|checkout)\b/u);
+    expect(migration).not.toContain("<<'SQL'");
+    expect(migration).not.toContain('echo "===');
+  });
+
   it("creates all three normalized history tables", () => {
     const sql = loadMigration().toLowerCase();
 
