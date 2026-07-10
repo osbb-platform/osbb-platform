@@ -96,7 +96,7 @@ export async function uploadAnnouncementPdf(params: {
   const { error } = await supabase.storage
     .from(HOUSE_ANNOUNCEMENT_PDF_BUCKET)
     .upload(filePath, params.file, {
-      upsert: true,
+      upsert: false,
       contentType: "application/pdf",
     });
 
