@@ -84,6 +84,7 @@ export function CreateAnnouncementInlineForm({
             title: String(formData.get("title") ?? ""),
             body: String(formData.get("body") ?? ""),
             level: String(formData.get("level") ?? "info"),
+            isPinned: formData.get("isPinned") === "on",
             pdf,
           },
         },
@@ -158,6 +159,26 @@ export function CreateAnnouncementInlineForm({
             <option value="warning">Помаранчевий — звернути увагу</option>
             <option value="info">Салатовий — звичайне оголошення</option>
           </select>
+        </div>
+
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3">
+          <label className="flex items-start gap-3">
+            <input
+              name="isPinned"
+              type="checkbox"
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <span>
+              <span className="block text-sm font-medium text-[var(--cms-text)]">
+                Закріпити оголошення
+              </span>
+              <span className="mt-1 block text-xs text-[var(--cms-text-muted)]">
+                Після публікації воно стане головним оголошенням будинку.
+                Одночасно може бути закріплене лише одне опубліковане
+                оголошення.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div>

@@ -34,6 +34,7 @@ export const duplicateCommand: CommandSpec = {
         title: source.title,
         body: source.body,
         level: source.level,
+        is_pinned: false,
         lifecycle_status: "draft",
         published_at: null,
         archived_at: null,

@@ -54,6 +54,7 @@ export default async function AdminHouseAnnouncementsPage({
     content: {
       body: announcement.body,
       level: announcement.level,
+      isPinned: Boolean(announcement.is_pinned),
       createdAt: announcement.created_at,
       updatedAt: announcement.updated_at,
       publishedAt: announcement.published_at,

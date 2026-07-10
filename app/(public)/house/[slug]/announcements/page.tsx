@@ -187,6 +187,7 @@ export default async function PublicHouseAnnouncementsPage({
       content: {
         body: announcement.body,
         level: announcement.level,
+        isPinned: announcement.is_pinned,
         publishedAt: announcement.published_at,
         updatedAt: announcement.updated_at,
         createdAt: announcement.published_at ?? announcement.updated_at,
@@ -269,7 +270,7 @@ export default async function PublicHouseAnnouncementsPage({
           ? (section.content as Record<string, unknown>)
           : {};
 
-      return normalizeLevel(content.level) === "danger";
+      return content.isPinned === true;
     }) ?? null;
 
   const feedAnnouncements = pinnedAnnouncement

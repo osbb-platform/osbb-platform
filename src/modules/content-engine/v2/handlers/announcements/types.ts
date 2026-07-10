@@ -21,6 +21,7 @@ export type Announcement = {
   title: string;
   body: string;
   level: AnnouncementLevel;
+  is_pinned?: boolean;
   lifecycle_status: AnnouncementLifecycle;
   lock_version: number;
   created_at: string;
@@ -40,6 +41,7 @@ export type CreateAnnouncementPayload = {
   title: string;
   body?: string | null;
   level?: AnnouncementLevel | string | null;
+  isPinned?: boolean;
   pdf?: HouseAnnouncementFileInput | null;
 };
 
@@ -47,6 +49,7 @@ export type UpdateAnnouncementPayload = AnnouncementIdAndLock & {
   title: string;
   body?: string | null;
   level?: AnnouncementLevel | string | null;
+  isPinned?: boolean;
   pdf?: HouseAnnouncementFileInput | null;
   removePdf?: boolean;
 };

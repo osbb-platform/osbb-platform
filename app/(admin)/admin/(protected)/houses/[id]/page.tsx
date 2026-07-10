@@ -107,6 +107,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
   title: string;
   body: string;
   level: "info" | "warning" | "danger";
+  is_pinned?: boolean;
   lifecycle_status: "draft" | "published" | "archived";
   lock_version: number;
   created_at: string;
@@ -120,6 +121,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
     content: {
       body: announcement.body,
       level: announcement.level,
+      isPinned: Boolean(announcement.is_pinned),
       createdAt: announcement.created_at,
       updatedAt: announcement.updated_at,
       publishedAt: announcement.published_at,

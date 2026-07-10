@@ -48,6 +48,7 @@ export const createCommand: CommandSpec = {
       title: normalizeText(payload.title),
       body: normalizeBody(payload.body),
       level: normalizeLevel(payload.level),
+      is_pinned: payload.isPinned === true,
       lifecycle_status: "draft",
       published_at: null,
       archived_at: null,

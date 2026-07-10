@@ -60,6 +60,7 @@ export const updateCommand: CommandSpec = {
         title: normalizeText(payload.title),
         body: normalizeBody(payload.body),
         level: normalizeLevel(payload.level),
+        is_pinned: payload.isPinned === true,
         updated_at: now,
         lock_version: payload.lockVersion + 1,
       })

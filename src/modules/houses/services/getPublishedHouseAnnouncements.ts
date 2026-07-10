@@ -27,6 +27,7 @@ export type PublishedHouseAnnouncement = {
   title: string;
   body: string;
   level: "info" | "warning" | "danger";
+  is_pinned: boolean;
   published_at: string | null;
   updated_at: string;
   pdf: PublishedHouseAnnouncementPdf | null;
@@ -37,6 +38,7 @@ type AnnouncementRow = {
   title: string;
   body: string;
   level: "info" | "warning" | "danger";
+  is_pinned: boolean;
   published_at: string | null;
   updated_at: string;
 };
@@ -63,7 +65,7 @@ async function loadPublishedHouseAnnouncements(
 
   const { data, error } = await supabase
     .from("house_announcements")
-    .select("id, title, body, level, published_at, updated_at")
+    .select("id, title, body, level, is_pinned, published_at, updated_at")
     .eq("house_id", houseId)
     .eq("lifecycle_status", "published")
     .order("published_at", { ascending: false });

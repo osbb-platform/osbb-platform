@@ -44,6 +44,7 @@ export const archiveCommand: CommandSpec = {
       .from("house_announcements")
       .update({
         lifecycle_status: "archived",
+        is_pinned: false,
         archived_at: now,
         updated_at: now,
         lock_version: payload.lockVersion + 1,

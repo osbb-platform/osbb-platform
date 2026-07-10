@@ -266,10 +266,10 @@ function buildAnnouncementsWidget(
     };
   }
 
-  const importantAnnouncement =
-    sortedAnnouncements.find((announcement) => announcement.level === "danger") ?? null;
+  const pinnedAnnouncement =
+    sortedAnnouncements.find((announcement) => announcement.is_pinned) ?? null;
 
-  const featured = importantAnnouncement ?? sortedAnnouncements[0];
+  const featured = pinnedAnnouncement ?? sortedAnnouncements[0];
   const level = normalizeAnnouncementLevel(featured.level);
 
   const levelLabel =
