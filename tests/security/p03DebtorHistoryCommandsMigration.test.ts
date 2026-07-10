@@ -48,18 +48,18 @@ describe("P03 debtor history command migration", () => {
     );
   });
 
-  it("protects security definer functions and checks admin access", () => {
+  it("keeps security definer mutations on the server-only boundary", () => {
     const normalized = loadMigration()
       .toLowerCase()
       .replace(/\s+/gu, " ");
 
     expect(normalized.match(/security definer/gu)).toHaveLength(4);
     expect(normalized.match(/set search_path = ''/gu)).toHaveLength(4);
-    expect(normalized.match(/p03_forbidden/gu)).toHaveLength(8);
-    expect(normalized).toContain("from public.admin_memberships");
-    expect(normalized).toContain("membership.house_id = p_house_id");
-    expect(normalized).toContain("revoke all on function");
-    expect(normalized).toContain("to authenticated");
+    expect(normalized).toContain("from public, authenticated");
+    expect(normalized).toContain("to service_role");
+    expect(normalized).not.toContain("to authenticated");
+    expect(normalized).not.toContain("auth.uid()");
+    expect(normalized).not.toContain("p03_forbidden");
   });
 
   it("enforces unknown-account blocking and atomic stale checks", () => {

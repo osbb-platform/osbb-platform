@@ -186,17 +186,25 @@ drop policy if exists
   house_debtor_month_snapshots_admin_manage
 on public.house_debtor_month_snapshots;
 
-create policy house_debtor_month_snapshots_admin_manage
+drop policy if exists
+  house_debtor_month_snapshots_admin_read
+on public.house_debtor_month_snapshots;
+
+create policy house_debtor_month_snapshots_admin_read
 on public.house_debtor_month_snapshots
-for all
+for select
 to authenticated
 using (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
-)
-with check (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
+  exists (
+    select 1
+    from public.admin_memberships membership
+    where membership.user_id = auth.uid()
+      and membership.status = 'active'
+      and (
+        membership.house_id is null
+        or membership.house_id = public.house_debtor_month_snapshots.house_id
+      )
+  )
 );
 
 
@@ -204,17 +212,25 @@ drop policy if exists
   house_debtor_month_rows_admin_manage
 on public.house_debtor_month_rows;
 
-create policy house_debtor_month_rows_admin_manage
+drop policy if exists
+  house_debtor_month_rows_admin_read
+on public.house_debtor_month_rows;
+
+create policy house_debtor_month_rows_admin_read
 on public.house_debtor_month_rows
-for all
+for select
 to authenticated
 using (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
-)
-with check (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
+  exists (
+    select 1
+    from public.admin_memberships membership
+    where membership.user_id = auth.uid()
+      and membership.status = 'active'
+      and (
+        membership.house_id is null
+        or membership.house_id = public.house_debtor_month_rows.house_id
+      )
+  )
 );
 
 
@@ -222,17 +238,25 @@ drop policy if exists
   house_debtor_series_admin_manage
 on public.house_debtor_series;
 
-create policy house_debtor_series_admin_manage
+drop policy if exists
+  house_debtor_series_admin_read
+on public.house_debtor_series;
+
+create policy house_debtor_series_admin_read
 on public.house_debtor_series
-for all
+for select
 to authenticated
 using (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
-)
-with check (
-  public.get_my_admin_role() is not null
-  and public.get_my_admin_role() <> 'inactive'
+  exists (
+    select 1
+    from public.admin_memberships membership
+    where membership.user_id = auth.uid()
+      and membership.status = 'active'
+      and (
+        membership.house_id is null
+        or membership.house_id = public.house_debtor_series.house_id
+      )
+  )
 );
 
 

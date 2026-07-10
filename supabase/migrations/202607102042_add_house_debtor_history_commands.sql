@@ -1,6 +1,7 @@
 
 create or replace function public.import_house_debtor_month_draft(
   p_house_id uuid,
+  p_created_by uuid,
   p_period_year int,
   p_period_month int,
   p_source text,
@@ -18,23 +19,6 @@ declare
   v_duplicate_account text;
   v_unknown_accounts text;
 begin
-  if coalesce(public.get_my_admin_role(), '') in ('', 'inactive') then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
-  if not exists (
-    select 1
-    from public.admin_memberships membership
-    where membership.user_id = auth.uid()
-      and membership.status = 'active'
-      and (
-        membership.house_id is null
-        or membership.house_id = p_house_id
-      )
-  ) then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
   if p_period_year not between 2000 and 2100
      or p_period_month not between 1 and 12 then
     raise exception 'P03_INVALID_PERIOD';
@@ -167,7 +151,7 @@ begin
     p_source,
     p_import_meta,
     'draft',
-    auth.uid()
+    p_created_by
   )
   returning id into v_snapshot_id;
 
@@ -242,23 +226,6 @@ declare
   v_current_published_ids uuid[];
   v_expected_published_ids uuid[];
 begin
-  if coalesce(public.get_my_admin_role(), '') in ('', 'inactive') then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
-  if not exists (
-    select 1
-    from public.admin_memberships membership
-    where membership.user_id = auth.uid()
-      and membership.status = 'active'
-      and (
-        membership.house_id is null
-        or membership.house_id = p_house_id
-      )
-  ) then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
   if p_series is null or jsonb_typeof(p_series) <> 'array' then
     raise exception 'P03_INVALID_SERIES';
   end if;
@@ -417,23 +384,6 @@ security definer
 set search_path = ''
 as $$
 begin
-  if coalesce(public.get_my_admin_role(), '') in ('', 'inactive') then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
-  if not exists (
-    select 1
-    from public.admin_memberships membership
-    where membership.user_id = auth.uid()
-      and membership.status = 'active'
-      and (
-        membership.house_id is null
-        or membership.house_id = p_house_id
-      )
-  ) then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
   update public.house_debtor_month_snapshots snapshot
   set
     status = 'discarded',
@@ -469,23 +419,6 @@ declare
   v_snapshot public.house_debtor_month_snapshots%rowtype;
   v_revision int;
 begin
-  if coalesce(public.get_my_admin_role(), '') in ('', 'inactive') then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
-  if not exists (
-    select 1
-    from public.admin_memberships membership
-    where membership.user_id = auth.uid()
-      and membership.status = 'active'
-      and (
-        membership.house_id is null
-        or membership.house_id = p_house_id
-      )
-  ) then
-    raise exception 'P03_FORBIDDEN';
-  end if;
-
   if p_period_year not between 2000 and 2100
      or p_period_month not between 1 and 12 then
     raise exception 'P03_INVALID_PERIOD';
@@ -549,12 +482,13 @@ $$;
 
 revoke all on function public.import_house_debtor_month_draft(
   uuid,
+  uuid,
   int,
   int,
   text,
   jsonb,
   jsonb
-) from public;
+) from public, authenticated;
 
 revoke all on function public.publish_house_debtor_month_snapshot(
   uuid,
@@ -563,13 +497,13 @@ revoke all on function public.publish_house_debtor_month_snapshot(
   uuid[],
   jsonb,
   jsonb
-) from public;
+) from public, authenticated;
 
 revoke all on function public.discard_house_debtor_month_snapshot(
   uuid,
   uuid,
   int
-) from public;
+) from public, authenticated;
 
 revoke all on function public.relabel_house_debtor_month_snapshot(
   uuid,
@@ -577,17 +511,18 @@ revoke all on function public.relabel_house_debtor_month_snapshot(
   int,
   int,
   int
-) from public;
+) from public, authenticated;
 
 
 grant execute on function public.import_house_debtor_month_draft(
+  uuid,
   uuid,
   int,
   int,
   text,
   jsonb,
   jsonb
-) to authenticated;
+) to service_role;
 
 grant execute on function public.publish_house_debtor_month_snapshot(
   uuid,
@@ -596,13 +531,13 @@ grant execute on function public.publish_house_debtor_month_snapshot(
   uuid[],
   jsonb,
   jsonb
-) to authenticated;
+) to service_role;
 
 grant execute on function public.discard_house_debtor_month_snapshot(
   uuid,
   uuid,
   int
-) to authenticated;
+) to service_role;
 
 grant execute on function public.relabel_house_debtor_month_snapshot(
   uuid,
@@ -610,4 +545,4 @@ grant execute on function public.relabel_house_debtor_month_snapshot(
   int,
   int,
   int
-) to authenticated;
+) to service_role;

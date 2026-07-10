@@ -1,3 +1,4 @@
+import { createSupabaseAdminClient } from "../../../../../../integrations/supabase/server/admin";
 
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
@@ -46,7 +47,9 @@ export const relabelMonthSnapshotCommand: CommandSpec = {
       );
     }
 
-    const { error } = await ctx.supabase.rpc(
+    const adminSupabase = createSupabaseAdminClient();
+
+    const { error } = await adminSupabase.rpc(
       "relabel_house_debtor_month_snapshot",
       {
         p_house_id: ctx.house.id,

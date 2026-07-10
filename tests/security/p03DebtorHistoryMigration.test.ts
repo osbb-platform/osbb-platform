@@ -84,7 +84,7 @@ describe("P03 debtor history migration", () => {
     );
   });
 
-  it("keeps the history layer private behind admin RLS", () => {
+  it("keeps authenticated reads house-scoped and mutations private", () => {
     const normalized = loadMigration()
       .toLowerCase()
       .replace(/\s+/gu, " ");
@@ -92,16 +92,18 @@ describe("P03 debtor history migration", () => {
     const rlsStatements =
       normalized.match(/enable row level security/gu) ?? [];
 
-    const adminPolicies =
-      normalized.match(/create policy house_debtor_[a-z_]+_admin_manage/gu) ?? [];
+    const readPolicies =
+      normalized.match(/create policy house_debtor_[a-z_]+_admin_read/gu) ?? [];
 
     expect(rlsStatements).toHaveLength(3);
-    expect(adminPolicies).toHaveLength(3);
+    expect(readPolicies).toHaveLength(3);
 
-    expect(normalized).toContain(
-      "public.get_my_admin_role() is not null",
-    );
+    expect(normalized).toContain("for select to authenticated");
+    expect(normalized).toContain("from public.admin_memberships");
+    expect(normalized).toContain("membership.user_id = auth.uid()");
+    expect(normalized).toContain("membership.house_id is null");
 
+    expect(normalized).not.toContain("for all to authenticated");
     expect(normalized).not.toContain("to anon");
     expect(normalized).not.toContain("using (true)");
   });

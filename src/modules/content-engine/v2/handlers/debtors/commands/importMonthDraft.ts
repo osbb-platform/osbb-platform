@@ -1,3 +1,4 @@
+import { createSupabaseAdminClient } from "../../../../../../integrations/supabase/server/admin";
 
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
@@ -28,10 +29,13 @@ export const importMonthDraftCommand: CommandSpec = {
 
     const payload = payloadResult.data as ImportMonthDraftPayload;
 
-    const { data, error } = await ctx.supabase.rpc(
+    const adminSupabase = createSupabaseAdminClient();
+
+    const { data, error } = await adminSupabase.rpc(
       "import_house_debtor_month_draft",
       {
         p_house_id: ctx.house.id,
+        p_created_by: ctx.user.id,
         p_period_year: payload.periodYear,
         p_period_month: payload.periodMonth,
         p_source: payload.source ?? "manual_import",

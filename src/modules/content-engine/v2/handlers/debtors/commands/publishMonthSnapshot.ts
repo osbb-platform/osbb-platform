@@ -1,3 +1,4 @@
+import { createSupabaseAdminClient } from "../../../../../../integrations/supabase/server/admin";
 
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
@@ -45,7 +46,9 @@ export const publishMonthSnapshotCommand: CommandSpec = {
     if (!planResult.ok) return planResult;
 
     const plan = planResult.data;
-    const { error } = await ctx.supabase.rpc(
+    const adminSupabase = createSupabaseAdminClient();
+
+    const { error } = await adminSupabase.rpc(
       "publish_house_debtor_month_snapshot",
       {
         p_house_id: ctx.house.id,
