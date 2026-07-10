@@ -1,10 +1,15 @@
+
 import type { ContentHandler } from "../../types/handler";
 import { err, ok } from "../../types/result";
 
 import { deleteDraftCommand } from "./commands/deleteDraft";
+import { discardMonthSnapshotCommand } from "./commands/discardMonthSnapshot";
+import { importMonthDraftCommand } from "./commands/importMonthDraft";
+import { publishDraftCommand } from "./commands/publishDraft";
+import { publishMonthSnapshotCommand } from "./commands/publishMonthSnapshot";
+import { relabelMonthSnapshotCommand } from "./commands/relabelMonthSnapshot";
 import { saveDraftItemsCommand } from "./commands/saveDraftItems";
 import { saveSettingsCommand } from "./commands/saveSettings";
-import { publishDraftCommand } from "./commands/publishDraft";
 
 export const debtorsHandler: ContentHandler = {
   key: "debtors",
@@ -15,6 +20,10 @@ export const debtorsHandler: ContentHandler = {
     saveDraftItems: saveDraftItemsCommand,
     publishDraft: publishDraftCommand,
     deleteDraft: deleteDraftCommand,
+    importMonthDraft: importMonthDraftCommand,
+    publishMonthSnapshot: publishMonthSnapshotCommand,
+    discardMonthSnapshot: discardMonthSnapshotCommand,
+    relabelMonthSnapshot: relabelMonthSnapshotCommand,
   },
 
   async onBootstrap(ctx) {
