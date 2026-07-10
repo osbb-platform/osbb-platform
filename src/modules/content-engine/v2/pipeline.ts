@@ -3,7 +3,7 @@ import type { ContentHandler } from "./types/handler";
 import type { ExecResult, HandlerContext } from "./types/pipeline";
 import { err, ok } from "./types/result";
 import type { Result } from "./types/result";
-import { cleanupFiles, trackFiles } from "./services/fileService";
+import { cleanupFiles, removeUntrackedFiles, trackFiles } from "./services/fileService";
 import { writeHistory } from "./services/historyService";
 import { revalidateForCommand } from "./services/revalidateService";
 import { applyTaskOps } from "./services/taskService";
@@ -28,7 +28,10 @@ export async function runPipeline(args: {
       files: execResult.filesToTrack,
     });
 
-    if (!trackResult.ok) return trackResult;
+    if (!trackResult.ok) {
+      await removeUntrackedFiles(ctx.supabase, execResult.filesToTrack);
+      return trackResult;
+    }
   }
 
   if (execResult.tasks) {

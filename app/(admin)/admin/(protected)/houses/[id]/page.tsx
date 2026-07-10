@@ -17,6 +17,7 @@ import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseR
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
+import type { HouseAnnouncementFileInput } from "@/src/modules/content-engine/v2/handlers/announcements/types";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
@@ -113,6 +114,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  pdf?: HouseAnnouncementFileInput | null;
 }) {
   return {
     id: announcement.id,
@@ -126,6 +128,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
       updatedAt: announcement.updated_at,
       publishedAt: announcement.published_at,
       lockVersion: announcement.lock_version,
+      pdf: announcement.pdf ?? null,
     },
   };
 }
