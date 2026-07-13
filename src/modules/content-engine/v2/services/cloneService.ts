@@ -306,6 +306,15 @@ async function cleanupCopiedFiles(
   }
 }
 
+function isMissingSourceStorageObject(error: string) {
+  const normalized = error.toLowerCase();
+
+  return (
+    normalized.includes("object not found") ||
+    normalized.includes("not found")
+  );
+}
+
 async function copyTrackedFiles(
   supabase: SupabaseClient,
   params: {
@@ -329,6 +338,16 @@ async function copyTrackedFiles(
     );
 
     if (!copyResult.ok) {
+      if (isMissingSourceStorageObject(copyResult.error)) {
+        console.warn("Skipping missing tracked file during duplicate:", {
+          bucket: file.storage_bucket,
+          path: file.storage_path,
+          entityField: file.field_key,
+        });
+
+        continue;
+      }
+
       await cleanupCopiedFiles(supabase, copied);
       return copyResult;
     }

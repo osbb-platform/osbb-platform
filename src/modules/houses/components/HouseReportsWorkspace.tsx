@@ -212,10 +212,13 @@ function getDefaultYear(tab: TabKey) {
 
 function getLegacyPeriodType(
   periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
 ): HouseReportPeriodType {
-  return periodKind === "quarter" || periodKind === "year"
-    ? "past"
-    : "current";
+  if (periodKind === "none" || periodYear === null) {
+    return "current";
+  }
+
+  return periodYear < new Date().getFullYear() ? "past" : "current";
 }
 
 function getDefaultPeriodKind(tab: TabKey): HouseReportPeriodKind {
@@ -242,7 +245,7 @@ function getEmptyDraft(tab: TabKey, firstCategory: string) {
     description: "",
     categoryTitle: firstCategory,
     reportDate: "",
-    periodType: getLegacyPeriodType(period.periodKind),
+    periodType: getLegacyPeriodType(period.periodKind, period.periodYear),
     periodKind: period.periodKind,
     periodMonth: period.periodMonth,
     periodQuarter: period.periodQuarter,
@@ -317,7 +320,7 @@ function mapReportToDraft(report: HouseReportSnapshot) {
     description: report.description,
     categoryTitle: report.categoryTitle,
     reportDate: report.reportDate ?? "",
-    periodType: getLegacyPeriodType(period.periodKind),
+    periodType: getLegacyPeriodType(period.periodKind, period.periodYear),
     periodKind: period.periodKind,
     periodMonth: period.periodMonth,
     periodQuarter: period.periodQuarter,
@@ -683,7 +686,7 @@ export function HouseReportsWorkspace({
   }
 
   function buildPayload(pdf: Awaited<ReturnType<typeof uploadSelectedPdf>>) {
-    const legacyPeriodType = getLegacyPeriodType(draft.periodKind);
+    const legacyPeriodType = getLegacyPeriodType(draft.periodKind, draft.periodYear);
     const legacyMonth = draft.periodKind === "month" ? draft.periodMonth || null : null;
     const legacyYear =
       draft.periodKind === "month" ||
@@ -801,7 +804,7 @@ export function HouseReportsWorkspace({
 
           if (!published) return;
           resetWorkspace(
-            getReportResultPeriodType(created, getLegacyPeriodType(draft.periodKind)) === "past"
+            getReportResultPeriodType(created, getLegacyPeriodType(draft.periodKind, draft.periodYear)) === "past"
               ? "past"
               : "current",
           );
@@ -849,7 +852,7 @@ export function HouseReportsWorkspace({
 
         resetWorkspace(
           intent === "publish"
-            ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
+            ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind, draft.periodYear)) === "past"
               ? "past"
               : "current"
             : "archive",
@@ -859,7 +862,7 @@ export function HouseReportsWorkspace({
 
       resetWorkspace(
         getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "published"
-          ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
+          ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind, draft.periodYear)) === "past"
             ? "past"
             : "current"
           : getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "archived"
@@ -1166,7 +1169,12 @@ export function HouseReportsWorkspace({
 
                   setDraft((prev) => ({
                     ...prev,
-                    periodType: getLegacyPeriodType(nextKind),
+                    periodType: getLegacyPeriodType(
+                      nextKind,
+                      nextKind === "none"
+                        ? null
+                        : prev.periodYear ?? getDefaultYear(getDraftTab(prev)),
+                    ),
                     periodKind: nextKind,
                     periodMonth: nextKind === "month" ? prev.periodMonth : "",
                     periodQuarter:

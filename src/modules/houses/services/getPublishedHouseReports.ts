@@ -105,8 +105,15 @@ function formatMonth(value: number | null) {
   return value ? String(value).padStart(2, "0") : null;
 }
 
-function getLegacyPeriodType(periodKind: HouseReportPeriodKind): HouseReportPeriodType {
-  return periodKind === "quarter" || periodKind === "year" ? "past" : "current";
+function getLegacyPeriodType(
+  periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
+): HouseReportPeriodType {
+  if (periodKind === "none" || periodYear === null) {
+    return "current";
+  }
+
+  return periodYear < new Date().getFullYear() ? "past" : "current";
 }
 
 function getLegacyMonth(
@@ -144,7 +151,7 @@ function mapReport(
     categoryId: row.category_id,
     categoryTitle: row.category_title,
     reportDate: row.report_date,
-    periodType: getLegacyPeriodType(periodKind),
+    periodType: getLegacyPeriodType(periodKind, periodYear),
     month: getLegacyMonth(periodKind, periodMonth),
     year: getLegacyYear(periodKind, periodYear),
     periodKind,
