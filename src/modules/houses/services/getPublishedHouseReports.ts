@@ -289,7 +289,7 @@ export const getPublishedHouseReports = cache(
   async (houseId: string): Promise<PublishedHouseReportsData> => {
     return unstable_cache(
       () => loadPublishedHouseReports(houseId),
-      ["published-house-reports", houseId],
+      ["published-house-reports-v2", houseId],
       {
         tags: [`house:${houseId}:reports`, `house:${houseId}`],
         revalidate: 300,
