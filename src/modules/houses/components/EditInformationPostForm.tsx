@@ -1,7 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -9,13 +14,10 @@ import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInf
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 import {
-  adminPrimaryButtonClass,
-  adminSuccessButtonClass,
-  adminDangerButtonClass,
-  adminWarningButtonClass,
+  adminButtonClasses,
   adminInputClass,
-  adminIconButtonClass,
   adminInsetSurfaceClass,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 const INFORMATION_IMAGE_BUCKET = "house-information-images";
@@ -279,7 +281,7 @@ export function EditInformationPostForm({
             <button
               type="button"
               onClick={onClose}
-              className={adminIconButtonClass}
+              className={adminIconButtonClasses()}
             >
               ×
             </button>
@@ -338,7 +340,7 @@ export function EditInformationPostForm({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={adminPrimaryButtonClass}
+                className={adminButtonClasses({ variant: "primary" })}
               >
                 Обрати файл
               </button>
@@ -409,7 +411,7 @@ export function EditInformationPostForm({
             type="submit"
             form="information-post-edit-form"
             disabled={buttonsDisabled}
-            className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+            className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
           >
             {isSaving ? "Зберігаємо..." : "Зберегти"}
           </button>
@@ -419,7 +421,7 @@ export function EditInformationPostForm({
               type="button"
               disabled={buttonsDisabled}
               onClick={() => setConfirmAction("delete")}
-              className={`${adminDangerButtonClass} disabled:opacity-60`}
+              className={`${adminButtonClasses({ variant: "danger" })} disabled:opacity-60`}
             >
               {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
             </button>
@@ -432,9 +434,9 @@ export function EditInformationPostForm({
               type="button"
               disabled={buttonsDisabled}
               onClick={() => setConfirmAction("publish")}
-              className={`${adminSuccessButtonClass} disabled:opacity-60`}
+              className={`${adminButtonClasses({ variant: "success" })} disabled:opacity-60`}
             >
-              {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+              {pendingAction === "publish" ? "Публікуємо..." : "Опублікувати"}
             </button>
           ) : null}
 
@@ -443,9 +445,9 @@ export function EditInformationPostForm({
               type="button"
               disabled={buttonsDisabled}
               onClick={() => setConfirmAction("archive")}
-              className={`${adminWarningButtonClass} disabled:opacity-60`}
+              className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-60`}
             >
-              {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
+              {pendingAction === "archive" ? "Переносимо..." : "В архів"}
             </button>
           ) : null}
         </div>

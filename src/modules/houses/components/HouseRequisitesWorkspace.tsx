@@ -1,18 +1,19 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseRequisitesSnapshot } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import {
   adminBodyClass,
   adminInputClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSectionTitleClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type RequisitesSnapshot = {
@@ -363,7 +364,7 @@ export function HouseRequisitesWorkspace({
               <button
                 type="submit"
                 disabled={isPending || !isDirty || !publishReady}
-                className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {isPending ? "Зберігаємо..." : "Зберегти"}
               </button>
@@ -372,7 +373,7 @@ export function HouseRequisitesWorkspace({
                 type="button"
                 onClick={() => setSnapshot(DEFAULT_SNAPSHOT)}
                 disabled={isPending}
-                className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 Скинути
               </button>

@@ -1,9 +1,11 @@
 "use client";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
-import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
+import {
+  ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useState } from "react";
+import { useMemo,
+  useState } from "react";
 import { CreateAnnouncementInlineForm } from "@/src/modules/houses/components/CreateAnnouncementInlineForm";
 import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/EditAnnouncementSectionForm";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -13,15 +15,14 @@ import {
   AdminStatusBadge,
   statusLabelFor,
   statusToneFor,
-} from "@/src/shared/ui/admin/AdminStatusBadge";
+  } from "@/src/shared/ui/admin/AdminStatusBadge";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 import {
   adminBodyClass,
-  adminDangerButtonClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type AnnouncementItem = {
@@ -261,7 +262,7 @@ export function HouseAnnouncementsWorkspace({
         <button
           type="button"
           onClick={openCreateMode}
-          className={[adminPrimaryButtonClass, "min-h-12 px-6"].join(" ")}
+          className={[adminButtonClasses({ variant: "primary" }), "min-h-12 px-6"].join(" ")}
         >
           Нове оголошення
         </button>
@@ -297,7 +298,7 @@ export function HouseAnnouncementsWorkspace({
             type="button"
             disabled={isDeletingArchive}
             onClick={() => setIsDeleteArchiveConfirmOpen(true)}
-            className={[adminDangerButtonClass, "disabled:opacity-60"].join(" ")}
+            className={[adminButtonClasses({ variant: "danger" }), "disabled:opacity-60"].join(" ")}
           >
             {isDeletingArchive ? "Видаляємо архів..." : "Видалити все"}
           </button>

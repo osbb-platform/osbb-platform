@@ -2,13 +2,10 @@
 
 import type { ReactNode } from "react";
 import {
-  adminDangerButtonClass,
-  adminIconButtonClass,
   adminInputClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
-  adminSuccessButtonClass,
-  adminWarningButtonClass,
+  adminButtonClasses,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { FormEvent, useRef, useState, type ChangeEvent } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -231,7 +228,7 @@ export function EditAnnouncementSectionForm({
               type="button"
               onClick={onClose}
               aria-label="Закрити редактор"
-              className={adminIconButtonClass}
+              className={adminIconButtonClasses()}
             >
               ×
             </button>
@@ -342,9 +339,9 @@ export function EditAnnouncementSectionForm({
           </div>
         ) : null}
 
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-            <div className="flex flex-nowrap items-center gap-3">
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 disabled={saveDisabled}
@@ -352,7 +349,7 @@ export function EditAnnouncementSectionForm({
                   setActionError(null);
                   formRef.current?.requestSubmit();
                 }}
-                className={`${adminPrimaryButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl ${
+                className={`${adminButtonClasses({ variant: "primary" })} ${
                   isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
@@ -368,7 +365,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "danger" })} disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
@@ -381,9 +378,9 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("publish")}
-                  className={`${adminSuccessButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "success" })} disabled:opacity-60`}
                 >
-                  {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                  {pendingAction === "publish" ? "Публікуємо..." : "Опублікувати"}
                 </button>
               </div>
             ) : null}
@@ -394,9 +391,9 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("archive")}
-                  className={`${adminWarningButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-60`}
                 >
-                  {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
+                  {pendingAction === "archive" ? "Переносимо..." : "В архів"}
                 </button>
               </div>
             ) : null}
@@ -407,7 +404,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "danger" })} disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>

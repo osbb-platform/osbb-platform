@@ -1,20 +1,24 @@
 "use client";
 
-import { FormEvent, useRef, useState, type ChangeEvent } from "react";
+import {
+  FormEvent,
+  useRef,
+  useState,
+  type ChangeEvent } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { AnnouncementPdfUploadBlock } from "@/src/modules/houses/components/AnnouncementPdfUploadBlock";
 import {
   createClientUuid,
   uploadAnnouncementPdf,
-} from "@/src/modules/houses/components/announcementPdfUpload";
+  } from "@/src/modules/houses/components/announcementPdfUpload";
 import {
   adminBodyClass,
-  adminIconButtonClass,
   adminInputClass,
   adminInsetPaddingClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
+  adminButtonClasses,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 
@@ -126,7 +130,7 @@ export function CreateAnnouncementInlineForm({
             type="button"
             onClick={onClose}
             aria-label="Закрити форму"
-            className={adminIconButtonClass}
+            className={adminIconButtonClasses()}
           >
             ×
           </button>
@@ -212,7 +216,7 @@ export function CreateAnnouncementInlineForm({
           <button
             type="submit"
             disabled={isBusy || Boolean(pdfError)}
-            className={[adminPrimaryButtonClass, "min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
+            className={adminButtonClasses({ variant: "primary" })}
           >
             {isBusy
               ? selectedPdf

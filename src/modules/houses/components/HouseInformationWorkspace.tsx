@@ -1,6 +1,9 @@
 "use client";
 
-import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+import {
+  AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
 
@@ -9,7 +12,7 @@ import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/C
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
-} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+  } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
 import { useState } from "react";
@@ -23,8 +26,7 @@ import { EditInformationPostForm } from "@/src/modules/houses/components/EditInf
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
@@ -287,7 +289,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={() => setPostTemplatesPanelOpen(true)}
                     disabled={applyingPostsTemplate || isPending}
-                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                    className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
                   >
                     <TemplateIcon className="h-5 w-5" />
                     Шаблони
@@ -297,7 +299,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={openCreatePost}
                     disabled={!housePageId}
-                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
                     Нова стаття
                   </button>
@@ -308,7 +310,7 @@ export function HouseInformationWorkspace({
                 <button
                   type="button"
                   onClick={openCreateDocument}
-                  className={adminPrimaryButtonClass}
+                  className={adminButtonClasses({ variant: "primary" })}
                 >
                   Новий матеріал
                 </button>
@@ -320,7 +322,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={() => setFaqTemplatesPanelOpen(true)}
                     disabled={applyingFaqTemplate || isPending}
-                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                    className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
                   >
                     <TemplateIcon className="h-5 w-5" />
                     Шаблони
@@ -330,7 +332,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={openCreateFaqForm}
                     disabled={isPending}
-                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
                     Створити FAQ
                   </button>

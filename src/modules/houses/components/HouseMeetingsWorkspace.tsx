@@ -1,15 +1,19 @@
 "use client";
 
-import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+import {
+  AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
-import { useMemo, useState } from "react";
+import { useMemo,
+  useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { AdminHouseMeetingsSnapshot } from "@/src/modules/houses/services/getAdminHouseMeetings";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import {
@@ -769,7 +773,7 @@ export function HouseMeetingsWorkspace({
           <button
             type="button"
             onClick={openCreateMode}
-            className={adminPrimaryButtonClass}
+            className={adminButtonClasses({ variant: "primary" })}
           >
             Нові збори
           </button>
@@ -1052,7 +1056,7 @@ export function HouseMeetingsWorkspace({
                       setManualVoteAnswers({});
                     }}
                     disabled={isPending}
-                    className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "success" })}
                   >
                     Зберегти голос квартири
                   </button>
@@ -1277,7 +1281,7 @@ export function HouseMeetingsWorkspace({
                   <button
                     type="button"
                     onClick={() => setConfirmAction("delete")}
-                    className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90"
+                    className={adminButtonClasses({ variant: "danger" })}
                   >
                     Видалити
                   </button>
@@ -1287,7 +1291,7 @@ export function HouseMeetingsWorkspace({
                   type="button"
                   onClick={() => saveDraftToRegistry()}
                   disabled={isPending}
-                  className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
                 >
                   Зберегти
                 </button>
@@ -1300,9 +1304,9 @@ export function HouseMeetingsWorkspace({
                     type="button"
                     onClick={() => setConfirmAction("publish")}
                     disabled={isPending}
-                    className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "success" })}
                   >
-                    Підтвердити
+                    Опублікувати
                   </button>
                 ) : null}
 
@@ -1317,9 +1321,9 @@ export function HouseMeetingsWorkspace({
                       }
                     }}
                     disabled={isPending}
-                    className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
-                    Архівувати
+                    В архів
                   </button>
                 ) : null}
               </div>

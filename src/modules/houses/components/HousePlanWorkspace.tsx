@@ -1,13 +1,17 @@
 "use client";
 
-import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import {
+  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useState } from "react";
+import { useMemo,
+  useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -17,9 +21,9 @@ import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAd
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type PlanTaskStatus =
@@ -805,7 +809,7 @@ export function HousePlanWorkspace({
             </p>
           </div>
 
-          <button type="button" onClick={openCreateMode} className={adminPrimaryButtonClass}>
+          <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>
             Нове завдання
           </button>
         </div>
@@ -1159,14 +1163,14 @@ export function HousePlanWorkspace({
               </div>
             ) : null}
 
-            <div className="overflow-x-auto">
-              <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-                <div className="flex flex-nowrap items-center gap-3">
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={() => void submitTask("save")}
-                    className={`${adminPrimaryButtonClass} min-h-16 px-10 py-5 text-2xl disabled:opacity-60`}
+                    className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
@@ -1177,7 +1181,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-danger-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "danger" })}
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -1190,9 +1194,9 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("publish")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "success" })}
                     >
-                      {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                      {isPending && submitIntent === "publish" ? "Публікуємо..." : "Опублікувати"}
                     </button>
                   </div>
                 ) : workspaceMode === "edit" &&
@@ -1203,9 +1207,9 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("archive")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-warning-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "secondary" })}
                     >
-                      {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
+                      {isPending && submitIntent === "archive" ? "Переносимо..." : "В архів"}
                     </button>
                   </div>
                 ) : null}

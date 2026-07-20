@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type {
   AdminHouseBoard,
   AdminHouseBoardMember,
-} from "@/src/modules/houses/services/getAdminHouseBoard";
+  } from "@/src/modules/houses/services/getAdminHouseBoard";
 import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
-  adminDangerButtonClass,
+  adminButtonClasses,
   adminInputClass,
-  adminIconButtonClass,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
@@ -499,7 +499,7 @@ export function EditBoardSectionForm({
               <button
                 type="button"
                 onClick={openCreateMode}
-                className={[adminPrimaryButtonClass, "h-12 shrink-0 whitespace-nowrap"].join(" ")}
+                className={[adminButtonClasses({ variant: "primary" }), "h-12 shrink-0 whitespace-nowrap"].join(" ")}
               >
                 Створити роль
               </button>
@@ -547,7 +547,7 @@ export function EditBoardSectionForm({
                   setIntro(savedIntro);
                   setIsEditingIntro(false);
                 }}
-                className={adminIconButtonClass}
+                className={adminIconButtonClasses()}
                 aria-label="Закрити форму"
               >
                 ×
@@ -556,7 +556,7 @@ export function EditBoardSectionForm({
               <button
                 type="button"
                 onClick={() => setIsEditingIntro(true)}
-                className={adminSecondaryButtonClass}
+                className={adminButtonClasses({ variant: "secondary" })}
               >
                 Редагувати
               </button>
@@ -577,7 +577,7 @@ export function EditBoardSectionForm({
                 type="button"
                 onClick={handleSaveIntro}
                 disabled={!introDirty || isPending}
-                className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
               >
                 {isPending ? "Зберігаємо..." : "Зберегти звернення"}
               </button>
@@ -608,7 +608,7 @@ export function EditBoardSectionForm({
                 type="button"
                 onClick={closeWorkspace}
                 aria-label="Закрити форму"
-                className={adminIconButtonClass}
+                className={adminIconButtonClasses()}
               >
                 ×
               </button>
@@ -723,12 +723,12 @@ export function EditBoardSectionForm({
                   />
                 </div>
               </div>
-              <div className="overflow-x-auto border-t border-[var(--cms-border)] pt-5">
-                <div className="flex min-w-max flex-nowrap items-end gap-3">
+              <div className="border-t border-[var(--cms-border)] pt-5">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={handleSaveDraft}
-                    className={[adminPrimaryButtonClass, "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ") }
+                    className={[adminButtonClasses({ variant: "primary" }), "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ") }
                   >
                     Зберегти
                   </button>
@@ -737,7 +737,7 @@ export function EditBoardSectionForm({
                     <button
                       type="button"
                       onClick={() => setIsDeleteConfirmOpen(true)}
-                      className={[adminDangerButtonClass, "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ")}
+                      className={[adminButtonClasses({ variant: "danger" }), "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ")}
                     >
                       Видалити
                     </button>

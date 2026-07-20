@@ -1,6 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
@@ -8,11 +12,10 @@ import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInf
 import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 
 import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
+  adminButtonClasses,
   adminInputClass,
-  adminIconButtonClass,
   adminInsetSurfaceClass,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 const INFORMATION_IMAGE_BUCKET = "house-information-images";
@@ -290,7 +293,7 @@ export function CreateInformationPostInlineForm({
         <button
           type="button"
           onClick={onClose}
-          className={adminIconButtonClass}
+          className={adminIconButtonClasses()}
           aria-label="Закрити форму створення повідомлення"
         >
           ×
@@ -347,7 +350,7 @@ export function CreateInformationPostInlineForm({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={adminPrimaryButtonClass}
+                className={adminButtonClasses({ variant: "primary" })}
               >
                 Обрати файл
               </button>
@@ -420,7 +423,7 @@ export function CreateInformationPostInlineForm({
           <button
             type="submit"
             disabled={actionsDisabled}
-            className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+            className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
           >
             {isPending ? "Створюємо..." : "Створити"}
           </button>
@@ -439,7 +442,7 @@ export function CreateInformationPostInlineForm({
           type="button"
           disabled={actionsDisabled}
           onClick={() => void saveCurrentFormAsTemplate()}
-          className={`${adminSecondaryButtonClass} disabled:opacity-60`}
+          className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-60`}
         >
           {isSavingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
         </button>

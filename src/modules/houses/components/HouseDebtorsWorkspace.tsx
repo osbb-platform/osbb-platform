@@ -1,18 +1,22 @@
 "use client";
 
-import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import {
+  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo,
+  useRef,
+  useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
-import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
+import { exportDebtorsRegistry,
+  parseDebtorsImportFile,
+  type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
   adminSurfaceClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type WorkspaceTab = "all" | "published" | "draft";
@@ -632,7 +636,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={openImportPicker}
               disabled={isImporting}
-              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-50`}
             >
               {isImporting ? "Імпорт..." : "Імпорт"}
             </button>
@@ -640,7 +644,7 @@ export function HouseDebtorsWorkspace({
             <button
               type="button"
               onClick={handleExport}
-              className={adminSecondaryButtonClass}
+              className={adminButtonClasses({ variant: "secondary" })}
             >
               Експорт
             </button>
@@ -648,7 +652,7 @@ export function HouseDebtorsWorkspace({
             <button
               type="button"
               onClick={clearAllDebtFields}
-              className={adminSecondaryButtonClass}
+              className={adminButtonClasses({ variant: "secondary" })}
             >
               Очистити
             </button>
@@ -657,7 +661,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               disabled={!hasAnyEditableValue}
               onClick={openPreview}
-              className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+              className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
             >
               Зберегти
             </button>
@@ -686,7 +690,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={deleteDraft}
               disabled={isPending}
-              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-50`}
             >
               Видалити чернетку
             </button>
@@ -695,7 +699,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               onClick={publishDraft}
               disabled={isPending}
-              className={`${adminPrimaryButtonClass} disabled:opacity-50`}
+              className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-50`}
             >
               Підтвердити публікацію
             </button>
@@ -862,7 +866,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={savePaymentSettings}
                   disabled={!debtors || !paymentDirty || !isPaymentUrlValid || isPending}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_payment"
                     ? "Зберігаємо..."
@@ -873,7 +877,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setPayment(DEFAULT_PAYMENT)}
                   disabled={!paymentDirty || isPending}
-                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
                 </button>
@@ -1070,7 +1074,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={saveCalculatorSettings}
                   disabled={!debtors || (calculator.enabled && !calculatorDirty) || isPending}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_calculator"
                     ? "Зберігаємо..."
@@ -1081,7 +1085,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setCalculator(DEFAULT_CALCULATOR)}
                   disabled={!calculatorDirty || isPending}
-                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
                 </button>
@@ -1245,7 +1249,7 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={closePreview}
-                  className={adminSecondaryButtonClass}
+                  className={adminButtonClasses({ variant: "secondary" })}
                 >
                   Назад
                 </button>
@@ -1254,7 +1258,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   disabled={isPreviewEmpty || !debtors || isPending}
                   onClick={submitDraftSave}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending ? "Зберігаємо..." : "Зберегти в чернетку"}
                 </button>

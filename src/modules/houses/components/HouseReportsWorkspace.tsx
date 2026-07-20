@@ -1,24 +1,29 @@
 "use client";
 
-import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import {
+  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo,
+  useRef,
+  useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import {
   getSinglePdfHintMessage,
@@ -956,7 +961,7 @@ export function HouseReportsWorkspace({
               type="button"
               onClick={openCreateMode}
               disabled={readOnlyMode || isPending}
-              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+              className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
             >
               Створити звіт
             </button>
@@ -1421,13 +1426,13 @@ export function HouseReportsWorkspace({
             </>
           ) : null}
 
-          <div className="overflow-x-auto">
-            <div className="mt-6 flex min-w-max flex-nowrap items-end justify-between gap-6">
-              <div className="flex flex-nowrap items-center gap-3">
+          <div>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="submit"
                   disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                 </button>
@@ -1437,7 +1442,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "danger" })}
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -1450,9 +1455,9 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "success" })}
                   >
-                    {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                    {isPending && submitIntent === "publish" ? "Публікуємо..." : "Опублікувати"}
                   </button>
                 </div>
               ) : null}
@@ -1463,7 +1468,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "В архів"}
                   </button>
@@ -1476,7 +1481,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("restore")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
                     Відновити
                   </button>
@@ -1484,7 +1489,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "danger" })}
                   >
                     Видалити
                   </button>

@@ -1,18 +1,22 @@
 "use client";
 
-import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import {
+  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 
-import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
-} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+  } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
-import { useMemo, useState } from "react";
+import { useMemo,
+  useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
@@ -21,16 +25,12 @@ import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/s
 import type {
   AdminHouseSpecialistsSnapshot,
   HouseSpecialistSnapshot,
-} from "@/src/modules/houses/services/getAdminHouseSpecialists";
+  } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import {
-  adminDangerButtonClass,
+  adminButtonClasses,
   adminInputClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
-  adminSuccessButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
-  adminWarningButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 
@@ -578,7 +578,7 @@ export function HouseSpecialistsWorkspace({
                 type="button"
                 onClick={() => setTemplatesPanelOpen(true)}
                 disabled={isPending || applyingTemplate}
-                className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
               >
                 <TemplateIcon className="h-5 w-5" />
                 Шаблони
@@ -587,7 +587,7 @@ export function HouseSpecialistsWorkspace({
               <button
                 type="button"
                 onClick={openCreateMode}
-                className={adminPrimaryButtonClass}
+                className={adminButtonClasses({ variant: "primary" })}
               >
                 Створити спеціаліста
               </button>
@@ -724,7 +724,7 @@ export function HouseSpecialistsWorkspace({
                       <button
                         type="button"
                         onClick={() => removeDraftPhone(index)}
-                        className={adminSecondaryButtonClass}
+                        className={adminButtonClasses({ variant: "secondary" })}
                       >
                         Видалити
                       </button>
@@ -789,7 +789,7 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={saveDraft}
-                  className={adminPrimaryButtonClass}
+                  className={adminButtonClasses({ variant: "primary" })}
                   disabled={isPending}
                 >
                   Зберегти
@@ -798,7 +798,7 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={closeWorkspace}
-                  className={adminSecondaryButtonClass}
+                  className={adminButtonClasses({ variant: "secondary" })}
                   disabled={isPending}
                 >
                   Скасувати
@@ -808,7 +808,7 @@ export function HouseSpecialistsWorkspace({
                   <button
                     type="button"
                     onClick={() => setConfirmAction("delete")}
-                    className={adminDangerButtonClass}
+                    className={adminButtonClasses({ variant: "danger" })}
                     disabled={isPending}
                   >
                     Видалити
@@ -820,7 +820,7 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={() => void saveSpecialistDraftAsTemplate()}
-                  className={adminSecondaryButtonClass}
+                  className={adminButtonClasses({ variant: "secondary" })}
                   disabled={isPending || savingTemplate}
                 >
                   {savingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
@@ -831,7 +831,7 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={() => setConfirmAction("publish")}
-                  className={adminSuccessButtonClass}
+                  className={adminButtonClasses({ variant: "success" })}
                   disabled={isPending || savingTemplate}
                 >
                   Опублікувати
@@ -842,10 +842,10 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={() => setConfirmAction("archive")}
-                  className={adminWarningButtonClass}
+                  className={adminButtonClasses({ variant: "secondary" })}
                   disabled={isPending}
                 >
-                  Архівувати
+                  В архів
                 </button>
               ) : null}
 
@@ -853,10 +853,10 @@ export function HouseSpecialistsWorkspace({
                 <button
                   type="button"
                   onClick={() => setConfirmAction("restore")}
-                  className={adminSecondaryButtonClass}
+                  className={adminButtonClasses({ variant: "secondary" })}
                   disabled={isPending}
                 >
-                  Відновити в чернетки
+                  Відновити
                 </button>
               ) : null}
             </div>
