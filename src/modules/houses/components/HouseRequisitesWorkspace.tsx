@@ -88,7 +88,7 @@ export function HouseRequisitesWorkspace({
   requisites,
   readOnlyMode,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const initialSnapshot = useMemo(
     () => normalizeSnapshot(requisites),
@@ -377,10 +377,6 @@ export function HouseRequisitesWorkspace({
                 Скинути
               </button>
             </div>
-
-            {lastError ? (
-              <div className="mt-4 text-sm text-[var(--cms-danger-text)]">{lastError}</div>
-            ) : null}
           </div>
         </form>
       )}

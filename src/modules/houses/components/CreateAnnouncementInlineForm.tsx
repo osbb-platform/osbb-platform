@@ -31,7 +31,7 @@ export function CreateAnnouncementInlineForm({
   housePageId,
   onClose,
 }: CreateAnnouncementInlineFormProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -202,9 +202,9 @@ export function CreateAnnouncementInlineForm({
           onChange={handlePdfChange}
         />
 
-        {lastError || submitError ? (
+        {submitError ? (
           <p role="alert" className="text-sm text-[var(--cms-danger-text)]">
-            {submitError ?? lastError}
+            {submitError}
           </p>
         ) : null}
 

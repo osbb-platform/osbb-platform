@@ -42,8 +42,20 @@ export function useAdminContentCommand() {
           options.onError?.(result.error);
           toast({
             tone: "error",
-            title: options.errorPrefix ?? "Помилка",
-            description: result.code ? (errorMessages[result.code] ?? result.error) : result.error,
+            title:
+              result.code === "STALE_CONTENT"
+                ? "Дані застаріли"
+                : (options.errorPrefix ?? "Помилка"),
+            description: result.code
+              ? (errorMessages[result.code] ?? result.error)
+              : result.error,
+            action:
+              result.code === "STALE_CONTENT"
+                ? {
+                    label: "Оновити дані",
+                    onClick: () => router.refresh(),
+                  }
+                : undefined,
           });
           resolve(null);
           return;

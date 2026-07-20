@@ -649,12 +649,12 @@ export function HouseSpecialistsWorkspace({
             </div>
           </div>
 
-          {workspaceError ?? lastError ? (
+          {workspaceError ? (
             <div
               role="alert"
               className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
             >
-              {workspaceError ?? lastError}
+              {workspaceError}
             </div>
           ) : null}
 
@@ -937,12 +937,6 @@ export function HouseSpecialistsWorkspace({
           )}
         </div>
       </div>
-
-      {lastError ? (
-        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {lastError}
-        </div>
-      ) : null}
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}

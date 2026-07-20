@@ -75,7 +75,7 @@ export function ContentTemplateSlotsPanel({
   disabled = false,
   onApplyTemplateKeys,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export function ContentTemplateSlotsPanel({
   }, [templates]);
 
   const busy = isPending || Boolean(applyingKey) || Boolean(deletingKey);
-  const error = localError ?? lastError;
+  const error = localError;
 
   async function applyTemplate(template: ContentTemplateSlot) {
     setLocalError(null);

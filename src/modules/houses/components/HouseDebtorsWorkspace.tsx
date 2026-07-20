@@ -602,11 +602,6 @@ export function HouseDebtorsWorkspace({
       </div>
 
       <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
-        {lastError ? (
-        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {lastError}
-        </div>
-      ) : null}
 
       {importError ? (
         <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">

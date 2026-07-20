@@ -74,7 +74,7 @@ export function HouseInformationWorkspace({
   informationPostTemplates = [],
   duplicateTargets = [],
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -414,9 +414,9 @@ export function HouseInformationWorkspace({
             />
           ) : null}
 
-          {workspaceError ?? lastError ? (
+          {workspaceError ? (
             <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-              {workspaceError ?? lastError}
+              {workspaceError}
             </div>
           ) : null}
 
@@ -525,9 +525,9 @@ export function HouseInformationWorkspace({
 
       {mainTab === "faq" ? (
         <>
-          {workspaceError ?? lastError ? (
+          {workspaceError ? (
             <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-              {workspaceError ?? lastError}
+              {workspaceError}
             </div>
           ) : null}
 

@@ -105,7 +105,7 @@ export function HouseAnnouncementsWorkspace({
   sections,
   duplicateTargets = [],
 }: HouseAnnouncementsWorkspaceProps) {
-  const { dispatch, isPending: isDeletingArchive, lastError } = useAdminContentCommand();
+  const { dispatch, isPending: isDeletingArchive } = useAdminContentCommand();
   const [activeTab, setActiveTab] = useState<TabKey>("active");
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -304,9 +304,9 @@ export function HouseAnnouncementsWorkspace({
         ) : null}
       </div>
 
-      {workspaceError ?? lastError ? (
+      {workspaceError ? (
         <div className="mt-6 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {workspaceError ?? lastError}
+          {workspaceError}
         </div>
       ) : null}
 

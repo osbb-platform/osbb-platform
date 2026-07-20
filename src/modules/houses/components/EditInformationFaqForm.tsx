@@ -50,7 +50,7 @@ export function EditInformationFaqForm({
   templates = [],
   templateSlotLimit = 3,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [currentLockVersion, setCurrentLockVersion] = useState(faq.lockVersion);
@@ -325,7 +325,7 @@ export function EditInformationFaqForm({
     );
   }
 
-  const error = localError ?? lastError;
+  const error = localError;
   const isArchived = currentStatus === "archived";
   const canPublish = currentStatus === "draft";
   const canArchive = currentStatus === "published";

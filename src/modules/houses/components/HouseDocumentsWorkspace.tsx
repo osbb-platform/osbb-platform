@@ -164,7 +164,7 @@ export function HouseDocumentsWorkspace({
   embedded = false,
   duplicateTargets = [],
 }: HouseDocumentsWorkspaceProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
@@ -999,12 +999,12 @@ export function HouseDocumentsWorkspace({
               </div>
             ) : null}
 
-            {actionError ?? lastError ? (
+            {actionError ? (
               <div
                 role="alert"
                 className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
-                {actionError ?? lastError}
+                {actionError}
               </div>
             ) : null}
 

@@ -44,7 +44,7 @@ export function CreateInformationFaqForm({
   templates = [],
   templateSlotLimit = 3,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [items, setItems] = useState<DraftFaqItem[]>([
     { question: "", answer: "" },
   ]);
@@ -167,7 +167,7 @@ export function CreateInformationFaqForm({
     setIsSavingTemplate(false);
   }
 
-  const error = localError ?? lastError;
+  const error = localError;
   const actionsDisabled = isPending || isSavingTemplate;
 
   return (

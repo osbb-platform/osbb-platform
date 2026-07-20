@@ -66,7 +66,7 @@ export function CreateInformationPostInlineForm({
   templateSlotLimit = 3,
   onClose,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const [body, setBody] = useState("");
@@ -268,7 +268,7 @@ export function CreateInformationPostInlineForm({
   void houseSlug;
   void housePageId;
 
-  const combinedError = actionError ?? lastError;
+  const combinedError = actionError;
   const actionsDisabled = isPending || isSavingTemplate;
 
   return (

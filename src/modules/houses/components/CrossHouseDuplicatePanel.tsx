@@ -55,7 +55,7 @@ export function CrossHouseDuplicatePanel({
   onCancel,
   onSuccess,
 }: CrossHouseDuplicatePanelProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -343,12 +343,6 @@ export function CrossHouseDuplicatePanel({
               Далі
             </button>
           </div>
-        </div>
-      ) : null}
-
-      {lastError ? (
-        <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {lastError}
         </div>
       ) : null}
 

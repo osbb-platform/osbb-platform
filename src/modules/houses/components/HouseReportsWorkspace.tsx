@@ -404,7 +404,7 @@ export function HouseReportsWorkspace({
   categories,
   duplicateTargets = [],
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>("current");
@@ -1035,9 +1035,9 @@ export function HouseReportsWorkspace({
             </div>
           </div>
 
-          {actionError || lastError ? (
+          {actionError ? (
             <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-              {actionError ?? lastError}
+              {actionError}
             </div>
           ) : null}
 

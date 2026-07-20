@@ -252,7 +252,7 @@ export function HousePlanWorkspace({
   duplicateTargets = [],
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const [tasks, setTasks] = useState<PlanTask[]>(() => normalizePlanTasks(plan));
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
@@ -1211,12 +1211,6 @@ export function HousePlanWorkspace({
                 ) : null}
               </div>
             </div>
-
-            {lastError ? (
-              <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                {lastError}
-              </div>
-            ) : null}
           </div>
         </div>
       ) : null}

@@ -55,7 +55,7 @@ export function EditAnnouncementSectionForm({
   section,
   onClose,
 }: EditAnnouncementSectionFormProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -208,7 +208,7 @@ export function EditAnnouncementSectionForm({
   void houseSlug;
   void housePageId;
 
-  const combinedError = actionError ?? lastError;
+  const combinedError = actionError;
   const buttonsDisabled = isPending || pendingAction !== null;
   const saveDisabled = buttonsDisabled || isSaving || Boolean(pdfError);
 

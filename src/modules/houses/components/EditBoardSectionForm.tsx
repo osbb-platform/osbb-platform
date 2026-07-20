@@ -225,7 +225,7 @@ export function EditBoardSectionForm({
   board,
   readOnlyMode,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const initialBoardData = useMemo(
     () => normalizeBoardData(board),
@@ -614,12 +614,12 @@ export function EditBoardSectionForm({
               </button>
             </div>
 
-            {workspaceError ?? lastError ? (
+            {workspaceError ? (
               <div
                 role="alert"
                 className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
-                {workspaceError ?? lastError}
+                {workspaceError}
               </div>
             ) : null}
 
@@ -800,12 +800,6 @@ export function EditBoardSectionForm({
             )}
           </div>
         </div>
-
-        {lastError ? (
-          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {lastError}
-          </div>
-        ) : null}
       </form>
       <PlatformConfirmModal
         open={isDeleteConfirmOpen}

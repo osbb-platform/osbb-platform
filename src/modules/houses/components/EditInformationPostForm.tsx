@@ -67,7 +67,7 @@ export function EditInformationPostForm({
   section,
   onClose,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const [body, setBody] = useState(
@@ -252,7 +252,7 @@ export function EditInformationPostForm({
 
   void houseSlug;
 
-  const combinedError = actionError ?? lastError;
+  const combinedError = actionError;
   const buttonsDisabled = isPending || pendingAction !== null || isSaving;
 
   return (
