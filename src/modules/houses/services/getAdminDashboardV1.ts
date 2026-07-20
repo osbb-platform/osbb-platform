@@ -176,17 +176,18 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     houseRows.map((row) => [row.houseId, row.houseName]),
   );
 
-  const publications = history.items
-    .filter(
-      (item) =>
-        item.house_id &&
-        isRecent7d(item.created_at) &&
-        (
-          item.action_type.includes("publish") ||
-          item.action_type.includes("confirm") ||
-          item.action_type.includes("update_house_section")
-        ),
-    )
+  const recentPublicationItems = history.items.filter(
+    (item) =>
+      item.house_id &&
+      isRecent7d(item.created_at) &&
+      (
+        item.action_type.includes("publish") ||
+        item.action_type.includes("confirm") ||
+        item.action_type.includes("update_house_section")
+      ),
+  );
+
+  const publications = recentPublicationItems
     .slice(0, MAX_FEED_ITEMS)
     .map((item) => ({
       id: item.id,
@@ -257,7 +258,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
       housesWithoutApartments: houseRows.filter((row) => !row.hasApartments)
         .length,
       draftsForReview: reviewQueue.length,
-      recentPublications7d: publications.length,
+      recentPublications7d: recentPublicationItems.length,
     },
     topAlert,
     reviewQueue,
