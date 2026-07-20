@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
@@ -138,24 +140,6 @@ function getMonthLabel(value: string | null | undefined) {
   return (
     CURRENT_MONTH_OPTIONS.find((item) => item.value === value)?.label ?? value
   );
-}
-
-function getStatusLabel(status: HouseReportLifecycle) {
-  if (status === "published") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getStatusBadgeClasses(status: HouseReportLifecycle) {
-  if (status === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (status === "archived") {
-    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
-  }
-
-  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
 }
 
 function isReportPeriodKind(value: unknown): value is HouseReportPeriodKind {
@@ -1587,11 +1571,9 @@ export function HouseReportsWorkspace({
                 className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={getStatusBadgeClasses(report.lifecycleStatus)}>
-                    <span className="inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium">
-                      {getStatusLabel(report.lifecycleStatus)}
-                    </span>
-                  </span>
+                  <AdminStatusBadge tone={statusToneFor(report.lifecycleStatus)}>
+                    {statusLabelFor(report.lifecycleStatus)}
+                  </AdminStatusBadge>
                   <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                     {normalizeReportCategory(report.categoryTitle) || "Без категорії"}
                   </span>

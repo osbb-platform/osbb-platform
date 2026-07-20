@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
@@ -1262,28 +1264,6 @@ export function HousePlanWorkspace({
                   ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                   : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
 
-            const statusLabel =
-              task.status === "planned"
-                ? "Заплановано"
-                : task.status === "in_progress"
-                  ? "В роботі"
-                  : task.status === "completed"
-                    ? "Виконано"
-                    : task.status === "archived"
-                      ? "Архів"
-                      : "Чернетка";
-
-            const statusClasses =
-              task.status === "planned"
-                ? "border border-sky-300 bg-sky-100 text-sky-700"
-                : task.status === "in_progress"
-                  ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                  : task.status === "completed"
-                    ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                    : task.status === "archived"
-                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]"
-                      : "border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
-
             return (
               <button
                 key={task.id}
@@ -1299,9 +1279,9 @@ export function HousePlanWorkspace({
                   <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}>
                     {priorityLabel}
                   </span>
-                  <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}>
-                    {statusLabel}
-                  </span>
+                  <AdminStatusBadge tone={statusToneFor(task.status)}>
+                    {statusLabelFor(task.status, { completed: "Виконано" })}
+                  </AdminStatusBadge>
                 </div>
 
                 <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">

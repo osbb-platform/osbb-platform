@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
@@ -59,24 +61,6 @@ function getPostDate(content: Record<string, unknown>) {
     typeof content.createdAt === "string" ? content.createdAt : null;
 
   return publishedAt ?? createdAt ?? "";
-}
-
-function getFaqStatusLabel(status: HouseFaqSnapshot["status"]) {
-  if (status === "published") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getFaqStatusClass(status: HouseFaqSnapshot["status"]) {
-  if (status === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (status === "archived") {
-    return "border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]";
-  }
-
-  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
 }
 
 export function HouseInformationWorkspace({
@@ -496,15 +480,9 @@ export function HouseInformationWorkspace({
                             <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                               {formatAdminDate(getPostDate(content), "Дату не вказано")}
                             </span>
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                                section.status === "published"
-                                  ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                                  : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                              }`}
-                            >
-                              {section.status === "published" ? "Активна" : "Чернетка"}
-                            </span>
+                            <AdminStatusBadge tone={statusToneFor(section.status)}>
+                              {statusLabelFor(section.status)}
+                            </AdminStatusBadge>
                             {Boolean(content.isPinned) ? (
                               <span className="inline-flex rounded-full border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-success-text)]">
                                 PIN
@@ -565,11 +543,9 @@ export function HouseInformationWorkspace({
                       className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${getFaqStatusClass(faq.status)}`}
-                        >
-                          {getFaqStatusLabel(faq.status)}
-                        </span>
+                        <AdminStatusBadge tone={statusToneFor(faq.status)}>
+                          {statusLabelFor(faq.status)}
+                        </AdminStatusBadge>
                         <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
                           Запитань: {faq.items.length}
                         </span>

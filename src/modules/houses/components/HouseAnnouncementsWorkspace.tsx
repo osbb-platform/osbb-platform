@@ -9,7 +9,11 @@ import { EditAnnouncementSectionForm } from "@/src/modules/houses/components/Edi
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
-import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import {
+  AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor,
+} from "@/src/shared/ui/admin/AdminStatusBadge";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 import {
@@ -55,20 +59,6 @@ function getSortTimestamp(content: Record<string, unknown>) {
   }
 
   return 0;
-}
-
-function getStatusLabel(status: AnnouncementItem["status"]) {
-  if (status === "published") return "Опубліковано";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getStatusTone(
-  status: AnnouncementItem["status"],
-): "success" | "warning" | "neutral" | "info" {
-  if (status === "published") return "success";
-  if (status === "archived") return "neutral";
-  return "info";
 }
 
 function getLevelLabel(level: string) {
@@ -412,8 +402,8 @@ export function HouseAnnouncementsWorkspace({
                       <span className="text-xs font-medium uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Оголошення #{index + 1}
                       </span>
-                      <AdminStatusBadge tone={getStatusTone(section.status)}>
-                        {getStatusLabel(section.status)}
+                      <AdminStatusBadge tone={statusToneFor(section.status)}>
+                        {statusLabelFor(section.status)}
                       </AdminStatusBadge>
                     </div>
 

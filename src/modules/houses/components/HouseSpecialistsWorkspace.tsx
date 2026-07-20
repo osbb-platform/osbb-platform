@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
@@ -145,12 +147,6 @@ function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
     sortOrder: item.content.sortOrder,
     status: item.status,
   };
-}
-
-function getStatusLabel(status: WorkspaceTab) {
-  if (status === "published") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
 }
 
 function sortSpecialists(items: HouseSpecialistSnapshot[]) {
@@ -918,9 +914,9 @@ export function HouseSpecialistsWorkspace({
                 className="block w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
               >
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                    {getStatusLabel(item.status)}
-                  </span>
+                  <AdminStatusBadge tone={statusToneFor(item.status)}>
+                    {statusLabelFor(item.status)}
+                  </AdminStatusBadge>
 
                   {item.content.category ? (
                     <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">

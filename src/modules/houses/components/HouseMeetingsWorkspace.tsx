@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import { useMemo, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -284,24 +286,6 @@ function splitMeetingDateTime(value: string) {
     date: `${year}-${month}-${day}`,
     time: `${hours}:${minutes}`,
   };
-}
-
-function getMeetingStatusLabel(status: MeetingLifecycleStatus) {
-  if (status === "draft") return "Чернетка";
-  if (status === "scheduled") return "Заплановано";
-  if (status === "active") return "Голосування";
-  if (status === "review") return "Перевірка";
-  if (status === "completed") return "Рішення";
-  return "Архів";
-}
-
-function getMeetingStatusBadgeClasses(status: MeetingLifecycleStatus) {
-  if (status === "draft") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
-  if (status === "scheduled") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
-  if (status === "active") return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  if (status === "review") return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
-  if (status === "completed") return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
-  return "border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
 }
 
 function combineMeetingDateTime(date: string, time: string) {
@@ -1373,13 +1357,9 @@ export function HouseMeetingsWorkspace({
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {meeting.title || "Без назви"}
                 </div>
-                <span
-                  className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-[11px] font-medium uppercase tracking-wide ${getMeetingStatusBadgeClasses(
-                    meeting.status,
-                  )}`}
-                >
-                  {getMeetingStatusLabel(meeting.status)}
-                </span>
+                <AdminStatusBadge tone={statusToneFor(meeting.status)}>
+                  {statusLabelFor(meeting.status)}
+                </AdminStatusBadge>
               </div>
               <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
                 {formatDate(meeting.meetingDateTime)}

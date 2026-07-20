@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
@@ -87,24 +89,6 @@ function getDocumentTypeLabel(documentType: HouseDocumentType | null) {
     foundingDocumentTypeOptions.find((item) => item.value === documentType)
       ?.label ?? "Інше"
   );
-}
-
-function getLifecycleLabel(lifecycle: HouseDocumentLifecycle) {
-  if (lifecycle === "published") return "Активний";
-  if (lifecycle === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getLifecycleClasses(lifecycle: HouseDocumentLifecycle) {
-  if (lifecycle === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (lifecycle === "archived") {
-    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
-  }
-
-  return "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
 }
 
 function formatDate(value: string | null) {
@@ -1202,11 +1186,9 @@ export function HouseDocumentsWorkspace({
                     </div>
 
                     <div className="flex flex-col items-start gap-3 lg:items-end">
-                      <span
-                        className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
-                      >
-                        {getLifecycleLabel(document.lifecycle_status)}
-                      </span>
+                      <AdminStatusBadge tone={statusToneFor(document.lifecycle_status)}>
+                        {statusLabelFor(document.lifecycle_status)}
+                      </AdminStatusBadge>
 
                       <span className="text-xs text-[var(--cms-text-soft)]">
                         Натисни для редагування
