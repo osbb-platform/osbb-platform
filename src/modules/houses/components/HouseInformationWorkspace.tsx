@@ -1,5 +1,7 @@
 "use client";
 
+import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
@@ -57,19 +59,6 @@ function getPostDate(content: Record<string, unknown>) {
     typeof content.createdAt === "string" ? content.createdAt : null;
 
   return publishedAt ?? createdAt ?? "";
-}
-
-function formatDate(value: string) {
-  if (!value) return "Дату не вказано";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 function getFaqStatusLabel(status: HouseFaqSnapshot["status"]) {
@@ -505,7 +494,7 @@ export function HouseInformationWorkspace({
                               {category}
                             </span>
                             <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                              {formatDate(getPostDate(content))}
+                              {formatAdminDate(getPostDate(content), "Дату не вказано")}
                             </span>
                             <span
                               className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
@@ -585,7 +574,7 @@ export function HouseInformationWorkspace({
                           Запитань: {faq.items.length}
                         </span>
                         <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                          Оновлено: {formatDate(faq.updatedAt)}
+                          Оновлено: {formatAdminDate(faq.updatedAt, "Дату не вказано")}
                         </span>
                       </div>
 

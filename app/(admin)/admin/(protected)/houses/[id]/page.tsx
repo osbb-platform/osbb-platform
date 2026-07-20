@@ -143,7 +143,7 @@ function HouseTechnicalPlaceholder({
   return (
     <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-        CMS заповнювач
+        Розділ тимчасово недоступний
       </div>
 
       <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
@@ -156,13 +156,12 @@ function HouseTechnicalPlaceholder({
 
       <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
         <div className="text-sm font-medium text-[var(--cms-text)]">
-          Технічна заглушка
+          Що можна зробити
         </div>
 
         <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-          Публічна сторінка для цього розділу вже передбачена у структурі
-          сайту будинку. Тут зафіксовано безпечне місце під майбутній CMS
-          редактор без зміни наявного public rendering path.
+          Оновіть сторінку через кілька хвилин. Якщо розділ не з’явиться,
+          зверніться до адміністратора платформи.
         </p>
       </div>
     </div>
@@ -432,7 +431,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="Правління"
-            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити коректність ініціалізації будинку."
+            description="Не вдалося відкрити дані правління цього будинку."
           />
         )
       ) : null}
@@ -499,7 +498,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="План робіт"
-            description="Не вдалося завантажити план робіт для цього будинку. Потрібно перевірити таблицю house_plan_tasks."
+            description="Не вдалося відкрити план робіт цього будинку."
           />
         )
       ) : null}
@@ -521,7 +520,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="Збори"
-            description="Не вдалося завантажити збори для цього будинку. Потрібно перевірити таблицю house_meetings."
+            description="Не вдалося відкрити дані зборів цього будинку."
           />
         )
       ) : null}

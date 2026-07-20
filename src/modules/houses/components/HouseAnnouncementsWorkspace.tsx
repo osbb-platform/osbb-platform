@@ -11,6 +11,7 @@ import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfi
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
+import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 import {
   adminBodyClass,
   adminDangerButtonClass,
@@ -54,20 +55,6 @@ function getSortTimestamp(content: Record<string, unknown>) {
   }
 
   return 0;
-}
-
-function formatDateTime(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return "Не опубліковано";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Не опубліковано";
-  }
-
-  return date.toLocaleString("ru-RU");
 }
 
 function getStatusLabel(status: AnnouncementItem["status"]) {
@@ -398,8 +385,8 @@ export function HouseAnnouncementsWorkspace({
                 : "info";
 
             const bodyPreview = getPreviewText(section.content.body);
-            const publishedAt = formatDateTime(section.content.publishedAt);
-            const updatedAt = formatDateTime(section.content.updatedAt);
+            const publishedAt = formatAdminDateTime(section.content.publishedAt);
+            const updatedAt = formatAdminDateTime(section.content.updatedAt);
             const isSelected =
               mode === "edit" && selectedSectionId === section.id;
 

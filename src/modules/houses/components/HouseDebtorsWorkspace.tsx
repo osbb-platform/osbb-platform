@@ -668,7 +668,7 @@ export function HouseDebtorsWorkspace({
               onClick={handleExport}
               className={adminSecondaryButtonClass}
             >
-              Export
+              Експорт
             </button>
 
             <button

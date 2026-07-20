@@ -19,6 +19,7 @@ import {
   uploadAnnouncementPdf,
 } from "@/src/modules/houses/components/announcementPdfUpload";
 import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
+import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 
 type EditAnnouncementSectionFormProps = {
   headerActions?: ReactNode;
@@ -33,20 +34,6 @@ type EditAnnouncementSectionFormProps = {
   };
   onClose?: () => void;
 };
-
-function formatDateTime(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return "Не опубліковано";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Не опубліковано";
-  }
-
-  return date.toLocaleString("ru-RU");
-}
 
 function getLevelLabel(level: string) {
   if (level === "danger") {
@@ -89,8 +76,8 @@ export function EditAnnouncementSectionForm({
     typeof section.content.level === "string" ? section.content.level : "info";
 
   const currentPdf = normalizeAnnouncementPdfFromContent(section.content.pdf);
-  const publishedAt = formatDateTime(section.content.publishedAt);
-  const updatedAt = formatDateTime(section.content.updatedAt);
+  const publishedAt = formatAdminDateTime(section.content.publishedAt);
+  const updatedAt = formatAdminDateTime(section.content.updatedAt);
 
   const isDraftLike =
     section.status === "draft";

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
@@ -136,19 +138,6 @@ function getMonthLabel(value: string | null | undefined) {
   return (
     CURRENT_MONTH_OPTIONS.find((item) => item.value === value)?.label ?? value
   );
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "Дату не вказано";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 function getStatusLabel(status: HouseReportLifecycle) {
@@ -1627,7 +1616,7 @@ export function HouseReportsWorkspace({
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--cms-text-soft)]">
-                  <span>{formatDate(report.reportDate)}</span>
+                  <span>{formatAdminDate(report.reportDate, "Дату не вказано")}</span>
                   <span>·</span>
                   <span>
                     {formatReportPeriodLabel(report)}
