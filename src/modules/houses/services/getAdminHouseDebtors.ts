@@ -38,6 +38,8 @@ export type HouseDebtorsItemSnapshot = {
   lifecycleStatus: "draft" | "published" | "archived";
   createdAt: string;
   updatedAt: string;
+  monthsInDebt?: number;
+  seriesBroken?: boolean;
 };
 
 export type HouseDebtorMonthSnapshotSummary = {

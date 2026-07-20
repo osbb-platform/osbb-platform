@@ -21,6 +21,8 @@ type DebtorItem = {
   area: number | null;
   amount: string;
   days: string;
+  monthsInDebt: number;
+  seriesBroken: boolean;
 };
 
 type PaymentSettings = {
@@ -111,6 +113,11 @@ function normalizeItems(value: unknown): DebtorItem[] {
             : null,
         amount: String(raw.amount ?? "").trim(),
         days: String(raw.days ?? "").trim(),
+        monthsInDebt:
+          typeof raw.monthsInDebt === "number" && Number.isFinite(raw.monthsInDebt)
+            ? raw.monthsInDebt
+            : Number(String(raw.days ?? "0")) || 0,
+        seriesBroken: Boolean(raw.seriesBroken),
       };
     })
     .filter((item): item is DebtorItem => Boolean(item?.apartmentId))
@@ -157,6 +164,18 @@ function normalizePayment(value: unknown): PaymentSettings {
     buttonLabel:
       String(raw.buttonLabel ?? "Оплатити").trim() || "Оплатити",
   };
+}
+
+const PERIOD_MONTHS = [
+  "січень", "лютий", "березень", "квітень", "травень", "червень",
+  "липень", "серпень", "вересень", "жовтень", "листопад", "грудень",
+];
+
+function formatPeriodLabel(
+  period: { periodYear: number; periodMonth: number } | null | undefined,
+) {
+  if (!period) return "—";
+  return `${PERIOD_MONTHS[period.periodMonth - 1] ?? period.periodMonth} ${period.periodYear}`;
 }
 
 function formatUpdatedAt(value: unknown) {
@@ -238,10 +257,12 @@ export default async function DebtorsPage({
         payment: debtors.payment,
         calculator: debtors.calculator,
         activeItems: debtors.activeItems,
+        latestPublishedMonth: debtors.latestPublishedMonth,
       }
     : null;
 
   const updatedAtLabel = formatUpdatedAt(content?.updatedAt);
+  const latestPeriodLabel = formatPeriodLabel(content?.latestPublishedMonth);
   const payment = normalizePayment(content?.payment);
   const calculator = normalizeCalculator(content?.calculator);
   const balanceItems = normalizeItems(content?.activeItems);
@@ -274,7 +295,7 @@ export default async function DebtorsPage({
         </p>
 
         <div className="mt-6 inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-2 text-sm font-medium text-[var(--pub-text-muted)]">
-          Дата актуальності: {updatedAtLabel}
+          Актуальний період: {latestPeriodLabel} · Опубліковано: {updatedAtLabel}
         </div>
       </section>
 
@@ -361,6 +382,9 @@ export default async function DebtorsPage({
                       Баланс
                     </th>
                     <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
+                      Місяців у боргу
+                    </th>
+                    <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Статус
                     </th>
                   </tr>
@@ -383,6 +407,9 @@ export default async function DebtorsPage({
                         </td>
                         <td className={`px-5 py-4 text-sm font-semibold ${getBalanceTextClass(amount)}`}>
                           {formatSignedBalance(amount)}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
+                          {isDebtBalance(item.amount) ? item.monthsInDebt : "—"}
                         </td>
                         <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
                           {getBalanceStatus(amount)}
