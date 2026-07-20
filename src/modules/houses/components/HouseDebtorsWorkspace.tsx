@@ -187,6 +187,24 @@ function formatSummaryAmount(items: DebtSnapshotItem[]) {
   }).format(total);
 }
 
+function getPreviousCalendarPeriod(now = new Date()) {
+  const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  return {
+    year: previousMonth.getFullYear(),
+    month: previousMonth.getMonth() + 1,
+  };
+}
+
+const MONTH_OPTIONS = [
+  "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+  "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+];
+
+function formatPeriodLabel(year: number, month: number) {
+  return `${MONTH_OPTIONS[month - 1] ?? month} ${year}`;
+}
+
 export function HouseDebtorsWorkspace({
   houseId,
   houseSlug,
@@ -206,6 +224,10 @@ export function HouseDebtorsWorkspace({
   >(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const previousPeriod = useMemo(() => getPreviousCalendarPeriod(), []);
+  const [periodYear, setPeriodYear] = useState(previousPeriod.year);
+  const [periodMonth, setPeriodMonth] = useState(previousPeriod.month);
+  const [periodConfirmed, setPeriodConfirmed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const content =
@@ -258,6 +280,20 @@ export function HouseDebtorsWorkspace({
     () => previewItems.filter((item) => isDebtBalance(item.amount)).length,
     [previewItems],
   );
+
+  const monthlyImportRows = useMemo(
+    () =>
+      previewItems.map((item) => ({
+        accountNumber: item.accountNumber,
+        closingBalance: parseBalanceAmount(item.amount),
+        debtSourceValue: isDebtBalance(item.amount)
+          ? Math.abs(parseBalanceAmount(item.amount))
+          : null,
+      })),
+    [previewItems],
+  );
+
+  const monthlyMissingApartmentsCount = workingRows.length - previewItems.length;
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -328,29 +364,31 @@ export function HouseDebtorsWorkspace({
   }
 
   async function submitDraftSave() {
-    if (!debtors) return;
+    if (!debtors || !periodConfirmed) return;
 
     setSubmittedMode("save_draft");
 
     const saved = await dispatch({
-      type: "debtors.saveDraftItems",
+      type: "debtors.importMonthDraft",
       houseId,
       payload: {
-        items: previewItems.map((item) => ({
-          apartmentId: item.apartmentId,
-          apartmentLabel: item.apartmentLabel,
-          accountNumber: item.accountNumber,
-          ownerName: item.ownerName,
-          area: item.area,
-          amount: normalizeDecimalInput(item.amount),
-          days: item.days.trim(),
-        })),
+        periodYear,
+        periodMonth,
+        source: "manual_import",
+        importMeta: {
+          flow: "admin_cleaned_import",
+          confirmedPeriod: `${periodYear}-${String(periodMonth).padStart(2, "0")}`,
+          rowsCount: monthlyImportRows.length,
+          missingApartmentsCount: monthlyMissingApartmentsCount,
+        },
+        rows: monthlyImportRows,
       },
     });
 
     if (!saved) return;
 
     setIsPreviewOpen(false);
+    setPeriodConfirmed(false);
     setActiveTab("draft");
   }
 
@@ -642,6 +680,54 @@ export function HouseDebtorsWorkspace({
         onChange={handleImportFileChange}
         className="hidden"
       />
+
+      {activeTab === "all" ? (
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_180px] lg:items-end">
+            <div>
+              <div className="text-sm font-semibold text-[var(--cms-text)]">Звітний період</div>
+              <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
+                За замовчуванням вибрано попередній календарний місяць.
+              </p>
+            </div>
+            <select
+              value={periodMonth}
+              onChange={(event) => {
+                setPeriodMonth(Number(event.target.value));
+                setPeriodConfirmed(false);
+              }}
+              className={adminInputClass}
+            >
+              {MONTH_OPTIONS.map((label, index) => (
+                <option key={label} value={index + 1}>{label}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min={2000}
+              max={2100}
+              value={periodYear}
+              onChange={(event) => {
+                setPeriodYear(Number(event.target.value));
+                setPeriodConfirmed(false);
+              }}
+              className={adminInputClass}
+            />
+          </div>
+
+          <label className="mt-4 flex items-start gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3">
+            <input
+              type="checkbox"
+              checked={periodConfirmed}
+              onChange={(event) => setPeriodConfirmed(event.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm text-[var(--cms-text)]">
+              Підтвердіть місяць: {formatPeriodLabel(periodYear, periodMonth)}
+            </span>
+          </label>
+        </div>
+      ) : null}
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
         <input
@@ -1228,6 +1314,12 @@ export function HouseDebtorsWorkspace({
                 <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}
                 </span>
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                  Період: {formatPeriodLabel(periodYear, periodMonth)}
+                </span>
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
+                  Квартир без рядка: {monthlyMissingApartmentsCount}
+                </span>
               </div>
             </div>
 
@@ -1278,11 +1370,16 @@ export function HouseDebtorsWorkspace({
 
                 <button
                   type="button"
-                  disabled={isPreviewEmpty || !debtors || isPending}
+                  disabled={
+                    isPreviewEmpty ||
+                    !debtors ||
+                    !periodConfirmed ||
+                    isPending
+                  }
                   onClick={submitDraftSave}
                   className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
-                  {isPending ? "Зберігаємо..." : "Зберегти в чернетку"}
+                  {isPending ? "Зберігаємо..." : "Створити місячну чернетку"}
                 </button>
               </div>
             </div>
