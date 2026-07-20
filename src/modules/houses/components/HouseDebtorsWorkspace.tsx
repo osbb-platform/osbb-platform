@@ -239,6 +239,9 @@ export function HouseDebtorsWorkspace({
           draftItems: debtors.draftItems,
           updatedAt: debtors.updatedAt,
           settingsLockVersion: debtors.settingsLockVersion,
+          monthSnapshots: debtors.monthSnapshots,
+          draftMonthSnapshots: debtors.draftMonthSnapshots,
+          latestPublishedMonth: debtors.latestPublishedMonth,
         }
       : {};
 
@@ -250,6 +253,9 @@ export function HouseDebtorsWorkspace({
   );
   const activeItems = normalizeSnapshotItems(content.activeItems);
   const draftItems = normalizeSnapshotItems(content.draftItems);
+  const monthSnapshots = debtors?.monthSnapshots ?? [];
+  const draftMonthSnapshot = debtors?.draftMonthSnapshots[0] ?? null;
+  const latestPublishedMonth = debtors?.latestPublishedMonth ?? null;
 
   const overlayItems = draftItems.length > 0 ? draftItems : activeItems;
 
@@ -439,14 +445,17 @@ export function HouseDebtorsWorkspace({
   }
 
   async function publishDraft() {
-    if (!debtors) return;
+    if (!debtors || !draftMonthSnapshot) return;
 
     setSubmittedMode("publish_draft");
 
     const published = await dispatch({
-      type: "debtors.publishDraft",
+      type: "debtors.publishMonthSnapshot",
       houseId,
-      payload: {},
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+      },
     });
 
     if (!published) return;
@@ -455,19 +464,41 @@ export function HouseDebtorsWorkspace({
   }
 
   async function deleteDraft() {
-    if (!debtors) return;
+    if (!debtors || !draftMonthSnapshot) return;
 
     setSubmittedMode("delete_draft");
 
     const deleted = await dispatch({
-      type: "debtors.deleteDraft",
+      type: "debtors.discardMonthSnapshot",
       houseId,
-      payload: {},
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+      },
     });
 
     if (!deleted) return;
 
     setActiveTab("all");
+  }
+
+  async function relabelDraftMonth() {
+    if (!debtors || !draftMonthSnapshot) return;
+
+    const relabelled = await dispatch({
+      type: "debtors.relabelMonthSnapshot",
+      houseId,
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+        periodYear,
+        periodMonth,
+      },
+    });
+
+    if (!relabelled) return;
+
+    setPeriodConfirmed(false);
   }
 
   function buildReferenceRows(rows: DebtSnapshotItem[]): DebtorsSpreadsheetRow[] {
@@ -584,8 +615,8 @@ export function HouseDebtorsWorkspace({
     isDebtBalance(item.amount),
   ).length;
   void draftDebtorsCount;
-  const isDraftEmpty = draftBalanceRowsCount === 0;
-  const isPublishedEmpty = publishedBalanceRowsCount === 0;
+  const isDraftEmpty = draftMonthSnapshot === null;
+  const isPublishedEmpty = latestPublishedMonth === null;
   const isPreviewEmpty = previewItems.length === 0;
   const trimmedPaymentUrl = payment.url.trim();
   const hasPaymentUrl = Boolean(trimmedPaymentUrl);
@@ -782,35 +813,87 @@ export function HouseDebtorsWorkspace({
           Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
         </div>
       ) : null}
-      {activeTab === "draft" && !isDraftEmpty ? (
-        <div className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[var(--cms-warning-text)]">
-              Чернетка готова до публікації
-            </p>
-            <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
-              Після публікації поточний опублікований список буде повністю замінено.
-            </p>
+      {activeTab === "draft" && draftMonthSnapshot ? (
+        <div className="space-y-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[var(--cms-warning-text)]">
+                Чернетка готова до публікації
+              </p>
+              <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
+                {formatPeriodLabel(
+                  draftMonthSnapshot.periodYear,
+                  draftMonthSnapshot.periodMonth,
+                )} · Ревізія {draftMonthSnapshot.revision} · Рядків: {draftMonthSnapshot.rowsCount}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={deleteDraft}
+                disabled={isPending}
+                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              >
+                Видалити чернетку
+              </button>
+
+              <button
+                type="button"
+                onClick={publishDraft}
+                disabled={isPending}
+                className={`${adminPrimaryButtonClass} disabled:opacity-50`}
+              >
+                Підтвердити публікацію
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={deleteDraft}
-              disabled={isPending}
-              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
-            >
-              Видалити чернетку
-            </button>
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-surface)] p-4">
+            <div className="text-sm font-medium text-[var(--cms-text)]">
+              Змінити період чернетки
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+              <select
+                value={periodMonth}
+                onChange={(event) =>
+                  setPeriodMonth(Number(event.target.value))
+                }
+                className={adminInputClass}
+              >
+                {MONTH_OPTIONS.map((label, index) => (
+                  <option key={label} value={index + 1}>
+                    {label}
+                  </option>
+                ))}
+              </select>
 
-            <button
-              type="button"
-              onClick={publishDraft}
-              disabled={isPending}
-              className={`${adminPrimaryButtonClass} disabled:opacity-50`}
-            >
-              Підтвердити публікацію
-            </button>
+              <input
+                type="number"
+                min={2000}
+                max={2100}
+                value={periodYear}
+                onChange={(event) =>
+                  setPeriodYear(Number(event.target.value))
+                }
+                className={adminInputClass}
+              />
+
+              <button
+                type="button"
+                onClick={relabelDraftMonth}
+                disabled={
+                  isPending ||
+                  (
+                    periodYear === draftMonthSnapshot.periodYear &&
+                    periodMonth === draftMonthSnapshot.periodMonth
+                  )
+                }
+                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              >
+                Змінити період
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -821,6 +904,71 @@ export function HouseDebtorsWorkspace({
           Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
         </div>
       ) : null}
+
+      {latestPublishedMonth ? (
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--cms-success-text)]">
+            Актуальний опублікований період
+          </div>
+          <div className="mt-2 text-base font-semibold text-[var(--cms-success-text)]">
+            {formatPeriodLabel(
+              latestPublishedMonth.periodYear,
+              latestPublishedMonth.periodMonth,
+            )} · Ревізія {latestPublishedMonth.revision}
+          </div>
+          <div className="mt-1 text-xs text-[var(--cms-success-text)]">
+            Рядків: {latestPublishedMonth.rowsCount}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+        <div className="text-base font-semibold text-[var(--cms-text)]">
+          Історія по місяцях
+        </div>
+
+        {monthSnapshots.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--cms-text-muted)]">
+            Місячних знімків поки немає.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {monthSnapshots.map((snapshot) => {
+              const statusLabel =
+                snapshot.status === "published"
+                  ? "Опубліковано"
+                  : snapshot.status === "draft"
+                    ? "Чернетка"
+                    : snapshot.status === "superseded"
+                      ? "Замінено"
+                      : "Відхилено";
+
+              return (
+                <div
+                  key={snapshot.id}
+                  className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <div className="text-sm font-medium text-[var(--cms-text)]">
+                      {formatPeriodLabel(
+                        snapshot.periodYear,
+                        snapshot.periodMonth,
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                      Ревізія {snapshot.revision} · Рядків: {snapshot.rowsCount}
+                    </div>
+                  </div>
+
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                    {statusLabel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       {activeTab === "all" ? (
         <div
           className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
