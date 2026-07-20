@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+
 import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
@@ -586,39 +588,16 @@ export function HouseDebtorsWorkspace({
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            {[
+          <AdminSegmentedTabs
+            items={[
               { key: "all", label: "Усі квартири", count: totalApartmentsCount },
               { key: "published", label: "Опубліковано", count: publishedBalanceRowsCount },
               { key: "draft", label: "Чернетка", count: draftBalanceRowsCount },
-            ].map((tab) => {
-              const isActive = activeTab === tab.key;
-
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key as WorkspaceTab)}
-                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
-                      isActive
-                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+            ]}
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as WorkspaceTab)}
+            ariaLabel="Фільтр боржників"
+          />
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+
 import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
@@ -809,35 +811,16 @@ export function HousePlanWorkspace({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            {[
-              ["active", "Активні", counters.active],
-              ["draft", "Чернетки", counters.draft],
-              ["archive", "Архів", counters.archive],
-            ].map(([key, label, count]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveTab(key as WorkspaceTab)}
-                className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
-                  activeTab === key
-                    ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                    : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                }`}
-              >
-                <span>{label}</span>
-                <span
-                  className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
-                    activeTab === key
-                      ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                      : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            ))}
-          </div>
+          <AdminSegmentedTabs
+            items={[
+              { key: "active", label: "Активні", count: counters.active },
+              { key: "draft", label: "Чернетки", count: counters.draft },
+              { key: "archive", label: "Архів", count: counters.archive },
+            ]}
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as WorkspaceTab)}
+            ariaLabel="Фільтр плану робіт"
+          />
         </div>
       </div>
 

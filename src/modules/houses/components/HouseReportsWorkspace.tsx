@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+
 import { AdminStatusBadge, statusLabelFor, statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
@@ -962,40 +964,17 @@ export function HouseReportsWorkspace({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            {[
-              ["current", "Поточний рік", currentReports.length],
-              ["past", "Минулі роки", pastReports.length],
-              ["draft", "Чернетки", draftReports.length],
-              ["archive", "Архів", archivedReports.length],
-            ].map(([key, label, count]) => {
-              const isActive = activeTab === key;
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleTabChange(key as TabKey)}
-                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  }`}
-                >
-                  <span>{label}</span>
-                  <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
-                      isActive
-                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <AdminSegmentedTabs
+            items={[
+              { key: "current", label: "Поточний рік", count: currentReports.length },
+              { key: "past", label: "Минулі роки", count: pastReports.length },
+              { key: "draft", label: "Чернетки", count: draftReports.length },
+              { key: "archive", label: "Архів", count: archivedReports.length },
+            ]}
+            activeKey={activeTab}
+            onChange={(key) => handleTabChange(key as TabKey)}
+            ariaLabel="Фільтр звітів"
+          />
 
           <button
             type="button"
