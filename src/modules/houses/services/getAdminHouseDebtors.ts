@@ -2,6 +2,8 @@ import { unstable_noStore as noStore } from "next/cache";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type {
+  HouseDebtorMonthRow,
+  HouseDebtorMonthSnapshot,
   HouseDebtorsItem,
   HouseDebtorsSettings,
 } from "@/src/modules/content-engine/v2/handlers/debtors";
@@ -38,6 +40,30 @@ export type HouseDebtorsItemSnapshot = {
   updatedAt: string;
 };
 
+export type HouseDebtorMonthSnapshotSummary = {
+  id: string;
+  periodYear: number;
+  periodMonth: number;
+  revision: number;
+  source:
+    | "manual_import"
+    | "buffer_1c"
+    | "manual_edit"
+    | "migration_legacy";
+  status:
+    | "draft"
+    | "published"
+    | "superseded"
+    | "discarded";
+  rowsCount: number;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lockVersion: number;
+  importMeta: Record<string, unknown>;
+};
+
+
 export type AdminHouseDebtorsSnapshot = {
   settingsId: string | null;
   settingsLockVersion: number;
@@ -47,6 +73,9 @@ export type AdminHouseDebtorsSnapshot = {
   activeItems: HouseDebtorsItemSnapshot[];
   draftItems: HouseDebtorsItemSnapshot[];
   archivedItems: HouseDebtorsItemSnapshot[];
+  monthSnapshots: HouseDebtorMonthSnapshotSummary[];
+  draftMonthSnapshots: HouseDebtorMonthSnapshotSummary[];
+  latestPublishedMonth: HouseDebtorMonthSnapshotSummary | null;
 };
 
 export const DEFAULT_DEBTORS_PAYMENT: HouseDebtorsPaymentSnapshot = {
@@ -137,6 +166,27 @@ function sortItems(
   });
 }
 
+function mapMonthSnapshot(
+  snapshot: HouseDebtorMonthSnapshot,
+  rowsCount: number,
+): HouseDebtorMonthSnapshotSummary {
+  return {
+    id: snapshot.id,
+    periodYear: snapshot.period_year,
+    periodMonth: snapshot.period_month,
+    revision: snapshot.revision,
+    source: snapshot.source,
+    status: snapshot.status,
+    rowsCount,
+    publishedAt: snapshot.published_at,
+    createdAt: snapshot.created_at,
+    updatedAt: snapshot.updated_at,
+    lockVersion: snapshot.lock_version,
+    importMeta: snapshot.import_meta ?? {},
+  };
+}
+
+
 async function ensureSettings(params: {
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   houseId: string;
@@ -204,23 +254,89 @@ export async function getAdminHouseDebtors(params: {
     });
   }
 
-  const { data: itemsData, error: itemsError } = await supabase
-    .from("house_debtors_items")
-    .select("*")
-    .eq("house_id", params.houseId)
-    .order("apartment_label", { ascending: true })
-    .order("updated_at", { ascending: false });
+  const [
+    itemsResult,
+    monthSnapshotsResult,
+    monthRowsResult,
+  ] = await Promise.all([
+    supabase
+      .from("house_debtors_items")
+      .select("*")
+      .eq("house_id", params.houseId)
+      .order("apartment_label", { ascending: true })
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("house_debtor_month_snapshots")
+      .select("*")
+      .eq("house_id", params.houseId)
+      .order("period_year", { ascending: false })
+      .order("period_month", { ascending: false })
+      .order("revision", { ascending: false }),
+    supabase
+      .from("house_debtor_month_rows")
+      .select("snapshot_id")
+      .eq("house_id", params.houseId),
+  ]);
 
-  if (itemsError) {
+  if (itemsResult.error) {
     console.error(
       "Failed to load admin house debtors items:",
-      itemsError.message,
+      itemsResult.error.message,
     );
   }
+
+  if (monthSnapshotsResult.error) {
+    console.error(
+      "Failed to load admin debtor month snapshots:",
+      monthSnapshotsResult.error.message,
+    );
+  }
+
+  if (monthRowsResult.error) {
+    console.error(
+      "Failed to load admin debtor month row counts:",
+      monthRowsResult.error.message,
+    );
+  }
+
+  const itemsData = itemsResult.data;
 
   const mappedItems = ((itemsData ?? []) as unknown as HouseDebtorsItem[])
     .map(mapItem)
     .sort(sortItems);
+
+  const monthRowCounts = new Map<string, number>();
+
+  for (
+    const row of
+      (monthRowsResult.data ?? []) as Pick<
+        HouseDebtorMonthRow,
+        "snapshot_id"
+      >[]
+  ) {
+    monthRowCounts.set(
+      row.snapshot_id,
+      (monthRowCounts.get(row.snapshot_id) ?? 0) + 1,
+    );
+  }
+
+  const monthSnapshots = (
+    (monthSnapshotsResult.data ?? []) as HouseDebtorMonthSnapshot[]
+  ).map((snapshot) =>
+    mapMonthSnapshot(
+      snapshot,
+      monthRowCounts.get(snapshot.id) ?? 0,
+    ),
+  );
+
+  const draftMonthSnapshots = monthSnapshots.filter(
+    (snapshot) => snapshot.status === "draft",
+  );
+
+  const latestPublishedMonth =
+    monthSnapshots.find(
+      (snapshot) => snapshot.status === "published",
+    ) ?? null;
 
   const mappedSettings = mapSettings(settings);
 
@@ -244,5 +360,8 @@ export async function getAdminHouseDebtors(params: {
     archivedItems: mappedItems.filter(
       (item) => item.lifecycleStatus === "archived",
     ),
+    monthSnapshots,
+    draftMonthSnapshots,
+    latestPublishedMonth,
   };
 }

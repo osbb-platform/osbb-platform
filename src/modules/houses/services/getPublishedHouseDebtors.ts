@@ -62,6 +62,9 @@ function emptySnapshot(): AdminHouseDebtorsSnapshot {
     activeItems: [],
     draftItems: [],
     archivedItems: [],
+    monthSnapshots: [],
+    draftMonthSnapshots: [],
+    latestPublishedMonth: null,
   };
 }
 
@@ -150,6 +153,9 @@ async function loadPublishedHouseDebtors(
     activeItems,
     draftItems: [],
     archivedItems: [],
+    monthSnapshots: [],
+    draftMonthSnapshots: [],
+    latestPublishedMonth: null,
   };
 }
 
