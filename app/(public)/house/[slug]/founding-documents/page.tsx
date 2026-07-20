@@ -120,6 +120,9 @@ export default async function FoundingDocumentsPage({
                   filePath={document.storage_path ?? ""}
                   fileName={document.original_file_name || document.title}
                   bucket="house-documents"
+                  entityType="house_document"
+                  entityId={document.id}
+                  fieldKey="pdf"
                   analyticsHouseId={house.id}
                   analyticsHouseSlug={house.slug}
                   analyticsEntityId={document.id}

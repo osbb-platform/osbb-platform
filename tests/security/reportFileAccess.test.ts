@@ -35,7 +35,7 @@ describe("resolveSignedFileUrl security helpers", () => {
     expect(normalizeFileEntityType("house_report")).toBe("house_report");
     expect(normalizeFileEntityType("house_announcement")).toBe("house_announcement");
     expect(normalizeFileEntityType("house_plan_task")).toBe("house_plan_task");
-    expect(normalizeFileEntityType("house_document")).toBeNull();
+    expect(normalizeFileEntityType("house_document")).toBe("house_document");
     expect(normalizeFileEntityType("")).toBeNull();
   });
 
