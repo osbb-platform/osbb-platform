@@ -1,7 +1,8 @@
 "use client";
 
-import {
-  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
 
 import { AdminStatusBadge,
   statusLabelFor,
@@ -46,6 +47,7 @@ const PLAN_ARCHIVE_YEARS = Array.from(
 );
 
 type WorkspaceTab = "active" | "draft" | "archive";
+type ActiveStageFilter = "all" | "planned" | "in_progress" | "completed";
 type WorkspaceMode = "idle" | "create" | "edit";
 type SubmitIntent = "save" | "delete" | "publish" | "archive" | "copy";
 type CreatePlanPlacement = "active" | "archive";
@@ -275,6 +277,10 @@ export function HousePlanWorkspace({
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
+  const [activeStageFilter, setActiveStageFilter] =
+    useState<ActiveStageFilter>("all");
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   const counters = useMemo(
     () => ({
@@ -292,12 +298,16 @@ export function HousePlanWorkspace({
 
   const visibleTasks = useMemo(() => {
     if (activeTab === "active") {
-      return tasks.filter(
+      const activeTasks = tasks.filter(
         (item) =>
           item.status === "planned" ||
           item.status === "in_progress" ||
           item.status === "completed",
       );
+
+      return activeStageFilter === "all"
+        ? activeTasks
+        : activeTasks.filter((item) => item.status === activeStageFilter);
     }
 
     if (activeTab === "archive") {
@@ -305,7 +315,13 @@ export function HousePlanWorkspace({
     }
 
     return tasks.filter((item) => item.status === "draft");
-  }, [tasks, activeTab]);
+  }, [tasks, activeTab, activeStageFilter]);
+
+  function markDirty() {
+    if (!panelDirty) {
+      setPanelDirty(true);
+    }
+  }
 
   function resetWorkspace() {
     setWorkspaceMode("idle");
@@ -320,40 +336,61 @@ export function HousePlanWorkspace({
     setPdfError(null);
     setSubmitIntent("save");
     setConfirmAction(null);
+    setPanelDirty(false);
+  }
+
+  function requestCloseWorkspace() {
+    dirtyGuard.request(resetWorkspace);
   }
 
   function openCreateMode() {
-    setActiveTab("draft");
-    setWorkspaceMode("create");
-    setSelectedTaskId(null);
-    setDraft(createEmptyTask());
-    setDraftPublishStatus("planned");
-    setCreatePlacement("active");
-    setSelectedImageFiles([]);
-    setSelectedPdfFiles([]);
-    setRemovedImageIds([]);
-    setRemovedDocumentIds([]);
-    setPdfError(null);
-    setSubmitIntent("save");
+    dirtyGuard.request(() => {
+      setActiveTab("draft");
+      setWorkspaceMode("create");
+      setSelectedTaskId(null);
+      setDraft(createEmptyTask());
+      setDraftPublishStatus("planned");
+      setCreatePlacement("active");
+      setSelectedImageFiles([]);
+      setSelectedPdfFiles([]);
+      setRemovedImageIds([]);
+      setRemovedDocumentIds([]);
+      setPdfError(null);
+      setSubmitIntent("save");
+      setPanelDirty(false);
+    });
   }
 
   function openEditMode(task: PlanTask) {
-    setWorkspaceMode("edit");
-    setSelectedTaskId(task.id);
-    setDraft(task);
-    setDraftPublishStatus(
-      task.status === "in_progress"
-        ? "in_progress"
-        : task.status === "completed"
-          ? "completed"
-          : "planned",
-    );
-    setSelectedImageFiles([]);
-    setSelectedPdfFiles([]);
-    setRemovedImageIds([]);
-    setRemovedDocumentIds([]);
-    setPdfError(null);
-    setSubmitIntent("save");
+    dirtyGuard.request(() => {
+      setWorkspaceMode("edit");
+      setSelectedTaskId(task.id);
+      setDraft(task);
+      setDraftPublishStatus(
+        task.status === "in_progress"
+          ? "in_progress"
+          : task.status === "completed"
+            ? "completed"
+            : "planned",
+      );
+      setSelectedImageFiles([]);
+      setSelectedPdfFiles([]);
+      setRemovedImageIds([]);
+      setRemovedDocumentIds([]);
+      setPdfError(null);
+      setSubmitIntent("save");
+      setPanelDirty(false);
+    });
+  }
+
+  function handleTabChange(tab: WorkspaceTab) {
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      setWorkspaceMode("idle");
+      setSelectedTaskId(null);
+      setConfirmAction(null);
+      setPanelDirty(false);
+    });
   }
 
   function updateStatus(next: PlanTaskStatus) {
@@ -407,11 +444,13 @@ export function HousePlanWorkspace({
 
   function clearSelectedImages() {
     setSelectedImageFiles([]);
+    markDirty();
   }
 
   function clearSelectedPdfs() {
     setSelectedPdfFiles([]);
     setPdfError(null);
+    markDirty();
   }
 
   function removeExistingImage(attachmentId: string) {
@@ -422,6 +461,7 @@ export function HousePlanWorkspace({
     setRemovedImageIds((prev) =>
       prev.includes(attachmentId) ? prev : [...prev, attachmentId],
     );
+    markDirty();
   }
 
   function removeExistingDocument(attachmentId: string) {
@@ -432,6 +472,7 @@ export function HousePlanWorkspace({
     setRemovedDocumentIds((prev) =>
       prev.includes(attachmentId) ? prev : [...prev, attachmentId],
     );
+    markDirty();
   }
 
   async function uploadSelectedFiles(taskId: string): Promise<UploadedPlanFile[] | null> {
@@ -824,26 +865,56 @@ export function HousePlanWorkspace({
               { key: "archive", label: "Архів", count: counters.archive },
             ]}
             activeKey={activeTab}
-            onChange={(key) => setActiveTab(key as WorkspaceTab)}
+            onChange={(key) => handleTabChange(key as WorkspaceTab)}
             ariaLabel="Фільтр плану робіт"
           />
         </div>
       </div>
 
-      {workspaceMode !== "idle" ? (
-        <div className={`${adminSurfaceClass} p-6`}>
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                {workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
-              </h3>
-              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                Нове завдання спочатку зберігається як чернетка. Після збереження картку можна повторно відкрити та змінити її статус.
-              </p>
-            </div>
+      {activeTab === "active" ? (
+        <div className="flex flex-wrap gap-2">
+          {[
+            ["all", "Усі етапи", counters.active],
+            [
+              "planned",
+              "Заплановано",
+              tasks.filter((item) => item.status === "planned").length,
+            ],
+            [
+              "in_progress",
+              "В роботі",
+              tasks.filter((item) => item.status === "in_progress").length,
+            ],
+            [
+              "completed",
+              "Виконано",
+              tasks.filter((item) => item.status === "completed").length,
+            ],
+          ].map(([key, label, count]) => (
+            <button
+              key={String(key)}
+              type="button"
+              onClick={() => setActiveStageFilter(key as ActiveStageFilter)}
+              className={adminButtonClasses({
+                variant: activeStageFilter === key ? "primary" : "secondary",
+              })}
+            >
+              {label} · {count}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-            <div className="flex shrink-0 items-center gap-2">
-              {workspaceMode === "edit" && draft.status !== "draft" && selectedTaskId ? (
+      <AdminSidePanel
+        title={workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
+        description={
+          workspaceMode === "edit" ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <AdminStatusBadge tone={statusToneFor(draft.status)}>
+                {statusLabelFor(draft.status, { completed: "Виконано" })}
+              </AdminStatusBadge>
+              <span>Оновлено: {new Date(draft.updatedAt).toLocaleString("uk-UA")}</span>
+              {draft.status !== "draft" && selectedTaskId ? (
                 <ContentWorkspaceActionButtons
                   houseId={houseId}
                   sourceId={selectedTaskId}
@@ -855,19 +926,16 @@ export function HousePlanWorkspace({
                   duplicatePanelTitle="Копії завдання в інші будинки"
                 />
               ) : null}
-
-              <button
-                type="button"
-                onClick={resetWorkspace}
-                aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              >
-                ×
-              </button>
             </div>
-          </div>
-
-          <div className="grid gap-4">
+          ) : (
+            "Нове завдання спочатку зберігається як чернетка."
+          )
+        }
+        isOpen={workspaceMode !== "idle"}
+        onClose={requestCloseWorkspace}
+      >
+        {workspaceMode !== "idle" ? (
+          <div className="grid gap-4" onChange={markDirty}>
             <input
               value={draft.title}
               onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
@@ -1172,7 +1240,7 @@ export function HousePlanWorkspace({
               </div>
             ) : null}
 
-            <div>
+            <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -1225,8 +1293,8 @@ export function HousePlanWorkspace({
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AdminSidePanel>
 
       <div className="space-y-4">
         {visibleTasks.length === 0 ? (
@@ -1255,10 +1323,17 @@ export function HousePlanWorkspace({
                   : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
 
             return (
-              <button
+              <div
                 key={task.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => openEditMode(task)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openEditMode(task);
+                  }
+                }}
                 className={`block w-full rounded-[var(--r-lg)] border p-4 text-left transition ${
                   isSelected
                     ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
@@ -1288,11 +1363,22 @@ export function HousePlanWorkspace({
                   {task.contractor ? <span>{task.contractor}</span> : null}
                   <span>Фото: {task.images.length} · PDF: {task.documents.length}</span>
                 </div>
-              </button>
+              </div>
             );
           })
         )}
       </div>
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}
