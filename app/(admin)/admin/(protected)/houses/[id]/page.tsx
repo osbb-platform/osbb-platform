@@ -302,8 +302,8 @@ export default async function AdminHouseDetailPage({
   );
 
   return (
-    <div className="flex min-h-0 flex-col gap-4 lg:h-[calc(100dvh-2rem)] lg:overflow-hidden">
-      <div className="-mx-2 shrink-0 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 shadow-[var(--cms-shadow-sm)] md:mx-0 md:px-5">
+    <div className="space-y-6">
+      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_96%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
         <div className="relative flex flex-col gap-4">
           <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
             <div className="min-w-0">
@@ -320,12 +320,12 @@ export default async function AdminHouseDetailPage({
               </span>
             </div>
 
-            <div className="mt-1 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-              <h1 className="mt-3 max-w-[calc(100%-10rem)] break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
+            <div className="mt-1 min-w-0">
+              <h1 className="mt-3 break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
               {house.name}
             </h1>
 
-              <p className="mt-2 max-w-[calc(100%-10rem)] break-words text-base leading-6 text-[var(--cms-text-muted)]">
+              <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
               {house.address}
             </p>
             </div>
@@ -400,7 +400,7 @@ export default async function AdminHouseDetailPage({
 
       <div
         id="house-section-content"
-        className="relative min-h-[320px] lg:min-h-0 lg:flex-1 lg:overflow-hidden"
+        className="relative min-h-[320px]"
         aria-busy="false"
       >
       {activeBlock === "announcements" ? (

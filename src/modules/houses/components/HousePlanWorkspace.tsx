@@ -835,7 +835,7 @@ export function HousePlanWorkspace({
   const uploadPdfDisabled = draft.documents.length + selectedPdfFiles.length >= 2;
 
   return (
-    <div className="relative flex min-h-0 flex-col gap-4 lg:h-full lg:overflow-hidden">
+    <div className="relative space-y-6">
       <PlatformSectionLoader
         active={isPending}
         delayMs={280}
@@ -843,7 +843,7 @@ export function HousePlanWorkspace({
         className="rounded-[var(--r-xl)]"
       />
 
-      <div className={`${adminSurfaceClass} shrink-0 p-5`}>
+      <div className={`${adminSurfaceClass} p-6`}>
         <div>
           <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
           <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
@@ -865,7 +865,7 @@ export function HousePlanWorkspace({
         </div>
       </div>
 
-      <div className={`${adminSurfaceClass} shrink-0 px-4 py-3`}>
+      <div className={`${adminSurfaceClass} px-4 py-3`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {activeTab === "active" ? (
             <div className="flex min-w-0 flex-wrap gap-2">
@@ -1304,7 +1304,7 @@ export function HousePlanWorkspace({
         ) : null}
       </AdminSidePanel>
 
-      <div className="min-h-0 flex-1 space-y-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+      <div className="space-y-4">
         {visibleTasks.length === 0 ? (
           <EmptyState
             title={activeTab === "active" ? "Активних завдань поки немає" : activeTab === "draft" ? "Чернеток поки немає" : "Архів завдань поки порожній"}

@@ -116,11 +116,11 @@ export function HouseSectionTabs({
     : "Ще";
 
   return (
-    <div className="relative min-w-0">
+    <div className="relative z-40 min-w-0 overflow-visible">
       <div
         role="tablist"
         aria-label="Розділи будинку"
-        className="flex min-w-0 items-center gap-2 overflow-hidden"
+        className="flex min-w-0 flex-wrap items-center gap-2 overflow-visible"
       >
         {visibleBlocks.map((block) => {
           const isActive = block.value === selectedBlock;
@@ -145,7 +145,7 @@ export function HouseSectionTabs({
         })}
 
         {overflowBlocks.length > 0 ? (
-          <div ref={menuRef} className="relative flex-none">
+          <div ref={menuRef} className="relative z-50 flex-none">
             <button
               type="button"
               aria-haspopup="menu"
@@ -165,7 +165,7 @@ export function HouseSectionTabs({
             {menuOpen ? (
               <div
                 role="menu"
-                className="absolute right-0 top-full z-50 mt-2 min-w-[220px] rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-1.5 shadow-[var(--cms-shadow-lg)]"
+                className="absolute right-0 top-full z-[90] mt-2 min-w-[220px] rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-1.5 shadow-[var(--cms-shadow-lg)]"
               >
                 {overflowBlocks.map((block) => {
                   const isActive = block.value === selectedBlock;
