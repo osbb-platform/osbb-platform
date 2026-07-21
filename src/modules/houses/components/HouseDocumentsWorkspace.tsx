@@ -27,6 +27,8 @@ import {
   adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
 
 import type {
   HouseDocumentCategory,
@@ -198,6 +200,8 @@ export function HouseDocumentsWorkspace({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [removeAttachment, setRemoveAttachment] = useState(false);
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   const isFoundingScope = documentScope === "founding";
 
@@ -312,6 +316,12 @@ export function HouseDocumentsWorkspace({
   const isPublishedEdit = formMode === "edit" && lifecycle === "published";
   const isArchivedEdit = formMode === "edit" && lifecycle === "archived";
 
+  function markDirty() {
+    if (!panelDirty) {
+      setPanelDirty(true);
+    }
+  }
+
   function resetForm() {
     setTitle("");
     setCategory("regulations");
@@ -322,6 +332,7 @@ export function HouseDocumentsWorkspace({
     setSelectedFile(null);
     setFileError(null);
     setRemoveAttachment(false);
+    setPanelDirty(false);
     setSubmitIntent("save");
     setConfirmAction(null);
 
@@ -338,46 +349,59 @@ export function HouseDocumentsWorkspace({
     resetForm();
   }
 
-  function openCreateMode() {
-    if (!embedded) {
-      setActiveTab("draft");
-    }
+  function requestCloseForm() {
+    dirtyGuard.request(closeForm);
+  }
 
-    setSelectedDocumentId(null);
-    resetForm();
-    setIsFormOpen(true);
+  function openCreateMode() {
+    dirtyGuard.request(() => {
+      if (!embedded) {
+        setActiveTab("draft");
+      }
+
+      setSelectedDocumentId(null);
+      resetForm();
+      setIsFormOpen(true);
+    });
   }
 
   function switchToEditMode(document: HouseDocumentListItem) {
-    setIsFormOpen(true);
-    setSelectedDocumentId(document.id);
-    setActionError(null);
-    setTitle(document.title);
-    setCategory(document.category);
-    setLifecycle(document.lifecycle_status);
-    setDocumentYear(
-      document.document_year ? String(document.document_year) : YEAR_OPTIONS[0],
-    );
-    setDocumentType(document.document_type ?? "statute");
-    setDescription(document.description ?? "");
-    setSelectedFile(null);
-    setFileError(null);
-    setRemoveAttachment(false);
-    setSubmitIntent("save");
-    setConfirmAction(null);
+    dirtyGuard.request(() => {
+      setIsFormOpen(true);
+      setSelectedDocumentId(document.id);
+      setActionError(null);
+      setTitle(document.title);
+      setCategory(document.category);
+      setLifecycle(document.lifecycle_status);
+      setDocumentYear(
+        document.document_year
+          ? String(document.document_year)
+          : YEAR_OPTIONS[0],
+      );
+      setDocumentType(document.document_type ?? "statute");
+      setDescription(document.description ?? "");
+      setSelectedFile(null);
+      setFileError(null);
+      setRemoveAttachment(false);
+      setPanelDirty(false);
+      setSubmitIntent("save");
+      setConfirmAction(null);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    });
   }
 
   function handleTabChange(tab: WorkspaceTab) {
-    setActiveTab(tab);
-    setIsFormOpen(false);
-    setSelectedDocumentId(null);
-    setActionError(null);
-    setConfirmAction(null);
-    resetForm();
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      setIsFormOpen(false);
+      setSelectedDocumentId(null);
+      setActionError(null);
+      setConfirmAction(null);
+      resetForm();
+    });
   }
 
   function buildDocumentYearPayload() {
@@ -643,6 +667,30 @@ export function HouseDocumentsWorkspace({
   const shouldRenderForm =
     isFormOpen && (formMode === "create" || Boolean(selectedDocument));
 
+  const panelTitle = formMode === "edit" ? editTitle : createTitle;
+  const panelDescription = selectedDocument ? (
+    <div className="flex flex-wrap items-center gap-3">
+      <AdminStatusBadge tone={statusToneFor(selectedDocument.lifecycle_status)}>
+        {statusLabelFor(selectedDocument.lifecycle_status)}
+      </AdminStatusBadge>
+      <span>Оновлено: {formatDateTime(selectedDocument.updated_at)}</span>
+      {(isPublishedEdit || isArchivedEdit) ? (
+        <ContentWorkspaceActionButtons
+          houseId={houseId}
+          sourceId={selectedDocument.id}
+          commandType="documents.duplicate"
+          duplicateTargets={duplicateTargets}
+          disabled={isPending || Boolean(fileError)}
+          isCopying={isPending && submitIntent === "copy"}
+          onCopy={copySelectedDocumentToDraft}
+          duplicatePanelTitle="Копії документа в інші будинки"
+        />
+      ) : null}
+    </div>
+  ) : (
+    "Новий документ автоматично створюється як чернетка."
+  );
+
   return (
     <div className="relative space-y-6">
       <PlatformSectionLoader
@@ -711,49 +759,18 @@ export function HouseDocumentsWorkspace({
       </div>
       ) : null}
 
-      {shouldRenderForm ? (
-        <form
-          onSubmit={handleFormSubmit}
-          className={`${adminSurfaceClass} p-6`}
-        >
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                {formMode === "edit" ? editTitle : createTitle}
-              </h3>
-              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                {formMode === "edit"
-                  ? "Картку відкрито у верхній формі. Тут можна змінити дані, замінити файл або виконати доступну дію."
-                  : "Новий документ автоматично створюється як чернетка. Завантаж один PDF файл перед збереженням."}
-              </p>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              {formMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedDocument ? (
-                <ContentWorkspaceActionButtons
-                  houseId={houseId}
-                  sourceId={selectedDocument.id}
-                  commandType="documents.duplicate"
-                  duplicateTargets={duplicateTargets}
-                  disabled={isPending || Boolean(fileError)}
-                  isCopying={isPending && submitIntent === "copy"}
-                  onCopy={copySelectedDocumentToDraft}
-                  duplicatePanelTitle="Копії документа в інші будинки"
-                />
-              ) : null}
-
-              <button
-                type="button"
-                onClick={closeForm}
-                aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
+      <AdminSidePanel
+        title={panelTitle}
+        description={panelDescription}
+        isOpen={shouldRenderForm}
+        onClose={requestCloseForm}
+      >
+        {shouldRenderForm ? (
+          <form
+            onSubmit={handleFormSubmit}
+            onChange={markDirty}
+            className="grid gap-4"
+          >
             <div>
               <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Назва документа
@@ -852,6 +869,7 @@ export function HouseDocumentsWorkspace({
                     setFileError(null);
                     setSelectedFile(file);
                     setRemoveAttachment(false);
+                    markDirty();
                   }}
                   file={selectedFile}
                   disabled={isPending}
@@ -942,6 +960,7 @@ export function HouseDocumentsWorkspace({
                               checked={removeAttachment}
                               onChange={(event) => {
                                 setRemoveAttachment(event.target.checked);
+                                markDirty();
                                 if (event.target.checked) {
                                   setSelectedFile(null);
                                   if (fileInputRef.current) {
@@ -992,6 +1011,7 @@ export function HouseDocumentsWorkspace({
                     setFileError(null);
                     setSelectedFile(file);
                     setRemoveAttachment(false);
+                    markDirty();
                   }}
                   file={selectedFile}
                   disabled={isPending}
@@ -1022,7 +1042,7 @@ export function HouseDocumentsWorkspace({
               </div>
             ) : null}
 
-            <div>
+            <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -1070,12 +1090,12 @@ export function HouseDocumentsWorkspace({
                 ) : null}
               </div>
             </div>
-          </div>
-        </form>
-      ) : null}
+          </form>
+        ) : null}
+      </AdminSidePanel>
 
       <div className={`${adminSurfaceClass} p-6`}>
-        {baseVisibleDocuments.length > 0 ? (
+        {!isFoundingScope && baseVisibleDocuments.length > 0 ? (
           <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
@@ -1126,10 +1146,17 @@ export function HouseDocumentsWorkspace({
               const hasAttachment = document.attachment_status === "uploaded";
 
               return (
-                <button
+                <div
                   key={document.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => switchToEditMode(document)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      switchToEditMode(document);
+                    }
+                  }}
                   className={[
                     "w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
                     isSelected
@@ -1211,12 +1238,23 @@ export function HouseDocumentsWorkspace({
                       </span>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}
