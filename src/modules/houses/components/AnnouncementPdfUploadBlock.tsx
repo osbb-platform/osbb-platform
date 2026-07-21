@@ -11,6 +11,7 @@ import {
   adminSecondaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { getSinglePdfHintMessage } from "@/src/shared/utils/validators/pdfUpload";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 
 type AnnouncementPdfUploadBlockProps = {
   inputId: string;
@@ -90,18 +91,22 @@ export function AnnouncementPdfUploadBlock({
           </div>
         )}
 
-        <input
-          id={inputId}
-          type="file"
+        <FileDropzone
+          inputId={inputId}
           accept="application/pdf,.pdf"
+          hint={getSinglePdfHintMessage()}
+          label={hasCurrentPdf ? "Замінити PDF" : "Додати PDF"}
           disabled={disabled}
           onChange={onChange}
-          className="sr-only"
+          file={selectedFile}
+          removalPending={removePdf}
+          error={error}
+          kind="pdf"
         />
 
         <label
           htmlFor={inputId}
-          className={`${adminSecondaryButtonClass} mt-4 inline-flex cursor-pointer ${
+          className={`${adminSecondaryButtonClass} hidden ${
             disabled ? "pointer-events-none opacity-60" : ""
           }`}
         >

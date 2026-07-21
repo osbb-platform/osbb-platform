@@ -19,6 +19,7 @@ import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import {
   adminInputClass,
   adminSurfaceClass,
@@ -1339,19 +1340,22 @@ export function HouseReportsWorkspace({
                 </div>
               ) : null}
 
-              <label className="mt-4 block">
+              <div className="mt-4 block">
                 <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Завантажити / замінити PDF
                 </span>
-                <input
-                  ref={reportPdfInputRef}
-                  key={`${workspaceMode}-${selectedReportId ?? "new"}`}
-                  type="file"
+                <FileDropzone
+                  inputRef={reportPdfInputRef}
                   accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={selectedReport?.pdf?.path ? "Замінити PDF" : "Додати PDF"}
                   onChange={handleReportPdfChange}
-                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  file={selectedPdf}
+                  disabled={isPending}
+                  saving={isPending && !selectedPdf}
+                  kind="pdf"
                 />
-              </label>
+              </div>
 
               <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
                 {getSinglePdfHintMessage()}

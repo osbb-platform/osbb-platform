@@ -17,6 +17,7 @@ import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
@@ -1008,19 +1009,22 @@ export function HousePlanWorkspace({
                 </div>
               ) : null}
 
-              <input
-                type="file"
+              <FileDropzone
+                inputId="plan-image-files-input"
                 accept="image/*"
+                hint="До 5 зображень."
+                label="Додати фото"
                 multiple
+                disabled={uploadImageDisabled}
                 onChange={handleImageChange}
-                className="hidden"
-                id="plan-image-files-input"
+                files={selectedImageFiles}
+                kind="image"
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-image-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
+                  className={`hidden inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadImageDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
@@ -1074,19 +1078,23 @@ export function HousePlanWorkspace({
                 </div>
               ) : null}
 
-              <input
-                type="file"
-                accept="application/pdf"
+              <FileDropzone
+                inputId="plan-pdf-files-input"
+                accept="application/pdf,.pdf"
+                hint="До 2 PDF, кожен — до 15 МБ."
+                label="Додати PDF"
                 multiple
+                disabled={uploadPdfDisabled}
                 onChange={handlePdfChange}
-                className="hidden"
-                id="plan-pdf-files-input"
+                files={selectedPdfFiles}
+                error={pdfError}
+                kind="pdf"
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-pdf-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
+                  className={`hidden inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadPdfDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"

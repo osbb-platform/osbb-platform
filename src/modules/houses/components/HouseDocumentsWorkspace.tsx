@@ -15,6 +15,7 @@ import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
@@ -824,10 +825,11 @@ export function HouseDocumentsWorkspace({
                 <label className={`mb-2 block ${adminTextLabelClass}`}>
                   PDF файл
                 </label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf"
+                <FileDropzone
+                  inputRef={fileInputRef}
+                  accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={hasExistingAttachment ? "Замінити PDF" : "Додати PDF"}
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
 
@@ -848,8 +850,11 @@ export function HouseDocumentsWorkspace({
 
                     setFileError(null);
                     setSelectedFile(file);
+                    setRemoveAttachment(false);
                   }}
-                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  file={selectedFile}
+                  disabled={isPending}
+                  kind="pdf"
                 />
 
                 <p className="mt-2 text-xs text-[var(--cms-text-soft)]">
@@ -960,34 +965,37 @@ export function HouseDocumentsWorkspace({
                     <label className={`mb-2 block ${adminTextLabelClass}`}>
                       Завантажити новий файл
                     </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="application/pdf"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0] ?? null;
+                <FileDropzone
+                  inputRef={fileInputRef}
+                  accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={hasExistingAttachment ? "Замінити PDF" : "Додати PDF"}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
 
-                        if (!file) {
-                          setSelectedFile(null);
-                          setFileError(null);
-                          return;
-                        }
+                    if (!file) {
+                      setSelectedFile(null);
+                      setFileError(null);
+                      return;
+                    }
 
-                        const validation = validateSinglePdfFile(file);
+                    const validation = validateSinglePdfFile(file);
 
-                        if (!validation.isValid) {
-                          setSelectedFile(null);
-                          setFileError(validation.error);
-                          event.target.value = "";
-                          return;
-                        }
+                    if (!validation.isValid) {
+                      setSelectedFile(null);
+                      setFileError(validation.error);
+                      event.target.value = "";
+                      return;
+                    }
 
-                        setFileError(null);
-                        setSelectedFile(file);
-                        setRemoveAttachment(false);
-                      }}
-                      className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
-                    />
+                    setFileError(null);
+                    setSelectedFile(file);
+                    setRemoveAttachment(false);
+                  }}
+                  file={selectedFile}
+                  disabled={isPending}
+                  kind="pdf"
+                />
 
                     {fileError ? (
                       <div role="alert" className="mt-2 text-xs text-[var(--cms-danger-text)]">{fileError}</div>
