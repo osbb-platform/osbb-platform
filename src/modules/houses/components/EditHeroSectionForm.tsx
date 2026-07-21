@@ -1,3 +1,4 @@
+// LEGACY v1: не використовується, кандидат на видалення разом із карантином legacy
 "use client";
 
 import type { FormEvent } from "react";

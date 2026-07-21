@@ -66,7 +66,6 @@ type AdminHouseDetailPageProps = {
 };
 
 const allowedBlocks = new Set([
-  "hero",
   "announcements",
   "board",
   "information",
@@ -188,7 +187,6 @@ export default async function AdminHouseDetailPage({
 
   const publicPreviewHref =
     {
-      hero: basePublicUrl,
       announcements: `${basePublicUrl}/announcements`,
       board: `${basePublicUrl}/board`,
       information: `${basePublicUrl}/information`,
