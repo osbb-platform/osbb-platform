@@ -15,6 +15,7 @@ import { HouseDebtorsWorkspace } from "@/src/modules/houses/components/HouseDebt
 import { HouseSpecialistsWorkspace } from "@/src/modules/houses/components/HouseSpecialistsWorkspace";
 import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseRequisitesWorkspace";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
+import { getHouseSectionCounters } from "@/src/modules/houses/services/getHouseSectionCounters";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
 import type { HouseAnnouncementFileInput } from "@/src/modules/content-engine/v2/handlers/announcements/types";
@@ -200,6 +201,7 @@ export default async function AdminHouseDetailPage({
       "founding-documents": `${basePublicUrl}/founding-documents`,
     }[activeBlock] ?? basePublicUrl;
 
+  const sectionCounters = await getHouseSectionCounters(house.id);
   const pages = await getAdminHousePages(house.id);
   const informationPage =
     activeBlock === "information"
@@ -403,6 +405,7 @@ export default async function AdminHouseDetailPage({
             <HouseSectionTabs
               houseId={house.id}
               activeBlock={activeBlock}
+              counters={sectionCounters}
               contentTargetId="house-section-content"
             />
 

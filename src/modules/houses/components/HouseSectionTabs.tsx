@@ -10,10 +10,15 @@ import {
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/src/shared/ui/admin/Skeleton";
+import type {
+  HouseSectionCounters,
+  HouseSectionCounterValue,
+} from "@/src/modules/houses/services/getHouseSectionCounters";
 
 type HouseSectionTabsProps = {
   houseId: string;
   activeBlock: string;
+  counters?: HouseSectionCounters;
   contentTargetId?: string;
 };
 
@@ -37,9 +42,54 @@ export function getHouseBlockLabel(value: string) {
   );
 }
 
+function CounterBadges({
+  value,
+  inverse = false,
+}: {
+  value?: HouseSectionCounterValue;
+  inverse?: boolean;
+}) {
+  const warning = value?.warning ?? 0;
+  const info = value?.info ?? 0;
+
+  if (warning <= 0 && info <= 0) return null;
+
+  return (
+    <span className="ml-1.5 inline-flex items-center gap-1">
+      {warning > 0 ? (
+        <span
+          className={`inline-flex min-w-5 items-center justify-center rounded-[var(--r-pill)] px-1.5 text-[11px] font-semibold ${
+            inverse
+              ? "bg-white/20 text-white"
+              : "bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+          }`}
+          aria-label={`Чернетки: ${warning}`}
+          title={`Чернетки: ${warning}`}
+        >
+          {warning}
+        </span>
+      ) : null}
+      {info > 0 ? (
+        <span
+          className={`inline-flex min-w-5 items-center justify-center rounded-[var(--r-pill)] px-1.5 text-[11px] font-semibold ${
+            inverse
+              ? "bg-white/20 text-white"
+              : "bg-[var(--cms-info-bg)] text-[var(--cms-info-text)]"
+          }`}
+          aria-label={`Нові звернення: ${info}`}
+          title={`Нові звернення: ${info}`}
+        >
+          {info}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function HouseSectionTabs({
   houseId,
   activeBlock,
+  counters = {},
   contentTargetId,
 }: HouseSectionTabsProps) {
   const router = useRouter();
@@ -139,7 +189,11 @@ export function HouseSectionTabs({
                   : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
               } disabled:cursor-wait disabled:opacity-70`}
             >
-              {block.label}
+              <span>{block.label}</span>
+              <CounterBadges
+                value={counters[block.value]}
+                inverse={isActive}
+              />
             </button>
           );
         })}
@@ -159,6 +213,12 @@ export function HouseSectionTabs({
               } disabled:cursor-wait disabled:opacity-70`}
             >
               <span className="truncate">{moreLabel}</span>
+              {activeIsHidden ? (
+                <CounterBadges
+                  value={counters[selectedBlock as keyof HouseSectionCounters]}
+                  inverse
+                />
+              ) : null}
               <span aria-hidden="true">▾</span>
             </button>
 
@@ -176,13 +236,14 @@ export function HouseSectionTabs({
                       type="button"
                       role="menuitem"
                       onClick={() => navigate(block.value)}
-                      className={`flex w-full items-center rounded-[var(--r-md)] px-3 py-2 text-left text-sm transition ${
+                      className={`flex w-full items-center gap-2 rounded-[var(--r-md)] px-3 py-2 text-left text-sm transition ${
                         isActive
                           ? "bg-[var(--cms-pill-bg)] font-semibold text-[var(--cms-accent-primary)]"
                           : "text-[var(--cms-text)] hover:bg-[var(--cms-surface-muted)]"
                       }`}
                     >
-                      {block.label}
+                      <span className="flex-1">{block.label}</span>
+                      <CounterBadges value={counters[block.value]} />
                     </button>
                   );
                 })}
