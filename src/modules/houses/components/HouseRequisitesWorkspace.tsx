@@ -1,19 +1,17 @@
 "use client";
 
 import type { FormEvent } from "react";
-import {
-  useMemo,
-  useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseRequisitesSnapshot } from "@/src/modules/houses/services/getAdminHouseRequisites";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { Button } from "@/src/shared/ui/admin/Button";
+import { FormField } from "@/src/shared/ui/admin/FormField";
+import { Input } from "@/src/shared/ui/admin/Input";
 import {
-  adminBodyClass,
-  adminInputClass,
-  adminSectionTitleClass,
   adminSurfaceClass,
-  adminTextLabelClass,
-  adminButtonClasses,
+  adminTextareaClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type RequisitesSnapshot = {
@@ -134,6 +132,7 @@ export function HouseRequisitesWorkspace({
   }
 
   function handleOpenSettings() {
+    if (readOnlyMode) return;
     setIsEditing(true);
   }
 
@@ -177,177 +176,199 @@ export function HouseRequisitesWorkspace({
 
   return (
     <div className="space-y-6">
-      {!isEditing ? (
-        <div className={`${adminSurfaceClass} p-6`}>
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Реквізити</h2>
-                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                  Банківські реквізити та дані для оплати, які мешканці бачать на сайті будинку.
-                </p>
-              </div>
-
-              {!readOnlyMode ? (
-                <button
-                  type="button"
-                  onClick={handleOpenSettings}
-                  className="inline-flex rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                >
-                  Редагувати
-                </button>
-              ) : null}
+      <section className={`${adminSurfaceClass} p-6`}>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-[var(--cms-text)]">
+                Реквізити
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--cms-text-muted)]">
+                Банківські реквізити та дані для оплати, які мешканці бачать на сайті будинку.
+              </p>
             </div>
 
-            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
-              <div className="space-y-3">
-                <div><span className="text-[var(--cms-text-muted)]">Отримувач:</span> {snapshot.recipient || "—"}</div>
-                <div><span className="text-[var(--cms-text-muted)]">IBAN:</span> {snapshot.iban || "—"}</div>
-                <div><span className="text-[var(--cms-text-muted)]">ЕДРПОУ:</span> {snapshot.edrpou || "—"}</div>
-                <div><span className="text-[var(--cms-text-muted)]">Банк:</span> {snapshot.bank || "—"}</div>
-                <div><span className="text-[var(--cms-text-muted)]">Призначення платежу:</span> {snapshot.purposeTemplate || "—"}</div>
-                <div className="break-words">
-                  <span className="text-[var(--cms-text-muted)]">Онлайн-оплата:</span>{" "}
-                  <span className="break-all text-[var(--cms-text)]">
-                    {snapshot.paymentUrl || "Не підключена"}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {!readOnlyMode ? (
+              <Button type="button" variant="secondary" onClick={handleOpenSettings}>
+                Редагувати
+              </Button>
+            ) : null}
           </div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className={`space-y-6 ${adminSurfaceClass} p-6`}>
-          <div className="space-y-6">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h3 className={adminSectionTitleClass}>
-                  Редагування реквізитів
-                </h3>
-                <p className={`mt-2 ${adminBodyClass}`}>
-                  Після збереження зміни одразу оновлять публічну сторінку будинку.
-                </p>
-              </div>
 
-              <button
-                type="button"
-                onClick={handleCloseEditing}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                aria-label="Закрити форму"
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              ["Отримувач", snapshot.recipient || "—"],
+              ["IBAN", snapshot.iban || "—"],
+              ["ЕДРПОУ", snapshot.edrpou || "—"],
+              ["Банк", snapshot.bank || "—"],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
               >
-                ×
-              </button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className={`mb-2 ${adminTextLabelClass}`}>
-                  Отримувач платежу
+                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                  {label}
                 </div>
-                <input
-                  value={snapshot.recipient}
-                  onChange={(e) => updateField("recipient", e.target.value)}
-                  placeholder="ОСББ Чарівна 123А"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className={adminTextLabelClass}>
-                  IBAN для копіювання
+                <div className="mt-2 break-words text-sm font-semibold text-[var(--cms-text)]">
+                  {value}
                 </div>
-                <input
-                  value={snapshot.iban}
-                  onChange={(e) => updateField("iban", normalizeIban(e.target.value))}
-                  placeholder="UA123456789012345678901234567"
-                  className={`w-full rounded-[var(--r-lg)] border px-4 py-3 text-[var(--cms-text)] ${
-                    ibanValid
-                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text)]"
-                      : "border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)]"
-                  }`}
-                />
-                {!ibanValid ? (
-                  <div className="text-xs text-[var(--cms-danger-text)]">
-                    Введіть коректний український IBAN у форматі UA + 27 цифр.
-                  </div>
-                ) : null}
               </div>
-
-              <div>
-                <div className={`mb-2 ${adminTextLabelClass}`}>
-                  ЕДРПОУ
-                </div>
-                <input
-                  value={snapshot.edrpou}
-                  onChange={(e) => updateField("edrpou", e.target.value)}
-                  placeholder="12345678"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className={`mb-2 ${adminTextLabelClass}`}>
-                  Банк отримувача
-                </div>
-                <input
-                  value={snapshot.bank}
-                  onChange={(e) => updateField("bank", e.target.value)}
-                  placeholder="ПриватБанк"
-                  className={adminInputClass}
-                />
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="space-y-4">
-            <div className={adminTextLabelClass}>
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
               Призначення платежу
             </div>
-
-            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Це текст, який буде показано мешканцю на сторінці оплати.
-            </p>
-
-            <textarea
-              value={snapshot.purposeTemplate}
-              onChange={(e) => updateField("purposeTemplate", e.target.value)}
-              rows={4}
-              placeholder="Оплата внесків за квартиру {{apartment}}, особовий рахунок {{account}}, за {{period}}"
-              className={`mt-5 ${adminInputClass}`}
-            />
+            <div className="mt-2 text-sm leading-6 text-[var(--cms-text)]">
+              {snapshot.purposeTemplate || "—"}
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div className={adminTextLabelClass}>
-              Додаткова онлайн-оплата
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+              Онлайн-оплата
+            </div>
+            <div className="mt-2 break-all text-sm text-[var(--cms-text)]">
+              {snapshot.paymentUrl
+                ? snapshot.paymentButtonLabel || "Перейти до оплати"
+                : "Не підключена"}
+            </div>
+            {snapshot.paymentUrl ? (
+              <div className="mt-1 break-all text-xs text-[var(--cms-text-muted)]">
+                {snapshot.paymentUrl}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <AdminSidePanel
+        title="Редагування реквізитів"
+        description="Після збереження зміни одразу оновлять публічну сторінку будинку."
+        isOpen={isEditing && !readOnlyMode}
+        onClose={handleCloseEditing}
+        maxWidthClassName="max-w-2xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <section className="space-y-5">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                Банківські дані
+              </div>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                Основні реквізити
+              </h3>
             </div>
 
-            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Необов’язковий блок. Якщо посилання не вказане, мешканці використовуватимуть лише реквізити вище.
-            </p>
+            <FormField label="Отримувач платежу" required>
+              <Input
+                value={snapshot.recipient}
+                onChange={(event) => updateField("recipient", event.target.value)}
+                placeholder="ОСББ Чарівна 123А"
+              />
+            </FormField>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <input
+            <FormField
+              label="IBAN для копіювання"
+              required
+              error={
+                !ibanValid
+                  ? "Введіть коректний український IBAN у форматі UA + 27 цифр."
+                  : undefined
+              }
+            >
+              <Input
+                value={snapshot.iban}
+                onChange={(event) =>
+                  updateField("iban", normalizeIban(event.target.value))
+                }
+                placeholder="UA123456789012345678901234567"
+                invalid={!ibanValid}
+              />
+            </FormField>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <FormField label="ЕДРПОУ" required>
+                <Input
+                  value={snapshot.edrpou}
+                  onChange={(event) => updateField("edrpou", event.target.value)}
+                  placeholder="12345678"
+                />
+              </FormField>
+
+              <FormField label="Банк отримувача" required>
+                <Input
+                  value={snapshot.bank}
+                  onChange={(event) => updateField("bank", event.target.value)}
+                  placeholder="ПриватБанк"
+                />
+              </FormField>
+            </div>
+          </section>
+
+          <section className="space-y-5 border-t border-[var(--cms-border)] pt-7">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                Платіж
+              </div>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                Призначення платежу
+              </h3>
+            </div>
+
+            <FormField
+              label="Шаблон призначення"
+              hint="Цей текст буде показано мешканцю на сторінці оплати."
+              required
+            >
+              <textarea
+                value={snapshot.purposeTemplate}
+                onChange={(event) =>
+                  updateField("purposeTemplate", event.target.value)
+                }
+                rows={5}
+                className={adminTextareaClass}
+              />
+            </FormField>
+          </section>
+
+          <section className="space-y-5 border-t border-[var(--cms-border)] pt-7">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                Додатково
+              </div>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                Онлайн-оплата
+              </h3>
+            </div>
+
+            <FormField label="Посилання на оплату">
+              <Input
+                type="url"
                 value={snapshot.paymentUrl}
-                onChange={(e) => updateField("paymentUrl", e.target.value)}
+                onChange={(event) => updateField("paymentUrl", event.target.value)}
                 placeholder="https://example.com/pay"
-                className={adminInputClass}
               />
-              <input
+            </FormField>
+
+            <FormField label="Текст кнопки">
+              <Input
                 value={snapshot.paymentButtonLabel}
-                onChange={(e) => updateField("paymentButtonLabel", e.target.value)}
+                onChange={(event) =>
+                  updateField("paymentButtonLabel", event.target.value)
+                }
                 placeholder="Перейти до оплати"
-                className={adminInputClass}
               />
-            </div>
-          </div>
+            </FormField>
+          </section>
 
-          <div className="space-y-4">
-            <div className={adminTextLabelClass}>
-              Попередній перегляд сторінки для мешканця
+          <section className="space-y-4 border-t border-[var(--cms-border)] pt-7">
+            <div className="text-sm font-semibold text-[var(--cms-text)]">
+              Попередній перегляд
             </div>
 
-            <div className="mt-5 rounded-[var(--r-xl)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] p-6 text-[var(--cms-text)]">
+            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-sm text-[var(--cms-text)]">
               <div className="space-y-3">
                 <div><span className="text-[var(--cms-text-muted)]">Отримувач:</span> {snapshot.recipient || "—"}</div>
                 <div><span className="text-[var(--cms-text-muted)]">IBAN:</span> {snapshot.iban || "—"}</div>
@@ -357,30 +378,39 @@ export function HouseRequisitesWorkspace({
                 <div><span className="text-[var(--cms-text-muted)]">Онлайн-оплата:</span> {snapshot.paymentUrl ? (snapshot.paymentButtonLabel || "Перейти до оплати") : "Не підключена"}</div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={isPending || !isDirty || !publishReady}
-                className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                {isPending ? "Зберігаємо..." : "Зберегти"}
-              </button>
+          <div className="flex flex-wrap items-center gap-3 border-t border-[var(--cms-border)] pt-6">
+            <Button
+              type="submit"
+              disabled={isPending || !isDirty || !publishReady}
+              loading={isPending}
+            >
+              Зберегти
+            </Button>
 
-              <button
-                type="button"
-                onClick={() => setSnapshot(DEFAULT_SNAPSHOT)}
-                disabled={isPending}
-                className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                Скинути
-              </button>
-            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseEditing}
+              disabled={isPending}
+            >
+              Скасувати
+            </Button>
+
+            <div className="min-w-0 flex-1" />
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setSnapshot(DEFAULT_SNAPSHOT)}
+              disabled={isPending}
+            >
+              Скинути
+            </Button>
           </div>
         </form>
-      )}
+      </AdminSidePanel>
     </div>
   );
 }
