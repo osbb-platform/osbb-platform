@@ -87,8 +87,8 @@ export const FILE_ENTITY_CONFIG: Record<FileEntityType, EntityConfig> = {
     table: "house_plan_tasks",
     buckets: ["house-plan-media", "house-plan-documents"],
     fieldKeys: null,
-    lifecycleColumn: null,
-    publicStatuses: null,
+    lifecycleColumn: "lifecycle_status",
+    publicStatuses: ["published", "archived"],
   },
 };
 

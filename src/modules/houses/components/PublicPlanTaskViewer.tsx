@@ -18,16 +18,22 @@ type PlanTaskDateMode = "deadline" | "range";
 
 type PlanTaskImage = {
   id: string;
+  fieldKey: string;
   path: string;
   url?: string;
+  fileName?: string;
+  bucket: string;
   kind: "image";
   createdAt: string;
 };
 
 type PlanTaskDocument = {
   id: string;
+  fieldKey: string;
   path: string;
   url?: string;
+  fileName?: string;
+  bucket: string;
   kind: "pdf";
   createdAt: string;
 };
@@ -221,7 +227,7 @@ export function PublicPlanTaskViewer({
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {task.images.map((image, index) => {
                       const href = image.path
-                        ? `/api/reports/view?path=${encodeURIComponent(image.path)}&bucket=house-plan-media`
+                        ? `/api/reports/view?entityType=house_plan_task&entityId=${encodeURIComponent(task.id)}&fieldKey=${encodeURIComponent(image.fieldKey)}&path=${encodeURIComponent(image.path)}&bucket=${encodeURIComponent(image.bucket)}`
                         : "";
                       return href ? (
                         <a
@@ -250,8 +256,11 @@ export function PublicPlanTaskViewer({
                         <div key={document.id || `${task.id}-document-${index}`}>
                           <PublicReportPdfViewer
                             filePath={filePath}
-                            fileName={`Документ ${index + 1}`}
-                            bucket="house-plan-documents"
+                            fileName={document.fileName || `Документ ${index + 1}`}
+                            bucket={document.bucket}
+                            entityType="house_plan_task"
+                            entityId={task.id}
+                            fieldKey={document.fieldKey}
                             analyticsHouseId={houseId}
                             analyticsHouseSlug={houseSlug}
                             analyticsEntityId={document.id || task.id}
