@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
-import { HouseBlockSelector, getHouseBlockLabel } from "@/src/modules/houses/components/HouseBlockSelector";
+import { HouseSectionTabs, getHouseBlockLabel } from "@/src/modules/houses/components/HouseSectionTabs";
 
 type HouseBlockNavigationFrameProps = {
   houseId: string;
@@ -24,7 +24,7 @@ export function HouseBlockNavigationFrame({
   return (
     <div className="space-y-6">
       {hideSelector ? null : (
-        <HouseBlockSelector
+        <HouseSectionTabs
           houseId={houseId}
           activeBlock={activeBlock}
           onPendingBlockChange={setPendingBlock}

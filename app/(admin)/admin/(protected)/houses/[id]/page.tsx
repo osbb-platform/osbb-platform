@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
-import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
+import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTabs";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -364,15 +364,13 @@ export default async function AdminHouseDetailPage({
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
-            <div className="min-w-0 flex-1 sm:min-w-[260px] xl:w-[320px] xl:flex-none">
-              <HouseBlockSelector
-                houseId={house.id}
-                activeBlock={activeBlock}
-              />
-            </div>
+          <div className="flex w-full min-w-0 flex-col gap-3 xl:max-w-[720px] xl:flex-1">
+            <HouseSectionTabs
+              houseId={house.id}
+              activeBlock={activeBlock}
+            />
 
-            <div className="flex flex-none items-center gap-2 self-end sm:self-auto">
+            <div className="flex flex-none items-center gap-2 self-end">
               <AdminActionIconLink
                 href={publicPreviewHref}
                 icon="publicPage"
