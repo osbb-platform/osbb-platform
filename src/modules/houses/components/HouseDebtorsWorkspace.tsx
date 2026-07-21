@@ -18,6 +18,7 @@ import {
   adminSurfaceClass,
   adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type WorkspaceTab = "all" | "published" | "draft";
 
@@ -670,9 +671,7 @@ export function HouseDebtorsWorkspace({
       </div>
 
       {activeTab === "draft" && isDraftEmpty ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
-        </div>
+        <EmptyState title="Чернетка поки порожня" description="Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут." />
       ) : null}
       {activeTab === "draft" && !isDraftEmpty ? (
         <div className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -709,9 +708,7 @@ export function HouseDebtorsWorkspace({
 
 
       {activeTab === "published" && isPublishedEmpty ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
-        </div>
+        <EmptyState title="Опублікований список поки порожній" description="Після підтвердження чернетки тут з’являться опубліковані баланси." />
       ) : null}
       {activeTab === "all" ? (
         <div
@@ -1096,9 +1093,7 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {activeTab === "all" && filteredRows.length === 0 ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
-        </div>
+        <EmptyState title="У будинку поки немає квартир" description="Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр заборгованості." />
       ) : filteredRows.length > 0 ? (
         <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
           <div className="max-h-[70vh] overflow-auto">

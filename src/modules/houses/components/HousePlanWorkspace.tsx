@@ -26,6 +26,7 @@ import {
   adminTextLabelClass,
   adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type PlanTaskStatus =
   | "draft"
@@ -1229,13 +1230,13 @@ export function HousePlanWorkspace({
 
       <div className="space-y-4">
         {visibleTasks.length === 0 ? (
-          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
-            {activeTab === "active"
-              ? "Зараз немає активних завдань. Після підтвердження та запуску робіт картки з’являться тут."
-              : activeTab === "draft"
-                ? "Чернеток поки немає. Нове завдання з’явиться тут одразу після збереження."
-                : "Архів завдань поки порожній. Перенесені картки відображатимуться тут."}
-          </div>
+          <EmptyState
+            title={activeTab === "active" ? "Активних завдань поки немає" : activeTab === "draft" ? "Чернеток поки немає" : "Архів завдань поки порожній"}
+            description={activeTab === "active" ? "Після підтвердження та запуску робіт картки з’являться тут." : activeTab === "draft" ? "Нове завдання з’явиться тут одразу після збереження." : "Перенесені картки відображатимуться тут."}
+            action={!String(activeTab).startsWith("archiv") ? (
+              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити завдання</button>
+            ) : undefined}
+          />
         ) : (
           visibleTasks.map((task) => {
             const isSelected = workspaceMode === "edit" && selectedTaskId === task.id;

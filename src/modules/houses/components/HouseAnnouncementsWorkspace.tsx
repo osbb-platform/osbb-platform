@@ -439,6 +439,9 @@ export function HouseAnnouncementsWorkspace({
           <EmptyState
             title="Оголошень поки немає"
             description="Створіть перше оголошення або секцію, щоб вона зʼявилася у списку."
+            action={!String(activeTab).startsWith("archiv") && housePageId ? (
+              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити оголошення</button>
+            ) : undefined}
           />
         )}
       </div>

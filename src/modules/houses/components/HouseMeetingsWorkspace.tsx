@@ -22,6 +22,7 @@ import {
   getMeetingApartmentKey,
   normalizeMeetingApartmentLabel,
 } from "@/src/modules/houses/utils/meetingApartmentIdentity";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type MeetingLifecycleStatus =
   | "draft"
@@ -1334,22 +1335,13 @@ export function HouseMeetingsWorkspace({
 
       <div className="mt-6 space-y-4">
         {visibleMeetings.length === 0 ? (
-          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-6">
-            <div className="text-base font-semibold text-[var(--cms-text)]">
-              {activeTab === "draft"
-                ? "Чернеток поки немає"
-                : activeTab === "archived"
-                  ? "Архів зборів поки порожній"
-                  : "Активних зборів поки немає"}
-            </div>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
-              {activeTab === "draft"
-                ? "Створіть нові збори — вони з’являться тут як чернетка, доки ви не підтвердите публікацію."
-                : activeTab === "archived"
-                  ? "Після завершення роботи збори можна буде перенести в архів. Тут зберігатимуться завершені записи для історії будинку."
-                  : "Після підтвердження чернетки збори з’являться тут. У цій вкладці зібрано всі етапи роботи: заплановано, голосування, на перевірці та завершено."}
-            </p>
-          </div>
+          <EmptyState
+            title={activeTab === "draft" ? "Чернеток поки немає" : String(activeTab).startsWith("archiv") ? "Архів зборів поки порожній" : "Активних зборів поки немає"}
+            description={activeTab === "draft" ? "Створіть нові збори — вони з’являться тут як чернетка." : String(activeTab).startsWith("archiv") ? "Тут зберігатимуться завершені записи для історії будинку." : "Після підтвердження чернетки збори з’являться тут."}
+            action={!String(activeTab).startsWith("archiv") ? (
+              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити збори</button>
+            ) : undefined}
+          />
         ) : (
           visibleMeetings.map((meeting) => (
             <article

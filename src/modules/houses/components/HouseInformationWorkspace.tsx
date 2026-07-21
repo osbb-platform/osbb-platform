@@ -30,6 +30,7 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 export const INFORMATION_CATEGORIES = [
   "Про будинок",
@@ -505,9 +506,9 @@ export function HouseInformationWorkspace({
                   );
                 })
               ) : (
-                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                  Повідомлень поки немає. Створи першу публікацію через кнопку зверху.
-                </div>
+                <EmptyState title="Публікацій поки немає" description="Створіть першу інформаційну публікацію для мешканців." action={housePageId ? (
+                  <button type="button" onClick={openCreatePost} className={adminButtonClasses({ variant: "primary" })}>Створити публікацію</button>
+                ) : undefined} />
               )}
             </div>
           </div>
@@ -570,9 +571,9 @@ export function HouseInformationWorkspace({
                     </button>
                   ))
                 ) : (
-                  <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                    FAQ поки не створено. Створи першу FAQ-чернетку через кнопку зверху.
-                  </div>
+                  <EmptyState title="FAQ поки не створено" description="Створіть першу FAQ-чернетку для мешканців." action={
+                    <button type="button" onClick={openCreateFaqForm} className={adminButtonClasses({ variant: "primary" })}>Створити FAQ</button>
+                  } />
                 )}
               </div>
             </div>

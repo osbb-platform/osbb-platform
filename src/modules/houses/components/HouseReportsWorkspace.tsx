@@ -36,6 +36,7 @@ import type {
   HouseReportLifecycle,
   HouseReportPeriodType,
 } from "@/src/modules/houses/services/getAdminHouseReports";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 function createClientUploadId(prefix: string) {
   const randomId =
@@ -1546,9 +1547,9 @@ export function HouseReportsWorkspace({
         </div>
 
         {visibleReports.length === 0 ? (
-          <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-sm text-[var(--cms-text-muted)]">
-            У цьому списку поки немає звітів.
-          </div>
+          <EmptyState className="mt-6" title="У цьому списку поки немає звітів" description="Створіть новий звіт або змініть активні фільтри." action={!String(activeTab).startsWith("archiv") ? (
+            <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити звіт</button>
+          ) : undefined} />
         ) : (
           <div className="mt-6 grid gap-4 xl:grid-cols-2">
             {visibleReports.map((report) => (

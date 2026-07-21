@@ -33,6 +33,7 @@ import {
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 const SPECIALISTS_TEMPLATE_SLOT_LIMIT = 10;
 
@@ -927,13 +928,13 @@ export function HouseSpecialistsWorkspace({
               </button>
             ))
           ) : (
-            <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-              {activeTab === "published"
-                ? "Поки немає опублікованих спеціалістів. Створіть першу картку та опублікуйте її."
-                : activeTab === "draft"
-                  ? "Чернетки спеціалістів з’являтимуться тут після створення або відновлення з архіву."
-                  : "Архів поки порожній. Зняті з публікації картки спеціалістів відображатимуться тут."}
-            </div>
+            <EmptyState
+              title={activeTab === "published" ? "Опублікованих спеціалістів поки немає" : activeTab === "draft" ? "Чернеток спеціалістів поки немає" : "Архів спеціалістів поки порожній"}
+              description={activeTab === "published" ? "Створіть першу картку та опублікуйте її." : activeTab === "draft" ? "Чернетки з’являтимуться тут після створення або відновлення." : "Зняті з публікації картки відображатимуться тут."}
+              action={!String(activeTab).startsWith("archiv") ? (
+                <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити спеціаліста</button>
+              ) : undefined}
+            />
           )}
         </div>
       </div>

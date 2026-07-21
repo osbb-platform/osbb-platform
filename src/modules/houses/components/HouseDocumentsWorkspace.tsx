@@ -35,6 +35,7 @@ import type {
   HouseDocumentType,
   HouseDocumentLifecycle,
 } from "@/src/modules/houses/services/getHouseDocuments";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type HouseDocumentsWorkspaceProps = {
   houseId: string;
@@ -1111,11 +1112,13 @@ export function HouseDocumentsWorkspace({
         ) : null}
 
         {visibleDocuments.length === 0 ? (
-          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
-            {baseVisibleDocuments.length === 0
-              ? getEmptyText(activeTab, emptyTitle)
-              : "За цим пошуком документів не знайдено. Змініть запит або очистіть поле пошуку."}
-          </div>
+          <EmptyState
+            title={baseVisibleDocuments.length === 0 ? (activeTab === "draft" ? "Чернеток документів поки немає" : String(activeTab).startsWith("archiv") ? "Архів документів поки порожній" : "Активних документів поки немає") : "Документів за пошуком не знайдено"}
+            description={baseVisibleDocuments.length === 0 ? getEmptyText(activeTab, emptyTitle) : "Змініть запит або очистіть поле пошуку."}
+            action={baseVisibleDocuments.length === 0 && !String(activeTab).startsWith("archiv") ? (
+              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити документ</button>
+            ) : undefined}
+          />
         ) : (
           <div className="grid gap-4">
             {visibleDocuments.map((document) => {
