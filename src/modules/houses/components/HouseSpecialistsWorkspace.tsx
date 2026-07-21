@@ -1,22 +1,25 @@
 "use client";
 
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import {
-  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
-
-import { AdminStatusBadge,
+  AdminStatusBadge,
   statusLabelFor,
-  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+  statusToneFor,
+} from "@/src/shared/ui/admin/AdminStatusBadge";
+import { Button } from "@/src/shared/ui/admin/Button";
+import { FormField } from "@/src/shared/ui/admin/FormField";
+import { IconButton } from "@/src/shared/ui/admin/IconButton";
+import { Input } from "@/src/shared/ui/admin/Input";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
-  } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
-import { useMemo,
-  useState } from "react";
+import { useMemo, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
@@ -25,12 +28,11 @@ import type { HouseSpecialistContactRequestRecord } from "@/src/modules/houses/s
 import type {
   AdminHouseSpecialistsSnapshot,
   HouseSpecialistSnapshot,
-  } from "@/src/modules/houses/services/getAdminHouseSpecialists";
+} from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import {
-  adminButtonClasses,
-  adminInputClass,
+  adminSelectClass,
   adminSurfaceClass,
-  adminTextLabelClass,
+  adminTextareaClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
@@ -575,23 +577,19 @@ export function HouseSpecialistsWorkspace({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setTemplatesPanelOpen(true)}
                 disabled={isPending || applyingTemplate}
-                className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
+                iconLeft={<TemplateIcon className="h-5 w-5" />}
               >
-                <TemplateIcon className="h-5 w-5" />
                 Шаблони
-              </button>
+              </Button>
 
-              <button
-                type="button"
-                onClick={openCreateMode}
-                className={adminButtonClasses({ variant: "primary" })}
-              >
+              <Button type="button" onClick={openCreateMode} disabled={isPending}>
                 Створити спеціаліста
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -612,22 +610,95 @@ export function HouseSpecialistsWorkspace({
       </div>
 
 
-      {workspaceMode !== "idle" && draft ? (
-        <div className={`${adminSurfaceClass} p-6`}>
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <div className="text-lg font-semibold text-[var(--cms-text)]">
-                {workspaceMode === "create"
-                  ? "Новий спеціаліст"
-                  : "Редагування спеціаліста"}
+      <AdminSidePanel
+        title={workspaceMode === "create" ? "Новий спеціаліст" : "Редагування спеціаліста"}
+        description={
+          workspaceMode === "create"
+            ? "Нова картка зберігається як чернетка. Публікація виконується окремою дією."
+            : (
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminStatusBadge tone={statusToneFor(draft?.status)}>
+                  {statusLabelFor(draft?.status)}
+                </AdminStatusBadge>
+                <span>Зміни набудуть чинності після збереження.</span>
               </div>
-              <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                Нова картка зберігається як чернетка. Публікація виконується окремою командою.
-              </div>
-            </div>
+            )
+        }
+        isOpen={workspaceMode !== "idle" && Boolean(draft)}
+        onClose={closeWorkspace}
+        maxWidthClassName="max-w-2xl"
+        footer={
+          draft ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" onClick={saveDraft} disabled={isPending}>
+                Зберегти
+              </Button>
 
-            <div className="flex shrink-0 items-center gap-2">
-              {workspaceMode === "edit" && draft.status !== "draft" && draft.id ? (
+              {workspaceMode === "edit" && draft.status === "draft" ? (
+                <Button
+                  type="button"
+                  variant="success"
+                  onClick={() => setConfirmAction("publish")}
+                  disabled={isPending || savingTemplate}
+                >
+                  Опублікувати
+                </Button>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.status === "published" ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setConfirmAction("archive")}
+                  disabled={isPending}
+                >
+                  В архів
+                </Button>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.status === "archived" ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setConfirmAction("restore")}
+                  disabled={isPending}
+                >
+                  Відновити
+                </Button>
+              ) : null}
+
+              <div className="min-w-0 flex-1" />
+
+              {workspaceMode === "create" ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => void saveSpecialistDraftAsTemplate()}
+                  disabled={isPending || savingTemplate}
+                  loading={savingTemplate}
+                >
+                  Запамʼятати як шаблон
+                </Button>
+              ) : null}
+
+              {workspaceMode === "edit" ? (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => setConfirmAction("delete")}
+                  disabled={isPending}
+                >
+                  Видалити
+                </Button>
+              ) : null}
+            </div>
+          ) : null
+        }
+      >
+        {draft ? (
+          <div className="space-y-6">
+            {workspaceMode === "edit" && draft.status !== "draft" && draft.id ? (
+              <div className="flex justify-end">
                 <ContentWorkspaceActionButtons
                   houseId={houseId}
                   sourceId={draft.id}
@@ -637,49 +708,31 @@ export function HouseSpecialistsWorkspace({
                   onCopy={copySpecialistToDraft}
                   duplicatePanelTitle="Копії спеціаліста в інші будинки"
                 />
-              ) : null}
+              </div>
+            ) : null}
 
-              <button
-                type="button"
-                onClick={closeWorkspace}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                aria-label="Закрити форму"
+            {workspaceError ? (
+              <div
+                role="alert"
+                className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
-                ×
-              </button>
-            </div>
-          </div>
+                {workspaceError}
+              </div>
+            ) : null}
 
-          {workspaceError ? (
-            <div
-              role="alert"
-              className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
-            >
-              {workspaceError}
-            </div>
-          ) : null}
-
-          <div className="grid gap-5">
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Ім’я та прізвище / Компанія
-              </label>
-              <input
+            <FormField label="Ім’я та прізвище / Компанія" required>
+              <Input
                 value={draft.title}
                 onChange={(event) => updateDraft("title", event.target.value)}
-                className={adminInputClass}
                 placeholder="Наприклад: Іван Петренко або Аварком сервіс"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Категорія
-              </label>
+            <FormField label="Категорія" required>
               <select
                 value={draft.category}
                 onChange={(event) => updateDraft("category", event.target.value)}
-                className={adminInputClass}
+                className={adminSelectClass}
               >
                 <option value="">Оберіть категорію</option>
                 {categories.map((category) => (
@@ -688,22 +741,28 @@ export function HouseSpecialistsWorkspace({
                   </option>
                 ))}
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Телефони
-              </label>
-
-              <div className="grid gap-2">
+            <FormField
+              label="Телефони"
+              hint="Якщо телефони не вказані, на сайті будинку буде кнопка «Залишити заявку»."
+            >
+              <div className="grid gap-3">
                 {draft.phones.map((phone, index) => (
-                  <div key={`phone-${index}`} className="grid gap-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto]">
+                  <div
+                    key={`phone-${index}`}
+                    className="grid gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4 md:grid-cols-[180px_minmax(0,1fr)_auto]"
+                  >
                     <select
                       value={normalizePhoneType(draft.phoneTypes[index])}
                       onChange={(event) =>
-                        handleDraftPhoneTypeChange(index, event.target.value as SpecialistPhoneType)
+                        handleDraftPhoneTypeChange(
+                          index,
+                          event.target.value as SpecialistPhoneType,
+                        )
                       }
-                      className={adminInputClass}
+                      className={adminSelectClass}
+                      aria-label={`Тип телефону ${index + 1}`}
                     >
                       {SPECIALIST_PHONE_TYPE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -712,158 +771,68 @@ export function HouseSpecialistsWorkspace({
                       ))}
                     </select>
 
-                    <input
+                    <Input
                       value={phone}
-                      onChange={(event) =>
-                        handleDraftPhoneChange(index, event.target.value)
-                      }
-                      className={adminInputClass}
+                      onChange={(event) => handleDraftPhoneChange(index, event.target.value)}
                       placeholder="+380 67 123 45 67 або 0800 00 00 00"
+                      aria-label={`Телефон ${index + 1}`}
                     />
 
                     {draft.phones.length > 1 ? (
-                      <button
+                      <IconButton
                         type="button"
+                        variant="danger"
                         onClick={() => removeDraftPhone(index)}
-                        className={adminButtonClasses({ variant: "secondary" })}
+                        aria-label={`Видалити телефон ${index + 1}`}
                       >
-                        Видалити
-                      </button>
+                        ×
+                      </IconButton>
                     ) : null}
                   </div>
                 ))}
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
+                className="mt-3"
                 onClick={addDraftPhone}
-                className="mt-3 inline-flex items-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
               >
-                + Додати ще телефон
-              </button>
+                Додати ще телефон
+              </Button>
+            </FormField>
 
-              <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
-                Якщо телефони не вказані, на сайті будинку буде кнопка «Залишити заявку».
-              </div>
-            </div>
-
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Email
-              </label>
-              <input
+            <FormField label="Email">
+              <Input
+                type="email"
                 value={draft.email}
                 onChange={(event) => updateDraft("email", event.target.value)}
-                className={adminInputClass}
                 placeholder="specialist@example.com"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Опис / графік / примітки
-              </label>
+            <FormField label="Опис / графік / примітки">
               <textarea
                 value={draft.description}
                 onChange={(event) => updateDraft("description", event.target.value)}
-                className={`${adminInputClass} min-h-[120px]`}
+                className={adminTextareaClass}
                 placeholder="Опишіть, коли звертатися до спеціаліста, графік прийому або додаткові умови."
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className={`mb-2 block ${adminTextLabelClass}`}>
-                Порядок сортування
-              </label>
-              <input
+            <FormField label="Порядок сортування">
+              <Input
                 type="number"
                 value={draft.sortOrder}
                 onChange={(event) =>
                   updateDraft("sortOrder", Number.parseInt(event.target.value, 10) || 0)
                 }
-                className={adminInputClass}
               />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--cms-border)] pt-5">
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={saveDraft}
-                  className={adminButtonClasses({ variant: "primary" })}
-                  disabled={isPending}
-                >
-                  Зберегти
-                </button>
-
-                <button
-                  type="button"
-                  onClick={closeWorkspace}
-                  className={adminButtonClasses({ variant: "secondary" })}
-                  disabled={isPending}
-                >
-                  Скасувати
-                </button>
-
-                {workspaceMode === "edit" ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("delete")}
-                    className={adminButtonClasses({ variant: "danger" })}
-                    disabled={isPending}
-                  >
-                    Видалити
-                  </button>
-                ) : null}
-              </div>
-
-              {workspaceMode === "create" ? (
-                <button
-                  type="button"
-                  onClick={() => void saveSpecialistDraftAsTemplate()}
-                  className={adminButtonClasses({ variant: "secondary" })}
-                  disabled={isPending || savingTemplate}
-                >
-                  {savingTemplate ? "Зберігаємо шаблон..." : "Запамʼятати як шаблон"}
-                </button>
-              ) : null}
-
-              {workspaceMode === "edit" && draft.status === "draft" ? (
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("publish")}
-                  className={adminButtonClasses({ variant: "success" })}
-                  disabled={isPending || savingTemplate}
-                >
-                  Опублікувати
-                </button>
-              ) : null}
-
-              {workspaceMode === "edit" && draft.status === "published" ? (
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("archive")}
-                  className={adminButtonClasses({ variant: "secondary" })}
-                  disabled={isPending}
-                >
-                  В архів
-                </button>
-              ) : null}
-
-              {workspaceMode === "edit" && draft.status === "archived" ? (
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("restore")}
-                  className={adminButtonClasses({ variant: "secondary" })}
-                  disabled={isPending}
-                >
-                  Відновити
-                </button>
-              ) : null}
-            </div>
+            </FormField>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AdminSidePanel>
 
       <AdminSidePanel
         title="Шаблони спеціалістів"
@@ -932,7 +901,9 @@ export function HouseSpecialistsWorkspace({
               title={activeTab === "published" ? "Опублікованих спеціалістів поки немає" : activeTab === "draft" ? "Чернеток спеціалістів поки немає" : "Архів спеціалістів поки порожній"}
               description={activeTab === "published" ? "Створіть першу картку та опублікуйте її." : activeTab === "draft" ? "Чернетки з’являтимуться тут після створення або відновлення." : "Зняті з публікації картки відображатимуться тут."}
               action={!String(activeTab).startsWith("archiv") ? (
-                <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити спеціаліста</button>
+                <Button type="button" onClick={openCreateMode}>
+                  Створити спеціаліста
+                </Button>
               ) : undefined}
             />
           )}
