@@ -4,7 +4,9 @@ import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import {
   useEffect,
   useRef,
+  useMemo,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import { createPortal } from "react-dom";
@@ -14,6 +16,7 @@ import type {
   HouseSectionCounters,
   HouseSectionCounterValue,
 } from "@/src/modules/houses/services/getHouseSectionCounters";
+import { HouseTabsCustomizationModal } from "@/src/modules/houses/components/HouseTabsCustomizationModal";
 
 type HouseSectionTabsProps = {
   houseId: string;
@@ -34,6 +37,90 @@ export const houseNavigationBlocks = [
   { value: "requisites", label: "Реквізити" },
   { value: "founding-documents", label: "Установчі документи" },
 ] as const;
+
+type HouseBlockValue = (typeof houseNavigationBlocks)[number]["value"];
+
+type HouseTabsConfig = {
+  order: HouseBlockValue[];
+  pinned: HouseBlockValue[];
+};
+
+const HOUSE_TABS_STORAGE_KEY = "osbb.houseTabs.v1";
+const HOUSE_TABS_CHANGE_EVENT = "osbb-house-tabs-change";
+
+function isHouseBlockValue(value: unknown): value is HouseBlockValue {
+  return houseNavigationBlocks.some((block) => block.value === value);
+}
+
+function normalizeTabsConfig(rawValue: string): HouseTabsConfig {
+  const defaultOrder = houseNavigationBlocks.map((block) => block.value);
+
+  if (!rawValue) {
+    return { order: defaultOrder, pinned: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue) as {
+      order?: unknown;
+      pinned?: unknown;
+    };
+
+    const storedOrder = Array.isArray(parsed.order)
+      ? parsed.order.filter(isHouseBlockValue)
+      : [];
+    const order = [
+      ...storedOrder,
+      ...defaultOrder.filter((value) => !storedOrder.includes(value)),
+    ];
+
+    const pinned = Array.isArray(parsed.pinned)
+      ? parsed.pinned.filter(
+          (value): value is HouseBlockValue =>
+            isHouseBlockValue(value) && order.includes(value),
+        )
+      : [];
+
+    return {
+      order,
+      pinned: Array.from(new Set(pinned)),
+    };
+  } catch {
+    return { order: defaultOrder, pinned: [] };
+  }
+}
+
+function getTabsStorageSnapshot() {
+  if (typeof window === "undefined") return "";
+
+  try {
+    return window.localStorage.getItem(HOUSE_TABS_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function subscribeToTabsStorage(onStoreChange: () => void) {
+  function handleStorage(event: StorageEvent) {
+    if (event.key === HOUSE_TABS_STORAGE_KEY) onStoreChange();
+  }
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(HOUSE_TABS_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(HOUSE_TABS_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function writeTabsConfig(config: HouseTabsConfig) {
+  try {
+    window.localStorage.setItem(HOUSE_TABS_STORAGE_KEY, JSON.stringify(config));
+    window.dispatchEvent(new Event(HOUSE_TABS_CHANGE_EVENT));
+  } catch {
+    // localStorage can be unavailable in restricted browser contexts.
+  }
+}
 
 export function getHouseBlockLabel(value: string) {
   return (
@@ -96,7 +183,17 @@ export function HouseSectionTabs({
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedBlock, setSelectedBlock] = useState(activeBlock);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [customizationOpen, setCustomizationOpen] = useState(false);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const storedConfigRaw = useSyncExternalStore(
+    subscribeToTabsStorage,
+    getTabsStorageSnapshot,
+    () => "",
+  );
+  const tabsConfig = useMemo(
+    () => normalizeTabsConfig(storedConfigRaw),
+    [storedConfigRaw],
+  );
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -156,8 +253,29 @@ export function HouseSectionTabs({
     });
   }
 
-  const visibleBlocks = houseNavigationBlocks.slice(0, 6);
-  const overflowBlocks = houseNavigationBlocks.slice(6);
+  const orderedBlocks = tabsConfig.order
+    .map((value) =>
+      houseNavigationBlocks.find((block) => block.value === value),
+    )
+    .filter(
+      (block): block is (typeof houseNavigationBlocks)[number] =>
+        Boolean(block),
+    );
+  const pinnedValues = new Set(tabsConfig.pinned);
+  const pinnedBlocks = orderedBlocks.filter((block) =>
+    pinnedValues.has(block.value),
+  );
+  const regularBlocks = orderedBlocks.filter(
+    (block) => !pinnedValues.has(block.value),
+  );
+  const visibleBlocks = [
+    ...pinnedBlocks,
+    ...regularBlocks.slice(0, Math.max(0, 6 - pinnedBlocks.length)),
+  ];
+  const visibleValues = new Set(visibleBlocks.map((block) => block.value));
+  const overflowBlocks = orderedBlocks.filter(
+    (block) => !visibleValues.has(block.value),
+  );
   const activeIsHidden = overflowBlocks.some(
     (block) => block.value === selectedBlock,
   );
@@ -247,11 +365,41 @@ export function HouseSectionTabs({
                     </button>
                   );
                 })}
+
+                <div className="my-1 border-t border-[var(--cms-border)]" />
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setCustomizationOpen(true);
+                  }}
+                  className="flex w-full items-center rounded-[var(--r-md)] px-3 py-2 text-left text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)]"
+                >
+                  Налаштувати вкладки…
+                </button>
               </div>
             ) : null}
           </div>
         ) : null}
       </div>
+
+      {customizationOpen ? (
+        <HouseTabsCustomizationModal
+          blocks={houseNavigationBlocks}
+          order={tabsConfig.order}
+          pinned={tabsConfig.pinned}
+          onClose={() => setCustomizationOpen(false)}
+          onSave={(nextConfig) => {
+            writeTabsConfig({
+              order: nextConfig.order.filter(isHouseBlockValue),
+              pinned: nextConfig.pinned.filter(isHouseBlockValue),
+            });
+            setCustomizationOpen(false);
+          }}
+        />
+      ) : null}
 
       {isPending && portalTarget
         ? createPortal(
