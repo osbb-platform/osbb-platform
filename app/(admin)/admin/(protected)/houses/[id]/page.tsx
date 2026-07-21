@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTabs";
+import { HouseSwitcher } from "@/src/modules/houses/components/HouseSwitcher";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -296,8 +297,9 @@ export default async function AdminHouseDetailPage({
       ? (await getAdminHouseApartments({ houseId: house.id })).items
       : [];
 
+  const adminHouses = await getAdminHouses();
   const duplicateTargets = mapCrossHouseDuplicateTargets(
-    await getAdminHouses(),
+    adminHouses,
     house.id,
   );
 
@@ -321,9 +323,19 @@ export default async function AdminHouseDetailPage({
             </div>
 
             <div className="mt-1 min-w-0">
-              <h1 className="mt-3 break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
-              {house.name}
-            </h1>
+              <HouseSwitcher
+                currentHouseId={house.id}
+                currentHouseName={house.name}
+                activeBlock={activeBlock}
+                houses={adminHouses.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  slug: item.slug,
+                  address: item.address,
+                  districtName: item.district?.name ?? null,
+                  districtColor: item.district?.theme_color ?? null,
+                }))}
+              />
 
               <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
               {house.address}
