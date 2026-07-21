@@ -16,6 +16,9 @@ import {
   adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
+import Link from "next/link";
 import {
   findMeetingApartmentForVote,
   getAvailableMeetingApartments,
@@ -440,6 +443,8 @@ export function HouseMeetingsWorkspace({
     Record<string, ManualVoteChoice>
   >({});
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const counters = useMemo(
@@ -482,6 +487,33 @@ export function HouseMeetingsWorkspace({
 
   const isContentLocked = false;
 
+  function resetWorkspace() {
+    setWorkspaceError(null);
+    setConfirmAction(null);
+    setMode("idle");
+    setSelectedMeetingId(null);
+    setDraft(createEmptyMeeting());
+    setMeetingDateInput("");
+    setMeetingTimeInput("");
+    setSelectedApartmentVote("");
+    setManualVoteAnswers({});
+    setPanelDirty(false);
+  }
+
+  function openCreateWorkspace() {
+    setWorkspaceError(null);
+    setConfirmAction(null);
+    setMode("create");
+    setSelectedMeetingId(null);
+    setDraft(createEmptyMeeting());
+    setMeetingDateInput("");
+    setMeetingTimeInput("");
+    setSelectedApartmentVote("");
+    setManualVoteAnswers({});
+    setActiveTab("draft");
+    setPanelDirty(false);
+  }
+
   function openCreateMode() {
     if (!hasApartments) {
       setWorkspaceError(
@@ -490,34 +522,39 @@ export function HouseMeetingsWorkspace({
       return;
     }
 
-    setWorkspaceError(null);
-    setConfirmAction(null);
-    setMode("create");
-    setSelectedMeetingId(null);
-    setDraft(createEmptyMeeting());
-    setMeetingDateInput("");
-    setMeetingTimeInput("");
-    setActiveTab("draft");
+    dirtyGuard.request(openCreateWorkspace);
   }
 
   function openEditMode(meeting: MeetingItem) {
-    const splitDateTime = splitMeetingDateTime(meeting.meetingDateTime);
+    dirtyGuard.request(() => {
+      const splitDateTime = splitMeetingDateTime(meeting.meetingDateTime);
 
-    setMode("edit");
-    setSelectedMeetingId(meeting.id);
-    setDraft(meeting);
-    setMeetingDateInput(splitDateTime.date);
-    setMeetingTimeInput(splitDateTime.time);
+      setMode("edit");
+      setSelectedMeetingId(meeting.id);
+      setDraft(meeting);
+      setMeetingDateInput(splitDateTime.date);
+      setMeetingTimeInput(splitDateTime.time);
+      setSelectedApartmentVote("");
+      setManualVoteAnswers({});
+      setPanelDirty(false);
+    });
   }
 
   function closeWorkspace() {
-    setWorkspaceError(null);
-    setConfirmAction(null);
-    setMode("idle");
-    setSelectedMeetingId(null);
-    setDraft(createEmptyMeeting());
-    setMeetingDateInput("");
-    setMeetingTimeInput("");
+    dirtyGuard.request(resetWorkspace);
+  }
+
+  function handleTabChange(tab: WorkspaceTab) {
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      resetWorkspace();
+    });
+  }
+
+  function markDirty() {
+    if (!panelDirty) {
+      setPanelDirty(true);
+    }
   }
 
   function addQuestion() {
@@ -672,7 +709,7 @@ export function HouseMeetingsWorkspace({
     const nextMeetings = meetings.filter((item) => item.id !== meetingId);
     setMeetings(nextMeetings);
     setActiveTab("draft");
-    closeWorkspace();
+    resetWorkspace();
   }
 
   async function publishMeetingFromRegistry(meetingId: string) {
@@ -714,7 +751,7 @@ export function HouseMeetingsWorkspace({
 
     setMeetings(nextMeetings);
     setActiveTab("active");
-    closeWorkspace();
+    resetWorkspace();
   }
 
   async function archiveMeetingFromRegistry(meetingId: string) {
@@ -755,7 +792,7 @@ export function HouseMeetingsWorkspace({
 
     setMeetings(nextMeetings);
     setActiveTab("archived");
-    closeWorkspace();
+    resetWorkspace();
   }
 
   return (
@@ -785,7 +822,7 @@ export function HouseMeetingsWorkspace({
       <div className="mt-6">
         <AdminSegmentedTabs
           activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as WorkspaceTab)}
+          onChange={(key) => handleTabChange(key as WorkspaceTab)}
           items={tabs.map((tab) => ({
             key: tab.key,
             label: tab.label,
@@ -794,50 +831,118 @@ export function HouseMeetingsWorkspace({
         />
       </div>
 
-      {mode !== "idle" ? (
-        <div className="mt-6 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="text-lg font-semibold text-[var(--cms-text)]">
-              {mode === "create" ? "Нові збори" : "Редагування"}
+      <AdminSidePanel
+        title={mode === "create" ? "Нові збори" : "Редагування зборів"}
+        description={
+          mode === "edit" ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <AdminStatusBadge tone={statusToneFor(draft.status)}>
+                {statusLabelFor(draft.status)}
+              </AdminStatusBadge>
+              <span>{formatDate(draft.meetingDateTime)}</span>
             </div>
+          ) : (
+            "Нові збори спочатку зберігаються як чернетка."
+          )
+        }
+        isOpen={mode !== "idle"}
+        onClose={closeWorkspace}
+        maxWidthClassName="max-w-4xl"
+        footer={
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+              <div className="flex flex-wrap gap-3">
+                {mode === "edit" && draft.status === "draft" ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction("delete")}
+                    className={adminButtonClasses({ variant: "danger" })}
+                  >
+                    Видалити
+                  </button>
+                ) : null}
 
-            <button
-              type="button"
-              onClick={closeWorkspace}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:text-[var(--cms-text)]"
-              aria-label="Закрити форму"
-            >
-              ×
-            </button>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => saveDraftToRegistry()}
+                  disabled={isPending}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
+                >
+                  Зберегти
+                </button>
 
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {mode === "edit" && draft.status === "draft" ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction("publish")}
+                    disabled={isPending}
+                    className={adminButtonClasses({ variant: "success" })}
+                  >
+                    Опублікувати
+                  </button>
+                ) : null}
+
+                {mode === "edit" &&
+                draft.status !== "draft" &&
+                draft.status !== "archived" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedMeetingId) {
+                        archiveMeetingFromRegistry(selectedMeetingId);
+                      }
+                    }}
+                    disabled={isPending}
+                    className={adminButtonClasses({ variant: "secondary" })}
+                  >
+                    В архів
+                  </button>
+                ) : null}
+              </div>
+            </div>
+        }
+      >
+        <div onChange={markDirty} className="space-y-4">
+          <details
+            open
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
+          >
+            <summary className="cursor-pointer text-base font-semibold text-[var(--cms-text)]">
+              Основне
+            </summary>
+            <div className="mt-4 space-y-4">
           {mode === "edit" &&
           draft.status !== "draft" &&
           draft.status !== "archived" ? (
-            <label className="mt-4 block">
-              <span className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
+            <div>
+              <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
                 Статус після збереження
-              </span>
-              <select
-                value={draft.status}
-                onChange={(e) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    status: e.target.value as MeetingLifecycleStatus,
-                  }))
-                }
-                className={adminInputClass}
-              >
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {scheduledStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setDraft((prev) => ({
+                        ...prev,
+                        status: option.value,
+                      }));
+                      markDirty();
+                    }}
+                    className={adminButtonClasses({
+                      variant:
+                        draft.status === option.value ? "primary" : "secondary",
+                    })}
+                  >
                     {option.label}
-                  </option>
+                  </button>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
           ) : null}
-
-          <div className="mt-5 space-y-4">
             <input
               disabled={isContentLocked || isPending}
               value={draft.title}
@@ -902,7 +1007,179 @@ export function HouseMeetingsWorkspace({
               placeholder="Місце проведення"
               className={adminInputClass}
             />
+            </div>
+          </details>
 
+          <details
+            open
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
+          >
+            <summary className="cursor-pointer text-base font-semibold text-[var(--cms-text)]">
+              Порядок денний
+            </summary>
+            <div className="mt-4">
+            {draft.status !== "review" && draft.status !== "completed" ? (
+              <div className="border-t border-[var(--cms-border)] pt-4">
+              <div className="mb-3 text-sm font-semibold text-[var(--cms-text)]">
+                Порядок денний / питання
+              </div>
+
+              <div className="space-y-3">
+                {draft.questions.map((question, index) => (
+                  <div
+                    key={question.id}
+                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+                  >
+                    <input
+                      value={question.title}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          questions: prev.questions.map((q) =>
+                            q.id === question.id
+                              ? { ...q, title: e.target.value }
+                              : q,
+                          ),
+                        }))
+                      }
+                      disabled={isContentLocked || isPending}
+                      placeholder={`Питання ${index + 1}`}
+                      className="w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                    />
+
+                    <textarea
+                      value={question.description}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          questions: prev.questions.map((q) =>
+                            q.id === question.id
+                              ? { ...q, description: e.target.value }
+                              : q,
+                          ),
+                        }))
+                      }
+                      rows={3}
+                      disabled={isContentLocked || isPending}
+                      placeholder="Опис питання"
+                      className="mt-3 w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                    />
+
+                    {mode === "edit" &&
+                    (draft.status === "review" ||
+                      draft.status === "completed") ? (() => {
+                      const totalVotes = apartments.length;
+                      const votedApartments = (draft.manualVotes ?? []).length;
+
+                      const votesFor = (draft.manualVotes ?? []).filter((vote) =>
+                        vote.answers.some(
+                          (answer) =>
+                            answer.questionId === question.id &&
+                            answer.choice === "for",
+                        ),
+                      ).length;
+
+                      const votesAgainst = (draft.manualVotes ?? []).filter(
+                        (vote) =>
+                          vote.answers.some(
+                            (answer) =>
+                              answer.questionId === question.id &&
+                              answer.choice === "against",
+                          ),
+                      ).length;
+
+                      const votesAbstained = (draft.manualVotes ?? []).filter(
+                        (vote) =>
+                          vote.answers.some(
+                            (answer) =>
+                              answer.questionId === question.id &&
+                              answer.choice === "abstained",
+                          ),
+                      ).length;
+
+                      const forPercent =
+                        totalVotes > 0
+                          ? Math.round((votesFor / totalVotes) * 100)
+                          : 0;
+
+                      const againstPercent =
+                        totalVotes > 0
+                          ? Math.round((votesAgainst / totalVotes) * 100)
+                          : 0;
+
+                      const abstainedPercent =
+                        totalVotes > 0
+                          ? Math.round((votesAbstained / totalVotes) * 100)
+                          : 0;
+
+                      const outcome =
+                        totalVotes === 0
+                          ? "Немає даних"
+                          : votesFor > votesAgainst
+                            ? "Прийнято"
+                            : "Не прийнято";
+
+                      return (
+                        <div className="mt-3 space-y-3">
+                          <div className="grid gap-2 sm:grid-cols-4">
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                              За: {votesFor} ({forPercent}%)
+                            </div>
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                              Проти: {votesAgainst} ({againstPercent}%)
+                            </div>
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                              Утрималися: {votesAbstained} ({abstainedPercent}%)
+                            </div>
+                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
+                              Проголосувало квартир: {votedApartments} / {totalVotes}
+                            </div>
+                          </div>
+
+                          <div className="rounded-[var(--r-md)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-2 text-xs font-medium text-[var(--cms-text)]">
+                            Підсумок: {outcome}
+                          </div>
+                        </div>
+                      );
+                    })() : null}
+
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(question.id)}
+                      disabled={
+                        isContentLocked ||
+                        draft.questions.length <= 1 ||
+                        isPending
+                      }
+                      className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
+                    >
+                      Видалити питання
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={addQuestion}
+                disabled={isPending}
+                className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
+              >
+                Додати питання
+              </button>
+            </div>
+            ) : null}
+            </div>
+          </details>
+
+          <details
+            open={draft.status === "review"}
+            className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
+          >
+            <summary className="cursor-pointer text-base font-semibold text-[var(--cms-text)]">
+              Голоси
+            </summary>
+            <div className="mt-4">
             {mode === "edit" && draft.status === "review" ? (
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-4">
                 <div className="text-sm font-semibold text-[var(--cms-text)]">
@@ -1123,214 +1400,24 @@ export function HouseMeetingsWorkspace({
                 </div>
               </div>
             ) : null}
-
-            {draft.status !== "review" && draft.status !== "completed" ? (
-              <div className="border-t border-[var(--cms-border)] pt-4">
-              <div className="mb-3 text-sm font-semibold text-[var(--cms-text)]">
-                Порядок денний / питання
-              </div>
-
-              <div className="space-y-3">
-                {draft.questions.map((question, index) => (
-                  <div
-                    key={question.id}
-                    className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
-                  >
-                    <input
-                      value={question.title}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          questions: prev.questions.map((q) =>
-                            q.id === question.id
-                              ? { ...q, title: e.target.value }
-                              : q,
-                          ),
-                        }))
-                      }
-                      disabled={isContentLocked || isPending}
-                      placeholder={`Питання ${index + 1}`}
-                      className="w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
-                    />
-
-                    <textarea
-                      value={question.description}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          questions: prev.questions.map((q) =>
-                            q.id === question.id
-                              ? { ...q, description: e.target.value }
-                              : q,
-                          ),
-                        }))
-                      }
-                      rows={3}
-                      disabled={isContentLocked || isPending}
-                      placeholder="Опис питання"
-                      className="mt-3 w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
-                    />
-
-                    {mode === "edit" &&
-                    (draft.status === "review" ||
-                      draft.status === "completed") ? (() => {
-                      const totalVotes = apartments.length;
-                      const votedApartments = (draft.manualVotes ?? []).length;
-
-                      const votesFor = (draft.manualVotes ?? []).filter((vote) =>
-                        vote.answers.some(
-                          (answer) =>
-                            answer.questionId === question.id &&
-                            answer.choice === "for",
-                        ),
-                      ).length;
-
-                      const votesAgainst = (draft.manualVotes ?? []).filter(
-                        (vote) =>
-                          vote.answers.some(
-                            (answer) =>
-                              answer.questionId === question.id &&
-                              answer.choice === "against",
-                          ),
-                      ).length;
-
-                      const votesAbstained = (draft.manualVotes ?? []).filter(
-                        (vote) =>
-                          vote.answers.some(
-                            (answer) =>
-                              answer.questionId === question.id &&
-                              answer.choice === "abstained",
-                          ),
-                      ).length;
-
-                      const forPercent =
-                        totalVotes > 0
-                          ? Math.round((votesFor / totalVotes) * 100)
-                          : 0;
-
-                      const againstPercent =
-                        totalVotes > 0
-                          ? Math.round((votesAgainst / totalVotes) * 100)
-                          : 0;
-
-                      const abstainedPercent =
-                        totalVotes > 0
-                          ? Math.round((votesAbstained / totalVotes) * 100)
-                          : 0;
-
-                      const outcome =
-                        totalVotes === 0
-                          ? "Немає даних"
-                          : votesFor > votesAgainst
-                            ? "Прийнято"
-                            : "Не прийнято";
-
-                      return (
-                        <div className="mt-3 space-y-3">
-                          <div className="grid gap-2 sm:grid-cols-4">
-                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              За: {votesFor} ({forPercent}%)
-                            </div>
-                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              Проти: {votesAgainst} ({againstPercent}%)
-                            </div>
-                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              Утрималися: {votesAbstained} ({abstainedPercent}%)
-                            </div>
-                            <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              Проголосувало квартир: {votedApartments} / {totalVotes}
-                            </div>
-                          </div>
-
-                          <div className="rounded-[var(--r-md)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-3 py-2 text-xs font-medium text-[var(--cms-text)]">
-                            Підсумок: {outcome}
-                          </div>
-                        </div>
-                      );
-                    })() : null}
-
-                    <button
-                      type="button"
-                      onClick={() => removeQuestion(question.id)}
-                      disabled={
-                        isContentLocked ||
-                        draft.questions.length <= 1 ||
-                        isPending
-                      }
-                      className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
-                    >
-                      Видалити питання
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={addQuestion}
-                disabled={isPending}
-                className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
-              >
-                Додати питання
-              </button>
             </div>
-            ) : null}
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
-              <div className="flex flex-wrap gap-3">
-                {mode === "edit" && draft.status === "draft" ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("delete")}
-                    className={adminButtonClasses({ variant: "danger" })}
-                  >
-                    Видалити
-                  </button>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => saveDraftToRegistry()}
-                  disabled={isPending}
-                  className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
-                >
-                  Зберегти
-                </button>
-
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                {mode === "edit" && draft.status === "draft" ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmAction("publish")}
-                    disabled={isPending}
-                    className={adminButtonClasses({ variant: "success" })}
-                  >
-                    Опублікувати
-                  </button>
-                ) : null}
-
-                {mode === "edit" &&
-                draft.status !== "draft" &&
-                draft.status !== "archived" ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedMeetingId) {
-                        archiveMeetingFromRegistry(selectedMeetingId);
-                      }
-                    }}
-                    disabled={isPending}
-                    className={adminButtonClasses({ variant: "secondary" })}
-                  >
-                    В архів
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </div>
+          </details>
         </div>
+      </AdminSidePanel>
+
+      {!hasApartments ? (
+        <EmptyState
+          title="Для голосування немає квартир"
+          description="Спочатку додайте квартири цього будинку. Після цього можна буде створювати збори та фіксувати голоси."
+          action={
+            <Link
+              href="/admin/apartments"
+              className={adminButtonClasses({ variant: "primary" })}
+            >
+              Перейти до квартир
+            </Link>
+          }
+        />
       ) : null}
 
       <div className="mt-6 space-y-4">
@@ -1376,6 +1463,17 @@ export function HouseMeetingsWorkspace({
           {workspaceError}
         </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}
