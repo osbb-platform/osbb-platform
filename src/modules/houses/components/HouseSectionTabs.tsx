@@ -2,9 +2,7 @@
 
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import {
-  useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   useTransition,
@@ -45,73 +43,11 @@ export function HouseSectionTabs({
   contentTargetId,
 }: HouseSectionTabsProps) {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedBlock, setSelectedBlock] = useState(activeBlock);
-  const [visibleCount, setVisibleCount] = useState<number>(
-    houseNavigationBlocks.length,
-  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  const recalculate = useCallback(() => {
-    const container = containerRef.current;
-    const measure = measureRef.current;
-
-    if (!container || !measure) {
-      return;
-    }
-
-    const tabWidths = Array.from(
-      measure.querySelectorAll<HTMLElement>("[data-measure-tab]"),
-    ).map((element) => element.offsetWidth);
-
-    const moreButton = measure.querySelector<HTMLElement>("[data-measure-more]");
-    const availableWidth = container.clientWidth;
-    const moreWidth = moreButton?.offsetWidth ?? 92;
-    const gap = 8;
-    const totalWidth =
-      tabWidths.reduce((sum, width) => sum + width, 0) +
-      gap * Math.max(0, tabWidths.length - 1);
-
-    if (totalWidth <= availableWidth) {
-      setVisibleCount(houseNavigationBlocks.length);
-      return;
-    }
-
-    let consumed = moreWidth;
-    let nextVisibleCount = 0;
-
-    for (const width of tabWidths) {
-      const nextWidth = consumed + width + gap;
-
-      if (nextWidth > availableWidth) {
-        break;
-      }
-
-      consumed = nextWidth;
-      nextVisibleCount += 1;
-    }
-
-    setVisibleCount(Math.max(1, nextVisibleCount));
-  }, []);
-
-  useLayoutEffect(() => {
-    recalculate();
-
-    const container = containerRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    const observer = new ResizeObserver(recalculate);
-    observer.observe(container);
-
-    return () => observer.disconnect();
-  }, [recalculate]);
 
   useEffect(() => {
     setSelectedBlock(activeBlock);
@@ -170,8 +106,8 @@ export function HouseSectionTabs({
     });
   }
 
-  const visibleBlocks = houseNavigationBlocks.slice(0, visibleCount);
-  const overflowBlocks = houseNavigationBlocks.slice(visibleCount);
+  const visibleBlocks = houseNavigationBlocks.slice(0, 6);
+  const overflowBlocks = houseNavigationBlocks.slice(6);
   const activeIsHidden = overflowBlocks.some(
     (block) => block.value === selectedBlock,
   );
@@ -182,7 +118,6 @@ export function HouseSectionTabs({
   return (
     <div className="relative min-w-0">
       <div
-        ref={containerRef}
         role="tablist"
         aria-label="Розділи будинку"
         className="flex min-w-0 items-center gap-2 overflow-hidden"
@@ -255,28 +190,6 @@ export function HouseSectionTabs({
             ) : null}
           </div>
         ) : null}
-      </div>
-
-      <div
-        ref={measureRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed -left-[9999px] top-0 flex items-center gap-2 opacity-0"
-      >
-        {houseNavigationBlocks.map((block) => (
-          <span
-            key={block.value}
-            data-measure-tab
-            className="inline-flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-3 text-sm font-medium"
-          >
-            {block.label}
-          </span>
-        ))}
-        <span
-          data-measure-more
-          className="inline-flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-3 text-sm font-medium"
-        >
-          Ще: Установчі документи ▾
-        </span>
       </div>
 
       {isPending && portalTarget

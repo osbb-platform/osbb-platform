@@ -302,10 +302,11 @@ export default async function AdminHouseDetailPage({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_94%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
-        <div className="relative flex flex-col gap-6">
-          <div className="min-w-0 flex-1">
+    <div className="flex min-h-0 flex-col gap-4 lg:h-[calc(100dvh-2rem)] lg:overflow-hidden">
+      <div className="-mx-2 shrink-0 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 shadow-[var(--cms-shadow-sm)] md:mx-0 md:px-5">
+        <div className="relative flex flex-col gap-4">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
                 href={ROUTES.admin.houses}
@@ -329,71 +330,77 @@ export default async function AdminHouseDetailPage({
             </p>
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <HouseEntityBadge variant="slug" title={house.slug}>
-                {house.slug}
-              </HouseEntityBadge>
 
-              {!house.is_active ? (
-                <span className="inline-flex h-7 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2.5 text-xs font-medium text-[var(--cms-text)]">
-                  Архів
-                </span>
-              ) : null}
+            </div>
 
-              {house.district ? (
-                <span
-                  className="inline-flex h-7 items-center rounded-[var(--r-pill)] px-2.5 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
-                  style={{ backgroundColor: house.district.theme_color }}
-                >
-                  {house.district.name}
-                </span>
-              ) : null}
-
-              {house.management_company?.name ? (
-                <HouseEntityBadge
-                  variant="managementCompany"
-                  title={house.management_company.name}
-                >
-                  {house.management_company.name}
+            <div className="flex max-w-full flex-col items-start gap-3 lg:items-end">
+              <div className="flex max-w-full flex-wrap items-center gap-2 lg:justify-end">
+                <HouseEntityBadge variant="slug" title={house.slug}>
+                  {house.slug}
                 </HouseEntityBadge>
-              ) : null}
+
+                {!house.is_active ? (
+                  <span className="inline-flex h-7 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2.5 text-xs font-medium text-[var(--cms-text)]">
+                    Архів
+                  </span>
+                ) : null}
+
+                {house.district ? (
+                  <span
+                    className="inline-flex h-7 items-center rounded-[var(--r-pill)] px-2.5 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
+                    style={{ backgroundColor: house.district.theme_color }}
+                  >
+                    {house.district.name}
+                  </span>
+                ) : null}
+
+                {house.management_company?.name ? (
+                  <HouseEntityBadge
+                    variant="managementCompany"
+                    title={house.management_company.name}
+                  >
+                    {house.management_company.name}
+                  </HouseEntityBadge>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <AdminActionIconLink
+                  href={publicPreviewHref}
+                  icon="publicPage"
+                  label={`Відкрити сайт будинку ${house.name}`}
+                  tooltip="Відкрити сайт будинку"
+                  target="_blank"
+                  rel="noreferrer"
+                  size="lg"
+                  tone="accent"
+                />
+
+                <AdminActionIconLink
+                  href={ROUTES.admin.houses}
+                  icon="back"
+                  label="Назад до реєстру будинків"
+                  tooltip="Назад до реєстру"
+                  size="lg"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex w-full min-w-0 flex-col gap-4">
+          <div className="min-w-0">
             <HouseSectionTabs
               houseId={house.id}
               activeBlock={activeBlock}
               contentTargetId="house-section-content"
             />
 
-            <div className="absolute right-0 top-0 z-20 flex items-center gap-3">
-              <AdminActionIconLink
-                href={publicPreviewHref}
-                icon="publicPage"
-                label={`Відкрити сайт будинку ${house.name}`}
-                tooltip="Відкрити сайт будинку"
-                target="_blank"
-                rel="noreferrer"
-                size="lg"
-                tone="accent"
-              />
-
-              <AdminActionIconLink
-                href={ROUTES.admin.houses}
-                icon="back"
-                label="Назад до реєстру будинків"
-                tooltip="Назад до реєстру"
-                size="lg"
-              />
-            </div>
           </div>
         </div>
       </div>
 
       <div
         id="house-section-content"
-        className="relative min-h-[320px]"
+        className="relative min-h-[320px] lg:min-h-0 lg:flex-1 lg:overflow-hidden"
         aria-busy="false"
       >
       {activeBlock === "announcements" ? (

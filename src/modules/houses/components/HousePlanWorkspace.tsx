@@ -835,7 +835,7 @@ export function HousePlanWorkspace({
   const uploadPdfDisabled = draft.documents.length + selectedPdfFiles.length >= 2;
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative flex min-h-0 flex-col gap-4 lg:h-full lg:overflow-hidden">
       <PlatformSectionLoader
         active={isPending}
         delayMs={280}
@@ -843,18 +843,12 @@ export function HousePlanWorkspace({
         className="rounded-[var(--r-xl)]"
       />
 
-      <div className={`${adminSurfaceClass} p-6`}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
-            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
-            </p>
-          </div>
-
-          <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>
-            Нове завдання
-          </button>
+      <div className={`${adminSurfaceClass} shrink-0 p-5`}>
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
+          <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
+            Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
+          </p>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
@@ -871,39 +865,53 @@ export function HousePlanWorkspace({
         </div>
       </div>
 
-      {activeTab === "active" ? (
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["all", "Усі етапи", counters.active],
-            [
-              "planned",
-              "Заплановано",
-              tasks.filter((item) => item.status === "planned").length,
-            ],
-            [
-              "in_progress",
-              "В роботі",
-              tasks.filter((item) => item.status === "in_progress").length,
-            ],
-            [
-              "completed",
-              "Виконано",
-              tasks.filter((item) => item.status === "completed").length,
-            ],
-          ].map(([key, label, count]) => (
-            <button
-              key={String(key)}
-              type="button"
-              onClick={() => setActiveStageFilter(key as ActiveStageFilter)}
-              className={adminButtonClasses({
-                variant: activeStageFilter === key ? "primary" : "secondary",
-              })}
-            >
-              {label} · {count}
-            </button>
-          ))}
+      <div className={`${adminSurfaceClass} shrink-0 px-4 py-3`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {activeTab === "active" ? (
+            <div className="flex min-w-0 flex-wrap gap-2">
+              {[
+                ["all", "Усі етапи", counters.active],
+                [
+                  "planned",
+                  "Заплановано",
+                  tasks.filter((item) => item.status === "planned").length,
+                ],
+                [
+                  "in_progress",
+                  "В роботі",
+                  tasks.filter((item) => item.status === "in_progress").length,
+                ],
+                [
+                  "completed",
+                  "Виконано",
+                  tasks.filter((item) => item.status === "completed").length,
+                ],
+              ].map(([key, label, count]) => (
+                <button
+                  key={String(key)}
+                  type="button"
+                  onClick={() => setActiveStageFilter(key as ActiveStageFilter)}
+                  className={adminButtonClasses({
+                    variant: activeStageFilter === key ? "primary" : "secondary",
+                  })}
+                >
+                  {label} · {count}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div />
+          )}
+
+          <button
+            type="button"
+            onClick={openCreateMode}
+            className={`${adminButtonClasses({ variant: "primary" })} shrink-0`}
+          >
+            Нове завдання
+          </button>
         </div>
-      ) : null}
+      </div>
 
       <AdminSidePanel
         title={workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
@@ -1296,14 +1304,11 @@ export function HousePlanWorkspace({
         ) : null}
       </AdminSidePanel>
 
-      <div className="space-y-4">
+      <div className="min-h-0 flex-1 space-y-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
         {visibleTasks.length === 0 ? (
           <EmptyState
             title={activeTab === "active" ? "Активних завдань поки немає" : activeTab === "draft" ? "Чернеток поки немає" : "Архів завдань поки порожній"}
             description={activeTab === "active" ? "Після підтвердження та запуску робіт картки з’являться тут." : activeTab === "draft" ? "Нове завдання з’явиться тут одразу після збереження." : "Перенесені картки відображатимуться тут."}
-            action={!String(activeTab).startsWith("archiv") ? (
-              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити завдання</button>
-            ) : undefined}
           />
         ) : (
           visibleTasks.map((task) => {
