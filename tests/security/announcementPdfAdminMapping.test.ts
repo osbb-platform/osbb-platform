@@ -20,7 +20,7 @@ describe("announcement PDF CMS mapping", () => {
     const source = fs.readFileSync(
       path.resolve(
         process.cwd(),
-        "app/(admin)/admin/(protected)/houses/[id]/announcements/page.tsx",
+        "app/(admin)/admin/(protected)/houses/[id]/page.tsx",
       ),
       "utf8",
     );
