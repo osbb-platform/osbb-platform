@@ -304,7 +304,7 @@ export default async function AdminHouseDetailPage({
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_94%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
-        <div className="flex flex-col gap-5">
+        <div className="relative flex flex-col gap-6">
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
@@ -319,12 +319,12 @@ export default async function AdminHouseDetailPage({
               </span>
             </div>
 
-            <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-start">
-              <h1 className="mt-3 break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
+            <div className="mt-1 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+              <h1 className="mt-3 max-w-[calc(100%-10rem)] break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
               {house.name}
             </h1>
 
-              <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
+              <p className="mt-2 max-w-[calc(100%-10rem)] break-words text-base leading-6 text-[var(--cms-text-muted)]">
               {house.address}
             </p>
             </div>
@@ -360,14 +360,14 @@ export default async function AdminHouseDetailPage({
             </div>
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="flex w-full min-w-0 flex-col gap-4">
             <HouseSectionTabs
               houseId={house.id}
               activeBlock={activeBlock}
               contentTargetId="house-section-content"
             />
 
-            <div className="flex flex-none items-center gap-2 self-end">
+            <div className="absolute right-0 top-0 z-20 flex items-center gap-3">
               <AdminActionIconLink
                 href={publicPreviewHref}
                 icon="publicPage"
