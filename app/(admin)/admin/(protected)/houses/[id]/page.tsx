@@ -304,7 +304,7 @@ export default async function AdminHouseDetailPage({
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_94%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-5">
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
@@ -319,15 +319,14 @@ export default async function AdminHouseDetailPage({
               </span>
             </div>
 
-            <div className="mt-1 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-              <h1 className="truncate text-xl font-semibold tracking-tight text-[var(--cms-text)] md:text-2xl">
-                {house.name}
-              </h1>
+            <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-start">
+              <h1 className="mt-3 break-words text-3xl font-semibold leading-tight tracking-tight text-[var(--cms-text)]">
+              {house.name}
+            </h1>
 
-              <p className="truncate text-sm text-[var(--cms-text-muted)]">
-                {house.address}
-                {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
-              </p>
+              <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
+              {house.address}
+            </p>
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -361,7 +360,7 @@ export default async function AdminHouseDetailPage({
             </div>
           </div>
 
-          <div className="flex w-full min-w-0 flex-col gap-3 xl:max-w-[720px] xl:flex-1">
+          <div className="min-w-0 flex-1">
             <HouseSectionTabs
               houseId={house.id}
               activeBlock={activeBlock}
