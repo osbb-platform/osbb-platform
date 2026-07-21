@@ -306,46 +306,53 @@ export default async function AdminHouseDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_94%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
+            <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
                 href={ROUTES.admin.houses}
-                className="text-[var(--cms-text-muted)] transition hover:text-[var(--cms-text)]"
+                className="truncate transition hover:text-[var(--cms-text)]"
               >
                 Будинки
               </Link>
-              <span>/</span>
-              <span className="text-[var(--cms-text)]">{house.name}</span>
+              <span aria-hidden="true">/</span>
+              <span className="truncate text-[var(--cms-text)]">
+                {house.name}
+              </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
-              {house.name}
-            </h1>
+            <div className="mt-1 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-[var(--cms-text)] md:text-2xl">
+                {house.name}
+              </h1>
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              {house.address}
-              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
-            </p>
+              <p className="truncate text-sm text-[var(--cms-text-muted)]">
+                {house.address}
+                {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
+              </p>
+            </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <HouseEntityBadge variant="slug" title={house.slug}>
                 {house.slug}
               </HouseEntityBadge>
+
               {!house.is_active ? (
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                <span className="inline-flex h-7 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2.5 text-xs font-medium text-[var(--cms-text)]">
                   Архів
                 </span>
               ) : null}
+
               {house.district ? (
                 <span
-                  className="inline-flex h-8 items-center rounded-[var(--r-pill)] px-3 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
+                  className="inline-flex h-7 items-center rounded-[var(--r-pill)] px-2.5 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
                 </span>
               ) : null}
+
               {house.management_company?.name ? (
                 <HouseEntityBadge
                   variant="managementCompany"
@@ -354,27 +361,18 @@ export default async function AdminHouseDetailPage({
                   {house.management_company.name}
                 </HouseEntityBadge>
               ) : null}
-              <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                Розділ: {
-                  {
-                    announcements: "Оголошення",
-                    board: "Правління",
-                    information: "Інформація",
-                    reports: "Звіти",
-                    debtors: "Боржники",
-                    plan: "План робіт",
-                    meetings: "Збори",
-                    requisites: "Реквізити",
-                    specialists: "Спеціалісти",
-                    "founding-documents": "Установчі документи",
-                  }[activeBlock]
-                }
-              </span>
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
-            <div className="flex w-full flex-wrap items-center justify-end gap-3">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+            <div className="min-w-0 flex-1 sm:min-w-[260px] xl:w-[320px] xl:flex-none">
+              <HouseBlockSelector
+                houseId={house.id}
+                activeBlock={activeBlock}
+              />
+            </div>
+
+            <div className="flex flex-none items-center gap-2 self-end sm:self-auto">
               <AdminActionIconLink
                 href={publicPreviewHref}
                 icon="publicPage"
@@ -392,13 +390,6 @@ export default async function AdminHouseDetailPage({
                 label="Назад до реєстру будинків"
                 tooltip="Назад до реєстру"
                 size="lg"
-              />
-            </div>
-
-            <div className="w-full min-w-[260px] xl:max-w-[360px]">
-              <HouseBlockSelector
-                houseId={house.id}
-                activeBlock={activeBlock}
               />
             </div>
           </div>
