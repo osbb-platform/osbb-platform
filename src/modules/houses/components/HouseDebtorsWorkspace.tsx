@@ -1,11 +1,10 @@
 "use client";
 
-import {
-  AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { useMemo, useRef, useState } from "react";
 
-import { useMemo,
-  useRef,
-  useState } from "react";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { Input } from "@/src/shared/ui/admin/Input";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { exportDebtorsRegistry,
   parseDebtorsImportFile,
@@ -208,6 +207,9 @@ export function HouseDebtorsWorkspace({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "publish_draft" | "delete_draft" | null
+  >(null);
   const [submittedMode, setSubmittedMode] = useState<
     "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | "save_calculator" | null
   >(null);
@@ -623,12 +625,12 @@ export function HouseDebtorsWorkspace({
       />
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
-        <input
-          type="text"
+        <Input
+          type="search"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Пошук: квартира / особовий рахунок / власник"
-          className={adminInputClass}
+          aria-label="Пошук у реєстрі боржників"
         />
 
         {activeTab === "all" ? (
@@ -687,7 +689,7 @@ export function HouseDebtorsWorkspace({
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
-              onClick={deleteDraft}
+              onClick={() => setConfirmAction("delete_draft")}
               disabled={isPending}
               className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-50`}
             >
@@ -696,7 +698,7 @@ export function HouseDebtorsWorkspace({
 
             <button
               type="button"
-              onClick={publishDraft}
+              onClick={() => setConfirmAction("publish_draft")}
               disabled={isPending}
               className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-50`}
             >
@@ -1263,6 +1265,44 @@ export function HouseDebtorsWorkspace({
         </div>
       ) : null}
       </div>
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish_draft"}
+        title="Опублікувати чернетку боржників?"
+        description="Поточний опублікований список буде повністю замінено даними з чернетки."
+        confirmLabel="Опублікувати"
+        pendingLabel="Публікуємо..."
+        tone="publish"
+        isPending={isPending && submittedMode === "publish_draft"}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void publishDraft();
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete_draft"}
+        title="Видалити чернетку боржників?"
+        description="Усі дані поточної чернетки буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        tone="destructive"
+        isPending={isPending && submittedMode === "delete_draft"}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void deleteDraft();
+        }}
+      />
     </div>
   );
 }
