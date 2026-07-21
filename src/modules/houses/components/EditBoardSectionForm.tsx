@@ -1,20 +1,21 @@
 "use client";
 
-import {
-  useMemo,
-  useState } from "react";
+import { useMemo, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type {
   AdminHouseBoard,
   AdminHouseBoardMember,
-  } from "@/src/modules/houses/services/getAdminHouseBoard";
-import {
-  adminButtonClasses,
-  adminInputClass,
-  adminIconButtonClasses,
-} from "@/src/shared/ui/admin/adminStyles";
+} from "@/src/modules/houses/services/getAdminHouseBoard";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { Button } from "@/src/shared/ui/admin/Button";
+import { FormField } from "@/src/shared/ui/admin/FormField";
+import { Input } from "@/src/shared/ui/admin/Input";
+import {
+  adminSelectClass,
+  adminTextareaClass,
+} from "@/src/shared/ui/admin/adminStyles";
 
 type BoardRoleStatus =
   | "chairman"
@@ -237,7 +238,7 @@ export function EditBoardSectionForm({
   const [introLockVersion, setIntroLockVersion] = useState(
     initialBoardData.introLockVersion,
   );
-  const [isEditingIntro, setIsEditingIntro] = useState(false);
+  const [isSectionPanelOpen, setIsSectionPanelOpen] = useState(false);
 
   const [roles, setRoles] = useState<BoardRoleItem[]>(initialBoardData.roles);
   const [activeTab, setActiveTab] = useState<BoardTabKey>("chairman");
@@ -284,6 +285,7 @@ export function EditBoardSectionForm({
   function openCreateMode() {
     if (readOnlyMode) return;
 
+    setIsSectionPanelOpen(true);
     setWorkspaceError(null);
     setIsDeleteConfirmOpen(false);
     setWorkspaceMode("create");
@@ -296,6 +298,7 @@ export function EditBoardSectionForm({
     const role = roles.find((item) => item.id === roleId);
     if (!role) return;
 
+    setIsSectionPanelOpen(true);
     setWorkspaceError(null);
     setIsDeleteConfirmOpen(false);
     setWorkspaceMode("edit");
@@ -472,7 +475,6 @@ export function EditBoardSectionForm({
           setIntro(saved.intro);
           setSavedIntro(saved.intro);
           setIntroLockVersion(saved.lockVersion);
-          setIsEditingIntro(false);
         },
       },
     );
@@ -480,155 +482,269 @@ export function EditBoardSectionForm({
 
   const activeTabConfig = TAB_CONFIG.find((item) => item.key === activeTab);
 
+  function closeSectionPanel() {
+    if (isPending) {
+      return;
+    }
+
+    setIntro(savedIntro);
+    closeWorkspace();
+    setIsSectionPanelOpen(false);
+  }
+
   return (
     <div className="space-y-6">
-      <form
-        onSubmit={(event) => event.preventDefault()}
-        className="space-y-6"
-      >
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-[var(--cms-text)]">Правління</h2>
-                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                  Склад правління, контакти відповідальних осіб і картки, які мешканці бачать на сайті будинку.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={openCreateMode}
-                className={[adminButtonClasses({ variant: "primary" }), "h-12 shrink-0 whitespace-nowrap"].join(" ")}
-              >
-                Створити роль
-              </button>
-            </div>
-
-            <AdminSegmentedTabs
-              activeKey={activeTab}
-              onChange={(key) => setActiveTab(key as BoardTabKey)}
-              items={TAB_CONFIG.map((tab) => ({
-                key: tab.key,
-                label: tab.label,
-                count:
-                  tab.status === "chairman"
-                    ? chairman
-                      ? 1
-                      : 0
-                    : tab.status === "vice_chairman"
-                      ? viceChairman
-                        ? 1
-                        : 0
-                      : tab.status === "member"
-                        ? members.length
-                        : revisionCommission.length,
-              }))}
-            />
+      <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">
+              Правління
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--cms-text-muted)]">
+              Склад правління, контакти відповідальних осіб і звернення, які мешканці бачать на сайті будинку.
+            </p>
           </div>
+
+          {!readOnlyMode ? (
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => setIsSectionPanelOpen(true)}
+            >
+              Редагувати розділ
+            </Button>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+            Вступ
+          </div>
+          <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+            Звернення від правління
+          </h3>
         </div>
 
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                Звернення від правління
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                Цей текст відображатиметься у верхній частині публічної сторінки
-                правління.
-              </p>
-            </div>
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-sm leading-7 text-[var(--cms-text-muted)]">
+          {intro || "Звернення поки не заповнено"}
+        </div>
+      </section>
 
-            {isEditingIntro ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIntro(savedIntro);
-                  setIsEditingIntro(false);
-                }}
-                className={adminIconButtonClasses()}
-                aria-label="Закрити форму"
-              >
-                ×
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditingIntro(true)}
-                className={adminButtonClasses({ variant: "secondary" })}
-              >
-                Редагувати
-              </button>
-            )}
+      <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+            Команда
           </div>
+          <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+            Члени правління
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+            Актуальні представники та їхні контактні дані.
+          </p>
+        </div>
 
-          {isEditingIntro ? (
-            <div className="mt-4 space-y-4">
-              <textarea
-                value={intro}
-                onChange={(event) => setIntro(event.target.value)}
-                rows={6}
-                placeholder="Введіть звернення від правління..."
-                className={adminInputClass}
-              />
+        <div className="mt-5 space-y-3">
+          {roles.length > 0 ? (
+            [...roles]
+              .sort((left, right) => left.sortOrder - right.sortOrder)
+              .map((role) => (
+                <article
+                  key={role.id}
+                  className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
+                        {role.role || getRoleLabel(role.status)}
+                      </div>
+                      <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
+                        {role.name || "Без імені"}
+                      </div>
+                      <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+                        {buildRolePreview(role)}
+                      </div>
+                      {role.description ? (
+                        <div className="mt-2 text-sm leading-6 text-[var(--cms-text-soft)]">
+                          {role.description}
+                        </div>
+                      ) : null}
+                    </div>
 
-              <button
-                type="button"
-                onClick={handleSaveIntro}
-                disabled={!introDirty || isPending}
-                className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
-              >
-                {isPending ? "Зберігаємо..." : "Зберегти звернення"}
-              </button>
-            </div>
+                    {!readOnlyMode ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openEditMode(role.id)}
+                      >
+                        Редагувати
+                      </Button>
+                    ) : null}
+                  </div>
+                </article>
+              ))
           ) : (
-            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-sm leading-7 text-[var(--cms-text-muted)]">
-              {intro || "Звернення поки не заповнено"}
+            <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-5 py-6 text-sm text-[var(--cms-text-muted)]">
+              Представників правління поки не додано.
             </div>
           )}
         </div>
+      </section>
 
-        {workspaceMode !== "idle" && draft ? (
-          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <div className="text-lg font-semibold text-[var(--cms-text)]">
-                  {workspaceMode === "create"
-                    ? "Нова роль"
-                    : "Редагування ролі"}
-                </div>
-                <div className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  Після збереження картка автоматично закриється і з’явиться у
-                  відповідній вкладці.
-                </div>
+      <AdminSidePanel
+        title="Редагування правління"
+        description="Вступ і члени правління редагуються в одному робочому просторі, але зберігаються окремими безпечними командами."
+        isOpen={isSectionPanelOpen && !readOnlyMode}
+        onClose={closeSectionPanel}
+        maxWidthClassName="max-w-4xl"
+      >
+        <div className="space-y-8">
+          <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                Вступ
               </div>
-
-              <button
-                type="button"
-                onClick={closeWorkspace}
-                aria-label="Закрити форму"
-                className={adminIconButtonClasses()}
-              >
-                ×
-              </button>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                Звернення від правління
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+                Текст відображається у верхній частині публічної сторінки правління.
+              </p>
             </div>
 
-            {workspaceError ? (
-              <div
-                role="alert"
-                className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
-              >
-                {workspaceError}
-              </div>
-            ) : null}
+            <FormField
+              label="Текст звернення"
+              className="mt-5"
+            >
+              <textarea
+                value={intro}
+                onChange={(event) => setIntro(event.target.value)}
+                rows={7}
+                placeholder="Введіть звернення від правління..."
+                className={adminTextareaClass}
+              />
+            </FormField>
 
-            <div className="grid gap-6">
-              <div className="grid gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Посада
-                  </label>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                onClick={handleSaveIntro}
+                disabled={!introDirty || isPending}
+                loading={isPending}
+              >
+                Зберегти вступ
+              </Button>
+
+              {introDirty ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIntro(savedIntro)}
+                  disabled={isPending}
+                >
+                  Скасувати зміни
+                </Button>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                  Члени правління
+                </div>
+                <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                  Картки представників
+                </h3>
+              </div>
+
+              <Button
+                type="button"
+                onClick={openCreateMode}
+                disabled={isPending}
+              >
+                Додати представника
+              </Button>
+            </div>
+
+            <div className="mt-5">
+              <AdminSegmentedTabs
+                activeKey={activeTab}
+                onChange={(key) => setActiveTab(key as BoardTabKey)}
+                items={TAB_CONFIG.map((tab) => ({
+                  key: tab.key,
+                  label: tab.label,
+                  count:
+                    tab.status === "chairman"
+                      ? chairman
+                        ? 1
+                        : 0
+                      : tab.status === "vice_chairman"
+                        ? viceChairman
+                          ? 1
+                          : 0
+                        : tab.status === "member"
+                          ? members.length
+                          : revisionCommission.length,
+                }))}
+              />
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {visibleRoles.length > 0 ? (
+                visibleRoles.map((role) => (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => openEditMode(role.id)}
+                    className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4 text-left transition hover:border-[var(--cms-border-strong)]"
+                  >
+                    <div className="text-sm font-semibold text-[var(--cms-text)]">
+                      {role.name || "Без імені"}
+                    </div>
+                    <div className="mt-1 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
+                      {role.role || getRoleLabel(role.status)}
+                    </div>
+                    <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                      {buildRolePreview(role)}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-5 text-sm text-[var(--cms-text-muted)]">
+                  {activeTabConfig?.emptyText ?? "У цій категорії поки немає карток."}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {workspaceMode !== "idle" && draft ? (
+            <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">
+                  {workspaceMode === "create" ? "Новий запис" : "Редагування"}
+                </div>
+                <h3 className="mt-2 text-lg font-semibold text-[var(--cms-text)]">
+                  {workspaceMode === "create"
+                    ? "Новий представник"
+                    : "Редагування представника"}
+                </h3>
+              </div>
+
+              {workspaceError ? (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+                >
+                  {workspaceError}
+                </div>
+              ) : null}
+
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <FormField label="Посада" required>
                   <select
                     value={draft.status}
                     onChange={(event) =>
@@ -637,170 +753,118 @@ export function EditBoardSectionForm({
                         event.target.value as BoardRoleStatus,
                       )
                     }
-                    className={adminInputClass}
+                    className={adminSelectClass}
                   >
                     <option value="chairman">Голова правління</option>
                     <option value="vice_chairman">
                       Заступник голови правління
                     </option>
-                    <option value="member">Члени правління</option>
+                    <option value="member">Член правління</option>
                     <option value="revision_commission">
                       Ревізійна комісія
                     </option>
                   </select>
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Ім’я
-                  </label>
-                  <input
+                <FormField label="Ім’я" required>
+                  <Input
                     value={draft.name}
                     onChange={(event) =>
                       handleDraftChange("name", event.target.value)
                     }
-                    className={adminInputClass}
                     placeholder="Введіть ім’я"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Телефон
-                  </label>
-                  <input
+                <FormField label="Телефон">
+                  <Input
                     type="tel"
                     inputMode="tel"
                     value={draft.phone}
                     onChange={(event) =>
                       handleDraftChange("phone", event.target.value)
                     }
-                    className={adminInputClass}
                     placeholder="+380 67 123 45 67"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Email
-                  </label>
-                  <input
+                <FormField label="Email">
+                  <Input
+                    type="email"
                     value={draft.email}
                     onChange={(event) =>
                       handleDraftChange("email", event.target.value)
                     }
-                    className={adminInputClass}
                     placeholder="name@example.com"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Години прийому / зв’язку
-                  </label>
-                  <input
+                <FormField
+                  label="Години прийому / зв’язку"
+                  className="md:col-span-2"
+                >
+                  <Input
                     value={draft.officeHours}
                     onChange={(event) =>
                       handleDraftChange("officeHours", event.target.value)
                     }
-                    className={adminInputClass}
                     placeholder="Пн–Пт, 10:00–18:00"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
-                    Опис
-                  </label>
+                <FormField
+                  label="Опис"
+                  className="md:col-span-2"
+                >
                   <textarea
                     value={draft.description}
                     onChange={(event) =>
                       handleDraftChange("description", event.target.value)
                     }
                     rows={5}
-                    className={adminInputClass}
+                    className={adminTextareaClass}
                     placeholder="Короткий опис функцій і зони відповідальності"
                   />
-                </div>
+                </FormField>
               </div>
-              <div className="border-t border-[var(--cms-border)] pt-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSaveDraft}
-                    className={[adminButtonClasses({ variant: "primary" }), "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ") }
-                  >
-                    Зберегти
-                  </button>
 
-                  {workspaceMode === "edit" ? (
-                    <button
-                      type="button"
-                      onClick={() => setIsDeleteConfirmOpen(true)}
-                      className={[adminButtonClasses({ variant: "danger" }), "rounded-[var(--r-xl)] px-8 py-4 text-base"].join(" ")}
-                    >
-                      Видалити
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-              {activeTabConfig?.label ?? "Ролі правління"}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-              Тут відображаються картки, які будуть опубліковані на сайті
-              будинку у відповідному розділі.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {visibleRoles.length > 0 ? (
-              visibleRoles.map((role) => (
-                <button
-                  key={role.id}
+              <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--cms-border)] pt-5">
+                <Button
                   type="button"
-                  onClick={() => openEditMode(role.id)}
-                  className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/40 p-4 text-left transition hover:border-[var(--cms-border)] hover:bg-[var(--cms-surface-muted)]/70"
+                  onClick={handleSaveDraft}
+                  disabled={isPending}
+                  loading={isPending}
                 >
-                  <div className="min-w-0">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text)]">
-                        {role.role || getRoleLabel(role.status)}
-                      </span>
-                    </div>
+                  Зберегти представника
+                </Button>
 
-                    <div className="truncate text-base font-semibold text-[var(--cms-text)]">
-                      {role.name || "Без імені"}
-                    </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeWorkspace}
+                  disabled={isPending}
+                >
+                  Скасувати
+                </Button>
 
-                    <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
-                      {buildRolePreview(role)}
-                    </div>
+                <div className="min-w-0 flex-1" />
 
-                    {role.description ? (
-                      <div className="mt-3 text-sm leading-6 text-[var(--cms-text-muted)]">
-                        {role.description.length > 140
-                          ? `${role.description.slice(0, 140).trim()}…`
-                          : role.description}
-                      </div>
-                    ) : null}
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                {activeTabConfig?.emptyText ?? "У цій вкладці поки немає карток."}
+                {workspaceMode === "edit" ? (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                    disabled={isPending}
+                  >
+                    Видалити
+                  </Button>
+                ) : null}
               </div>
-            )}
-          </div>
+            </section>
+          ) : null}
         </div>
-      </form>
+      </AdminSidePanel>
+
       <PlatformConfirmModal
         open={isDeleteConfirmOpen}
         tone="destructive"
@@ -816,7 +880,6 @@ export function EditBoardSectionForm({
           }
         }}
       />
-
     </div>
   );
 }
