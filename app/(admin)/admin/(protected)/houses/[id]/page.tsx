@@ -6,6 +6,7 @@ import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/Hou
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
 import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTabs";
 import { HouseSwitcher } from "@/src/modules/houses/components/HouseSwitcher";
+import { HouseStatusLine } from "@/src/modules/houses/components/HouseStatusLine";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -342,6 +343,11 @@ export default async function AdminHouseDetailPage({
               <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
               {house.address}
             </p>
+
+              <HouseStatusLine
+                houseId={house.id}
+                counters={sectionCounters}
+              />
             </div>
 
 
