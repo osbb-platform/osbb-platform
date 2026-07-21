@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
-import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
 import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTabs";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
@@ -368,6 +367,7 @@ export default async function AdminHouseDetailPage({
             <HouseSectionTabs
               houseId={house.id}
               activeBlock={activeBlock}
+              contentTargetId="house-section-content"
             />
 
             <div className="flex flex-none items-center gap-2 self-end">
@@ -394,10 +394,10 @@ export default async function AdminHouseDetailPage({
         </div>
       </div>
 
-      <HouseBlockNavigationFrame
-        houseId={house.id}
-        activeBlock={activeBlock}
-        hideSelector
+      <div
+        id="house-section-content"
+        className="relative min-h-[320px]"
+        aria-busy="false"
       >
       {activeBlock === "announcements" ? (
         <HouseAnnouncementsWorkspace
@@ -532,7 +532,7 @@ export default async function AdminHouseDetailPage({
         />
       ) : null}
 
-      </HouseBlockNavigationFrame>
+      </div>
     </div>
   );
 }

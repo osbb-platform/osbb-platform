@@ -9,12 +9,14 @@ import {
   useState,
   useTransition,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/src/shared/ui/admin/Skeleton";
 
 type HouseSectionTabsProps = {
   houseId: string;
   activeBlock: string;
-  onPendingBlockChange?: (block: string | null) => void;
+  contentTargetId?: string;
 };
 
 export const houseNavigationBlocks = [
@@ -40,15 +42,18 @@ export function getHouseBlockLabel(value: string) {
 export function HouseSectionTabs({
   houseId,
   activeBlock,
-  onPendingBlockChange,
+  contentTargetId,
 }: HouseSectionTabsProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedBlock, setSelectedBlock] = useState(activeBlock);
-  const [visibleCount, setVisibleCount] = useState<number>(houseNavigationBlocks.length);
+  const [visibleCount, setVisibleCount] = useState<number>(
+    houseNavigationBlocks.length,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const recalculate = useCallback(() => {
@@ -113,10 +118,17 @@ export function HouseSectionTabs({
   }, [activeBlock]);
 
   useEffect(() => {
-    if (!isPending) {
-      onPendingBlockChange?.(null);
+    if (!contentTargetId) {
+      setPortalTarget(null);
+      return;
     }
-  }, [isPending, onPendingBlockChange]);
+
+    setPortalTarget(document.getElementById(contentTargetId));
+  }, [contentTargetId]);
+
+  useEffect(() => {
+    portalTarget?.setAttribute("aria-busy", isPending ? "true" : "false");
+  }, [isPending, portalTarget]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -152,7 +164,6 @@ export function HouseSectionTabs({
 
     setSelectedBlock(nextBlock);
     setMenuOpen(false);
-    onPendingBlockChange?.(nextBlock);
 
     startTransition(() => {
       router.push(`${ROUTES.admin.houses}/${houseId}?block=${nextBlock}`);
@@ -267,6 +278,38 @@ export function HouseSectionTabs({
           Ще: Установчі документи ▾
         </span>
       </div>
+
+      {isPending && portalTarget
+        ? createPortal(
+            <div
+              className="absolute inset-0 z-40 rounded-[var(--r-xl)] bg-[color-mix(in_srgb,var(--cms-surface)_92%,transparent)] p-4 backdrop-blur-[2px]"
+              aria-live="polite"
+              aria-label={`Відкриваємо розділ «${getHouseBlockLabel(selectedBlock)}»`}
+            >
+              <div className="space-y-4 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 shadow-[var(--cms-shadow-sm)]">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton variant="text" className="h-4 w-[34%]" />
+                    <Skeleton variant="text" className="w-[58%]" />
+                  </div>
+                  <Skeleton variant="block" className="h-9 w-28" />
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Skeleton variant="card" />
+                  <Skeleton variant="card" />
+                </div>
+
+                <div className="space-y-3">
+                  <Skeleton variant="row" />
+                  <Skeleton variant="row" />
+                  <Skeleton variant="row" />
+                </div>
+              </div>
+            </div>,
+            portalTarget,
+          )
+        : null}
     </div>
   );
 }
