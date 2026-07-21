@@ -1,11 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import {
   adminInputClass,
   adminInsetSurfaceClass,
   adminButtonClasses,
-  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { FormEvent, useRef, useState, type ChangeEvent } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -19,7 +17,6 @@ import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 
 type EditAnnouncementSectionFormProps = {
-  headerActions?: ReactNode;
   houseId: string;
   houseSlug: string;
   housePageId?: string | null;
@@ -30,6 +27,7 @@ type EditAnnouncementSectionFormProps = {
     content: Record<string, unknown>;
   };
   onClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 function getLevelLabel(level: string) {
@@ -45,12 +43,12 @@ function getLevelLabel(level: string) {
 }
 
 export function EditAnnouncementSectionForm({
-  headerActions,
   houseId,
   houseSlug,
   housePageId,
   section,
   onClose,
+  onDirtyChange,
 }: EditAnnouncementSectionFormProps) {
   const { dispatch, isPending } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -63,6 +61,7 @@ export function EditAnnouncementSectionForm({
   const [pendingAction, setPendingAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
+  const [isDirty, setIsDirty] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
@@ -91,6 +90,13 @@ export function EditAnnouncementSectionForm({
     return new FormData(formElement);
   }
 
+  function markDirty() {
+    if (!isDirty) {
+      setIsDirty(true);
+      onDirtyChange?.(true);
+    }
+  }
+
   function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
 
@@ -112,6 +118,7 @@ export function EditAnnouncementSectionForm({
     setPdfError(null);
     setSelectedPdf(file);
     setRemovePdf(false);
+    markDirty();
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -147,7 +154,11 @@ export function EditAnnouncementSectionForm({
           },
         },
         {
-          onSuccess: () => onClose?.(),
+          onSuccess: () => {
+            setIsDirty(false);
+            onDirtyChange?.(false);
+            onClose?.();
+          },
           onError: setActionError,
         },
       );
@@ -187,7 +198,11 @@ export function EditAnnouncementSectionForm({
           },
         },
         {
-          onSuccess: () => onClose?.(),
+          onSuccess: () => {
+            setIsDirty(false);
+            onDirtyChange?.(false);
+            onClose?.();
+          },
           onError: setActionError,
         },
       );
@@ -211,31 +226,6 @@ export function EditAnnouncementSectionForm({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-medium text-[var(--cms-text)]">
-            Редагування оголошення
-          </div>
-          <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
-            Зміни зберігаються в секції та історії версій.
-          </div>
-        </div>
-
-        {onClose ? (
-          <div className="flex shrink-0 items-center gap-2">
-            {headerActions}
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Закрити редактор"
-              className={adminIconButtonClasses()}
-            >
-              ×
-            </button>
-          </div>
-        ) : null}
-      </div>
-
       <div className="grid gap-4 md:grid-cols-3">
         <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
           <div className="text-sm text-[var(--cms-text-muted)]">Дата публікації</div>
@@ -255,7 +245,7 @@ export function EditAnnouncementSectionForm({
         </div>
       </div>
 
-      <form ref={formRef} onSubmit={handleSave} className="grid gap-4">
+      <form ref={formRef} onSubmit={handleSave} onChange={markDirty} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення
@@ -325,6 +315,7 @@ export function EditAnnouncementSectionForm({
           onChange={handlePdfChange}
           onRemoveCurrent={() => {
             setRemovePdf(true);
+            markDirty();
             setSelectedPdf(null);
             setPdfError(null);
             if (pdfInputRef.current) {
@@ -339,7 +330,7 @@ export function EditAnnouncementSectionForm({
           </div>
         ) : null}
 
-        <div>
+        <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <button
