@@ -55,6 +55,11 @@ type PostQuickActionConfirm = {
   sectionId: string;
   action: PostQuickActionKind;
 } | null;
+type FaqQuickActionKind = "publish" | "archive" | "delete";
+type FaqQuickActionConfirm = {
+  faqId: string;
+  action: FaqQuickActionKind;
+} | null;
 
 type InformationSectionItem = HouseInformationPostSnapshot;
 
@@ -156,6 +161,8 @@ export function HouseInformationWorkspace({
   const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
   const [postQuickActionConfirm, setPostQuickActionConfirm] =
     useState<PostQuickActionConfirm>(null);
+  const [faqQuickActionConfirm, setFaqQuickActionConfirm] =
+    useState<FaqQuickActionConfirm>(null);
 
   const baseVisiblePosts = posts
     .filter((item) => item.status === postLifecycleTab)
@@ -398,6 +405,76 @@ export function HouseInformationWorkspace({
     setFaqCreateOpen(false);
     setEditingFaqId(faqId);
     closePostWorkspace();
+  }
+
+  function prepareFaqQuickAction(
+    faq: HouseFaqSnapshot,
+    action: FaqQuickActionKind,
+  ) {
+    setWorkspaceError(null);
+    setFaqCreateOpen(false);
+    setEditingFaqId(null);
+    closePostWorkspace();
+    setFaqQuickActionConfirm({
+      faqId: faq.id,
+      action,
+    });
+  }
+
+  async function runFaqQuickAction() {
+    if (!faqQuickActionConfirm) return;
+
+    const faq = faqs.find((item) => item.id === faqQuickActionConfirm.faqId);
+    if (!faq) {
+      setFaqQuickActionConfirm(null);
+      setWorkspaceError("FAQ не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    const action = faqQuickActionConfirm.action;
+
+    if (action === "publish") {
+      await dispatch(
+        {
+          type: "faq.publish",
+          houseId,
+          payload: {
+            faqId: faq.id,
+            lockVersion: faq.lockVersion,
+          },
+        },
+        {
+          successMessage: "FAQ опубліковано",
+          onError: setWorkspaceError,
+          onSuccess: () => {
+            setFaqQuickActionConfirm(null);
+            setFaqLifecycleTab("published");
+          },
+        },
+      );
+      return;
+    }
+
+    await dispatch(
+      {
+        type: `faq.${action}`,
+        houseId,
+        payload: {
+          faqId: faq.id,
+          lockVersion: faq.lockVersion,
+        },
+      },
+      {
+        onError: setWorkspaceError,
+        onSuccess: () => {
+          setFaqQuickActionConfirm(null);
+
+          if (action === "archive") {
+            setFaqLifecycleTab("archived");
+          }
+        },
+      },
+    );
   }
 
   function openCreateDocument() {
@@ -931,10 +1008,17 @@ export function HouseInformationWorkspace({
               ].join(" ")}>
               {visibleFaqs.length > 0 ? (
                 visibleFaqs.slice(0, visibleFaqCount).map((faq) => (
-                  <button
+                  <div
                     key={faq.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => openFaqWorkspace(faq.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openFaqWorkspace(faq.id);
+                      }
+                    }}
                     className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -960,7 +1044,56 @@ export function HouseInformationWorkspace({
                           ? "Цей FAQ зараз показується на публічній сторінці будинку."
                           : "Архівна версія FAQ не показується на сайті."}
                     </div>
-                  </button>
+
+                    <div className="mt-4">
+                      <WorkspaceQuickActions
+                        actions={[
+                          ...(faq.status === "draft"
+                            ? [
+                                {
+                                  key: "publish",
+                                  label: "Опублікувати",
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "publish"),
+                                },
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "delete"),
+                                },
+                              ]
+                            : []),
+                          ...(faq.status === "published"
+                            ? [
+                                {
+                                  key: "archive",
+                                  label: "В архів",
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "archive"),
+                                },
+                              ]
+                            : []),
+                          ...(faq.status === "archived"
+                            ? [
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "delete"),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
+                    </div>
+                  </div>
                 ))
               ) : (
                 <EmptyState
@@ -990,6 +1123,54 @@ export function HouseInformationWorkspace({
               </div>
             </div>
           </div>
+
+          <PlatformConfirmModal
+            open={faqQuickActionConfirm !== null}
+            title={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Опублікувати FAQ?"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "Перенести FAQ до архіву?"
+                  : "Видалити FAQ?"
+            }
+            description={
+              faqQuickActionConfirm?.action === "publish"
+                ? "FAQ стане доступним мешканцям і замінить поточну опубліковану версію."
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "FAQ буде знято з публікації та переміщено до архіву."
+                  : "FAQ буде видалено без можливості відновлення."
+            }
+            confirmLabel={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Опублікувати"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "В архів"
+                  : "Видалити"
+            }
+            pendingLabel={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Публікуємо..."
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "Архівуємо..."
+                  : "Видаляємо..."
+            }
+            tone={
+              faqQuickActionConfirm?.action === "delete"
+                ? "destructive"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "warning"
+                  : "publish"
+            }
+            isPending={isPending}
+            onCancel={() => {
+              if (!isPending) {
+                setFaqQuickActionConfirm(null);
+              }
+            }}
+            onConfirm={() => {
+              void runFaqQuickAction();
+            }}
+          />
 
           <AdminSidePanel
             title="Новий FAQ"
