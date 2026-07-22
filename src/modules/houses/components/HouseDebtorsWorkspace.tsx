@@ -1,6 +1,7 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 
 import { useMemo, useRef, useState } from "react";
 
@@ -212,6 +213,7 @@ export function HouseDebtorsWorkspace({
   );
   const [searchQuery, setSearchQuery] =
     useWorkspaceMemory("debtors", "searchQuery", "");
+  const [visibleRowCount, setVisibleRowCount] = useState(20);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
@@ -610,7 +612,10 @@ export function HouseDebtorsWorkspace({
               { key: "draft", label: "Чернетка", count: draftBalanceRowsCount },
             ]}
             activeKey={activeTab}
-            onChange={(key) => setActiveTab(key as WorkspaceTab)}
+            onChange={(key) => {
+              setVisibleRowCount(20);
+              setActiveTab(key as WorkspaceTab);
+            }}
             ariaLabel="Фільтр боржників"
           />
         </div>
@@ -636,7 +641,10 @@ export function HouseDebtorsWorkspace({
         <Input
           type="search"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => {
+            setSearchQuery(event.target.value);
+            setVisibleRowCount(20);
+          }}
           placeholder="Пошук: квартира / особовий рахунок / власник"
           aria-label="Пошук у реєстрі боржників"
         />
@@ -679,6 +687,12 @@ export function HouseDebtorsWorkspace({
           </>
         ) : null}
       </div>
+
+      <WorkspacePaginationControls
+        visible={visibleRowCount}
+        total={filteredRows.length}
+        onShowMore={() => setVisibleRowCount((current) => current + 20)}
+      />
 
       {activeTab === "draft" && isDraftEmpty ? (
         <EmptyState title="Чернетка поки порожня" description="Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут." />
@@ -1120,7 +1134,7 @@ export function HouseDebtorsWorkspace({
               </thead>
 
               <tbody>
-                {filteredRows.map((row) => (
+                {filteredRows.slice(0, visibleRowCount).map((row) => (
                   <tr
                     key={row.apartmentId}
                     className="border-b border-[var(--cms-border)]"

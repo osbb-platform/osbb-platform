@@ -1,6 +1,8 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import {
@@ -199,6 +201,16 @@ export function HouseSpecialistsWorkspace({
     "published",
     ["published", "draft", "archived"],
   );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("specialists", "searchQuery", "");
+  const [sortMode, setSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "specialists",
+      "sortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [visibleCount, setVisibleCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -235,12 +247,17 @@ export function HouseSpecialistsWorkspace({
     [specialistsData.specialists],
   );
 
-  const visibleSpecialists =
+  const baseVisibleSpecialists =
     activeTab === "published"
       ? publishedItems
       : activeTab === "draft"
         ? draftItems
         : archivedItems;
+  const visibleSpecialists = filterAndSortWorkspaceItems(
+    baseVisibleSpecialists,
+    searchQuery,
+    sortMode,
+  );
 
   const nextSortOrder =
     specialistsData.specialists.reduce(
@@ -861,8 +878,25 @@ export function HouseSpecialistsWorkspace({
 
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="grid gap-4 md:grid-cols-2">
+          <WorkspaceListToolbar
+            searchQuery={searchQuery}
+            sortMode={sortMode}
+            visible={visibleCount}
+            total={visibleSpecialists.length}
+            searchPlaceholder="Назва, категорія або телефон"
+            onSearchChange={(value) => {
+              setSearchQuery(value);
+              setVisibleCount(20);
+            }}
+            onSortChange={(value) => {
+              setSortMode(value);
+              setVisibleCount(20);
+            }}
+            onShowMore={() => setVisibleCount((current) => current + 20)}
+          />
+
           {visibleSpecialists.length > 0 ? (
-            visibleSpecialists.map((item) => (
+            visibleSpecialists.slice(0, visibleCount).map((item) => (
               <button
                 key={item.id}
                 type="button"

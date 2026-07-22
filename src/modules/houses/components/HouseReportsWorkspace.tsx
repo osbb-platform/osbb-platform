@@ -1,6 +1,7 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -434,6 +435,7 @@ export function HouseReportsWorkspace({
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
   const [reportSearchQuery, setReportSearchQuery] =
     useWorkspaceMemory("reports", "searchQuery", "");
+  const [visibleReportCount, setVisibleReportCount] = useState(20);
   const [reportSortMode, setReportSortMode] =
     useWorkspaceMemory<ReportSortMode>(
       "reports",
@@ -1063,7 +1065,10 @@ export function HouseReportsWorkspace({
               { key: "archive", label: "Архів", count: archivedReports.length },
             ]}
             activeKey={activeTab}
-            onChange={(key) => handleTabChange(key as TabKey)}
+            onChange={(key) => {
+              setVisibleReportCount(20);
+              handleTabChange(key as TabKey);
+            }}
             ariaLabel="Фільтр звітів"
           />
 
@@ -1614,15 +1619,19 @@ export function HouseReportsWorkspace({
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               value={reportSearchQuery}
-              onChange={(event) => setReportSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setReportSearchQuery(event.target.value);
+                setVisibleReportCount(20);
+              }}
               placeholder="Пошук за назвою, категорією, роком..."
               className={`${adminInputClass} sm:w-80`}
             />
             <select
               value={reportSortMode}
-              onChange={(event) =>
-                setReportSortMode(event.target.value as ReportSortMode)
-              }
+              onChange={(event) => {
+                setReportSortMode(event.target.value as ReportSortMode);
+                setVisibleReportCount(20);
+              }}
               className={adminInputClass}
             >
               <option value="updated_desc">Новіші оновлення</option>
@@ -1633,6 +1642,14 @@ export function HouseReportsWorkspace({
               <option value="year_asc">Рік ↑</option>
             </select>
           </div>
+
+          <WorkspacePaginationControls
+            visible={visibleReportCount}
+            total={visibleReports.length}
+            onShowMore={() =>
+              setVisibleReportCount((current) => current + 20)
+            }
+          />
         </div>
 
         {activeTab === "published" ? (
@@ -1697,7 +1714,7 @@ export function HouseReportsWorkspace({
           ) : undefined} />
         ) : (
           <div className="mt-6 space-y-3">
-            {visibleReports.map((report) => (
+            {visibleReports.slice(0, visibleReportCount).map((report) => (
               <div
                 key={report.id}
                 role="button"

@@ -1,6 +1,8 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
   AdminStatusBadge,
@@ -101,6 +103,26 @@ export function HouseInformationWorkspace({
       "published",
       ["published", "draft", "archived"],
     );
+  const [postSearchQuery, setPostSearchQuery] =
+    useWorkspaceMemory("information", "postSearchQuery", "");
+  const [postSortMode, setPostSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "information",
+      "postSortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [faqSearchQuery, setFaqSearchQuery] =
+    useWorkspaceMemory("information", "faqSearchQuery", "");
+  const [faqSortMode, setFaqSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "information",
+      "faqSortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [visiblePostCount, setVisiblePostCount] = useState(20);
+  const [visibleFaqCount, setVisibleFaqCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
@@ -113,7 +135,7 @@ export function HouseInformationWorkspace({
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
   const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
 
-  const visiblePosts = posts
+  const baseVisiblePosts = posts
     .filter((item) => item.status === postLifecycleTab)
     .slice()
     .sort((left, right) => {
@@ -126,8 +148,20 @@ export function HouseInformationWorkspace({
 
       return getPostDate(right.content).localeCompare(getPostDate(left.content));
     });
+  const visiblePosts = filterAndSortWorkspaceItems(
+    baseVisiblePosts,
+    postSearchQuery,
+    postSortMode,
+  );
 
-  const visibleFaqs = faqs.filter((item) => item.status === faqLifecycleTab);
+  const baseVisibleFaqs = faqs.filter(
+    (item) => item.status === faqLifecycleTab,
+  );
+  const visibleFaqs = filterAndSortWorkspaceItems(
+    baseVisibleFaqs,
+    faqSearchQuery,
+    faqSortMode,
+  );
 
   const editingPost =
     workspaceMode === "edit"
@@ -511,7 +545,10 @@ export function HouseInformationWorkspace({
             <div className="mb-5">
               <AdminSegmentedTabs
                 activeKey={postLifecycleTab}
-                onChange={(key) => setPostLifecycleTab(key as InformationLifecycleTab)}
+                onChange={(key) => {
+                  setVisiblePostCount(20);
+                  setPostLifecycleTab(key as InformationLifecycleTab);
+                }}
                 ariaLabel="Статус публікацій"
                 items={[
                   { key: "published", label: "Опубліковані", count: posts.filter((item) => item.status === "published").length },
@@ -522,8 +559,27 @@ export function HouseInformationWorkspace({
             </div>
 
             <div className="space-y-4">
+              <WorkspaceListToolbar
+                searchQuery={postSearchQuery}
+                sortMode={postSortMode}
+                visible={visiblePostCount}
+                total={visiblePosts.length}
+                searchPlaceholder="Назва, категорія або текст матеріалу"
+                onSearchChange={(value) => {
+                  setPostSearchQuery(value);
+                  setVisiblePostCount(20);
+                }}
+                onSortChange={(value) => {
+                  setPostSortMode(value);
+                  setVisiblePostCount(20);
+                }}
+                onShowMore={() =>
+                  setVisiblePostCount((current) => current + 20)
+                }
+              />
+
               {visiblePosts.length > 0 ? (
-                visiblePosts.map((section) => {
+                visiblePosts.slice(0, visiblePostCount).map((section) => {
                   const content = section.content;
                   const category =
                     typeof content.category === "string"
@@ -630,7 +686,10 @@ export function HouseInformationWorkspace({
             <div className="mb-5">
               <AdminSegmentedTabs
                 activeKey={faqLifecycleTab}
-                onChange={(key) => setFaqLifecycleTab(key as InformationLifecycleTab)}
+                onChange={(key) => {
+                  setVisibleFaqCount(20);
+                  setFaqLifecycleTab(key as InformationLifecycleTab);
+                }}
                 ariaLabel="Статус FAQ"
                 items={[
                   { key: "published", label: "Опубліковані", count: faqs.filter((item) => item.status === "published").length },
@@ -641,8 +700,27 @@ export function HouseInformationWorkspace({
             </div>
 
             <div className="space-y-4">
+              <WorkspaceListToolbar
+                searchQuery={faqSearchQuery}
+                sortMode={faqSortMode}
+                visible={visibleFaqCount}
+                total={visibleFaqs.length}
+                searchPlaceholder="Питання або текст відповіді"
+                onSearchChange={(value) => {
+                  setFaqSearchQuery(value);
+                  setVisibleFaqCount(20);
+                }}
+                onSortChange={(value) => {
+                  setFaqSortMode(value);
+                  setVisibleFaqCount(20);
+                }}
+                onShowMore={() =>
+                  setVisibleFaqCount((current) => current + 20)
+                }
+              />
+
               {visibleFaqs.length > 0 ? (
-                visibleFaqs.map((faq) => (
+                visibleFaqs.slice(0, visibleFaqCount).map((faq) => (
                   <button
                     key={faq.id}
                     type="button"

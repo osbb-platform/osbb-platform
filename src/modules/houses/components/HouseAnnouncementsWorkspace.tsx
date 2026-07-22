@@ -1,6 +1,8 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { useMemo, useState } from "react";
 
@@ -105,6 +107,16 @@ export function HouseAnnouncementsWorkspace({
     "active",
     ["active", "moderation", "archive"],
   );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("announcements", "searchQuery", "");
+  const [sortMode, setSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "announcements",
+      "sortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [visibleCount, setVisibleCount] = useState(20);
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
@@ -138,7 +150,16 @@ export function HouseAnnouncementsWorkspace({
     archive: archivedAnnouncements,
   };
 
-  const visibleSections = tabMap[activeTab];
+  const baseVisibleSections = tabMap[activeTab];
+  const visibleSections = useMemo(
+    () =>
+      filterAndSortWorkspaceItems(
+        baseVisibleSections,
+        searchQuery,
+        sortMode,
+      ),
+    [baseVisibleSections, searchQuery, sortMode],
+  );
   const selectedSection = selectedSectionId
     ? sortedSections.find((section) => section.id === selectedSectionId) ?? null
     : null;
@@ -334,8 +355,25 @@ export function HouseAnnouncementsWorkspace({
         ) : null}
 
         <div className="mt-6 space-y-3">
+          <WorkspaceListToolbar
+            searchQuery={searchQuery}
+            sortMode={sortMode}
+            visible={visibleCount}
+            total={visibleSections.length}
+            searchPlaceholder="Назва або текст оголошення"
+            onSearchChange={(value) => {
+              setSearchQuery(value);
+              setVisibleCount(20);
+            }}
+            onSortChange={(value) => {
+              setSortMode(value);
+              setVisibleCount(20);
+            }}
+            onShowMore={() => setVisibleCount((current) => current + 20)}
+          />
+
           {visibleSections.length > 0 ? (
-            visibleSections.map((section) => {
+            visibleSections.slice(0, visibleCount).map((section) => {
               const level =
                 typeof section.content.level === "string"
                   ? section.content.level

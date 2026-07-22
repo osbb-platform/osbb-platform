@@ -1,6 +1,8 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -271,6 +273,16 @@ export function HousePlanWorkspace({
     "active",
     ["active", "draft", "archive"],
   );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("plan", "searchQuery", "");
+  const [sortMode, setSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "plan",
+      "sortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [visibleCount, setVisibleCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PlanTask>(createEmptyTask());
@@ -308,7 +320,7 @@ export function HousePlanWorkspace({
     [tasks],
   );
 
-  const visibleTasks = useMemo(() => {
+  const baseVisibleTasks = useMemo(() => {
     if (activeTab === "active") {
       const activeTasks = tasks.filter(
         (item) =>
@@ -328,6 +340,16 @@ export function HousePlanWorkspace({
 
     return tasks.filter((item) => item.status === "draft");
   }, [tasks, activeTab, activeStageFilter]);
+
+  const visibleTasks = useMemo(
+    () =>
+      filterAndSortWorkspaceItems(
+        baseVisibleTasks,
+        searchQuery,
+        sortMode,
+      ),
+    [baseVisibleTasks, searchQuery, sortMode],
+  );
 
   function markDirty() {
     if (!panelDirty) {
@@ -1317,13 +1339,30 @@ export function HousePlanWorkspace({
       </AdminSidePanel>
 
       <div className="space-y-4">
+        <WorkspaceListToolbar
+          searchQuery={searchQuery}
+          sortMode={sortMode}
+          visible={visibleCount}
+          total={visibleTasks.length}
+          searchPlaceholder="Назва або опис завдання"
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setVisibleCount(20);
+          }}
+          onSortChange={(value) => {
+            setSortMode(value);
+            setVisibleCount(20);
+          }}
+          onShowMore={() => setVisibleCount((current) => current + 20)}
+        />
+
         {visibleTasks.length === 0 ? (
           <EmptyState
             title={activeTab === "active" ? "Активних завдань поки немає" : activeTab === "draft" ? "Чернеток поки немає" : "Архів завдань поки порожній"}
             description={activeTab === "active" ? "Після підтвердження та запуску робіт картки з’являться тут." : activeTab === "draft" ? "Нове завдання з’явиться тут одразу після збереження." : "Перенесені картки відображатимуться тут."}
           />
         ) : (
-          visibleTasks.map((task) => {
+          visibleTasks.slice(0, visibleCount).map((task) => {
             const isSelected = workspaceMode === "edit" && selectedTaskId === task.id;
             const priorityLabel =
               task.priority === "high"

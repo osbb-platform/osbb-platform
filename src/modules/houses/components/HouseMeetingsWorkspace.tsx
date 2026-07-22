@@ -1,6 +1,8 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
   AdminStatusBadge,
@@ -439,6 +441,16 @@ export function HouseMeetingsWorkspace({
     "active",
     ["active", "draft", "archived"],
   );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("meetings", "searchQuery", "");
+  const [sortMode, setSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "meetings",
+      "sortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
@@ -474,7 +486,7 @@ export function HouseMeetingsWorkspace({
     [apartments, draft.manualVotes],
   );
 
-  const visibleMeetings = useMemo(() => {
+  const baseVisibleMeetings = useMemo(() => {
     if (activeTab === "draft") {
       return meetings.filter((item) => item.status === "draft");
     }
@@ -491,6 +503,16 @@ export function HouseMeetingsWorkspace({
         item.status === "completed",
     );
   }, [meetings, activeTab]);
+
+  const visibleMeetings = useMemo(
+    () =>
+      filterAndSortWorkspaceItems(
+        baseVisibleMeetings,
+        searchQuery,
+        sortMode,
+      ),
+    [baseVisibleMeetings, searchQuery, sortMode],
+  );
 
   const isContentLocked = false;
 
@@ -1428,6 +1450,23 @@ export function HouseMeetingsWorkspace({
       ) : null}
 
       <div className="mt-6 space-y-4">
+        <WorkspaceListToolbar
+          searchQuery={searchQuery}
+          sortMode={sortMode}
+          visible={visibleCount}
+          total={visibleMeetings.length}
+          searchPlaceholder="Назва або текст зборів"
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setVisibleCount(20);
+          }}
+          onSortChange={(value) => {
+            setSortMode(value);
+            setVisibleCount(20);
+          }}
+          onShowMore={() => setVisibleCount((current) => current + 20)}
+        />
+
         {visibleMeetings.length === 0 ? (
           <EmptyState
             title={activeTab === "draft" ? "Чернеток поки немає" : String(activeTab).startsWith("archiv") ? "Архів зборів поки порожній" : "Активних зборів поки немає"}
@@ -1437,7 +1476,7 @@ export function HouseMeetingsWorkspace({
             ) : undefined}
           />
         ) : (
-          visibleMeetings.map((meeting) => (
+          visibleMeetings.slice(0, visibleCount).map((meeting) => (
             <article
               key={meeting.id}
               onClick={() => openEditMode(meeting)}

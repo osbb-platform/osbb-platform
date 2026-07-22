@@ -1,6 +1,7 @@
 "use client";
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 
 import {
   AdminStatusBadge,
@@ -192,6 +193,7 @@ export function HouseDocumentsWorkspace({
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
   const [documentSearchQuery, setDocumentSearchQuery] =
     useWorkspaceMemory("documents", "searchQuery", "");
+  const [visibleDocumentCount, setVisibleDocumentCount] = useState(20);
   const [documentSortMode, setDocumentSortMode] =
     useWorkspaceMemory<DocumentSortMode>(
       "documents",
@@ -754,7 +756,10 @@ export function HouseDocumentsWorkspace({
         <div className="mt-6">
           <AdminSegmentedTabs
             activeKey={activeTab}
-            onChange={(key) => handleTabChange(key as WorkspaceTab)}
+            onChange={(key) => {
+              setVisibleDocumentCount(20);
+              handleTabChange(key as WorkspaceTab);
+            }}
             items={[
               {
                 key: "active",
@@ -1121,7 +1126,10 @@ export function HouseDocumentsWorkspace({
               </span>
               <input
                 value={documentSearchQuery}
-                onChange={(event) => setDocumentSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  setDocumentSearchQuery(event.target.value);
+                  setVisibleDocumentCount(20);
+                }}
                 placeholder="Назва, опис, файл або рік"
                 className={adminInputClass}
               />
@@ -1133,9 +1141,10 @@ export function HouseDocumentsWorkspace({
               </span>
               <select
                 value={documentSortMode}
-                onChange={(event) =>
-                  setDocumentSortMode(event.target.value as DocumentSortMode)
-                }
+                onChange={(event) => {
+                  setDocumentSortMode(event.target.value as DocumentSortMode);
+                  setVisibleDocumentCount(20);
+                }}
                 className={adminInputClass}
               >
                 <option value="updated_desc">Спочатку оновлені</option>
@@ -1149,6 +1158,14 @@ export function HouseDocumentsWorkspace({
           </div>
         ) : null}
 
+        <WorkspacePaginationControls
+          visible={visibleDocumentCount}
+          total={visibleDocuments.length}
+          onShowMore={() =>
+            setVisibleDocumentCount((current) => current + 20)
+          }
+        />
+
         {visibleDocuments.length === 0 ? (
           <EmptyState
             title={baseVisibleDocuments.length === 0 ? (activeTab === "draft" ? "Чернеток документів поки немає" : String(activeTab).startsWith("archiv") ? "Архів документів поки порожній" : "Активних документів поки немає") : "Документів за пошуком не знайдено"}
@@ -1159,7 +1176,7 @@ export function HouseDocumentsWorkspace({
           />
         ) : (
           <div className="grid gap-4">
-            {visibleDocuments.map((document) => {
+            {visibleDocuments.slice(0, visibleDocumentCount).map((document) => {
               const isSelected = document.id === selectedDocumentId && isFormOpen;
               const hasAttachment = document.attachment_status === "uploaded";
 
