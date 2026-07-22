@@ -554,6 +554,15 @@ export function HouseAnnouncementsWorkspace({
                                 onSelect: () =>
                                   prepareQuickAction(section, "archive"),
                               },
+                              {
+                                key: "duplicate",
+                                label: "Створити на основі",
+                                disabled:
+                                  isDeletingArchive ||
+                                  copyingSectionId === section.id,
+                                onSelect: () =>
+                                  void handleCopyToDraft(section.id),
+                              },
                             ]
                           : []),
                         ...(section.status === "archived"
