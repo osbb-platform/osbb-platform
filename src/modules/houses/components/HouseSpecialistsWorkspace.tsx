@@ -571,8 +571,10 @@ export function HouseSpecialistsWorkspace({
     }
   }
 
-  async function copySpecialistToDraft() {
-    if (!draft?.id || draft.status === "draft") return;
+  async function copySpecialistSnapshotToDraft(
+    specialist: HouseSpecialistSnapshot,
+  ) {
+    if (specialist.status === "draft") return;
 
     setWorkspaceError(null);
 
@@ -581,7 +583,7 @@ export function HouseSpecialistsWorkspace({
         type: "specialists.duplicate",
         houseId,
         payload: {
-          sourceId: draft.id,
+          sourceId: specialist.id,
           targetHouseIds: [houseId],
         },
       },
@@ -594,6 +596,20 @@ export function HouseSpecialistsWorkspace({
 
     closeWorkspace();
     setActiveTab("draft");
+  }
+
+  async function copySpecialistToDraft() {
+    if (!draft?.id || draft.status === "draft") return;
+
+    const selectedSpecialist = specialistsData.specialists.find(
+      (item) => item.id === draft.id,
+    );
+    if (!selectedSpecialist) {
+      setWorkspaceError("Картку спеціаліста не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    await copySpecialistSnapshotToDraft(selectedSpecialist);
   }
 
 
@@ -971,6 +987,13 @@ export function HouseSpecialistsWorkspace({
                               label: "В архів",
                               onSelect: () =>
                                 prepareQuickAction(item, "archive"),
+                            },
+                            {
+                              key: "duplicate",
+                              label: "Створити на основі",
+                              disabled: isPending,
+                              onSelect: () =>
+                                void copySpecialistSnapshotToDraft(item),
                             },
                           ]
                         : []),
