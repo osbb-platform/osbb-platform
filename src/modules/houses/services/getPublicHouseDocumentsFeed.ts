@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 
 export type PublicHouseDocumentFeedItem = {
   id: string;
@@ -23,11 +26,12 @@ async function loadPublicHouseDocumentsFeed(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load public house documents feed:", {
+    throwRequiredPublicReadError({
+      section: "documents",
+      resource: "house_documents",
       houseId,
-      message: error.message,
+      error,
     });
-    return [];
   }
 
   return (data ?? []) as PublicHouseDocumentFeedItem[];
@@ -38,7 +42,7 @@ export const getPublicHouseDocumentsFeed = cache(async (
 ): Promise<PublicHouseDocumentFeedItem[]> => {
   return unstable_cache(
     () => loadPublicHouseDocumentsFeed(houseId),
-    ["public-house-documents-feed", houseId],
+    ["public-house-documents-feed-v2", houseId],
     {
       tags: [`house:${houseId}:documents`, `house:${houseId}`],
       revalidate: 300,

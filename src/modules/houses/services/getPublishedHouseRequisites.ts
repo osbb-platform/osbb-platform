@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 
 import type { HouseRequisitesSnapshot } from "./getAdminHouseRequisites";
 
@@ -47,11 +50,12 @@ async function loadPublishedHouseRequisites(
     .maybeSingle();
 
   if (error) {
-    console.error("Failed to load published house requisites:", {
+    throwRequiredPublicReadError({
+      section: "requisites",
+      resource: "house_requisites",
       houseId,
-      message: error.message,
+      error,
     });
-    return null;
   }
 
   if (!data) {
@@ -65,7 +69,7 @@ export const getPublishedHouseRequisites = cache(
   async (houseId: string): Promise<HouseRequisitesSnapshot | null> => {
     return unstable_cache(
       () => loadPublishedHouseRequisites(houseId),
-      ["published-house-requisites", houseId],
+      ["published-house-requisites-v2", houseId],
       {
         tags: [`house:${houseId}:requisites`, `house:${houseId}`],
         revalidate: 300,

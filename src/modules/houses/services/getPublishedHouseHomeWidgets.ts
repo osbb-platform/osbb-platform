@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 
 import type { HouseHomeWidgetsSnapshot } from "./getAdminHouseHomeWidgets";
 
@@ -65,11 +68,12 @@ async function loadPublishedHouseHomeWidgets(
     .maybeSingle();
 
   if (error) {
-    console.error("Failed to load published house home widgets:", {
+    throwRequiredPublicReadError({
+      section: "home_widgets",
+      resource: "house_home_widgets",
       houseId,
-      message: error.message,
+      error,
     });
-    return null;
   }
 
   if (!data) {
@@ -83,7 +87,7 @@ export const getPublishedHouseHomeWidgets = cache(
   async (houseId: string): Promise<HouseHomeWidgetsSnapshot | null> => {
     return unstable_cache(
       () => loadPublishedHouseHomeWidgets(houseId),
-      ["published-house-home-widgets", houseId],
+      ["published-house-home-widgets-v2", houseId],
       {
         tags: [`house:${houseId}:home_widgets`, `house:${houseId}`],
         revalidate: 300,

@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type {
   HouseDebtorsItem,
   HouseDebtorsSettings,
@@ -114,19 +117,21 @@ async function loadPublishedHouseDebtors(
   ]);
 
   if (settingsResult.error) {
-    console.error("Failed to load published debtors settings:", {
+    throwRequiredPublicReadError({
+      section: "debtors",
+      resource: "house_debtors_settings",
       houseId,
-      message: settingsResult.error.message,
+      error: settingsResult.error,
     });
-    return emptySnapshot();
   }
 
   if (itemsResult.error) {
-    console.error("Failed to load published debtors items:", {
+    throwRequiredPublicReadError({
+      section: "debtors",
+      resource: "house_debtors_items",
       houseId,
-      message: itemsResult.error.message,
+      error: itemsResult.error,
     });
-    return emptySnapshot();
   }
 
   const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
@@ -157,7 +162,7 @@ export const getPublishedHouseDebtors = cache(
   async (houseId: string): Promise<AdminHouseDebtorsSnapshot> => {
     return unstable_cache(
       () => loadPublishedHouseDebtors(houseId),
-      ["published-house-debtors", houseId],
+      ["published-house-debtors-v2", houseId],
       {
         tags: [`house:${houseId}:debtors`, `house:${houseId}`],
         revalidate: 300,

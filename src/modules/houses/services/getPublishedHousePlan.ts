@@ -2,6 +2,10 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  logOptionalPublicReadError,
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type { HousePlanTask } from "@/src/modules/content-engine/v2/handlers/plan/types";
 import {
   mapHousePlanTask,
@@ -47,10 +51,16 @@ async function loadPlanFiles(params: {
     .in("entity_id", params.taskIds);
 
   if (error) {
-    console.error("Failed to load published house plan files:", {
-      taskIds: params.taskIds,
-      message: error.message,
+    logOptionalPublicReadError({
+      section: "plan",
+      resource: "house_content_files",
+      houseId: "multiple-plan-tasks",
+      error,
+      details: {
+        taskIds: params.taskIds,
+      },
     });
+
     return new Map<string, HousePlanFileRow[]>();
   }
 
@@ -78,11 +88,12 @@ async function loadPublishedHousePlan(houseId: string): Promise<AdminHousePlanSn
     .order("updated_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load published house plan:", {
+    throwRequiredPublicReadError({
+      section: "plan",
+      resource: "house_plan_tasks",
       houseId,
-      message: error.message,
+      error,
     });
-    return { tasks: [] };
   }
 
   const tasks = (data ?? []) as unknown as HousePlanTask[];
@@ -100,7 +111,7 @@ export const getPublishedHousePlan = cache(
   async (houseId: string): Promise<AdminHousePlanSnapshot> => {
     return unstable_cache(
       () => loadPublishedHousePlan(houseId),
-      ["published-house-plan", houseId],
+      ["published-house-plan-v2", houseId],
       {
         tags: [`house:${houseId}:plan`, `house:${houseId}`],
         revalidate: 300,

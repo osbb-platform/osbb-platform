@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 
 type BellSourceKind =
   | "announcements"
@@ -121,15 +124,12 @@ async function loadPublicHouseBellFeed({
   });
 
   if (error) {
-    console.error("Failed to load public house bell feed RPC:", {
+    throwRequiredPublicReadError({
+      section: "bell_feed",
+      resource: "get_house_bell_feed",
       houseId,
-      message: error.message,
+      error,
     });
-
-    return {
-      total: 0,
-      items: [],
-    };
   }
 
   const rows = (data ?? []) as BellFeedRpcRow[];
@@ -165,7 +165,7 @@ export const getPublicHouseBellFeed = cache(
   async ({ houseId }: { houseId: string }): Promise<PublicHouseBellFeed> => {
     return unstable_cache(
       () => loadPublicHouseBellFeed({ houseId }),
-      ["public-house-bell-feed", houseId],
+      ["public-house-bell-feed-v2", houseId],
       {
         tags: [`house:${houseId}`],
         revalidate: 300,
