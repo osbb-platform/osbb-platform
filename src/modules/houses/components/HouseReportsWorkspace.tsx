@@ -972,9 +972,7 @@ export function HouseReportsWorkspace({
     resetWorkspace("archive");
   }
 
-  async function copySelectedReportToDraft() {
-    if (!selectedReport) return;
-
+  async function copyReportToDraft(report: HouseReportSnapshot) {
     setActionError(null);
     setSubmitIntent("copy");
     setActionLabel("Копіюємо звіт у чернетку...");
@@ -984,7 +982,7 @@ export function HouseReportsWorkspace({
         type: "reports.duplicate",
         houseId,
         payload: {
-          sourceId: selectedReport.id,
+          sourceId: report.id,
           targetHouseIds: [houseId],
         },
       },
@@ -995,6 +993,11 @@ export function HouseReportsWorkspace({
 
     resetWorkspace("draft");
     setActiveTab("draft");
+  }
+
+  async function copySelectedReportToDraft() {
+    if (!selectedReport) return;
+    await copyReportToDraft(selectedReport);
   }
 
   async function handleCategoriesSync() {
@@ -1807,6 +1810,12 @@ export function HouseReportsWorkspace({
                                 key: "archive",
                                 label: "В архів",
                                 onSelect: () => prepareQuickAction(report, "archive"),
+                              },
+                              {
+                                key: "duplicate",
+                                label: "Створити на основі",
+                                disabled: isPending,
+                                onSelect: () => void copyReportToDraft(report),
                               },
                             ]
                           : []),
