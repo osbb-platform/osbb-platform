@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
@@ -422,6 +423,30 @@ export function HousePlanWorkspace({
       setSubmitIntent("save");
       setPanelDirty(false);
     });
+  }
+
+  function prepareQuickAction(
+    task: PlanTask,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setWorkspaceMode("idle");
+    setSelectedTaskId(task.id);
+    setDraft(task);
+    setDraftPublishStatus(
+      task.status === "in_progress"
+        ? "in_progress"
+        : task.status === "completed"
+          ? "completed"
+          : "planned",
+    );
+    setSelectedImageFiles([]);
+    setSelectedPdfFiles([]);
+    setRemovedImageIds([]);
+    setRemovedDocumentIds([]);
+    setPdfError(null);
+    setSubmitIntent("save");
+    setPanelDirty(false);
+    setConfirmAction(action);
   }
 
   function handleTabChange(tab: WorkspaceTab) {
@@ -1426,6 +1451,43 @@ export function HousePlanWorkspace({
                 <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
                   {task.description || "Опис завдання поки не заповнено."}
                 </p>
+
+                <div className="mt-4">
+                  <WorkspaceQuickActions
+                    actions={[
+                      ...(task.status === "draft" && workflowAccessGranted
+                        ? [
+                            {
+                              key: "publish",
+                              label: "Опублікувати",
+                              onSelect: () => prepareQuickAction(task, "publish"),
+                            },
+                          ]
+                        : []),
+                      ...(task.status !== "draft" &&
+                      task.status !== "archived" &&
+                      workflowAccessGranted
+                        ? [
+                            {
+                              key: "archive",
+                              label: "В архів",
+                              onSelect: () => prepareQuickAction(task, "archive"),
+                            },
+                          ]
+                        : []),
+                      ...(task.status === "draft" || task.status === "archived"
+                        ? [
+                            {
+                              key: "delete",
+                              label: "Видалити",
+                              tone: "danger" as const,
+                              onSelect: () => prepareQuickAction(task, "delete"),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
                   <span>{getDatePreview(task)}</span>
