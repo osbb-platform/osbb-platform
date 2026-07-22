@@ -976,7 +976,9 @@ export function HousePlanWorkspace({
 
           <button
             type="button"
-            onClick={openCreateMode}
+            data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
             className={`${adminButtonClasses({ variant: "primary" })} shrink-0`}
           >
             Нове завдання

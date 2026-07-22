@@ -858,7 +858,9 @@ export function HouseMeetingsWorkspace({
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={openCreateMode}
+            data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
             className={adminButtonClasses({ variant: "primary" })}
           >
             Нові збори
@@ -1498,7 +1500,9 @@ export function HouseMeetingsWorkspace({
             title={activeTab === "draft" ? "Чернеток поки немає" : String(activeTab).startsWith("archiv") ? "Архів зборів поки порожній" : "Активних зборів поки немає"}
             description={activeTab === "draft" ? "Створіть нові збори — вони з’являться тут як чернетка." : String(activeTab).startsWith("archiv") ? "Тут зберігатимуться завершені записи для історії будинку." : "Після підтвердження чернетки збори з’являться тут."}
             action={!String(activeTab).startsWith("archiv") ? (
-              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити збори</button>
+              <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити збори</button>
             ) : undefined}
           />
         ) : (

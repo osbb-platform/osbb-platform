@@ -8,6 +8,7 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 import type { WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
+import { useWorkspaceKeyboardShortcuts } from "@/src/shared/ui/admin/WorkspaceKeyboardShortcuts";
 
 type WorkspaceListToolbarProps = {
   searchQuery: string;
@@ -34,6 +35,8 @@ export function WorkspaceListToolbar({
   trailingControls,
   className,
 }: WorkspaceListToolbarProps) {
+  useWorkspaceKeyboardShortcuts();
+
   return (
     <div className={["mb-4 space-y-3", className].filter(Boolean).join(" ")}>
       <div
@@ -50,6 +53,7 @@ export function WorkspaceListToolbar({
           </span>
           <input
             type="search"
+            title="Пошук (/)"
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={searchPlaceholder}

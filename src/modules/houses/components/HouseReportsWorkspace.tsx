@@ -1066,7 +1066,9 @@ export function HouseReportsWorkspace({
                 </button>
                 <button
                   type="button"
-                  onClick={openCreateMode}
+                  data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
                   disabled={readOnlyMode || isPending}
                   className={adminButtonClasses({ variant: "primary" })}
                 >
@@ -1554,7 +1556,7 @@ export function HouseReportsWorkspace({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  type="submit"
+                  type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
                   disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                   className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
@@ -1735,7 +1737,9 @@ export function HouseReportsWorkspace({
 
         {visibleReports.length === 0 ? (
           <EmptyState className="mt-6" title="У цьому списку поки немає звітів" description="Створіть новий звіт або змініть активні фільтри." action={!String(activeTab).startsWith("archiv") ? (
-            <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити звіт</button>
+            <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити звіт</button>
           ) : undefined} />
         ) : (
           <div

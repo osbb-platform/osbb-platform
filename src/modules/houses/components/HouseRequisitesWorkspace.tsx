@@ -382,7 +382,7 @@ export function HouseRequisitesWorkspace({
 
           <div className="flex flex-wrap items-center gap-3 border-t border-[var(--cms-border)] pt-6">
             <Button
-              type="submit"
+              type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
               disabled={isPending || !isDirty || !publishReady}
               loading={isPending}
             >

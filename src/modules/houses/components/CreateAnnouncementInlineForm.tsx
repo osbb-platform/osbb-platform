@@ -203,7 +203,7 @@ export function CreateAnnouncementInlineForm({
 
         <div className="sticky bottom-0 z-20 -mx-6 mt-4 flex flex-wrap gap-3 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
           <button
-            type="submit"
+            type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
             disabled={isBusy || Boolean(pdfError)}
             className={adminButtonClasses({ variant: "primary" })}
           >

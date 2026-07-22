@@ -408,7 +408,7 @@ export function EditInformationPostForm({
       <div className="mt-6 flex flex-wrap justify-between gap-3">
         <div className="flex gap-3">
           <button
-            type="submit"
+            type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
             form="information-post-edit-form"
             disabled={buttonsDisabled}
             className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}

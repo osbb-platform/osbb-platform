@@ -421,7 +421,7 @@ export function CreateInformationPostInlineForm({
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-3">
           <button
-            type="submit"
+            type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
             disabled={actionsDisabled}
             className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
           >

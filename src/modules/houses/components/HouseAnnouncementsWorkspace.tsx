@@ -379,7 +379,9 @@ export function HouseAnnouncementsWorkspace({
 
           <button
             type="button"
-            onClick={openCreateMode}
+            data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
             className={[
               adminButtonClasses({ variant: "primary" }),
               "min-h-12 px-6",
@@ -596,7 +598,9 @@ export function HouseAnnouncementsWorkspace({
                 !String(activeTab).startsWith("archiv") && housePageId ? (
                   <button
                     type="button"
-                    onClick={openCreateMode}
+                    data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
                     className={adminButtonClasses({ variant: "primary" })}
                   >
                     Створити оголошення

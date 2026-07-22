@@ -645,7 +645,9 @@ export function HouseSpecialistsWorkspace({
                 Шаблони
               </Button>
 
-              <Button type="button" onClick={openCreateMode} disabled={isPending}>
+              <Button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} disabled={isPending}>
                 Створити спеціаліста
               </Button>
             </div>
@@ -1035,7 +1037,9 @@ export function HouseSpecialistsWorkspace({
               title={activeTab === "published" ? "Опублікованих спеціалістів поки немає" : activeTab === "draft" ? "Чернеток спеціалістів поки немає" : "Архів спеціалістів поки порожній"}
               description={activeTab === "published" ? "Створіть першу картку та опублікуйте її." : activeTab === "draft" ? "Чернетки з’являтимуться тут після створення або відновлення." : "Зняті з публікації картки відображатимуться тут."}
               action={!String(activeTab).startsWith("archiv") ? (
-                <Button type="button" onClick={openCreateMode}>
+                <Button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}>
                   Створити спеціаліста
                 </Button>
               ) : undefined}

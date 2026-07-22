@@ -788,6 +788,8 @@ export function HouseDocumentsWorkspace({
           ) : (
             <button
               type="button"
+              data-workspace-create-action="true"
+              title="Створити (N)"
               onClick={openCreateMode}
               disabled={isPending}
               className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
@@ -1113,7 +1115,7 @@ export function HouseDocumentsWorkspace({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    type="submit"
+                    type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
                     disabled={isPending || Boolean(fileError)}
                     className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
                   >
@@ -1218,7 +1220,9 @@ export function HouseDocumentsWorkspace({
             title={baseVisibleDocuments.length === 0 ? (activeTab === "draft" ? "Чернеток документів поки немає" : String(activeTab).startsWith("archiv") ? "Архів документів поки порожній" : "Активних документів поки немає") : "Документів за пошуком не знайдено"}
             description={baseVisibleDocuments.length === 0 ? getEmptyText(activeTab, emptyTitle) : "Змініть запит або очистіть поле пошуку."}
             action={baseVisibleDocuments.length === 0 && !String(activeTab).startsWith("archiv") ? (
-              <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити документ</button>
+              <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити документ</button>
             ) : undefined}
           />
         ) : (

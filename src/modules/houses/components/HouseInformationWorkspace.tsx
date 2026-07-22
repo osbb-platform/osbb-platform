@@ -553,7 +553,9 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={openCreatePost}
+                    data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreatePost}
                     disabled={!housePageId}
                     className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
@@ -565,7 +567,9 @@ export function HouseInformationWorkspace({
               {mainTab === "materials" ? (
                 <button
                   type="button"
-                  onClick={openCreateDocument}
+                  data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateDocument}
                   className={adminButtonClasses({ variant: "primary" })}
                 >
                   Новий матеріал
@@ -586,7 +590,9 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={openCreateFaqForm}
+                    data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateFaqForm}
                     disabled={isPending}
                     className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
@@ -916,7 +922,9 @@ export function HouseInformationWorkspace({
                   }
                   action={
                     postLifecycleTab !== "archived" && housePageId ? (
-                      <button type="button" onClick={openCreatePost} className={adminButtonClasses({ variant: "primary" })}>
+                      <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreatePost} className={adminButtonClasses({ variant: "primary" })}>
                         Створити публікацію
                       </button>
                     ) : undefined
@@ -1159,7 +1167,9 @@ export function HouseInformationWorkspace({
                   }
                   action={
                     faqLifecycleTab !== "archived" ? (
-                      <button type="button" onClick={openCreateFaqForm} className={adminButtonClasses({ variant: "primary" })}>
+                      <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateFaqForm} className={adminButtonClasses({ variant: "primary" })}>
                         Створити FAQ
                       </button>
                     ) : undefined
