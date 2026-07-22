@@ -63,13 +63,6 @@ type HouseReportCategoryRow = {
   updated_at: string;
 };
 
-function emptyReports(): PublishedHouseReportsData {
-  return {
-    reports: [],
-    categories: [],
-  };
-}
-
 function mapCategory(row: HouseReportCategoryRow): HouseReportCategorySnapshot {
   return {
     id: row.id,
@@ -228,22 +221,27 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
   ]);
 
   if (reportsResult.error) {
-    console.error("Failed to load published house reports:", {
+    console.error("PUBLIC_CONTENT_READ_FAILED", {
+      section: "reports",
+      resource: "house_reports",
       houseId,
+      code: reportsResult.error.code,
       message: reportsResult.error.message,
     });
-    return emptyReports();
+
+    throw new Error(
+      `Failed to load published house reports for house ${houseId}: ${reportsResult.error.message}`,
+    );
   }
 
   if (categoriesResult.error) {
-    console.error("Failed to load published house report categories:", {
+    console.error("PUBLIC_CONTENT_OPTIONAL_READ_FAILED", {
+      section: "reports",
+      resource: "house_report_categories",
       houseId,
+      code: categoriesResult.error.code,
       message: categoriesResult.error.message,
     });
-    return {
-      reports: [],
-      categories: [],
-    };
   }
 
   const reports = (reportsResult.data ?? []) as unknown as HouseReportRow[];
@@ -270,8 +268,11 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
       .in("entity_id", reportIds);
 
     if (filesError) {
-      console.error("Failed to load published house report files:", {
+      console.error("PUBLIC_CONTENT_OPTIONAL_READ_FAILED", {
+        section: "reports",
+        resource: "house_content_files",
         houseId,
+        code: filesError.code,
         message: filesError.message,
       });
     } else {
@@ -296,7 +297,7 @@ export const getPublishedHouseReports = cache(
   async (houseId: string): Promise<PublishedHouseReportsData> => {
     return unstable_cache(
       () => loadPublishedHouseReports(houseId),
-      ["published-house-reports-v2", houseId],
+      ["published-house-reports-v3", houseId],
       {
         tags: [`house:${houseId}:reports`, `house:${houseId}`],
         revalidate: 300,
