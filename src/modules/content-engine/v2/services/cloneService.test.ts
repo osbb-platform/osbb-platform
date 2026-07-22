@@ -54,3 +54,12 @@ describe("cloneService tracked file duplication contract", () => {
     expect(source).toContain("copiedFiles");
   });
 });
+
+describe("cloneService B11 result contract", () => {
+  it("returns the fresh lock version for every created draft", () => {
+    const source = cloneServiceSource();
+    expect(source).toContain("lockVersion: number");
+    expect(source).toContain("inserted.lock_version");
+    expect(source).toContain("lockVersion: insertedLockVersion");
+  });
+});

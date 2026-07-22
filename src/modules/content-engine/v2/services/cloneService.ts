@@ -26,6 +26,7 @@ export type DuplicateTargetResult = {
   targetHouseId: string;
   targetHouseName: string;
   createdId: string;
+  lockVersion: number;
 };
 
 type Actor = HandlerContext["user"];
@@ -511,10 +512,26 @@ export async function duplicateTableRecordToDraft<TSource extends object>(
       return registerFilesResult;
     }
 
+    const insertedLockVersion =
+      typeof inserted.lock_version === "number" ? inserted.lock_version : null;
+
+    if (insertedLockVersion === null) {
+      await cleanupInsertedRecord(params.ctx.supabase, {
+        table: params.sourceTable,
+        id: newId,
+      });
+      await cleanupCopiedFiles(params.ctx.supabase, copiedFiles);
+      return err(
+        `Створений дублікат у будинку «${targetHouse.name}» не повернув lock_version.`,
+        "INTERNAL",
+      );
+    }
+
     created.push({
       targetHouseId: targetHouse.id,
       targetHouseName: targetHouse.name,
       createdId: newId,
+      lockVersion: insertedLockVersion,
     });
 
     await writeHistory(params.ctx.supabase, {
@@ -644,12 +661,25 @@ export async function duplicateFaqToDraft(
       );
     }
 
-    const createdId = String((replacedFaq as Record<string, unknown>)?.id ?? faq.id);
+    const replacedFaqRecord = replacedFaq as Record<string, unknown>;
+    const createdId = String(replacedFaqRecord?.id ?? faq.id);
+    const replacedLockVersion =
+      typeof replacedFaqRecord?.lock_version === "number"
+        ? replacedFaqRecord.lock_version
+        : null;
+
+    if (replacedLockVersion === null) {
+      return err(
+        `Створений дублікат FAQ у будинку «${targetHouse.name}» не повернув lock_version.`,
+        "INTERNAL",
+      );
+    }
 
     created.push({
       targetHouseId: targetHouse.id,
       targetHouseName: targetHouse.name,
       createdId,
+      lockVersion: replacedLockVersion,
     });
 
     await writeHistory(ctx.supabase, {

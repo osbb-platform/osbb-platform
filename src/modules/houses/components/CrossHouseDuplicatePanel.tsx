@@ -1,11 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
+import {
+  buildDuplicatePublishCommand,
+  readDuplicateCreatedItem,
+  type DuplicateCreatedItem,
+} from "@/src/modules/houses/components/crossHouseDuplicateFlow";
 import {
   adminInputClass,
   adminPrimaryButtonClass,
@@ -46,6 +52,13 @@ function formatHouseCount(count: number) {
   return count === 1 ? "1 будинку" : `${count} будинках`;
 }
 
+type DuplicateFailure = {
+  target: CrossHouseDuplicateTarget;
+  phase: "duplicate" | "publish";
+  message: string;
+  createdItem?: DuplicateCreatedItem;
+};
+
 export function CrossHouseDuplicatePanel({
   houseId,
   sourceId,
@@ -55,8 +68,14 @@ export function CrossHouseDuplicatePanel({
   onCancel,
   onSuccess,
 }: CrossHouseDuplicatePanelProps) {
+  const router = useRouter();
   const { dispatch, isPending } = useAdminContentCommand();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [publishImmediately, setPublishImmediately] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [publishedCount, setPublishedCount] = useState(0);
+  const [failures, setFailures] = useState<DuplicateFailure[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTargetIds, setSelectedTargetIds] = useState<string[]>([]);
@@ -182,6 +201,10 @@ export function CrossHouseDuplicatePanel({
     setSearchQuery("");
     setCurrentPage(1);
     setSelectedTargetIds([]);
+    setPublishImmediately(false);
+    setProcessedCount(0);
+    setPublishedCount(0);
+    setFailures([]);
   }
 
   function closePanel() {
@@ -189,30 +212,105 @@ export function CrossHouseDuplicatePanel({
     onCancel?.();
   }
 
+  async function runSequentialJobs(
+    jobs: Array<{ target: CrossHouseDuplicateTarget; createdItem?: DuplicateCreatedItem }>,
+  ) {
+    if (!jobs.length) return;
+
+    setConfirmOpen(false);
+    setIsProcessing(true);
+    setProcessedCount(0);
+    setPublishedCount(0);
+    setFailures([]);
+
+    const nextFailures: DuplicateFailure[] = [];
+    let nextPublishedCount = 0;
+
+    for (const job of jobs) {
+      let createdItem = job.createdItem;
+      let duplicateError = "";
+
+      if (!createdItem) {
+        const duplicateResult = await dispatch<unknown>(
+          {
+            type: commandType,
+            houseId,
+            payload: { sourceId, targetHouseIds: [job.target.id] },
+          },
+          {
+            successMessage: null,
+            refreshOnSuccess: false,
+            onError: (error) => { duplicateError = error; },
+          },
+        );
+
+        if (!duplicateResult) {
+          nextFailures.push({ target: job.target, phase: "duplicate", message: duplicateError || "Не вдалося створити чернетку." });
+          setProcessedCount((count) => count + 1);
+          continue;
+        }
+
+        createdItem =
+          readDuplicateCreatedItem(duplicateResult, job.target.id) ?? undefined;
+        if (!createdItem) {
+          nextFailures.push({ target: job.target, phase: "duplicate", message: "Команда дублювання не повернула id та lockVersion створеної чернетки." });
+          setProcessedCount((count) => count + 1);
+          continue;
+        }
+      }
+
+      if (publishImmediately) {
+        const publishCommand = buildDuplicatePublishCommand(commandType, createdItem);
+        if (!publishCommand) {
+          nextFailures.push({ target: job.target, phase: "publish", createdItem, message: "Для цього розділу не визначено безпечну команду публікації." });
+          setProcessedCount((count) => count + 1);
+          continue;
+        }
+
+        let publishError = "";
+        const publishResult = await dispatch(publishCommand, {
+          successMessage: null,
+          refreshOnSuccess: false,
+          enableUndo: false,
+          onError: (error) => { publishError = error; },
+        });
+
+        if (!publishResult) {
+          nextFailures.push({ target: job.target, phase: "publish", createdItem, message: publishError || "Чернетку створено, але не опубліковано." });
+          setProcessedCount((count) => count + 1);
+          continue;
+        }
+
+        nextPublishedCount += 1;
+        setPublishedCount(nextPublishedCount);
+      }
+
+      setProcessedCount((count) => count + 1);
+    }
+
+    setFailures(nextFailures);
+    setIsProcessing(false);
+    router.refresh();
+
+    if (!nextFailures.length) {
+      resetPanelState();
+      onSuccess?.();
+    }
+  }
+
   async function duplicateToSelectedHouses() {
-    if (!selectedTargetIds.length) return;
+    if (!selectedTargets.length) return;
+    await runSequentialJobs(selectedTargets.map((target) => ({ target })));
+  }
 
-    const result = await dispatch(
-      {
-        type: commandType,
-        houseId,
-        payload: {
-          sourceId,
-          targetHouseIds: selectedTargetIds,
-        },
-      },
-      {
-        successMessage:
-          selectedTargetIds.length === 1
-            ? "Чернетку створено в іншому будинку"
-            : `Чернетки створено у ${selectedTargetIds.length} будинках`,
-      },
+  async function retryFailures() {
+    await runSequentialJobs(
+      failures.map((failure) => ({
+        target: failure.target,
+        createdItem:
+          failure.phase === "publish" ? failure.createdItem : undefined,
+      })),
     );
-
-    if (!result) return;
-
-    resetPanelState();
-    onSuccess?.();
   }
 
   if (!availableTargets.length) {
@@ -227,9 +325,9 @@ export function CrossHouseDuplicatePanel({
   return (
     <div className="relative rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left shadow-[var(--cms-shadow-sm)]">
       <PlatformSectionLoader
-        active={isPending}
-        label="Створюємо копії у вибраних будинках…"
-        message="Формуємо нові чернетки та оновлюємо історію для кожного будинку."
+        active={isPending || isProcessing}
+        label={publishImmediately ? `Опубліковано ${publishedCount} з ${selectedTargets.length}` : `Створено ${processedCount} з ${selectedTargets.length}`}
+        message="Будинки обробляються строго послідовно. Помилка одного будинку не зупиняє інші."
         delayMs={0}
       />
 
@@ -257,7 +355,7 @@ export function CrossHouseDuplicatePanel({
           <button
             type="button"
             onClick={toggleAllTargets}
-            disabled={!availableTargets.length || isPending || disabled}
+            disabled={!availableTargets.length || isPending || isProcessing || disabled}
             className="text-xs font-semibold text-[var(--cms-text)] underline-offset-4 hover:underline disabled:opacity-50"
           >
             {allTargetsSelected ? "Зняти всі будинки" : "Усі будинки"}
@@ -266,7 +364,7 @@ export function CrossHouseDuplicatePanel({
           <button
             type="button"
             onClick={toggleVisibleTargets}
-            disabled={!visibleTargets.length || isPending || disabled}
+            disabled={!visibleTargets.length || isPending || isProcessing || disabled}
             className="text-xs font-semibold text-[var(--cms-text)] underline-offset-4 hover:underline disabled:opacity-50"
           >
             {visibleTargets.length > 0 &&
@@ -292,7 +390,7 @@ export function CrossHouseDuplicatePanel({
                 type="checkbox"
                 checked={selectedSet.has(target.id)}
                 onChange={() => toggleTarget(target.id)}
-                disabled={isPending || disabled}
+                disabled={isPending || isProcessing || disabled}
                 className="mt-1 h-4 w-4 rounded border-[var(--cms-border-strong)]"
               />
 
@@ -328,7 +426,7 @@ export function CrossHouseDuplicatePanel({
             <button
               type="button"
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-              disabled={isPending || disabled || safeCurrentPage <= 1}
+              disabled={isPending || isProcessing || disabled || safeCurrentPage <= 1}
               className="rounded-[var(--r-md)] border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
             >
               Назад
@@ -337,12 +435,55 @@ export function CrossHouseDuplicatePanel({
             <button
               type="button"
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-              disabled={isPending || disabled || safeCurrentPage >= totalPages}
+              disabled={isPending || isProcessing || disabled || safeCurrentPage >= totalPages}
               className="rounded-[var(--r-md)] border border-[var(--cms-border)] px-3 py-1 font-semibold text-[var(--cms-text)] disabled:opacity-50"
             >
               Далі
             </button>
           </div>
+        </div>
+      ) : null}
+
+      <label className="mt-4 flex items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3 text-sm text-[var(--cms-text)]">
+        <input
+          type="checkbox"
+          checked={publishImmediately}
+          onChange={(event) => setPublishImmediately(event.target.checked)}
+          disabled={isPending || isProcessing || disabled}
+          className="h-4 w-4 rounded border-[var(--cms-border-strong)]"
+        />
+        <span>
+          <span className="block font-semibold">Опублікувати одразу</span>
+          <span className="mt-1 block text-xs text-[var(--cms-text-muted)]">
+            Після створення кожна чернетка публікується окремою існуючою командою.
+          </span>
+        </span>
+      </label>
+
+      {failures.length > 0 ? (
+        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
+          <div className="text-sm font-semibold text-[var(--cms-text)]">
+            Не виконано для будинків: {failures.length}
+          </div>
+          <ul className="mt-2 space-y-2 text-xs text-[var(--cms-text-muted)]">
+            {failures.map((failure) => (
+              <li key={`${failure.target.id}-${failure.phase}`}>
+                <strong>{formatTargetLabel(failure.target)}</strong>{" — "}
+                {failure.phase === "publish"
+                  ? "чернетку створено, публікація не виконана"
+                  : "чернетку не створено"}
+                {failure.message ? `: ${failure.message}` : ""}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => void retryFailures()}
+            disabled={isPending || isProcessing || disabled}
+            className={[adminSecondaryButtonClass, "mt-3"].join(" ")}
+          >
+            Повторити для будинків з помилками
+          </button>
         </div>
       ) : null}
 
@@ -359,24 +500,24 @@ export function CrossHouseDuplicatePanel({
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
-          disabled={isPending || disabled || selectedTargetIds.length === 0}
+          disabled={isPending || isProcessing || disabled || selectedTargetIds.length === 0}
           className={[adminPrimaryButtonClass, "disabled:opacity-60"].join(" ")}
         >
-          Створити чернетки
+          {publishImmediately ? "Створити й опублікувати" : "Створити чернетки"}
         </button>
       </div>
 
       <PlatformConfirmModal
         open={confirmOpen}
-        title={`Створити копії у ${formatHouseCount(selectedTargets.length)}?`}
+        title={publishImmediately ? `Створити й опублікувати у ${formatHouseCount(selectedTargets.length)}?` : `Створити копії у ${formatHouseCount(selectedTargets.length)}?`}
         description={confirmDescription}
-        confirmLabel="Створити чернетки"
+        confirmLabel={publishImmediately ? "Створити й опублікувати" : "Створити чернетки"}
         tone="warning"
-        isPending={isPending}
+        isPending={isPending || isProcessing}
         pendingLabel="Створюємо..."
         onConfirm={() => void duplicateToSelectedHouses()}
         onCancel={() => {
-          if (!isPending) {
+          if (!isPending && !isProcessing) {
             setConfirmOpen(false);
           }
         }}
