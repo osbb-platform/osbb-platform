@@ -2,6 +2,7 @@
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
@@ -121,6 +122,18 @@ export function HouseInformationWorkspace({
       "newest",
       ["newest", "oldest", "title_asc"],
     );
+  const [postViewMode, setPostViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "information",
+    "postViewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [faqViewMode, setFaqViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "information",
+    "faqViewMode",
+    "rows",
+    ["rows", "grid"],
+  );
   const [visiblePostCount, setVisiblePostCount] = useState(20);
   const [visibleFaqCount, setVisibleFaqCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
@@ -576,8 +589,15 @@ export function HouseInformationWorkspace({
                 onShowMore={() =>
                   setVisiblePostCount((current) => current + 20)
                 }
+                trailingControls={
+                  <WorkspaceViewToggle value={postViewMode} onChange={setPostViewMode} ariaLabel="Вигляд публікацій" />
+                }
               />
 
+              <div className={[
+                "grid gap-4",
+                postViewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+              ].join(" ")}>
               {visiblePosts.length > 0 ? (
                 visiblePosts.slice(0, visiblePostCount).map((section) => {
                   const content = section.content;
@@ -658,6 +678,7 @@ export function HouseInformationWorkspace({
                   }
                 />
               )}
+              </div>
             </div>
           </div>
         </>
@@ -717,8 +738,15 @@ export function HouseInformationWorkspace({
                 onShowMore={() =>
                   setVisibleFaqCount((current) => current + 20)
                 }
+                trailingControls={
+                  <WorkspaceViewToggle value={faqViewMode} onChange={setFaqViewMode} ariaLabel="Вигляд FAQ" />
+                }
               />
 
+              <div className={[
+                "grid gap-4",
+                faqViewMode === "grid" ? "md:grid-cols-2" : "grid-cols-1",
+              ].join(" ")}>
               {visibleFaqs.length > 0 ? (
                 visibleFaqs.slice(0, visibleFaqCount).map((faq) => (
                   <button
@@ -777,6 +805,7 @@ export function HouseInformationWorkspace({
                   }
                 />
               )}
+              </div>
             </div>
           </div>
 

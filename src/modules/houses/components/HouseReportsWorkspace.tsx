@@ -2,6 +2,7 @@
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -435,6 +436,12 @@ export function HouseReportsWorkspace({
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
   const [reportSearchQuery, setReportSearchQuery] =
     useWorkspaceMemory("reports", "searchQuery", "");
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "reports",
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
   const [visibleReportCount, setVisibleReportCount] = useState(20);
   const [reportSortMode, setReportSortMode] =
     useWorkspaceMemory<ReportSortMode>(
@@ -1616,7 +1623,7 @@ export function HouseReportsWorkspace({
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               value={reportSearchQuery}
               onChange={(event) => {
@@ -1641,6 +1648,7 @@ export function HouseReportsWorkspace({
               <option value="year_desc">Рік ↓</option>
               <option value="year_asc">Рік ↑</option>
             </select>
+            <WorkspaceViewToggle value={viewMode} onChange={setViewMode} />
           </div>
 
           <WorkspacePaginationControls
@@ -1713,7 +1721,12 @@ export function HouseReportsWorkspace({
             <button type="button" onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити звіт</button>
           ) : undefined} />
         ) : (
-          <div className="mt-6 space-y-3">
+          <div
+            className={[
+              "mt-6 grid gap-3",
+              viewMode === "grid" ? "md:grid-cols-2" : "grid-cols-1",
+            ].join(" ")}
+          >
             {visibleReports.slice(0, visibleReportCount).map((report) => (
               <div
                 key={report.id}

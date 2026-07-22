@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import {
   adminInputClass,
   adminSelectClass,
@@ -16,6 +18,8 @@ type WorkspaceListToolbarProps = {
   onSearchChange: (value: string) => void;
   onSortChange: (value: WorkspaceListSortMode) => void;
   onShowMore: () => void;
+  trailingControls?: ReactNode;
+  className?: string;
 };
 
 export function WorkspaceListToolbar({
@@ -27,10 +31,19 @@ export function WorkspaceListToolbar({
   onSearchChange,
   onSortChange,
   onShowMore,
+  trailingControls,
+  className,
 }: WorkspaceListToolbarProps) {
   return (
-    <div className="mb-4 space-y-3">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+    <div className={["mb-4 space-y-3", className].filter(Boolean).join(" ")}>
+      <div
+        className={[
+          "grid gap-3",
+          trailingControls
+            ? "md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end"
+            : "md:grid-cols-[minmax(0,1fr)_220px]",
+        ].join(" ")}
+      >
         <label className="space-y-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-muted)]">
             Пошук
@@ -60,6 +73,10 @@ export function WorkspaceListToolbar({
             <option value="title_asc">Назва А–Я</option>
           </select>
         </label>
+
+        {trailingControls ? (
+          <div className="flex items-end md:pb-0.5">{trailingControls}</div>
+        ) : null}
       </div>
 
       <WorkspacePaginationControls

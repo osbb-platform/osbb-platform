@@ -2,6 +2,7 @@
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 
 import {
   AdminStatusBadge,
@@ -193,6 +194,12 @@ export function HouseDocumentsWorkspace({
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
   const [documentSearchQuery, setDocumentSearchQuery] =
     useWorkspaceMemory("documents", "searchQuery", "");
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    `documents-${documentScope}`,
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
   const [visibleDocumentCount, setVisibleDocumentCount] = useState(20);
   const [documentSortMode, setDocumentSortMode] =
     useWorkspaceMemory<DocumentSortMode>(
@@ -1158,13 +1165,16 @@ export function HouseDocumentsWorkspace({
           </div>
         ) : null}
 
-        <WorkspacePaginationControls
-          visible={visibleDocumentCount}
-          total={visibleDocuments.length}
-          onShowMore={() =>
-            setVisibleDocumentCount((current) => current + 20)
-          }
-        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <WorkspacePaginationControls
+            visible={visibleDocumentCount}
+            total={visibleDocuments.length}
+            onShowMore={() =>
+              setVisibleDocumentCount((current) => current + 20)
+            }
+          />
+          <WorkspaceViewToggle value={viewMode} onChange={setViewMode} />
+        </div>
 
         {visibleDocuments.length === 0 ? (
           <EmptyState
@@ -1175,7 +1185,12 @@ export function HouseDocumentsWorkspace({
             ) : undefined}
           />
         ) : (
-          <div className="grid gap-4">
+          <div
+            className={[
+              "grid gap-4",
+              viewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+            ].join(" ")}
+          >
             {visibleDocuments.slice(0, visibleDocumentCount).map((document) => {
               const isSelected = document.id === selectedDocumentId && isFormOpen;
               const hasAttachment = document.attachment_status === "uploaded";

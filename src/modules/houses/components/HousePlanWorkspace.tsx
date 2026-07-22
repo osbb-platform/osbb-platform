@@ -2,6 +2,7 @@
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
@@ -282,6 +283,12 @@ export function HousePlanWorkspace({
       "newest",
       ["newest", "oldest", "title_asc"],
     );
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "plan",
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
   const [visibleCount, setVisibleCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -1338,8 +1345,14 @@ export function HousePlanWorkspace({
         ) : null}
       </AdminSidePanel>
 
-      <div className="space-y-4">
+      <div
+        className={[
+          "grid gap-4",
+          viewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+        ].join(" ")}
+      >
         <WorkspaceListToolbar
+          className="col-span-full"
           searchQuery={searchQuery}
           sortMode={sortMode}
           visible={visibleCount}
@@ -1354,6 +1367,7 @@ export function HousePlanWorkspace({
             setVisibleCount(20);
           }}
           onShowMore={() => setVisibleCount((current) => current + 20)}
+          trailingControls={<WorkspaceViewToggle value={viewMode} onChange={setViewMode} />}
         />
 
         {visibleTasks.length === 0 ? (

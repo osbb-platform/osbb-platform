@@ -2,6 +2,7 @@
 
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
@@ -450,6 +451,12 @@ export function HouseMeetingsWorkspace({
       "newest",
       ["newest", "oldest", "title_asc"],
     );
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "meetings",
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
   const [visibleCount, setVisibleCount] = useState(20);
 
   const [mode, setMode] = useState<WorkspaceMode>("idle");
@@ -1449,8 +1456,14 @@ export function HouseMeetingsWorkspace({
         />
       ) : null}
 
-      <div className="mt-6 space-y-4">
+      <div
+        className={[
+          "mt-6 grid gap-4",
+          viewMode === "grid" ? "md:grid-cols-2" : "grid-cols-1",
+        ].join(" ")}
+      >
         <WorkspaceListToolbar
+          className="col-span-full"
           searchQuery={searchQuery}
           sortMode={sortMode}
           visible={visibleCount}
@@ -1465,6 +1478,7 @@ export function HouseMeetingsWorkspace({
             setVisibleCount(20);
           }}
           onShowMore={() => setVisibleCount((current) => current + 20)}
+          trailingControls={<WorkspaceViewToggle value={viewMode} onChange={setViewMode} />}
         />
 
         {visibleMeetings.length === 0 ? (
