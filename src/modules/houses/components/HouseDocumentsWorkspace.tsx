@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 
 import {
   AdminStatusBadge,
@@ -418,6 +419,35 @@ export function HouseDocumentsWorkspace({
         fileInputRef.current.value = "";
       }
     });
+  }
+
+  function prepareQuickAction(
+    document: HouseDocumentListItem,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setIsFormOpen(false);
+    setSelectedDocumentId(document.id);
+    setActionError(null);
+    setTitle(document.title);
+    setCategory(document.category);
+    setLifecycle(document.lifecycle_status);
+    setDocumentYear(
+      document.document_year
+        ? String(document.document_year)
+        : YEAR_OPTIONS[0],
+    );
+    setDocumentType(document.document_type ?? "statute");
+    setDescription(document.description ?? "");
+    setSelectedFile(null);
+    setFileError(null);
+    setRemoveAttachment(false);
+    setPanelDirty(false);
+    setSubmitIntent("save");
+    setConfirmAction(action);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function handleTabChange(tab: WorkspaceTab) {
@@ -1282,6 +1312,44 @@ export function HouseDocumentsWorkspace({
                       <AdminStatusBadge tone={statusToneFor(document.lifecycle_status)}>
                         {statusLabelFor(document.lifecycle_status)}
                       </AdminStatusBadge>
+
+                      <WorkspaceQuickActions
+                        actions={[
+                          ...(document.lifecycle_status === "draft" && canConfirm
+                            ? [
+                                {
+                                  key: "publish",
+                                  label: "Опублікувати",
+                                  onSelect: () =>
+                                    prepareQuickAction(document, "publish"),
+                                },
+                              ]
+                            : []),
+                          ...(document.lifecycle_status === "published" && canArchive
+                            ? [
+                                {
+                                  key: "archive",
+                                  label: "В архів",
+                                  onSelect: () =>
+                                    prepareQuickAction(document, "archive"),
+                                },
+                              ]
+                            : []),
+                          ...((document.lifecycle_status === "draft" ||
+                          document.lifecycle_status === "archived") &&
+                          canDelete
+                            ? [
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  onSelect: () =>
+                                    prepareQuickAction(document, "delete"),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
 
                       <span className="text-xs text-[var(--cms-text-soft)]">
                         Натисни для редагування
