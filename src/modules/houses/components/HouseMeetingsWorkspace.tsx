@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
@@ -41,7 +42,7 @@ type MeetingLifecycleStatus =
   | "archived";
 
 type WorkspaceMode = "idle" | "create" | "edit";
-type ConfirmAction = "delete" | "publish" | null;
+type ConfirmAction = "delete" | "publish" | "archive" | null;
 
 type MeetingQuestion = {
   id: string;
@@ -574,6 +575,17 @@ export function HouseMeetingsWorkspace({
       setManualVoteAnswers({});
       setPanelDirty(false);
     });
+  }
+
+  function prepareQuickAction(
+    meeting: MeetingItem,
+    action: Exclude<ConfirmAction, null>,
+  ) {
+    setMode("idle");
+    setSelectedMeetingId(meeting.id);
+    setDraft(meeting);
+    setPanelDirty(false);
+    setConfirmAction(action);
   }
 
   function closeWorkspace() {
@@ -1510,6 +1522,45 @@ export function HouseMeetingsWorkspace({
               <div className="mt-3 text-sm text-[var(--cms-text-soft)]">
                 {meeting.questions.length} питань · Не брали участь: {formatNotParticipatingApartments(meeting, apartments)}
               </div>
+
+              <div className="mt-4">
+                <WorkspaceQuickActions
+                  actions={[
+                    ...(meeting.lifecycleStatus === "draft"
+                      ? [
+                          ...(workflowAccessGranted
+                            ? [
+                                {
+                                  key: "publish",
+                                  label: "Опублікувати",
+                                  onSelect: () =>
+                                    prepareQuickAction(meeting, "publish"),
+                                },
+                              ]
+                            : []),
+                          {
+                            key: "delete",
+                            label: "Видалити",
+                            tone: "danger" as const,
+                            onSelect: () =>
+                              prepareQuickAction(meeting, "delete"),
+                          },
+                        ]
+                      : []),
+                    ...(meeting.lifecycleStatus === "published" &&
+                    workflowAccessGranted
+                      ? [
+                          {
+                            key: "archive",
+                            label: "В архів",
+                            onSelect: () =>
+                              prepareQuickAction(meeting, "archive"),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </div>
             </article>
           ))
         )}
@@ -1546,6 +1597,26 @@ export function HouseMeetingsWorkspace({
         onConfirm={() => {
           if (selectedMeetingId) {
             deleteMeetingFromRegistry(selectedMeetingId);
+          }
+        }}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "archive"}
+        tone="warning"
+        title="Перенести збори до архіву?"
+        description="Збори буде знято з публікації та переміщено до архіву."
+        confirmLabel="В архів"
+        pendingLabel="Архівуємо..."
+        isPending={isPending}
+        onConfirm={() => {
+          if (selectedMeetingId) {
+            void archiveMeetingFromRegistry(selectedMeetingId);
           }
         }}
         onCancel={() => {
