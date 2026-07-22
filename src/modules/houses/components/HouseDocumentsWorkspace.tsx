@@ -143,6 +143,10 @@ function formatFileSize(value: number | null) {
   return `${(value / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
+function createDocumentUploadFileName(fileExt: string) {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+}
+
 function getEmptyText(tab: WorkspaceTab, fallback: string) {
   if (tab === "active") {
     return "Зараз немає активних документів. Після підтвердження вони відображатимуться тут і на публічній сторінці.";
@@ -477,7 +481,7 @@ export function HouseDocumentsWorkspace({
 
     const supabase = createSupabaseBrowserClient();
     const fileExt = selectedFile.name.split(".").pop() ?? "pdf";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const fileName = createDocumentUploadFileName(fileExt);
     const filePath = `${houseId}/${documentScope}-documents/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -687,9 +691,7 @@ export function HouseDocumentsWorkspace({
     setActiveTab("archive");
   }
 
-  async function copySelectedDocumentToDraft() {
-    if (!selectedDocument) return;
-
+  async function copyDocumentToDraft(document: HouseDocumentListItem) {
     setActionError(null);
     setSubmitIntent("copy");
     setActionLabel("Копіюємо документ у чернетку...");
@@ -699,7 +701,7 @@ export function HouseDocumentsWorkspace({
         type: "documents.duplicate",
         houseId,
         payload: {
-          sourceId: selectedDocument.id,
+          sourceId: document.id,
           targetHouseIds: [houseId],
         },
       },
@@ -715,6 +717,11 @@ export function HouseDocumentsWorkspace({
     if (!embedded) {
       setActiveTab("draft");
     }
+  }
+
+  async function copySelectedDocumentToDraft() {
+    if (!selectedDocument) return;
+    await copyDocumentToDraft(selectedDocument);
   }
 
   const hasExistingAttachment =
@@ -1325,13 +1332,24 @@ export function HouseDocumentsWorkspace({
                                 },
                               ]
                             : []),
-                          ...(document.lifecycle_status === "published" && canArchive
+                          ...(document.lifecycle_status === "published"
                             ? [
+                                ...(canArchive
+                                  ? [
+                                      {
+                                        key: "archive",
+                                        label: "В архів",
+                                        onSelect: () =>
+                                          prepareQuickAction(document, "archive"),
+                                      },
+                                    ]
+                                  : []),
                                 {
-                                  key: "archive",
-                                  label: "В архів",
+                                  key: "duplicate",
+                                  label: "Створити на основі",
+                                  disabled: isPending,
                                   onSelect: () =>
-                                    prepareQuickAction(document, "archive"),
+                                    void copyDocumentToDraft(document),
                                 },
                               ]
                             : []),
