@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { dispatchAdminCommand } from "@/src/modules/content-engine/v2/dispatch";
 import { useToast } from "@/src/shared/ui/toast/ToastProvider";
 import { errorMessages } from "@/src/modules/content-engine/v2/client/errorMessages";
+import { buildLifecycleUndoCommand } from "@/src/modules/content-engine/v2/client/lifecycleUndo";
 import type { AdminCommand } from "@/src/modules/content-engine/v2/types/commands";
 
 type DispatchOptions = {
@@ -19,6 +20,8 @@ type DispatchOptions = {
   onSuccess?: (data: unknown) => void;
   /** Callback after error. */
   onError?: (error: string) => void;
+  /** Disable lifecycle Undo for inverse commands and exceptional flows. */
+  enableUndo?: boolean;
 };
 
 export function useAdminContentCommand() {
@@ -68,9 +71,25 @@ export function useAdminContentCommand() {
         options.onSuccess?.(result.data);
 
         if (options.successMessage !== null) {
+          const undoCommand =
+            options.enableUndo === false
+              ? null
+              : buildLifecycleUndoCommand(command, result.data);
+
           toast({
             tone: "success",
             title: options.successMessage ?? "Збережено",
+            action: undoCommand
+              ? {
+                  label: "Скасувати",
+                  onClick: () => {
+                    void dispatch(undoCommand, {
+                      successMessage: "Дію скасовано",
+                      enableUndo: false,
+                    });
+                  },
+                }
+              : undefined,
           });
         }
 
