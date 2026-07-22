@@ -307,11 +307,10 @@ export default async function AdminHouseDetailPage({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_96%,transparent)] px-4 py-3 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-5">
-        <div className="relative flex flex-col gap-4">
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-            <div className="min-w-0">
+    <div className="space-y-5">
+      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_98%,transparent)] px-3 py-2.5 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-4">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
+          <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
                 href={ROUTES.admin.houses}
@@ -325,7 +324,7 @@ export default async function AdminHouseDetailPage({
               </span>
             </div>
 
-            <div className="mt-1 min-w-0">
+            <div className="mt-0.5 min-w-0">
               <HouseSwitcher
                 currentHouseId={house.id}
                 currentHouseName={house.name}
@@ -340,51 +339,47 @@ export default async function AdminHouseDetailPage({
                 }))}
               />
 
-              <p className="mt-2 break-words text-base leading-6 text-[var(--cms-text-muted)]">
-              {house.address}
-            </p>
+              <p className="mt-1 truncate text-sm leading-5 text-[var(--cms-text-muted)]" title={house.address}>
+                {house.address}
+              </p>
 
-              <HouseStatusLine
-                houseId={house.id}
-                counters={sectionCounters}
-              />
+              <HouseStatusLine houseId={house.id} counters={sectionCounters} />
             </div>
+          </div>
 
+          <div className="flex min-w-0 flex-col gap-2 lg:items-end">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 lg:justify-end">
+              <HouseEntityBadge variant="slug" title={house.slug}>
+                {house.slug}
+              </HouseEntityBadge>
 
-            </div>
+              {!house.is_active ? (
+                <span className="inline-flex h-6 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2 text-[11px] font-medium text-[var(--cms-text)]">
+                  Архів
+                </span>
+              ) : null}
 
-            <div className="flex max-w-full flex-col items-start gap-3 lg:items-end">
-              <div className="flex max-w-full flex-wrap items-center gap-2 lg:justify-end">
-                <HouseEntityBadge variant="slug" title={house.slug}>
-                  {house.slug}
+              {house.district ? (
+                <span
+                  className="inline-flex h-6 items-center rounded-[var(--r-pill)] px-2 text-[11px] font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
+                  style={{ backgroundColor: house.district.theme_color }}
+                >
+                  {house.district.name}
+                </span>
+              ) : null}
+
+              {house.management_company?.name ? (
+                <HouseEntityBadge
+                  variant="managementCompany"
+                  title={house.management_company.name}
+                >
+                  {house.management_company.name}
                 </HouseEntityBadge>
+              ) : null}
 
-                {!house.is_active ? (
-                  <span className="inline-flex h-7 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2.5 text-xs font-medium text-[var(--cms-text)]">
-                    Архів
-                  </span>
-                ) : null}
+              <span className="ml-auto hidden h-5 w-px bg-[var(--cms-border)] lg:block" aria-hidden="true" />
 
-                {house.district ? (
-                  <span
-                    className="inline-flex h-7 items-center rounded-[var(--r-pill)] px-2.5 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
-                    style={{ backgroundColor: house.district.theme_color }}
-                  >
-                    {house.district.name}
-                  </span>
-                ) : null}
-
-                {house.management_company?.name ? (
-                  <HouseEntityBadge
-                    variant="managementCompany"
-                    title={house.management_company.name}
-                  >
-                    {house.management_company.name}
-                  </HouseEntityBadge>
-                ) : null}
-              </div>
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <AdminActionIconLink
                   href={publicPreviewHref}
                   icon="publicPage"
@@ -392,7 +387,7 @@ export default async function AdminHouseDetailPage({
                   tooltip="Відкрити сайт будинку"
                   target="_blank"
                   rel="noreferrer"
-                  size="lg"
+                  size="md"
                   tone="accent"
                 />
 
@@ -401,20 +396,19 @@ export default async function AdminHouseDetailPage({
                   icon="back"
                   label="Назад до реєстру будинків"
                   tooltip="Назад до реєстру"
-                  size="lg"
+                  size="md"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="min-w-0">
-            <HouseSectionTabs
-              houseId={house.id}
-              activeBlock={activeBlock}
-              counters={sectionCounters}
-              contentTargetId="house-section-content"
-            />
-
+            <div className="w-full min-w-0 lg:flex lg:justify-end">
+              <HouseSectionTabs
+                houseId={house.id}
+                activeBlock={activeBlock}
+                counters={sectionCounters}
+                contentTargetId="house-section-content"
+              />
+            </div>
           </div>
         </div>
       </div>

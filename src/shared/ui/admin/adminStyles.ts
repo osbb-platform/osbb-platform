@@ -134,7 +134,7 @@ export const adminEmptyStateClass = cx(
 );
 
 export const adminTabBaseClass = cx(
-  "inline-flex h-[38px] items-center gap-2 rounded-[var(--r-lg)] px-4 text-sm font-semibold transition-colors",
+  "inline-flex h-8 items-center gap-1.5 rounded-[var(--r-md)] px-3 text-xs font-semibold transition-colors",
   "border",
   adminFocusRingClass
 );
@@ -145,7 +145,7 @@ export const adminTabActiveClass =
 export const adminTabInactiveClass =
   "border-transparent bg-transparent text-[var(--cms-text-muted)] hover:text-[var(--cms-text)]";
 
-export const adminTabCountBaseClass = "rounded-[var(--r-pill)] px-2 py-px text-xs font-semibold";
+export const adminTabCountBaseClass = "inline-flex min-w-5 items-center justify-center rounded-[var(--r-pill)] px-1.5 py-px text-[11px] font-semibold";
 
 export const adminTabCountActiveClass =
   "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]";

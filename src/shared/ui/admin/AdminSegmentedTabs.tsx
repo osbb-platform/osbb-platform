@@ -57,7 +57,7 @@ export function AdminSegmentedTabs({
   return (
     <div
       className={[
-        "inline-flex max-w-full flex-wrap gap-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-1.5",
+        "inline-flex max-w-full flex-wrap gap-1 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-1",
         className,
       ]
         .filter(Boolean)

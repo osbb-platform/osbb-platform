@@ -288,7 +288,7 @@ export function HouseSectionTabs({
       <div
         role="tablist"
         aria-label="Розділи будинку"
-        className="flex min-w-0 flex-wrap items-center gap-2 overflow-visible"
+        className="flex min-w-0 flex-wrap items-center justify-start gap-1.5 overflow-visible lg:justify-end"
       >
         {visibleBlocks.map((block) => {
           const isActive = block.value === selectedBlock;
@@ -301,7 +301,7 @@ export function HouseSectionTabs({
               aria-selected={isActive}
               disabled={isPending}
               onClick={() => navigate(block.value)}
-              className={`inline-flex h-9 flex-none items-center justify-center whitespace-nowrap rounded-[var(--r-pill)] px-3 text-sm font-medium transition ${
+              className={`inline-flex h-8 flex-none items-center justify-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 text-xs font-semibold transition ${
                 isActive
                   ? "bg-[var(--cms-accent-primary)] text-white shadow-[var(--cms-shadow-sm)]"
                   : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)] hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"

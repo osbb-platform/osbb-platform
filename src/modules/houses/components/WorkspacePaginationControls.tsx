@@ -20,8 +20,8 @@ export function WorkspacePaginationControls({
   const nextCount = Math.min(step, remaining);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3">
-      <span className="text-sm text-[var(--cms-text-muted)]">
+    <div className="flex min-h-8 flex-wrap items-center justify-between gap-2 px-0.5">
+      <span className="text-xs font-medium text-[var(--cms-text-soft)]">
         Показано {shown} з {total}
       </span>
 
@@ -29,7 +29,7 @@ export function WorkspacePaginationControls({
         <button
           type="button"
           onClick={onShowMore}
-          className="inline-flex h-9 items-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+          className="inline-flex h-8 items-center rounded-[var(--r-md)] border border-[var(--cms-border)] bg-transparent px-3 text-xs font-semibold text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
         >
           Показати ще {nextCount}
         </button>
