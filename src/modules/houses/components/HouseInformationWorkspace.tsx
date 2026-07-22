@@ -155,6 +155,7 @@ export function HouseInformationWorkspace({
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
+  const [copyingFaqId, setCopyingFaqId] = useState<string | null>(null);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
   const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
@@ -362,6 +363,34 @@ export function HouseInformationWorkspace({
 
     setApplyingFaqTemplate(false);
     return true;
+  }
+
+  async function handleCopyFaqToDraft(faqId: string) {
+    setWorkspaceError(null);
+    setCopyingFaqId(faqId);
+
+    const copied = await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.duplicate",
+        houseId,
+        payload: {
+          sourceId: faqId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        successMessage: "FAQ скопійовано в чернетку",
+        onError: setWorkspaceError,
+        onSuccess() {
+          setFaqLifecycleTab("draft");
+          setEditingFaqId(null);
+          setFaqCreateOpen(false);
+        },
+      },
+    );
+
+    setCopyingFaqId(null);
+    return copied;
   }
 
   async function handleCopyPostToDraft(sectionId: string) {
@@ -1084,6 +1113,14 @@ export function HouseInformationWorkspace({
                                   disabled: isPending,
                                   onSelect: () =>
                                     prepareFaqQuickAction(faq, "archive"),
+                                },
+                                {
+                                  key: "duplicate",
+                                  label: "Створити на основі",
+                                  disabled:
+                                    isPending || copyingFaqId === faq.id,
+                                  onSelect: () =>
+                                    void handleCopyFaqToDraft(faq.id),
                                 },
                               ]
                             : []),
