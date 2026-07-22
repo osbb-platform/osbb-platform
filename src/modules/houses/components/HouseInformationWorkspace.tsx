@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import {
@@ -19,6 +20,7 @@ import {
   type ContentTemplateSlot,
   } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
@@ -48,6 +50,11 @@ export const INFORMATION_CATEGORIES = [
 type InformationMainTab = "posts" | "faq" | "materials";
 type InformationLifecycleTab = "published" | "draft" | "archived";
 type PostWorkspaceMode = "idle" | "create" | "edit";
+type PostQuickActionKind = "publish" | "archive" | "delete";
+type PostQuickActionConfirm = {
+  sectionId: string;
+  action: PostQuickActionKind;
+} | null;
 
 type InformationSectionItem = HouseInformationPostSnapshot;
 
@@ -147,6 +154,8 @@ export function HouseInformationWorkspace({
   const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
   const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
+  const [postQuickActionConfirm, setPostQuickActionConfirm] =
+    useState<PostQuickActionConfirm>(null);
 
   const baseVisiblePosts = posts
     .filter((item) => item.status === postLifecycleTab)
@@ -204,6 +213,71 @@ export function HouseInformationWorkspace({
     setWorkspaceError(null);
     setWorkspaceMode("idle");
     setEditingSectionId(null);
+  }
+
+  function preparePostQuickAction(
+    section: InformationSectionItem,
+    action: PostQuickActionKind,
+  ) {
+    setWorkspaceError(null);
+    setWorkspaceMode("idle");
+    setEditingSectionId(null);
+    setEditingFaqId(null);
+    setPostQuickActionConfirm({
+      sectionId: section.id,
+      action,
+    });
+  }
+
+  async function runPostQuickAction() {
+    if (!postQuickActionConfirm) return;
+
+    const section = posts.find(
+      (item) => item.id === postQuickActionConfirm.sectionId,
+    );
+    if (!section) {
+      setPostQuickActionConfirm(null);
+      setWorkspaceError("Інформаційний матеріал не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    const action = postQuickActionConfirm.action;
+    const commandType =
+      action === "publish"
+        ? "information_posts.publish"
+        : action === "archive"
+          ? "information_posts.archive"
+          : "information_posts.delete";
+
+    setWorkspaceError(null);
+
+    await dispatch(
+      {
+        type: commandType,
+        houseId,
+        payload: {
+          id: section.id,
+          lockVersion:
+            typeof section.content.lockVersion === "number"
+              ? section.content.lockVersion
+              : 1,
+        },
+      },
+      {
+        onSuccess: () => {
+          setPostQuickActionConfirm(null);
+          setWorkspaceMode("idle");
+          setEditingSectionId(null);
+
+          if (action === "publish") {
+            setPostLifecycleTab("published");
+          } else if (action === "archive") {
+            setPostLifecycleTab("archived");
+          }
+        },
+        onError: setWorkspaceError,
+      },
+    );
   }
 
   async function applyInformationTemplateKeys(templateKeys: string[]) {
@@ -612,10 +686,17 @@ export function HouseInformationWorkspace({
                   const isPinned = Boolean(content.isPinned);
 
                   return (
-                    <button
+                    <div
                       key={section.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => openEditPost(section.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openEditPost(section.id);
+                        }
+                      }}
                       className={`block w-full overflow-hidden rounded-[var(--r-lg)] border p-4 text-left transition ${
                         isPinned
                           ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)]"
@@ -650,7 +731,56 @@ export function HouseInformationWorkspace({
                           </div>
                         </div>
                       </div>
-                    </button>
+
+                      <div className="mt-4">
+                        <WorkspaceQuickActions
+                          actions={[
+                            ...(section.status === "draft"
+                              ? [
+                                  {
+                                    key: "publish",
+                                    label: "Опублікувати",
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "publish"),
+                                  },
+                                  {
+                                    key: "delete",
+                                    label: "Видалити",
+                                    tone: "danger" as const,
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "delete"),
+                                  },
+                                ]
+                              : []),
+                            ...(section.status === "published"
+                              ? [
+                                  {
+                                    key: "archive",
+                                    label: "В архів",
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "archive"),
+                                  },
+                                ]
+                              : []),
+                            ...(section.status === "archived"
+                              ? [
+                                  {
+                                    key: "delete",
+                                    label: "Видалити",
+                                    tone: "danger" as const,
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "delete"),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        />
+                      </div>
+                    </div>
                   );
                 })
               ) : (
@@ -683,6 +813,58 @@ export function HouseInformationWorkspace({
           </div>
         </>
       ) : null}
+
+      <PlatformConfirmModal
+        open={postQuickActionConfirm !== null}
+        title={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтвердити публікацію матеріалу?"
+            : postQuickActionConfirm?.action === "archive"
+              ? "Перенести матеріал в архів?"
+              : postLifecycleTab === "archived"
+                ? "Видалити архівний матеріал?"
+                : "Видалити чернетку матеріалу?"
+        }
+        description={
+          postQuickActionConfirm?.action === "publish"
+            ? "Після підтвердження матеріал стане видимим для мешканців на сторінці інформації."
+            : postQuickActionConfirm?.action === "archive"
+              ? "Після архівації матеріал зникне з публічної частини сайту. У CMS він залишиться доступним в архіві."
+              : postLifecycleTab === "archived"
+                ? "Архівний інформаційний матеріал буде видалено із системи без можливості відновлення."
+                : "Чернетку інформаційного матеріалу буде видалено без можливості відновлення."
+        }
+        confirmLabel={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтвердити публікацію"
+            : postQuickActionConfirm?.action === "archive"
+              ? "Архівувати матеріал"
+              : "Видалити матеріал"
+        }
+        pendingLabel={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтверджуємо..."
+            : postQuickActionConfirm?.action === "archive"
+              ? "Архівуємо..."
+              : "Видаляємо..."
+        }
+        tone={
+          postQuickActionConfirm?.action === "delete"
+            ? "destructive"
+            : postQuickActionConfirm?.action === "archive"
+              ? "warning"
+              : "publish"
+        }
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setPostQuickActionConfirm(null);
+          }
+        }}
+        onConfirm={() => {
+          void runPostQuickAction();
+        }}
+      />
 
       {mainTab === "materials" ? (
         <HouseDocumentsWorkspace
