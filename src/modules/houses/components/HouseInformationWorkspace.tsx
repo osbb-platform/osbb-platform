@@ -484,26 +484,35 @@ export function HouseInformationWorkspace({
       return;
     }
 
-    await dispatch(
-      {
-        type: `faq.${action}`,
-        houseId,
-        payload: {
-          faqId: faq.id,
-          lockVersion: faq.lockVersion,
-        },
-      },
-      {
-        onError: setWorkspaceError,
-        onSuccess: () => {
-          setFaqQuickActionConfirm(null);
-
-          if (action === "archive") {
-            setFaqLifecycleTab("archived");
+    const command =
+      action === "archive"
+        ? {
+            type: "faq.archive" as const,
+            houseId,
+            payload: {
+              faqId: faq.id,
+              lockVersion: faq.lockVersion,
+            },
           }
-        },
+        : {
+            type: "faq.delete" as const,
+            houseId,
+            payload: {
+              faqId: faq.id,
+              lockVersion: faq.lockVersion,
+            },
+          };
+
+    await dispatch(command, {
+      onError: setWorkspaceError,
+      onSuccess: () => {
+        setFaqQuickActionConfirm(null);
+
+        if (action === "archive") {
+          setFaqLifecycleTab("archived");
+        }
       },
-    );
+    });
   }
 
   function openCreateDocument() {
