@@ -58,15 +58,6 @@ function mapSettings(settings: HouseDebtorsSettings | null) {
   };
 }
 
-function emptySnapshot(): AdminHouseDebtorsSnapshot {
-  return {
-    ...mapSettings(null),
-    updatedAt: null,
-    activeItems: [],
-    draftItems: [],
-    archivedItems: [],
-  };
-}
 
 function mapItem(item: HouseDebtorsItem): HouseDebtorsItemSnapshot {
   return {

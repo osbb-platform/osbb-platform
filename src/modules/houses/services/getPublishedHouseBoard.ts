@@ -52,14 +52,6 @@ type BoardMemberRow = {
   updated_at: string;
 };
 
-function emptyBoard(): PublishedHouseBoard {
-  return {
-    intro: {
-      intro: "",
-    },
-    members: [],
-  };
-}
 
 function mapMember(row: BoardMemberRow): PublishedHouseBoardMember {
   return {

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { throwRequiredPublicReadError } from "./publicContentResilience";
 import type { HouseDocumentType } from "@/src/modules/houses/services/getHouseDocuments";
 
 export type PublicHouseFoundingDocumentItem = {
@@ -49,11 +50,12 @@ export const getPublicHouseFoundingDocuments = cache(async (
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load public house founding documents:", {
+    throwRequiredPublicReadError({
+      section: "founding_documents",
+      resource: "house_documents",
       houseId,
-      message: error.message,
+      error: error,
     });
-    return [];
   }
 
   const documents = (data ?? []) as unknown as DocumentRow[];
@@ -71,11 +73,12 @@ export const getPublicHouseFoundingDocuments = cache(async (
     .in("entity_id", documentIds);
 
   if (filesError) {
-    console.error("Failed to load public house founding document files:", {
+    throwRequiredPublicReadError({
+      section: "founding_documents",
+      resource: "house_content_files",
       houseId,
-      message: filesError.message,
+      error: filesError,
     });
-    return [];
   }
 
   const filesByDocumentId = new Map(
