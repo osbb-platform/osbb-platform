@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import { useMemo, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -97,7 +99,12 @@ export function HouseAnnouncementsWorkspace({
   duplicateTargets = [],
 }: HouseAnnouncementsWorkspaceProps) {
   const { dispatch, isPending: isDeletingArchive } = useAdminContentCommand();
-  const [activeTab, setActiveTab] = useState<TabKey>("active");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<TabKey>(
+    "announcements",
+    "activeTab",
+    "active",
+    ["active", "moderation", "archive"],
+  );
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);

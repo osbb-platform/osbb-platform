@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import {
   AdminStatusBadge,
   statusLabelFor,
@@ -176,8 +178,11 @@ export function HouseDocumentsWorkspace({
   const { dispatch, isPending } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>(
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "documents",
+    "activeTab",
     startInCreateMode ? "draft" : "active",
+    ["active", "draft", "archive"],
   );
   const [isFormOpen, setIsFormOpen] = useState(startInCreateMode);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
@@ -185,9 +190,22 @@ export function HouseDocumentsWorkspace({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
-  const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  const [documentSearchQuery, setDocumentSearchQuery] =
+    useWorkspaceMemory("documents", "searchQuery", "");
   const [documentSortMode, setDocumentSortMode] =
-    useState<DocumentSortMode>("updated_desc");
+    useWorkspaceMemory<DocumentSortMode>(
+      "documents",
+      "sortMode",
+      "updated_desc",
+      [
+        "updated_desc",
+        "updated_asc",
+        "title_asc",
+        "title_desc",
+        "year_desc",
+        "year_asc",
+      ],
+    );
 
   const [title, setTitle] = useState("");
   const [category, setCategory] =

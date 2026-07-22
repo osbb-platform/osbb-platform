@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import { useMemo, useRef, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -202,8 +204,14 @@ export function HouseDebtorsWorkspace({
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "debtors",
+    "activeTab",
+    "all",
+    ["all", "published", "draft"],
+  );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("debtors", "searchQuery", "");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);

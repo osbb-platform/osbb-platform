@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
@@ -410,19 +412,42 @@ export function HouseReportsWorkspace({
   const { dispatch, isPending } = useAdminContentCommand();
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("published");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<TabKey>(
+    "reports",
+    "activeTab",
+    "published",
+    ["published", "draft", "archive"],
+  );
   const [publishedPeriodFilter, setPublishedPeriodFilter] =
-    useState<PublishedPeriodFilter>("current");
+    useWorkspaceMemory<PublishedPeriodFilter>(
+      "reports",
+      "periodFilter",
+      "current",
+      ["current", "past", "none"],
+    );
   const [publishedCategoryFilter, setPublishedCategoryFilter] =
-    useState("all");
+    useWorkspaceMemory("reports", "categoryFilter", "all");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
-  const [reportSearchQuery, setReportSearchQuery] = useState("");
+  const [reportSearchQuery, setReportSearchQuery] =
+    useWorkspaceMemory("reports", "searchQuery", "");
   const [reportSortMode, setReportSortMode] =
-    useState<ReportSortMode>("updated_desc");
+    useWorkspaceMemory<ReportSortMode>(
+      "reports",
+      "sortMode",
+      "updated_desc",
+      [
+        "updated_desc",
+        "updated_asc",
+        "title_asc",
+        "title_desc",
+        "year_desc",
+        "year_asc",
+      ],
+    );
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [removeReportPdf, setRemoveReportPdf] = useState(false);
   const [reportPdfError, setReportPdfError] = useState<string | null>(null);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
@@ -263,7 +265,12 @@ export function HousePlanWorkspace({
   const { dispatch, isPending } = useAdminContentCommand();
 
   const [tasks, setTasks] = useState<PlanTask[]>(() => normalizePlanTasks(plan));
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "plan",
+    "activeTab",
+    "active",
+    ["active", "draft", "archive"],
+  );
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PlanTask>(createEmptyTask());
@@ -278,7 +285,12 @@ export function HousePlanWorkspace({
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
   const [activeStageFilter, setActiveStageFilter] =
-    useState<ActiveStageFilter>("all");
+    useWorkspaceMemory<ActiveStageFilter>(
+      "plan",
+      "stageFilter",
+      "all",
+      ["all", "planned", "in_progress", "completed"],
+    );
   const [panelDirty, setPanelDirty] = useState(false);
   const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 

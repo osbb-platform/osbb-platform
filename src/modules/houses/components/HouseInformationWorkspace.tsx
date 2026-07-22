@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import {
   AdminStatusBadge,
   statusLabelFor,
@@ -79,9 +81,26 @@ export function HouseInformationWorkspace({
   duplicateTargets = [],
 }: Props) {
   const { dispatch, isPending } = useAdminContentCommand();
-  const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
-  const [postLifecycleTab, setPostLifecycleTab] = useState<InformationLifecycleTab>("published");
-  const [faqLifecycleTab, setFaqLifecycleTab] = useState<InformationLifecycleTab>("published");
+  const [mainTab, setMainTab] = useWorkspaceMemory<InformationMainTab>(
+    "information",
+    "mainTab",
+    "posts",
+    ["posts", "faq", "materials"],
+  );
+  const [postLifecycleTab, setPostLifecycleTab] =
+    useWorkspaceMemory<InformationLifecycleTab>(
+      "information",
+      "postLifecycleTab",
+      "published",
+      ["published", "draft", "archived"],
+    );
+  const [faqLifecycleTab, setFaqLifecycleTab] =
+    useWorkspaceMemory<InformationLifecycleTab>(
+      "information",
+      "faqLifecycleTab",
+      "published",
+      ["published", "draft", "archived"],
+    );
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);

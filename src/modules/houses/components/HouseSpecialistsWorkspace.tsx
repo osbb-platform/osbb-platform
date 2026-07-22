@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import {
   AdminStatusBadge,
@@ -191,7 +193,12 @@ export function HouseSpecialistsWorkspace({
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("published");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "specialists",
+    "activeTab",
+    "published",
+    ["published", "draft", "archived"],
+  );
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);

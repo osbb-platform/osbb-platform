@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+
 import {
   AdminStatusBadge,
   statusLabelFor,
@@ -431,7 +433,12 @@ export function HouseMeetingsWorkspace({
     normalizeMeetings(meetingsSnapshot),
   );
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "meetings",
+    "activeTab",
+    "active",
+    ["active", "draft", "archived"],
+  );
 
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
