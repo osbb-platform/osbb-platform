@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { useMemo, useState } from "react";
@@ -46,6 +47,11 @@ type HouseAnnouncementsWorkspaceProps = {
 
 type TabKey = "active" | "moderation" | "archive";
 type WorkspaceMode = "idle" | "create" | "edit";
+type QuickActionKind = "publish" | "archive" | "delete";
+type QuickActionConfirm = {
+  sectionId: string;
+  action: QuickActionKind;
+} | null;
 
 function getSortTimestamp(content: Record<string, unknown>) {
   const candidates = [content.publishedAt, content.updatedAt, content.createdAt];
@@ -130,6 +136,8 @@ export function HouseAnnouncementsWorkspace({
   const [copyingSectionId, setCopyingSectionId] = useState<string | null>(null);
   const [isDeleteArchiveConfirmOpen, setIsDeleteArchiveConfirmOpen] =
     useState(false);
+  const [quickActionConfirm, setQuickActionConfirm] =
+    useState<QuickActionConfirm>(null);
   const [panelDirty, setPanelDirty] = useState(false);
   const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
@@ -212,6 +220,72 @@ export function HouseAnnouncementsWorkspace({
       setMode("idle");
       setSelectedSectionId(null);
     });
+  }
+
+  function prepareQuickAction(
+    section: AnnouncementItem,
+    action: QuickActionKind,
+  ) {
+    setWorkspaceError(null);
+    setPanelDirty(false);
+    setMode("idle");
+    setSelectedSectionId(null);
+    setQuickActionConfirm({
+      sectionId: section.id,
+      action,
+    });
+  }
+
+  async function runQuickAction() {
+    if (!quickActionConfirm) return;
+
+    const section = sortedSections.find(
+      (item) => item.id === quickActionConfirm.sectionId,
+    );
+    if (!section) {
+      setQuickActionConfirm(null);
+      setWorkspaceError("Оголошення не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    const action = quickActionConfirm.action;
+    const commandType =
+      action === "publish"
+        ? "announcements.publish"
+        : action === "archive"
+          ? "announcements.archive"
+          : "announcements.delete";
+
+    setWorkspaceError(null);
+
+    await dispatch(
+      {
+        type: commandType,
+        houseId,
+        payload: {
+          id: section.id,
+          lockVersion:
+            typeof section.content.lockVersion === "number"
+              ? section.content.lockVersion
+              : 1,
+        },
+      },
+      {
+        onSuccess: () => {
+          setQuickActionConfirm(null);
+          setPanelDirty(false);
+          setMode("idle");
+          setSelectedSectionId(null);
+
+          if (action === "publish") {
+            setActiveTab("active");
+          } else if (action === "archive") {
+            setActiveTab("archive");
+          }
+        },
+        onError: setWorkspaceError,
+      },
+    );
   }
 
   async function handleDeleteAllArchived() {
@@ -449,6 +523,55 @@ export function HouseAnnouncementsWorkspace({
                     </div>
                   </div>
 
+                  <div className="mt-4">
+                    <WorkspaceQuickActions
+                      actions={[
+                        ...(section.status === "draft"
+                          ? [
+                              {
+                                key: "publish",
+                                label: "Опублікувати",
+                                disabled: isDeletingArchive,
+                                onSelect: () =>
+                                  prepareQuickAction(section, "publish"),
+                              },
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                disabled: isDeletingArchive,
+                                onSelect: () =>
+                                  prepareQuickAction(section, "delete"),
+                              },
+                            ]
+                          : []),
+                        ...(section.status === "published"
+                          ? [
+                              {
+                                key: "archive",
+                                label: "В архів",
+                                disabled: isDeletingArchive,
+                                onSelect: () =>
+                                  prepareQuickAction(section, "archive"),
+                              },
+                            ]
+                          : []),
+                        ...(section.status === "archived"
+                          ? [
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                disabled: isDeletingArchive,
+                                onSelect: () =>
+                                  prepareQuickAction(section, "delete"),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </div>
+
                   <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[var(--cms-text-soft)]">
                     <span>Опубліковано: {publishedAt}</span>
                     <span>Оновлено: {updatedAt}</span>
@@ -503,6 +626,54 @@ export function HouseAnnouncementsWorkspace({
           />
         ) : null}
       </AdminSidePanel>
+
+      <PlatformConfirmModal
+        open={quickActionConfirm !== null}
+        title={
+          quickActionConfirm?.action === "publish"
+            ? "Опублікувати оголошення?"
+            : quickActionConfirm?.action === "archive"
+              ? "Перенести оголошення до архіву?"
+              : "Видалити оголошення?"
+        }
+        description={
+          quickActionConfirm?.action === "publish"
+            ? "Оголошення стане доступним мешканцям будинку."
+            : quickActionConfirm?.action === "archive"
+              ? "Оголошення буде знято з публікації та переміщено до архіву."
+              : "Оголошення буде безповоротно видалено із системи."
+        }
+        confirmLabel={
+          quickActionConfirm?.action === "publish"
+            ? "Опублікувати"
+            : quickActionConfirm?.action === "archive"
+              ? "В архів"
+              : "Видалити"
+        }
+        pendingLabel={
+          quickActionConfirm?.action === "publish"
+            ? "Публікуємо..."
+            : quickActionConfirm?.action === "archive"
+              ? "Архівуємо..."
+              : "Видаляємо..."
+        }
+        tone={
+          quickActionConfirm?.action === "delete"
+            ? "destructive"
+            : quickActionConfirm?.action === "archive"
+              ? "warning"
+              : "publish"
+        }
+        isPending={isDeletingArchive}
+        onCancel={() => {
+          if (!isDeletingArchive) {
+            setQuickActionConfirm(null);
+          }
+        }}
+        onConfirm={() => {
+          void runQuickAction();
+        }}
+      />
 
       <PlatformConfirmModal
         open={dirtyGuard.confirmOpen}
