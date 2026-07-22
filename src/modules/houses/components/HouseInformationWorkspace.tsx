@@ -840,6 +840,15 @@ export function HouseInformationWorkspace({
                                     onSelect: () =>
                                       preparePostQuickAction(section, "archive"),
                                   },
+                                  {
+                                    key: "duplicate",
+                                    label: "Створити на основі",
+                                    disabled:
+                                      isPending ||
+                                      copyingPostId === section.id,
+                                    onSelect: () =>
+                                      void handleCopyPostToDraft(section.id),
+                                  },
                                 ]
                               : []),
                             ...(section.status === "archived"
