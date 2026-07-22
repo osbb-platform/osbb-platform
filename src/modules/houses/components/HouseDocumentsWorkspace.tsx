@@ -1249,7 +1249,7 @@ export function HouseDocumentsWorkspace({
                     }
                   }}
                   className={[
-                    "w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
+                    "relative w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 pr-16 text-left transition",
                     isSelected
                       ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                       : "border-[var(--cms-border)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]",

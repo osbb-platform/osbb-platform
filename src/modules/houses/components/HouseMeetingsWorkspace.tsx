@@ -1510,7 +1510,7 @@ export function HouseMeetingsWorkspace({
             <article
               key={meeting.id}
               onClick={() => openEditMode(meeting)}
-              className="cursor-pointer rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 transition hover:border-[var(--cms-border-strong)]"
+              className="relative cursor-pointer rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 pr-16 transition hover:border-[var(--cms-border-strong)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
@@ -1527,7 +1527,7 @@ export function HouseMeetingsWorkspace({
                 {meeting.questions.length} питань · Не брали участь: {formatNotParticipatingApartments(meeting, apartments)}
               </div>
 
-              <div className="mt-4">
+              <div>
                 <WorkspaceQuickActions
                   actions={[
                     ...(meeting.lifecycleStatus === "draft"

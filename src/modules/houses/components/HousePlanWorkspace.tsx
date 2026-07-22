@@ -1436,7 +1436,7 @@ export function HousePlanWorkspace({
                     openEditMode(task);
                   }
                 }}
-                className={`block w-full rounded-[var(--r-lg)] border p-4 text-left transition ${
+                className={`relative block w-full rounded-[var(--r-lg)] border p-4 pr-16 text-left transition ${
                   isSelected
                     ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                     : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
@@ -1459,7 +1459,7 @@ export function HousePlanWorkspace({
                   {task.description || "Опис завдання поки не заповнено."}
                 </p>
 
-                <div className="mt-4">
+                <div>
                   <WorkspaceQuickActions
                     actions={[
                       ...(task.status === "draft" && workflowAccessGranted

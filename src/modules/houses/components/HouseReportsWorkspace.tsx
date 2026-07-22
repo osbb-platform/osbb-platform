@@ -1760,7 +1760,7 @@ export function HouseReportsWorkspace({
                     openEditMode(report);
                   }
                 }}
-                className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
+                className="relative rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 pr-16 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <AdminStatusBadge tone={statusToneFor(report.lifecycleStatus)}>
@@ -1790,7 +1790,7 @@ export function HouseReportsWorkspace({
                 </p>
 
                 {!readOnlyMode ? (
-                  <div className="mt-4">
+                  <div>
                     <WorkspaceQuickActions
                       actions={[
                         ...(report.lifecycleStatus === "draft"

@@ -488,7 +488,7 @@ export function HouseAnnouncementsWorkspace({
                       openEditMode(section.id);
                     }
                   }}
-                  className={`group cursor-pointer rounded-[var(--r-lg)] border p-4 transition ${
+                  className={`group relative cursor-pointer rounded-[var(--r-lg)] border p-4 pr-16 transition ${
                     isSelected
                       ? "border-[var(--cms-primary)] bg-[var(--cms-pill-bg)]"
                       : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
@@ -525,7 +525,7 @@ export function HouseAnnouncementsWorkspace({
                     </div>
                   </div>
 
-                  <div className="mt-4">
+                  <div>
                     <WorkspaceQuickActions
                       actions={[
                         ...(section.status === "draft"

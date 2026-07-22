@@ -944,7 +944,7 @@ export function HouseSpecialistsWorkspace({
                 key={item.id}
                 type="button"
                 onClick={() => openEditMode(item)}
-                className="block w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
+                className="relative block w-full rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4 pr-16 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
               >
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <AdminStatusBadge tone={statusToneFor(item.status)}>
@@ -962,7 +962,7 @@ export function HouseSpecialistsWorkspace({
                   {item.title || "Без назви"}
                 </div>
 
-                <div className="mt-4">
+                <div>
                   <WorkspaceQuickActions
                     actions={[
                       ...(item.status === "draft"

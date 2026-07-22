@@ -853,7 +853,7 @@ export function HouseInformationWorkspace({
                         </div>
                       </div>
 
-                      <div className="mt-4">
+                      <div>
                         <WorkspaceQuickActions
                           actions={[
                             ...(section.status === "draft"
@@ -1074,7 +1074,7 @@ export function HouseInformationWorkspace({
                         openFaqWorkspace(faq.id);
                       }
                     }}
-                    className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+                    className="relative block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 pr-16 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <AdminStatusBadge tone={statusToneFor(faq.status)}>
@@ -1100,7 +1100,7 @@ export function HouseInformationWorkspace({
                           : "Архівна версія FAQ не показується на сайті."}
                     </div>
 
-                    <div className="mt-4">
+                    <div>
                       <WorkspaceQuickActions
                         actions={[
                           ...(faq.status === "draft"
