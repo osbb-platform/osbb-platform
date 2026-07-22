@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
@@ -291,6 +292,16 @@ export function HouseSpecialistsWorkspace({
     setWorkspaceMode("edit");
     setDraft(toDraft(item));
   }
+  function prepareQuickAction(
+    item: HouseSpecialistSnapshot,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setWorkspaceError(null);
+    setWorkspaceMode("idle");
+    setDraft(toDraft(item));
+    setConfirmAction(action);
+  }
+
   async function applySpecialistsTemplateKeys(templateKeys: string[]) {
     setWorkspaceError(null);
     setApplyingTemplate(true);
@@ -931,6 +942,51 @@ export function HouseSpecialistsWorkspace({
 
                 <div className="text-lg font-semibold text-[var(--cms-text)]">
                   {item.title || "Без назви"}
+                </div>
+
+                <div className="mt-4">
+                  <WorkspaceQuickActions
+                    actions={[
+                      ...(item.status === "draft"
+                        ? [
+                            {
+                              key: "publish",
+                              label: "Опублікувати",
+                              onSelect: () =>
+                                prepareQuickAction(item, "publish"),
+                            },
+                            {
+                              key: "delete",
+                              label: "Видалити",
+                              tone: "danger" as const,
+                              onSelect: () =>
+                                prepareQuickAction(item, "delete"),
+                            },
+                          ]
+                        : []),
+                      ...(item.status === "published"
+                        ? [
+                            {
+                              key: "archive",
+                              label: "В архів",
+                              onSelect: () =>
+                                prepareQuickAction(item, "archive"),
+                            },
+                          ]
+                        : []),
+                      ...(item.status === "archived"
+                        ? [
+                            {
+                              key: "delete",
+                              label: "Видалити",
+                              tone: "danger" as const,
+                              onSelect: () =>
+                                prepareQuickAction(item, "delete"),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
                 </div>
 
                 <div className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--cms-text)] sm:grid-cols-[140px_1fr]">
