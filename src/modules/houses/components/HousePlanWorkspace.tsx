@@ -613,8 +613,8 @@ export function HousePlanWorkspace({
     return uploadedFiles;
   }
 
-  async function copyPlanTaskToDraft() {
-    if (!selectedTaskId || draft.status === "draft") return;
+  async function copyPlanTaskToDraftByTask(task: PlanTask) {
+    if (task.status === "draft") return;
 
     setSubmitIntent("copy");
     setActionLabel("Копіюємо завдання в чернетку...");
@@ -623,7 +623,7 @@ export function HousePlanWorkspace({
       type: "plan.duplicate",
       houseId,
       payload: {
-        sourceId: selectedTaskId,
+        sourceId: task.id,
         targetHouseIds: [houseId],
       },
     });
@@ -632,6 +632,11 @@ export function HousePlanWorkspace({
 
     resetWorkspace();
     setActiveTab("draft");
+  }
+
+  async function copyPlanTaskToDraft() {
+    if (!selectedTaskId || draft.status === "draft") return;
+    await copyPlanTaskToDraftByTask(draft);
   }
 
   async function submitTask(intent: SubmitIntent) {
@@ -1472,6 +1477,13 @@ export function HousePlanWorkspace({
                               key: "archive",
                               label: "В архів",
                               onSelect: () => prepareQuickAction(task, "archive"),
+                            },
+                            {
+                              key: "duplicate",
+                              label: "Створити на основі",
+                              disabled: isPending,
+                              onSelect: () =>
+                                void copyPlanTaskToDraftByTask(task),
                             },
                           ]
                         : []),
