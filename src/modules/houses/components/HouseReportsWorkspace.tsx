@@ -3,6 +3,7 @@
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -681,6 +682,19 @@ export function HouseReportsWorkspace({
       resetPdfInput();
       setDraft(mapReportToDraft(report));
     });
+  }
+
+  function prepareQuickAction(
+    report: HouseReportSnapshot,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setSelectedReportId(report.id);
+    setWorkspaceMode("idle");
+    setActionError(null);
+    setPanelDirty(false);
+    resetPdfInput();
+    setDraft(mapReportToDraft(report));
+    setConfirmAction(action);
   }
 
   function handleTabChange(tab: TabKey) {
@@ -1767,6 +1781,49 @@ export function HouseReportsWorkspace({
                 <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--cms-text-muted)]">
                   {report.description || "Опис не додано."}
                 </p>
+
+                {!readOnlyMode ? (
+                  <div className="mt-4">
+                    <WorkspaceQuickActions
+                      actions={[
+                        ...(report.lifecycleStatus === "draft"
+                          ? [
+                              {
+                                key: "publish",
+                                label: "Опублікувати",
+                                onSelect: () => prepareQuickAction(report, "publish"),
+                              },
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                onSelect: () => prepareQuickAction(report, "delete"),
+                              },
+                            ]
+                          : []),
+                        ...(report.lifecycleStatus === "published"
+                          ? [
+                              {
+                                key: "archive",
+                                label: "В архів",
+                                onSelect: () => prepareQuickAction(report, "archive"),
+                              },
+                            ]
+                          : []),
+                        ...(report.lifecycleStatus === "archived"
+                          ? [
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                onSelect: () => prepareQuickAction(report, "delete"),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </div>
+                ) : null}
 
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--cms-text-soft)]">
                   <span>{formatAdminDate(report.reportDate, "Дату не вказано")}</span>
