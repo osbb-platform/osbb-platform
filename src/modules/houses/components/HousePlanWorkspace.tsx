@@ -26,6 +26,7 @@ import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfi
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
+import type { AdminContractorOption } from "@/src/modules/houses/services/getAdminContractors";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
@@ -78,6 +79,7 @@ type PlanTask = {
   startDate: string | null;
   endDate: string | null;
   contractor: string | null;
+  contractorId: string | null;
   images: PlanAttachment[];
   documents: PlanAttachment[];
   createdAt: string;
@@ -105,6 +107,7 @@ type Props = {
   houseId: string;
   houseSlug: string;
   plan: AdminHousePlanSnapshot;
+  contractors: AdminContractorOption[];
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
@@ -149,6 +152,7 @@ function createEmptyTask(): PlanTask {
     startDate: "",
     endDate: "",
     contractor: "",
+    contractorId: null,
     images: [],
     documents: [],
     createdAt: now,
@@ -171,6 +175,7 @@ function normalizePlanTasks(plan: AdminHousePlanSnapshot): PlanTask[] {
     startDate: task.content.startDate ?? "",
     endDate: task.content.endDate ?? "",
     contractor: task.content.contractor ?? "",
+    contractorId: task.content.contractorId,
     images: task.content.images.map((file) => ({
       id: file.fieldKey,
       fieldKey: file.fieldKey,
@@ -255,6 +260,7 @@ function taskPayload(task: PlanTask) {
         : task.status,
     priority: task.priority,
     contractor: task.contractor,
+    contractorId: task.contractorId,
     archiveYear: task.archiveYear,
   };
 }
@@ -262,10 +268,12 @@ function taskPayload(task: PlanTask) {
 export function HousePlanWorkspace({
   houseId,
   plan,
+  contractors,
   canChangeWorkflowStatus,
   duplicateTargets = [],
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
+  const activeContractors = contractors;
   const { dispatch, isPending } = useAdminContentCommand();
 
   const [tasks, setTasks] = useState<PlanTask[]>(() => normalizePlanTasks(plan));
@@ -1092,10 +1100,25 @@ export function HousePlanWorkspace({
 
             <input
               value={draft.contractor ?? ""}
-              onChange={(e) => setDraft((prev) => ({ ...prev, contractor: e.target.value }))}
+              onChange={(e) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  contractor: e.target.value,
+                  contractorId:
+                    activeContractors.find(
+                      (contractor) => contractor.name === e.target.value,
+                    )?.id ?? null,
+                }))
+              }
+              list="house-plan-contractors"
               placeholder="Підрядник"
               className={adminInputClass}
             />
+            <datalist id="house-plan-contractors">
+              {activeContractors.map((contractor) => (
+                <option key={contractor.id} value={contractor.name} />
+              ))}
+            </datalist>
 
             {workspaceMode === "create" ? (
               <div>

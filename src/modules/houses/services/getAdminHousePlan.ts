@@ -49,6 +49,7 @@ export type HousePlanTaskSnapshot = {
     startDate: string | null;
     endDate: string | null;
     contractor: string | null;
+    contractorId: string | null;
     archiveYear: number | null;
     sortOrder: number;
     images: HousePlanAttachmentSnapshot[];
@@ -131,6 +132,7 @@ export function mapHousePlanTask(
       startDate: task.start_date,
       endDate: task.end_date,
       contractor: task.contractor,
+      contractorId: task.contractor_id,
       archiveYear: task.archive_year,
       sortOrder: task.sort_order,
       images,

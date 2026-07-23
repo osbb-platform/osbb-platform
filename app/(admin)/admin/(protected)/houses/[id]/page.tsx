@@ -28,6 +28,7 @@ import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq
 import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
 import { getAdminHouseSpecialists } from "@/src/modules/houses/services/getAdminHouseSpecialists";
 import { getAdminHousePlan } from "@/src/modules/houses/services/getAdminHousePlan";
+import { getAdminContractors } from "@/src/modules/houses/services/getAdminContractors";
 import { getAdminHouseBoard } from "@/src/modules/houses/services/getAdminHouseBoard";
 import { getAdminHouseReports } from "@/src/modules/houses/services/getAdminHouseReports";
 import { getAdminContentTemplates } from "@/src/modules/houses/services/getAdminContentTemplates";
@@ -238,6 +239,11 @@ export default async function AdminHouseDetailPage({
     activeBlock === "plan"
       ? await getAdminHousePlan({ houseId: house.id })
       : null;
+
+  const contractors =
+    activeBlock === "plan"
+      ? await getAdminContractors()
+      : [];
 
   const debtorsData =
     activeBlock === "debtors"
@@ -501,6 +507,7 @@ export default async function AdminHouseDetailPage({
             houseId={house.id}
             houseSlug={house.slug}
             plan={planData}
+            contractors={contractors}
             duplicateTargets={duplicateTargets}
           />
         ) : (

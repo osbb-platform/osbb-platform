@@ -69,6 +69,10 @@ export const updateCommand: CommandSpec = {
         task_status: normalizeTaskStatus(payload.taskStatus),
         priority: normalizePriority(payload.priority),
         contractor: normalizeOptionalText(payload.contractor),
+        contractor_id:
+          typeof payload.contractorId === "string" && payload.contractorId.trim()
+            ? payload.contractorId.trim()
+            : null,
         archive_year: normalizeArchiveYear(payload.archiveYear),
         sort_order: normalizeSortOrder(payload.sortOrder),
         updated_at: now,

@@ -20,6 +20,7 @@ export type HousePlanTask = {
   task_status: HousePlanTaskStatus;
   priority: HousePlanTaskPriority;
   contractor: string | null;
+  contractor_id: string | null;
   archive_year: number | null;
   sort_order: number;
   lifecycle_status: HousePlanTaskLifecycle;
@@ -55,6 +56,7 @@ export type CreatePlanTaskPayload = {
   taskStatus?: HousePlanTaskStatus;
   priority?: HousePlanTaskPriority;
   contractor?: string | null;
+  contractorId?: string | null;
   archiveYear?: number | null;
   sortOrder?: number;
   files?: HousePlanFileInput[];
