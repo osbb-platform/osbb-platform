@@ -27,6 +27,7 @@ import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSect
 import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
 import type { AdminContractorOption } from "@/src/modules/houses/services/getAdminContractors";
+import { ContractorCombobox } from "@/src/modules/houses/components/ContractorCombobox";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
@@ -1098,27 +1099,21 @@ export function HousePlanWorkspace({
               </div>
             )}
 
-            <input
-              value={draft.contractor ?? ""}
-              onChange={(e) =>
+            <ContractorCombobox
+              value={{
+                contractor: draft.contractor ?? "",
+                contractorId: draft.contractorId,
+              }}
+              options={activeContractors}
+              disabled={isPending}
+              onChange={({ contractor, contractorId }) =>
                 setDraft((prev) => ({
                   ...prev,
-                  contractor: e.target.value,
-                  contractorId:
-                    activeContractors.find(
-                      (contractor) => contractor.name === e.target.value,
-                    )?.id ?? null,
+                  contractor,
+                  contractorId,
                 }))
               }
-              list="house-plan-contractors"
-              placeholder="Підрядник"
-              className={adminInputClass}
             />
-            <datalist id="house-plan-contractors">
-              {activeContractors.map((contractor) => (
-                <option key={contractor.id} value={contractor.name} />
-              ))}
-            </datalist>
 
             {workspaceMode === "create" ? (
               <div>

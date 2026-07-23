@@ -29,8 +29,10 @@ describe("P05 T3.1 contractor task persistence", () => {
     expect(planService).toContain("contractorId: task.contractor_id");
   });
   it("supports frequent selection and arbitrary text", () => {
-    expect(workspace).toContain('list="house-plan-contractors"');
-    expect(workspace).toContain("contractor: e.target.value");
-    expect(workspace).toContain("?.id ?? null");
+    expect(workspace).toContain("<ContractorCombobox");
+    expect(workspace).toContain("contractor: draft.contractor ??");
+    expect(workspace).toContain("contractorId: draft.contractorId");
+    expect(workspace).toContain("contractorId: task.contractorId");
+    expect(workspace).not.toContain("<datalist");
   });
 });
