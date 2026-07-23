@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { HouseDebtors1cImportPanel } from "@/src/modules/import-buffer/components/HouseDebtors1cImportPanel";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
@@ -219,6 +220,7 @@ export function HouseDebtorsWorkspace({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
+  const [is1cImportOpen, setIs1cImportOpen] = useState(false);
   const [submittedMode, setSubmittedMode] = useState<
     "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | "save_calculator" | null
   >(null);
@@ -771,6 +773,16 @@ export function HouseDebtorsWorkspace({
 
         {activeTab === "all" ? (
           <>
+            <button
+              type="button"
+              onClick={() => setIs1cImportOpen(true)}
+              className="inline-flex h-10 min-w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)]"
+              aria-label="Імпорт боржників з 1С"
+              title="Імпорт з 1С"
+            >
+              1С
+            </button>
+
             <button
               type="button"
               onClick={openImportPicker}
@@ -1431,6 +1443,12 @@ export function HouseDebtorsWorkspace({
           </div>
         </div>
       ) : null}
+
+      <HouseDebtors1cImportPanel
+        houseId={houseId}
+        isOpen={is1cImportOpen}
+        onClose={() => setIs1cImportOpen(false)}
+      />
 
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm">
