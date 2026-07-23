@@ -85,6 +85,9 @@ type PlanTask = {
   automationEnabled: boolean;
 
   automationIntervalDays: number | null;
+  automationPausedAt: string | null;
+  automationAnchorAt: string | null;
+  automationNextDueAt: string | null;
   images: PlanAttachment[];
   documents: PlanAttachment[];
   createdAt: string;
@@ -162,6 +165,9 @@ function createEmptyTask(): PlanTask {
     automationEnabled: false,
 
     automationIntervalDays: null,
+    automationPausedAt: null,
+    automationAnchorAt: null,
+    automationNextDueAt: null,
     images: [],
     documents: [],
     createdAt: now,
@@ -189,6 +195,9 @@ function normalizePlanTasks(plan: AdminHousePlanSnapshot): PlanTask[] {
     automationEnabled: task.content.automationEnabled,
 
     automationIntervalDays: task.content.automationIntervalDays,
+    automationPausedAt: task.content.automationPausedAt,
+    automationAnchorAt: task.content.automationAnchorAt,
+    automationNextDueAt: task.content.automationNextDueAt,
     images: task.content.images.map((file) => ({
       id: file.fieldKey,
       fieldKey: file.fieldKey,
@@ -1130,6 +1139,100 @@ export function HousePlanWorkspace({
                 }))
               }
             />
+
+            <div
+              data-p05-automation-panel="true"
+              className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="text-sm font-medium text-[var(--cms-text)]">
+                    Автоматичне виконання за етапами
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
+                    Після публікації система послідовно змінюватиме статуси
+                    через однаковий інтервал.
+                  </p>
+                </div>
+
+                <label className="inline-flex shrink-0 items-center gap-2 text-sm text-[var(--cms-text)]">
+                  <input
+                    type="checkbox"
+                    checked={draft.automationEnabled}
+                    disabled={isPending}
+                    onChange={(event) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        automationEnabled: event.target.checked,
+                        automationIntervalDays: event.target.checked
+                          ? prev.automationIntervalDays ?? 7
+                          : null,
+                      }))
+                    }
+                  />
+                  Увімкнути
+                </label>
+              </div>
+
+              {draft.automationEnabled ? (
+                <div className="mt-4">
+                  <label className={`mb-2 block ${adminTextLabelClass}`}>
+                    Інтервал між етапами, днів
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    step={1}
+                    value={draft.automationIntervalDays ?? 7}
+                    disabled={isPending}
+                    onChange={(event) => {
+                      const parsed = Number(event.target.value);
+
+                      setDraft((prev) => ({
+                        ...prev,
+                        automationIntervalDays:
+                          Number.isInteger(parsed) &&
+                          parsed >= 1 &&
+                          parsed <= 365
+                            ? parsed
+                            : null,
+                      }));
+                    }}
+                    className={adminInputClass}
+                  />
+                  <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                    Допустиме ціле значення від 1 до 365. Відлік почнеться
+                    після публікації завдання.
+                  </div>
+                </div>
+              ) : null}
+
+              {workspaceMode === "edit" && draft.automationEnabled ? (
+                <div className="mt-4 rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-3 text-xs text-[var(--cms-text-muted)]">
+                  {draft.automationPausedAt ? (
+                    <span>
+                      Автоматизацію призупинено{" "}
+                      {new Date(draft.automationPausedAt).toLocaleString("uk-UA")}.
+                    </span>
+                  ) : draft.automationNextDueAt ? (
+                    <span>
+                      Наступний автоматичний перехід:{" "}
+                      {new Date(draft.automationNextDueAt).toLocaleString("uk-UA")}.
+                    </span>
+                  ) : draft.status === "draft" ? (
+                    <span>
+                      Розклад буде створено після публікації цього завдання.
+                    </span>
+                  ) : (
+                    <span>
+                      Розклад буде перераховано після наступного збереження.
+                    </span>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
 
             {workspaceMode === "create" ? (
               <div>
