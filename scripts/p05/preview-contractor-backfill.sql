@@ -29,7 +29,7 @@ matches as (
     legacy.task_count,
     legacy.task_ids,
     count(c.id)::integer as match_count,
-    min(c.id) as proposed_contractor_id,
+    (array_agg(c.id order by c.id))[1] as proposed_contractor_id,
     min(c.name) as proposed_contractor_name,
     bool_or(c.is_active) as has_active_match
   from legacy

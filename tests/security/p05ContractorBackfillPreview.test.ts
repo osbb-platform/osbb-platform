@@ -62,6 +62,10 @@ describe("P05 contractor backfill preview gate", () => {
     expect(preview).toContain("has_active_match");
     expect(preview).toContain("task_count");
     expect(preview).toContain("task_ids");
+    expect(preview).toContain(
+      "(array_agg(c.id order by c.id))[1] as proposed_contractor_id",
+    );
+    expect(preview).not.toContain("min(c.id)");
   });
 
   it("is SELECT-only and contains no mutation statement", () => {
