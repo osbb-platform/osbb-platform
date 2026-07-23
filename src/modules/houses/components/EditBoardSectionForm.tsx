@@ -16,6 +16,10 @@ import {
   adminSelectClass,
   adminTextareaClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import {
+  mapBoardMemberCommandResponse,
+  type BoardMemberClientItem,
+} from "@/src/modules/houses/components/boardMemberClientMapper";
 
 type BoardRoleStatus =
   | "chairman"
@@ -29,18 +33,7 @@ type BoardTabKey =
   | "revision_commission";
 type WorkspaceMode = "idle" | "create" | "edit";
 
-type BoardRoleItem = {
-  id: string;
-  status: BoardRoleStatus;
-  name: string;
-  role: string;
-  phone: string;
-  email: string;
-  officeHours: string;
-  description: string;
-  sortOrder: number;
-  lockVersion: number;
-};
+type BoardRoleItem = BoardMemberClientItem;
 
 type BoardDraft = {
   id: string;
@@ -206,18 +199,14 @@ function buildRolePreview(role: BoardRoleItem) {
   return parts.length > 0 ? parts.join(" • ") : "Контакти не вказані";
 }
 
-function mapSavedMember(member: AdminHouseBoardMember): BoardRoleItem {
+function mapSavedMember(member: unknown): BoardRoleItem {
+  const saved = mapBoardMemberCommandResponse(
+    member as Parameters<typeof mapBoardMemberCommandResponse>[0],
+  );
+
   return {
-    id: member.id,
-    status: member.roleStatus,
-    name: member.name,
-    role: member.role || getRoleLabel(member.roleStatus),
-    phone: member.phone,
-    email: member.email,
-    officeHours: member.officeHours,
-    description: member.description,
-    sortOrder: member.sortOrder,
-    lockVersion: member.lockVersion,
+    ...saved,
+    role: saved.role || getRoleLabel(saved.status),
   };
 }
 
@@ -226,7 +215,7 @@ export function EditBoardSectionForm({
   board,
   readOnlyMode,
 }: Props) {
-  const { dispatch, isPending } = useAdminContentCommand();
+  const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const initialBoardData = useMemo(
     () => normalizeBoardData(board),
@@ -734,12 +723,12 @@ export function EditBoardSectionForm({
                 </h3>
               </div>
 
-              {workspaceError ? (
+              {workspaceError || lastError ? (
                 <div
                   role="alert"
                   className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
                 >
-                  {workspaceError}
+                  {workspaceError || lastError}
                 </div>
               ) : null}
 
