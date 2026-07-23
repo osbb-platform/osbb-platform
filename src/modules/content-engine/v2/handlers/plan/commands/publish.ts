@@ -1,4 +1,5 @@
 import type { CommandSpec } from "../../../types/handler";
+import { createAutomationSchedule } from "../automation";
 import { err, ok } from "../../../types/result";
 import type { HousePlanTask, PublishPlanTaskPayload } from "../types";
 import {
@@ -43,6 +44,12 @@ export const publishCommand: CommandSpec = {
     const now = new Date().toISOString();
     const taskStatus = normalizePublishTaskStatus(payload.taskStatus ?? before.task_status);
 
+    const automationSchedule = createAutomationSchedule({
+      enabled: before.automation_enabled,
+      intervalDays: before.automation_interval_days,
+      anchorAt: now,
+    });
+
     const { data, error } = await ctx.supabase
       .from("house_plan_tasks")
       .update({
@@ -50,6 +57,9 @@ export const publishCommand: CommandSpec = {
         task_status: taskStatus,
         published_at: before.published_at ?? now,
         archived_at: null,
+        automation_paused_at: null,
+        automation_anchor_at: automationSchedule.automationAnchorAt,
+        automation_next_due_at: automationSchedule.automationNextDueAt,
         updated_at: now,
         lock_version: payload.lockVersion + 1,
       })

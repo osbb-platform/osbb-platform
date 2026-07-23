@@ -81,6 +81,10 @@ type PlanTask = {
   endDate: string | null;
   contractor: string | null;
   contractorId: string | null;
+
+  automationEnabled: boolean;
+
+  automationIntervalDays: number | null;
   images: PlanAttachment[];
   documents: PlanAttachment[];
   createdAt: string;
@@ -154,6 +158,10 @@ function createEmptyTask(): PlanTask {
     endDate: "",
     contractor: "",
     contractorId: null,
+
+    automationEnabled: false,
+
+    automationIntervalDays: null,
     images: [],
     documents: [],
     createdAt: now,
@@ -177,6 +185,10 @@ function normalizePlanTasks(plan: AdminHousePlanSnapshot): PlanTask[] {
     endDate: task.content.endDate ?? "",
     contractor: task.content.contractor ?? "",
     contractorId: task.content.contractorId,
+
+    automationEnabled: task.content.automationEnabled,
+
+    automationIntervalDays: task.content.automationIntervalDays,
     images: task.content.images.map((file) => ({
       id: file.fieldKey,
       fieldKey: file.fieldKey,
@@ -262,6 +274,10 @@ function taskPayload(task: PlanTask) {
     priority: task.priority,
     contractor: task.contractor,
     contractorId: task.contractorId,
+
+    automationEnabled: task.automationEnabled,
+
+    automationIntervalDays: task.automationIntervalDays,
     archiveYear: task.archiveYear,
   };
 }
