@@ -48,8 +48,10 @@ export const createCommand: CommandSpec = {
 
     if (error || !data) {
       if (error?.code === "23505") {
+        const roleLabel = getRoleLabel(roleStatus.data);
+
         return err(
-          "Для цього будинку вже є представник з такою унікальною роллю.",
+          `Для цього будинку вже призначено роль "${roleLabel}". Відредагуйте або видаліть поточну картку перед створенням нової.`,
           "VALIDATION_FAILED",
         );
       }
