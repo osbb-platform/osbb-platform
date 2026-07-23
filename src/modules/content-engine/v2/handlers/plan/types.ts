@@ -76,6 +76,12 @@ export type PublishPlanTaskPayload = PlanIdAndLock & {
 };
 
 export type DeletePlanTaskPayload = PlanIdAndLock;
+export type PlanAutomationCommandPayload = PlanIdAndLock;
+
+export type TransitionPlanTaskStatusPayload = PlanIdAndLock & {
+  toStatus: Exclude<HousePlanTaskStatus, "archived">;
+};
+
 
 export type AddPlanFilesPayload = PlanIdAndLock & {
   files: HousePlanFileInput[];
