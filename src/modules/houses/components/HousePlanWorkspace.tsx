@@ -57,7 +57,15 @@ const PLAN_ARCHIVE_YEARS = Array.from(
 type WorkspaceTab = "active" | "draft" | "archive";
 type ActiveStageFilter = "all" | "planned" | "in_progress" | "completed";
 type WorkspaceMode = "idle" | "create" | "edit";
-type SubmitIntent = "save" | "delete" | "publish" | "archive" | "copy";
+type SubmitIntent =
+  | "save"
+  | "delete"
+  | "publish"
+  | "archive"
+  | "copy"
+  | "pauseAutomation"
+  | "resumeAutomation"
+  | "transitionStatus";
 type CreatePlanPlacement = "active" | "archive";
 
 type PlanAttachment = {
@@ -108,6 +116,11 @@ type UploadedPlanFile = {
 type CommandResultWithLock = {
   lock_version?: number;
   lockVersion?: number;
+  task_status?: PlanTaskStatus;
+  automation_paused_at?: string | null;
+  automation_anchor_at?: string | null;
+  automation_next_due_at?: string | null;
+  updated_at?: string;
 };
 
 type Props = {
@@ -266,6 +279,40 @@ function getResultLockVersion(result: unknown, fallback: number) {
   }
 
   return fallback;
+}
+
+function applyAutomationCommandResult(
+  task: PlanTask,
+  result: unknown,
+): PlanTask {
+  if (!result || typeof result !== "object") {
+    return {
+      ...task,
+      lockVersion: task.lockVersion + 1,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  const record = result as CommandResultWithLock;
+
+  return {
+    ...task,
+    status: record.task_status ?? task.status,
+    automationPausedAt:
+      record.automation_paused_at === undefined
+        ? task.automationPausedAt
+        : record.automation_paused_at,
+    automationAnchorAt:
+      record.automation_anchor_at === undefined
+        ? task.automationAnchorAt
+        : record.automation_anchor_at,
+    automationNextDueAt:
+      record.automation_next_due_at === undefined
+        ? task.automationNextDueAt
+        : record.automation_next_due_at,
+    lockVersion: getResultLockVersion(result, task.lockVersion + 1),
+    updatedAt: record.updated_at ?? new Date().toISOString(),
+  };
 }
 
 function taskPayload(task: PlanTask) {
@@ -645,6 +692,91 @@ export function HousePlanWorkspace({
     }
 
     return uploadedFiles;
+  }
+
+  async function runAutomationAction(
+    action: "pauseAutomation" | "resumeAutomation",
+  ) {
+    if (
+      workspaceMode !== "edit" ||
+      !selectedTaskId ||
+      draft.status === "draft" ||
+      draft.status === "archived" ||
+      !draft.automationEnabled
+    ) {
+      return;
+    }
+
+    setSubmitIntent(action);
+    setActionLabel(
+      action === "pauseAutomation"
+        ? "Призупиняємо автоматизацію..."
+        : "Відновлюємо автоматизацію...",
+    );
+
+    const result = await dispatch({
+      type: `plan.${action}`,
+      houseId,
+      payload: {
+        id: selectedTaskId,
+        lockVersion: draft.lockVersion,
+      },
+    });
+
+    if (!result) return;
+
+    const nextTask = applyAutomationCommandResult(draft, result);
+    setDraft(nextTask);
+    setTasks((prev) =>
+      prev.map((item) => (item.id === nextTask.id ? nextTask : item)),
+    );
+    setPanelDirty(false);
+  }
+
+  async function applyManualStatusTransition() {
+    if (
+      workspaceMode !== "edit" ||
+      !selectedTaskId ||
+      draft.status === "draft" ||
+      draft.status === "archived" ||
+      !workflowAccessGranted
+    ) {
+      return;
+    }
+
+    const currentTask = tasks.find((item) => item.id === selectedTaskId);
+    if (!currentTask || currentTask.status === draft.status) {
+      return;
+    }
+
+    setSubmitIntent("transitionStatus");
+    setActionLabel("Змінюємо статус завдання...");
+
+    const result = await dispatch({
+      type: "plan.transitionStatus",
+      houseId,
+      payload: {
+        id: selectedTaskId,
+        lockVersion: currentTask.lockVersion,
+        toStatus: draft.status,
+      },
+    });
+
+    if (!result) return;
+
+    const nextTask = applyAutomationCommandResult(
+      {
+        ...currentTask,
+        status: draft.status,
+      },
+      result,
+    );
+
+    setDraft(nextTask);
+    setTasks((prev) =>
+      prev.map((item) => (item.id === nextTask.id ? nextTask : item)),
+    );
+    setPanelDirty(false);
   }
 
   async function copyPlanTaskToDraftByTask(task: PlanTask) {
@@ -1231,6 +1363,40 @@ export function HousePlanWorkspace({
                   )}
                 </div>
               ) : null}
+
+              {workspaceMode === "edit" &&
+              draft.status !== "draft" &&
+              draft.status !== "archived" &&
+              draft.automationEnabled ? (
+                <div
+                  data-p05-automation-action-controls="true"
+                  className="mt-4 flex flex-wrap gap-2"
+                >
+                  {draft.automationPausedAt ? (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => void runAutomationAction("resumeAutomation")}
+                      className={adminButtonClasses({ variant: "primary" })}
+                    >
+                      {isPending && submitIntent === "resumeAutomation"
+                        ? "Відновлюємо..."
+                        : "Відновити автоматизацію"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => void runAutomationAction("pauseAutomation")}
+                      className={adminButtonClasses({ variant: "secondary" })}
+                    >
+                      {isPending && submitIntent === "pauseAutomation"
+                        ? "Призупиняємо..."
+                        : "Призупинити автоматизацію"}
+                    </button>
+                  )}
+                </div>
+              ) : null}
             </div>
 
 
@@ -1452,9 +1618,27 @@ export function HousePlanWorkspace({
                 </select>
                 <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                   {workflowAccessGranted
-                    ? "Після збереження статус оновиться в CMS і на публічній сторінці плану."
+                    ? "Застосуйте статус окремою дією. Перехід буде записано в журнал, а автоматичний інтервал почнеться заново."
                     : "У цієї ролі немає прав змінювати статус виконання."}
                 </div>
+
+                {workflowAccessGranted ? (
+                  <button
+                    type="button"
+                    data-p05-manual-status-action="true"
+                    disabled={
+                      isPending ||
+                      tasks.find((item) => item.id === selectedTaskId)?.status ===
+                        draft.status
+                    }
+                    onClick={() => void applyManualStatusTransition()}
+                    className={`${adminButtonClasses({ variant: "secondary" })} mt-3 disabled:opacity-60`}
+                  >
+                    {isPending && submitIntent === "transitionStatus"
+                      ? "Застосовуємо статус..."
+                      : "Застосувати статус"}
+                  </button>
+                ) : null}
               </div>
             ) : null}
 
