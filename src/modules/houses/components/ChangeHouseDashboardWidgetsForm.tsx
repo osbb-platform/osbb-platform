@@ -114,7 +114,7 @@ export function ChangeHouseDashboardWidgetsForm({
   readOnlyMode,
   onSaved,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const initialSnapshot = normalizeWidgets(initialWidgets);
 
@@ -291,12 +291,6 @@ export function ChangeHouseDashboardWidgetsForm({
         {cleaned.length < 1 ? (
           <div className="mt-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
             Заповніть щонайменше 1 показник, щоб показати блок на головній сторінці.
-          </div>
-        ) : null}
-
-        {lastError ? (
-          <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-            {lastError}
           </div>
         ) : null}
 

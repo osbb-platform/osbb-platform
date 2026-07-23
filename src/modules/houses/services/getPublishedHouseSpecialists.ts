@@ -2,6 +2,10 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  logOptionalPublicReadError,
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type {
   HouseSpecialist,
   HouseSpecialistCategory,
@@ -35,18 +39,22 @@ async function loadPublishedHouseSpecialists(
   ]);
 
   if (specialistsResult.error) {
-    console.error("Failed to load published specialists:", {
+    throwRequiredPublicReadError({
+      section: "specialists",
+      resource: "house_specialists",
       houseId,
-      message: specialistsResult.error.message,
+      error: specialistsResult.error,
     });
-    return { specialists: [], categories: [] };
   }
 
   if (categoriesResult.error) {
-    console.error("Failed to load published specialist categories:", {
+    logOptionalPublicReadError({
+      section: "specialists",
+      resource: "house_specialists_categories",
       houseId,
-      message: categoriesResult.error.message,
+      error: categoriesResult.error,
     });
+
     return {
       specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
         mapHouseSpecialist,
@@ -69,7 +77,7 @@ export const getPublishedHouseSpecialists = cache(
   async (houseId: string): Promise<AdminHouseSpecialistsSnapshot> => {
     return unstable_cache(
       () => loadPublishedHouseSpecialists(houseId),
-      ["published-house-specialists", houseId],
+      ["published-house-specialists-v2", houseId],
       {
         tags: [`house:${houseId}:specialists`, `house:${houseId}`],
         revalidate: 300,

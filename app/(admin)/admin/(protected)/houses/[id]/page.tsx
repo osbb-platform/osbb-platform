@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HouseAnnouncementsWorkspace } from "@/src/modules/houses/components/HouseAnnouncementsWorkspace";
 import { EditBoardSectionForm } from "@/src/modules/houses/components/EditBoardSectionForm";
-import { HouseBlockNavigationFrame } from "@/src/modules/houses/components/HouseBlockNavigationFrame";
-import { HouseBlockSelector } from "@/src/modules/houses/components/HouseBlockSelector";
+import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTabs";
+import { HouseSwitcher } from "@/src/modules/houses/components/HouseSwitcher";
+import { HouseStatusLine } from "@/src/modules/houses/components/HouseStatusLine";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -15,8 +16,10 @@ import { HouseDebtorsWorkspace } from "@/src/modules/houses/components/HouseDebt
 import { HouseSpecialistsWorkspace } from "@/src/modules/houses/components/HouseSpecialistsWorkspace";
 import { HouseRequisitesWorkspace } from "@/src/modules/houses/components/HouseRequisitesWorkspace";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
+import { getHouseSectionCounters } from "@/src/modules/houses/services/getHouseSectionCounters";
 import { getAdminHousePages } from "@/src/modules/houses/services/getAdminHousePages";
 import { getAdminHouseAnnouncements } from "@/src/modules/houses/services/getAdminHouseAnnouncements";
+import type { HouseAnnouncementFileInput } from "@/src/modules/content-engine/v2/handlers/announcements/types";
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
@@ -66,7 +69,6 @@ type AdminHouseDetailPageProps = {
 };
 
 const allowedBlocks = new Set([
-  "hero",
   "announcements",
   "board",
   "information",
@@ -113,6 +115,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  pdf?: HouseAnnouncementFileInput | null;
 }) {
   return {
     id: announcement.id,
@@ -126,6 +129,7 @@ function normalizeAnnouncementForWorkspace(announcement: {
       updatedAt: announcement.updated_at,
       publishedAt: announcement.published_at,
       lockVersion: announcement.lock_version,
+      pdf: announcement.pdf ?? null,
     },
   };
 }
@@ -140,7 +144,7 @@ function HouseTechnicalPlaceholder({
   return (
     <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
       <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-        CMS заповнювач
+        Розділ тимчасово недоступний
       </div>
 
       <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--cms-text)]">
@@ -153,13 +157,12 @@ function HouseTechnicalPlaceholder({
 
       <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)]/60 p-5">
         <div className="text-sm font-medium text-[var(--cms-text)]">
-          Технічна заглушка
+          Що можна зробити
         </div>
 
         <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-          Публічна сторінка для цього розділу вже передбачена у структурі
-          сайту будинку. Тут зафіксовано безпечне місце під майбутній CMS
-          редактор без зміни наявного public rendering path.
+          Оновіть сторінку через кілька хвилин. Якщо розділ не з’явиться,
+          зверніться до адміністратора платформи.
         </p>
       </div>
     </div>
@@ -187,7 +190,6 @@ export default async function AdminHouseDetailPage({
 
   const publicPreviewHref =
     {
-      hero: basePublicUrl,
       announcements: `${basePublicUrl}/announcements`,
       board: `${basePublicUrl}/board`,
       information: `${basePublicUrl}/information`,
@@ -200,6 +202,7 @@ export default async function AdminHouseDetailPage({
       "founding-documents": `${basePublicUrl}/founding-documents`,
     }[activeBlock] ?? basePublicUrl;
 
+  const sectionCounters = await getHouseSectionCounters(house.id);
   const pages = await getAdminHousePages(house.id);
   const informationPage =
     activeBlock === "information"
@@ -297,53 +300,74 @@ export default async function AdminHouseDetailPage({
       ? (await getAdminHouseApartments({ houseId: house.id })).items
       : [];
 
+  const adminHouses = await getAdminHouses();
   const duplicateTargets = mapCrossHouseDuplicateTargets(
-    await getAdminHouses(),
+    adminHouses,
     house.id,
   );
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--cms-text-muted)]">
+    <div className="space-y-5">
+      <div className="sticky top-0 z-30 -mx-2 rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[color-mix(in_srgb,var(--cms-surface)_98%,transparent)] px-3 py-2.5 shadow-[var(--cms-shadow-sm)] backdrop-blur md:mx-0 md:px-4">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--cms-text-muted)]">
               <Link
                 href={ROUTES.admin.houses}
-                className="text-[var(--cms-text-muted)] transition hover:text-[var(--cms-text)]"
+                className="truncate transition hover:text-[var(--cms-text)]"
               >
                 Будинки
               </Link>
-              <span>/</span>
-              <span className="text-[var(--cms-text)]">{house.name}</span>
+              <span aria-hidden="true">/</span>
+              <span className="truncate text-[var(--cms-text)]">
+                {house.name}
+              </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
-              {house.name}
-            </h1>
+            <div className="mt-0.5 min-w-0">
+              <HouseSwitcher
+                currentHouseId={house.id}
+                currentHouseName={house.name}
+                activeBlock={activeBlock}
+                houses={adminHouses.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  slug: item.slug,
+                  address: item.address,
+                  districtName: item.district?.name ?? null,
+                  districtColor: item.district?.theme_color ?? null,
+                }))}
+              />
 
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-              {house.address}
-              {house.osbb_name ? ` · ОСББ: ${house.osbb_name}` : ""}
-            </p>
+              <p className="mt-1 truncate text-sm leading-5 text-[var(--cms-text-muted)]" title={house.address}>
+                {house.address}
+              </p>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+              <HouseStatusLine houseId={house.id} counters={sectionCounters} />
+            </div>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-2 lg:items-end">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 lg:justify-end">
               <HouseEntityBadge variant="slug" title={house.slug}>
                 {house.slug}
               </HouseEntityBadge>
+
               {!house.is_active ? (
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
+                <span className="inline-flex h-6 items-center rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-2 text-[11px] font-medium text-[var(--cms-text)]">
                   Архів
                 </span>
               ) : null}
+
               {house.district ? (
                 <span
-                  className="inline-flex h-8 items-center rounded-[var(--r-pill)] px-3 text-xs font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
+                  className="inline-flex h-6 items-center rounded-[var(--r-pill)] px-2 text-[11px] font-semibold leading-none text-[var(--cms-text)] shadow-[var(--cms-shadow-sm)]"
                   style={{ backgroundColor: house.district.theme_color }}
                 >
                   {house.district.name}
                 </span>
               ) : null}
+
               {house.management_company?.name ? (
                 <HouseEntityBadge
                   variant="managementCompany"
@@ -352,61 +376,47 @@ export default async function AdminHouseDetailPage({
                   {house.management_company.name}
                 </HouseEntityBadge>
               ) : null}
-              <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text)]">
-                Розділ: {
-                  {
-                    announcements: "Оголошення",
-                    board: "Правління",
-                    information: "Інформація",
-                    reports: "Звіти",
-                    debtors: "Боржники",
-                    plan: "План робіт",
-                    meetings: "Збори",
-                    requisites: "Реквізити",
-                    specialists: "Спеціалісти",
-                    "founding-documents": "Установчі документи",
-                  }[activeBlock]
-                }
-              </span>
-            </div>
-          </div>
 
-          <div className="flex w-full flex-col gap-4 xl:w-auto xl:items-end">
-            <div className="flex w-full flex-wrap items-center justify-end gap-3">
-              <AdminActionIconLink
-                href={publicPreviewHref}
-                icon="publicPage"
-                label={`Відкрити сайт будинку ${house.name}`}
-                tooltip="Відкрити сайт будинку"
-                target="_blank"
-                rel="noreferrer"
-                size="lg"
-                tone="accent"
-              />
+              <span className="ml-auto hidden h-5 w-px bg-[var(--cms-border)] lg:block" aria-hidden="true" />
 
-              <AdminActionIconLink
-                href={ROUTES.admin.houses}
-                icon="back"
-                label="Назад до реєстру будинків"
-                tooltip="Назад до реєстру"
-                size="lg"
-              />
+              <div className="flex items-center gap-1">
+                <AdminActionIconLink
+                  href={publicPreviewHref}
+                  icon="publicPage"
+                  label={`Відкрити сайт будинку ${house.name}`}
+                  tooltip="Відкрити сайт будинку"
+                  target="_blank"
+                  rel="noreferrer"
+                  size="md"
+                  tone="accent"
+                />
+
+                <AdminActionIconLink
+                  href={ROUTES.admin.houses}
+                  icon="back"
+                  label="Назад до реєстру будинків"
+                  tooltip="Назад до реєстру"
+                  size="md"
+                />
+              </div>
             </div>
 
-            <div className="w-full min-w-[260px] xl:max-w-[360px]">
-              <HouseBlockSelector
+            <div className="w-full min-w-0 lg:flex lg:justify-end">
+              <HouseSectionTabs
                 houseId={house.id}
                 activeBlock={activeBlock}
+                counters={sectionCounters}
+                contentTargetId="house-section-content"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <HouseBlockNavigationFrame
-        houseId={house.id}
-        activeBlock={activeBlock}
-        hideSelector
+      <div
+        id="house-section-content"
+        className="relative min-h-[320px]"
+        aria-busy="false"
       >
       {activeBlock === "announcements" ? (
         <HouseAnnouncementsWorkspace
@@ -429,7 +439,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="Правління"
-            description="Не вдалося підготувати секцію правління для цього будинку. Потрібно перевірити коректність ініціалізації будинку."
+            description="Не вдалося відкрити дані правління цього будинку."
           />
         )
       ) : null}
@@ -496,7 +506,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="План робіт"
-            description="Не вдалося завантажити план робіт для цього будинку. Потрібно перевірити таблицю house_plan_tasks."
+            description="Не вдалося відкрити план робіт цього будинку."
           />
         )
       ) : null}
@@ -518,7 +528,7 @@ export default async function AdminHouseDetailPage({
         ) : (
           <HouseTechnicalPlaceholder
             title="Збори"
-            description="Не вдалося завантажити збори для цього будинку. Потрібно перевірити таблицю house_meetings."
+            description="Не вдалося відкрити дані зборів цього будинку."
           />
         )
       ) : null}
@@ -541,7 +551,7 @@ export default async function AdminHouseDetailPage({
         />
       ) : null}
 
-      </HouseBlockNavigationFrame>
+      </div>
     </div>
   );
 }

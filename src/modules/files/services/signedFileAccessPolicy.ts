@@ -1,6 +1,7 @@
 export type FileEntityType =
   | "house_report"
   | "house_announcement"
+  | "house_document"
   | "house_plan_task";
 
 export type FileAccessErrorCode =
@@ -75,12 +76,19 @@ export const FILE_ENTITY_CONFIG: Record<FileEntityType, EntityConfig> = {
     lifecycleColumn: "lifecycle_status",
     publicStatuses: ["published"],
   },
+  house_document: {
+    table: "house_documents",
+    buckets: ["house-documents"],
+    fieldKeys: ["pdf"],
+    lifecycleColumn: "lifecycle_status",
+    publicStatuses: ["published"],
+  },
   house_plan_task: {
     table: "house_plan_tasks",
     buckets: ["house-plan-media", "house-plan-documents"],
     fieldKeys: null,
-    lifecycleColumn: null,
-    publicStatuses: null,
+    lifecycleColumn: "lifecycle_status",
+    publicStatuses: ["published", "archived"],
   },
 };
 
@@ -110,6 +118,7 @@ export function normalizeFileEntityType(value: string | null | undefined): FileE
   if (
     normalized === "house_report" ||
     normalized === "house_announcement" ||
+    normalized === "house_document" ||
     normalized === "house_plan_task"
   ) {
     return normalized;

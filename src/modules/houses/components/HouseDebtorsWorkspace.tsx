@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { HouseDebtors1cImportPanel } from "@/src/modules/import-buffer/components/HouseDebtors1cImportPanel";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
@@ -221,6 +222,9 @@ export function HouseDebtorsWorkspace({
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
   const [is1cImportOpen, setIs1cImportOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "publish_draft" | "delete_draft" | null
+  >(null);
   const [submittedMode, setSubmittedMode] = useState<
     "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | "save_calculator" | null
   >(null);
@@ -843,7 +847,7 @@ export function HouseDebtorsWorkspace({
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                onClick={deleteDraft}
+                onClick={() => setConfirmAction("delete_draft")}
                 disabled={isPending}
                 className={`${adminSecondaryButtonClass} disabled:opacity-50`}
               >
@@ -852,7 +856,7 @@ export function HouseDebtorsWorkspace({
 
               <button
                 type="button"
-                onClick={publishDraft}
+                onClick={() => setConfirmAction("publish_draft")}
                 disabled={isPending}
                 className={`${adminPrimaryButtonClass} disabled:opacity-50`}
               >
@@ -1443,6 +1447,44 @@ export function HouseDebtorsWorkspace({
           </div>
         </div>
       ) : null}
+
+      <PlatformConfirmModal
+        open={confirmAction === "publish_draft"}
+        title="Опублікувати чернетку боржників?"
+        description="Поточний опублікований список буде повністю замінено даними з чернетки."
+        confirmLabel="Опублікувати"
+        pendingLabel="Публікуємо..."
+        tone="publish"
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void publishDraft();
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete_draft"}
+        title="Видалити чернетку боржників?"
+        description="Усі дані поточної чернетки буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        tone="destructive"
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void deleteDraft();
+        }}
+      />
 
       <HouseDebtors1cImportPanel
         houseId={houseId}

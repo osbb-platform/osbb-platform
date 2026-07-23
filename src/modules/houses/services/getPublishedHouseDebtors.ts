@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import { throwRequiredPublicReadError } from "./publicContentResilience";
 import type { HouseDebtorsSettings } from "@/src/modules/content-engine/v2/handlers/debtors";
 import {
   DEFAULT_DEBTORS_CALCULATOR,
@@ -51,18 +52,6 @@ function mapSettings(settings: HouseDebtorsSettings | null) {
   };
 }
 
-function emptySnapshot(): AdminHouseDebtorsSnapshot {
-  return {
-    ...mapSettings(null),
-    updatedAt: null,
-    activeItems: [],
-    draftItems: [],
-    archivedItems: [],
-    monthSnapshots: [],
-    draftMonthSnapshots: [],
-    latestPublishedMonth: null,
-  };
-}
 
 function formatBalance(value: number) {
   const fixed = value.toFixed(2);
@@ -104,13 +93,22 @@ async function loadPublishedHouseDebtors(
     }),
   ]);
 
-  if (settingsResult.error || historyResult.error) {
-    console.error("Failed to load public debtor history", {
+  if (settingsResult.error) {
+    throwRequiredPublicReadError({
+      section: "debtors",
+      resource: "house_debtors_settings",
       houseId,
-      settings: settingsResult.error?.message,
-      history: historyResult.error?.message,
+      error: settingsResult.error,
     });
-    return emptySnapshot();
+  }
+
+  if (historyResult.error) {
+    throwRequiredPublicReadError({
+      section: "debtors",
+      resource: "get_public_house_debtor_history",
+      houseId,
+      error: historyResult.error,
+    });
   }
 
   const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
@@ -152,7 +150,7 @@ export const getPublishedHouseDebtors = cache(
   async (houseId: string): Promise<AdminHouseDebtorsSnapshot> =>
     unstable_cache(
       () => loadPublishedHouseDebtors(houseId),
-      ["published-house-debtors", houseId],
+      ["published-house-debtors-v2", houseId],
       {
         tags: [`house:${houseId}:debtors`, `house:${houseId}`],
         revalidate: 300,

@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type {
   HouseMeeting,
   HouseMeetingManualVote,
@@ -26,11 +29,12 @@ async function loadPublishedHouseMeetings(
     .order("updated_at", { ascending: false });
 
   if (meetingsError) {
-    console.error("Failed to load published house meetings:", {
+    throwRequiredPublicReadError({
+      section: "meetings",
+      resource: "house_meetings",
       houseId,
-      message: meetingsError.message,
+      error: meetingsError,
     });
-    return { items: [], updatedAt: null };
   }
 
   const meetings = (meetingsData ?? []) as unknown as HouseMeeting[];
@@ -54,19 +58,21 @@ async function loadPublishedHouseMeetings(
   ]);
 
   if (questionsResult.error) {
-    console.error("Failed to load published house meeting questions:", {
+    throwRequiredPublicReadError({
+      section: "meetings",
+      resource: "house_meeting_questions",
       houseId,
-      message: questionsResult.error.message,
+      error: questionsResult.error,
     });
-    return { items: [], updatedAt: null };
   }
 
   if (manualVotesResult.error) {
-    console.error("Failed to load published house meeting manual votes:", {
+    throwRequiredPublicReadError({
+      section: "meetings",
+      resource: "house_meeting_manual_votes",
       houseId,
-      message: manualVotesResult.error.message,
+      error: manualVotesResult.error,
     });
-    return { items: [], updatedAt: null };
   }
 
   const questions = (questionsResult.data ?? []) as unknown as HouseMeetingQuestion[];
@@ -93,7 +99,7 @@ export const getPublishedHouseMeetings = cache(
   async (houseId: string): Promise<AdminHouseMeetingsSnapshot> => {
     return unstable_cache(
       () => loadPublishedHouseMeetings(houseId),
-      ["published-house-meetings", houseId],
+      ["published-house-meetings-v2", houseId],
       {
         tags: [`house:${houseId}:meetings`, `house:${houseId}`],
         revalidate: 300,

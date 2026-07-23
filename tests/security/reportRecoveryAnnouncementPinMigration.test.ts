@@ -40,7 +40,7 @@ const homeDashboard = read(
   "src/modules/houses/services/getPublicHouseHomeDashboard.ts",
 );
 const adminAnnouncementsPage = read(
-  "app/(admin)/admin/(protected)/houses/[id]/announcements/page.tsx",
+  "app/(admin)/admin/(protected)/houses/[id]/page.tsx",
 );
 const adminHousePage = read(
   "app/(admin)/admin/(protected)/houses/[id]/page.tsx",

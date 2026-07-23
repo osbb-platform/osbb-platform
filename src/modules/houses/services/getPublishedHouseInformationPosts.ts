@@ -2,6 +2,10 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  logOptionalPublicReadError,
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type { InformationPost } from "@/src/modules/content-engine/v2/handlers/information_posts";
 import type { HouseInformationPostSnapshot } from "./getAdminHouseInformationPosts";
 
@@ -64,11 +68,12 @@ async function loadPublishedHouseInformationPosts(
     .order("updated_at", { ascending: false });
 
   if (postsError) {
-    console.error("Failed to load published information posts:", {
+    throwRequiredPublicReadError({
+      section: "information",
+      resource: "house_information_posts",
       houseId,
-      message: postsError.message,
+      error: postsError,
     });
-    return [];
   }
 
   const typedPosts = (posts ?? []) as unknown as InformationPost[];
@@ -86,10 +91,13 @@ async function loadPublishedHouseInformationPosts(
     .in("entity_id", postIds);
 
   if (filesError) {
-    console.error("Failed to load published information post files:", {
+    logOptionalPublicReadError({
+      section: "information",
+      resource: "house_content_files",
       houseId,
-      message: filesError.message,
+      error: filesError,
     });
+
     return typedPosts.map((post) => mapPost(post, new Map()));
   }
 
@@ -106,7 +114,7 @@ export const getPublishedHouseInformationPosts = cache(
   async (houseId: string): Promise<HouseInformationPostSnapshot[]> => {
     return unstable_cache(
       () => loadPublishedHouseInformationPosts(houseId),
-      ["published-house-information-posts", houseId],
+      ["published-house-information-posts-v2", houseId],
       {
         tags: [`house:${houseId}:information_posts`, `house:${houseId}:information`, `house:${houseId}`],
         revalidate: 300,

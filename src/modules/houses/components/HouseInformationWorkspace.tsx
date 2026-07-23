@@ -1,12 +1,26 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
+
+import {
+  AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
+import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 import {
   ContentTemplateSlotsPanel,
   type ContentTemplateSlot,
-} from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+  } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 
 import { useState } from "react";
 import type { HouseDocumentListItem } from "@/src/modules/houses/services/getHouseDocuments";
@@ -19,11 +33,11 @@ import { EditInformationPostForm } from "@/src/modules/houses/components/EditInf
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 export const INFORMATION_CATEGORIES = [
   "Про будинок",
@@ -34,7 +48,18 @@ export const INFORMATION_CATEGORIES = [
 ] as const;
 
 type InformationMainTab = "posts" | "faq" | "materials";
+type InformationLifecycleTab = "published" | "draft" | "archived";
 type PostWorkspaceMode = "idle" | "create" | "edit";
+type PostQuickActionKind = "publish" | "archive" | "delete";
+type PostQuickActionConfirm = {
+  sectionId: string;
+  action: PostQuickActionKind;
+} | null;
+type FaqQuickActionKind = "publish" | "archive" | "delete";
+type FaqQuickActionConfirm = {
+  faqId: string;
+  action: FaqQuickActionKind;
+} | null;
 
 type InformationSectionItem = HouseInformationPostSnapshot;
 
@@ -59,37 +84,6 @@ function getPostDate(content: Record<string, unknown>) {
   return publishedAt ?? createdAt ?? "";
 }
 
-function formatDate(value: string) {
-  if (!value) return "Дату не вказано";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function getFaqStatusLabel(status: HouseFaqSnapshot["status"]) {
-  if (status === "published") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getFaqStatusClass(status: HouseFaqSnapshot["status"]) {
-  if (status === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (status === "archived") {
-    return "border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]";
-  }
-
-  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
-}
-
 export function HouseInformationWorkspace({
   houseId,
   houseSlug,
@@ -101,8 +95,59 @@ export function HouseInformationWorkspace({
   informationPostTemplates = [],
   duplicateTargets = [],
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
-  const [mainTab, setMainTab] = useState<InformationMainTab>("posts");
+  const { dispatch, isPending } = useAdminContentCommand();
+  const [mainTab, setMainTab] = useWorkspaceMemory<InformationMainTab>(
+    "information",
+    "mainTab",
+    "posts",
+    ["posts", "faq", "materials"],
+  );
+  const [postLifecycleTab, setPostLifecycleTab] =
+    useWorkspaceMemory<InformationLifecycleTab>(
+      "information",
+      "postLifecycleTab",
+      "published",
+      ["published", "draft", "archived"],
+    );
+  const [faqLifecycleTab, setFaqLifecycleTab] =
+    useWorkspaceMemory<InformationLifecycleTab>(
+      "information",
+      "faqLifecycleTab",
+      "published",
+      ["published", "draft", "archived"],
+    );
+  const [postSearchQuery, setPostSearchQuery] =
+    useWorkspaceMemory("information", "postSearchQuery", "");
+  const [postSortMode, setPostSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "information",
+      "postSortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [faqSearchQuery, setFaqSearchQuery] =
+    useWorkspaceMemory("information", "faqSearchQuery", "");
+  const [faqSortMode, setFaqSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "information",
+      "faqSortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [postViewMode, setPostViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "information",
+    "postViewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [faqViewMode, setFaqViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "information",
+    "faqViewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [visiblePostCount, setVisiblePostCount] = useState(20);
+  const [visibleFaqCount, setVisibleFaqCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<PostWorkspaceMode>("idle");
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
@@ -110,12 +155,18 @@ export function HouseInformationWorkspace({
   const [materialsCreateKey, setMaterialsCreateKey] = useState(0);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [copyingPostId, setCopyingPostId] = useState<string | null>(null);
+  const [copyingFaqId, setCopyingFaqId] = useState<string | null>(null);
   const [applyingPostsTemplate, setApplyingPostsTemplate] = useState(false);
   const [applyingFaqTemplate, setApplyingFaqTemplate] = useState(false);
   const [postTemplatesPanelOpen, setPostTemplatesPanelOpen] = useState(false);
   const [faqTemplatesPanelOpen, setFaqTemplatesPanelOpen] = useState(false);
+  const [postQuickActionConfirm, setPostQuickActionConfirm] =
+    useState<PostQuickActionConfirm>(null);
+  const [faqQuickActionConfirm, setFaqQuickActionConfirm] =
+    useState<FaqQuickActionConfirm>(null);
 
-  const visiblePosts = posts
+  const baseVisiblePosts = posts
+    .filter((item) => item.status === postLifecycleTab)
     .slice()
     .sort((left, right) => {
       const leftPinned = Boolean(left.content.isPinned);
@@ -127,8 +178,20 @@ export function HouseInformationWorkspace({
 
       return getPostDate(right.content).localeCompare(getPostDate(left.content));
     });
+  const visiblePosts = filterAndSortWorkspaceItems(
+    baseVisiblePosts,
+    postSearchQuery,
+    postSortMode,
+  );
 
-  const visibleFaqs = faqs.slice();
+  const baseVisibleFaqs = faqs.filter(
+    (item) => item.status === faqLifecycleTab,
+  );
+  const visibleFaqs = filterAndSortWorkspaceItems(
+    baseVisibleFaqs,
+    faqSearchQuery,
+    faqSortMode,
+  );
 
   const editingPost =
     workspaceMode === "edit"
@@ -141,6 +204,7 @@ export function HouseInformationWorkspace({
 
   function openCreatePost() {
     setWorkspaceError(null);
+    setPostLifecycleTab("draft");
     setWorkspaceMode("create");
     setEditingSectionId(null);
     setEditingFaqId(null);
@@ -157,6 +221,71 @@ export function HouseInformationWorkspace({
     setWorkspaceError(null);
     setWorkspaceMode("idle");
     setEditingSectionId(null);
+  }
+
+  function preparePostQuickAction(
+    section: InformationSectionItem,
+    action: PostQuickActionKind,
+  ) {
+    setWorkspaceError(null);
+    setWorkspaceMode("idle");
+    setEditingSectionId(null);
+    setEditingFaqId(null);
+    setPostQuickActionConfirm({
+      sectionId: section.id,
+      action,
+    });
+  }
+
+  async function runPostQuickAction() {
+    if (!postQuickActionConfirm) return;
+
+    const section = posts.find(
+      (item) => item.id === postQuickActionConfirm.sectionId,
+    );
+    if (!section) {
+      setPostQuickActionConfirm(null);
+      setWorkspaceError("Інформаційний матеріал не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    const action = postQuickActionConfirm.action;
+    const commandType =
+      action === "publish"
+        ? "information_posts.publish"
+        : action === "archive"
+          ? "information_posts.archive"
+          : "information_posts.delete";
+
+    setWorkspaceError(null);
+
+    await dispatch(
+      {
+        type: commandType,
+        houseId,
+        payload: {
+          id: section.id,
+          lockVersion:
+            typeof section.content.lockVersion === "number"
+              ? section.content.lockVersion
+              : 1,
+        },
+      },
+      {
+        onSuccess: () => {
+          setPostQuickActionConfirm(null);
+          setWorkspaceMode("idle");
+          setEditingSectionId(null);
+
+          if (action === "publish") {
+            setPostLifecycleTab("published");
+          } else if (action === "archive") {
+            setPostLifecycleTab("archived");
+          }
+        },
+        onError: setWorkspaceError,
+      },
+    );
   }
 
   async function applyInformationTemplateKeys(templateKeys: string[]) {
@@ -187,6 +316,7 @@ export function HouseInformationWorkspace({
     setApplyingPostsTemplate(false);
     setPostTemplatesPanelOpen(false);
     setMainTab("posts");
+    setPostLifecycleTab("draft");
     closePostWorkspace();
     closeFaqWorkspace();
     return true;
@@ -219,6 +349,7 @@ export function HouseInformationWorkspace({
           const created = data as HouseFaqSnapshot | undefined;
           setFaqTemplatesPanelOpen(false);
           setMainTab("faq");
+          setFaqLifecycleTab("draft");
           closePostWorkspace();
           setEditingFaqId(created?.id ?? null);
         },
@@ -232,6 +363,34 @@ export function HouseInformationWorkspace({
 
     setApplyingFaqTemplate(false);
     return true;
+  }
+
+  async function handleCopyFaqToDraft(faqId: string) {
+    setWorkspaceError(null);
+    setCopyingFaqId(faqId);
+
+    const copied = await dispatch<HouseFaqSnapshot>(
+      {
+        type: "faq.duplicate",
+        houseId,
+        payload: {
+          sourceId: faqId,
+          targetHouseIds: [houseId],
+        },
+      },
+      {
+        successMessage: "FAQ скопійовано в чернетку",
+        onError: setWorkspaceError,
+        onSuccess() {
+          setFaqLifecycleTab("draft");
+          setEditingFaqId(null);
+          setFaqCreateOpen(false);
+        },
+      },
+    );
+
+    setCopyingFaqId(null);
+    return copied;
   }
 
   async function handleCopyPostToDraft(sectionId: string) {
@@ -258,11 +417,13 @@ export function HouseInformationWorkspace({
 
     setWorkspaceMode("idle");
     setEditingSectionId(null);
+    setPostLifecycleTab("draft");
   }
 
   function openCreateFaqForm() {
     setWorkspaceError(null);
     setMainTab("faq");
+    setFaqLifecycleTab("draft");
     closePostWorkspace();
     setEditingFaqId(null);
     setFaqCreateOpen(true);
@@ -273,6 +434,85 @@ export function HouseInformationWorkspace({
     setFaqCreateOpen(false);
     setEditingFaqId(faqId);
     closePostWorkspace();
+  }
+
+  function prepareFaqQuickAction(
+    faq: HouseFaqSnapshot,
+    action: FaqQuickActionKind,
+  ) {
+    setWorkspaceError(null);
+    setFaqCreateOpen(false);
+    setEditingFaqId(null);
+    closePostWorkspace();
+    setFaqQuickActionConfirm({
+      faqId: faq.id,
+      action,
+    });
+  }
+
+  async function runFaqQuickAction() {
+    if (!faqQuickActionConfirm) return;
+
+    const faq = faqs.find((item) => item.id === faqQuickActionConfirm.faqId);
+    if (!faq) {
+      setFaqQuickActionConfirm(null);
+      setWorkspaceError("FAQ не знайдено. Оновіть сторінку.");
+      return;
+    }
+
+    const action = faqQuickActionConfirm.action;
+
+    if (action === "publish") {
+      await dispatch(
+        {
+          type: "faq.publish",
+          houseId,
+          payload: {
+            faqId: faq.id,
+            lockVersion: faq.lockVersion,
+          },
+        },
+        {
+          successMessage: "FAQ опубліковано",
+          onError: setWorkspaceError,
+          onSuccess: () => {
+            setFaqQuickActionConfirm(null);
+            setFaqLifecycleTab("published");
+          },
+        },
+      );
+      return;
+    }
+
+    const command =
+      action === "archive"
+        ? {
+            type: "faq.archive" as const,
+            houseId,
+            payload: {
+              faqId: faq.id,
+              lockVersion: faq.lockVersion,
+            },
+          }
+        : {
+            type: "faq.delete" as const,
+            houseId,
+            payload: {
+              faqId: faq.id,
+              lockVersion: faq.lockVersion,
+            },
+          };
+
+    await dispatch(command, {
+      onError: setWorkspaceError,
+      onSuccess: () => {
+        setFaqQuickActionConfirm(null);
+
+        if (action === "archive") {
+          setFaqLifecycleTab("archived");
+        }
+      },
+    });
   }
 
   function openCreateDocument() {
@@ -314,7 +554,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={() => setPostTemplatesPanelOpen(true)}
                     disabled={applyingPostsTemplate || isPending}
-                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                    className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
                   >
                     <TemplateIcon className="h-5 w-5" />
                     Шаблони
@@ -322,9 +562,11 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={openCreatePost}
+                    data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreatePost}
                     disabled={!housePageId}
-                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
                     Нова стаття
                   </button>
@@ -334,8 +576,10 @@ export function HouseInformationWorkspace({
               {mainTab === "materials" ? (
                 <button
                   type="button"
-                  onClick={openCreateDocument}
-                  className={adminPrimaryButtonClass}
+                  data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateDocument}
+                  className={adminButtonClasses({ variant: "primary" })}
                 >
                   Новий матеріал
                 </button>
@@ -347,7 +591,7 @@ export function HouseInformationWorkspace({
                     type="button"
                     onClick={() => setFaqTemplatesPanelOpen(true)}
                     disabled={applyingFaqTemplate || isPending}
-                    className={[adminSecondaryButtonClass, "gap-2 disabled:opacity-60"].join(" ")}
+                    className={[adminButtonClasses({ variant: "secondary" }), "gap-2 disabled:opacity-60"].join(" ")}
                   >
                     <TemplateIcon className="h-5 w-5" />
                     Шаблони
@@ -355,9 +599,11 @@ export function HouseInformationWorkspace({
 
                   <button
                     type="button"
-                    onClick={openCreateFaqForm}
+                    data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateFaqForm}
                     disabled={isPending}
-                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    className={[adminButtonClasses({ variant: "primary" }), "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
                   >
                     Створити FAQ
                   </button>
@@ -366,28 +612,39 @@ export function HouseInformationWorkspace({
             </div>
           </div>
 
-          <div className="mt-2">
-            <AdminSegmentedTabs
-              activeKey={mainTab}
-              onChange={(key) => handleMainTabChange(key as typeof mainTab)}
-              items={[
-                {
-                  key: "posts",
-                  label: "Інформація",
-                  count: posts.length,
-                },
-                {
-                  key: "faq",
-                  label: "FAQ",
-                  count: faqs.length,
-                },
-                {
-                  key: "materials",
-                  label: "Матеріали",
-                  count: documents.length,
-                },
-              ]}
-            />
+          <div
+            className="flex max-w-full gap-6 overflow-x-auto border-b border-[var(--cms-border)]"
+            role="tablist"
+            aria-label="Розділи інформації"
+          >
+            {[
+              { key: "posts", label: "Публікації", count: posts.length },
+              { key: "faq", label: "FAQ", count: faqs.length },
+              { key: "materials", label: "Матеріали", count: documents.length },
+            ].map((item) => {
+              const active = mainTab === item.key;
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleMainTabChange(item.key as InformationMainTab)}
+                  className={[
+                    "relative -mb-px inline-flex h-12 shrink-0 items-center gap-2 border-b-2 px-1 text-sm font-semibold transition-colors",
+                    active
+                      ? "border-[var(--cms-accent-primary)] text-[var(--cms-text)]"
+                      : "border-transparent text-[var(--cms-text-muted)] hover:text-[var(--cms-text)]",
+                  ].join(" ")}
+                >
+                  <span>{item.label}</span>
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-2 py-0.5 text-xs text-[var(--cms-text-soft)]">
+                    {item.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -430,25 +687,45 @@ export function HouseInformationWorkspace({
             />
           </AdminSidePanel>
 
-          {workspaceMode === "create" ? (
-            <CreateInformationPostInlineForm
-              houseId={houseId}
-              houseSlug={houseSlug}
-              housePageId={housePageId}
-              templates={informationPostTemplates}
-              templateSlotLimit={3}
-              onClose={closePostWorkspace}
-            />
-          ) : null}
+          <AdminSidePanel
+            title="Нова публікація"
+            description="Нова публікація створюється як чернетка і публікується окремою дією."
+            isOpen={workspaceMode === "create"}
+            onClose={closePostWorkspace}
+            maxWidthClassName="max-w-4xl"
+          >
+            {workspaceMode === "create" ? (
+              <CreateInformationPostInlineForm
+                houseId={houseId}
+                houseSlug={houseSlug}
+                housePageId={housePageId}
+                templates={informationPostTemplates}
+                templateSlotLimit={3}
+                onClose={closePostWorkspace}
+              />
+            ) : null}
+          </AdminSidePanel>
 
-          {workspaceError ?? lastError ? (
+          {workspaceError ? (
             <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-              {workspaceError ?? lastError}
+              {workspaceError}
             </div>
           ) : null}
 
-          {workspaceMode === "edit" && editingPost ? (
-            <div className="space-y-4">
+          <AdminSidePanel
+            title={editingPost?.title || "Редагування публікації"}
+            description={
+              editingPost ? (
+                <AdminStatusBadge tone={statusToneFor(editingPost.status)}>
+                  {statusLabelFor(editingPost.status)}
+                </AdminStatusBadge>
+              ) : null
+            }
+            isOpen={workspaceMode === "edit" && Boolean(editingPost)}
+            onClose={closePostWorkspace}
+            maxWidthClassName="max-w-4xl"
+          >
+            {workspaceMode === "edit" && editingPost ? (
               <EditInformationPostForm
                 headerActions={
                   editingPost.status !== "draft" ? (
@@ -469,13 +746,55 @@ export function HouseInformationWorkspace({
                 section={editingPost}
                 onClose={closePostWorkspace}
               />
-            </div>
-          ) : null}
+            ) : null}
+          </AdminSidePanel>
 
           <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+            <div className="mb-5">
+              <AdminSegmentedTabs
+                activeKey={postLifecycleTab}
+                onChange={(key) => {
+                  setVisiblePostCount(20);
+                  setPostLifecycleTab(key as InformationLifecycleTab);
+                }}
+                ariaLabel="Статус публікацій"
+                items={[
+                  { key: "published", label: "Опубліковані", count: posts.filter((item) => item.status === "published").length },
+                  { key: "draft", label: "Чернетки", count: posts.filter((item) => item.status === "draft").length },
+                  { key: "archived", label: "Архів", count: posts.filter((item) => item.status === "archived").length },
+                ]}
+              />
+            </div>
+
             <div className="space-y-4">
+              <WorkspaceListToolbar
+                searchQuery={postSearchQuery}
+                sortMode={postSortMode}
+                visible={visiblePostCount}
+                total={visiblePosts.length}
+                searchPlaceholder="Назва, категорія або текст матеріалу"
+                onSearchChange={(value) => {
+                  setPostSearchQuery(value);
+                  setVisiblePostCount(20);
+                }}
+                onSortChange={(value) => {
+                  setPostSortMode(value);
+                  setVisiblePostCount(20);
+                }}
+                onShowMore={() =>
+                  setVisiblePostCount((current) => current + 20)
+                }
+                trailingControls={
+                  <WorkspaceViewToggle value={postViewMode} onChange={setPostViewMode} ariaLabel="Вигляд публікацій" />
+                }
+              />
+
+              <div className={[
+                "grid gap-4",
+                postViewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+              ].join(" ")}>
               {visiblePosts.length > 0 ? (
-                visiblePosts.map((section) => {
+                visiblePosts.slice(0, visiblePostCount).map((section) => {
                   const content = section.content;
                   const category =
                     typeof content.category === "string"
@@ -488,10 +807,17 @@ export function HouseInformationWorkspace({
                   const isPinned = Boolean(content.isPinned);
 
                   return (
-                    <button
+                    <div
                       key={section.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => openEditPost(section.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openEditPost(section.id);
+                        }
+                      }}
                       className={`block w-full overflow-hidden rounded-[var(--r-lg)] border p-4 text-left transition ${
                         isPinned
                           ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)]"
@@ -505,17 +831,11 @@ export function HouseInformationWorkspace({
                               {category}
                             </span>
                             <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                              {formatDate(getPostDate(content))}
+                              {formatAdminDate(getPostDate(content), "Дату не вказано")}
                             </span>
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
-                                section.status === "published"
-                                  ? "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                                  : "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                              }`}
-                            >
-                              {section.status === "published" ? "Активна" : "Чернетка"}
-                            </span>
+                            <AdminStatusBadge tone={statusToneFor(section.status)}>
+                              {statusLabelFor(section.status)}
+                            </AdminStatusBadge>
                             {Boolean(content.isPinned) ? (
                               <span className="inline-flex rounded-full border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-success-text)]">
                                 PIN
@@ -532,18 +852,151 @@ export function HouseInformationWorkspace({
                           </div>
                         </div>
                       </div>
-                    </button>
+
+                      <div>
+                        <WorkspaceQuickActions
+                          actions={[
+                            ...(section.status === "draft"
+                              ? [
+                                  {
+                                    key: "publish",
+                                    label: "Опублікувати",
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "publish"),
+                                  },
+                                  {
+                                    key: "delete",
+                                    label: "Видалити",
+                                    tone: "danger" as const,
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "delete"),
+                                  },
+                                ]
+                              : []),
+                            ...(section.status === "published"
+                              ? [
+                                  {
+                                    key: "archive",
+                                    label: "В архів",
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "archive"),
+                                  },
+                                  {
+                                    key: "duplicate",
+                                    label: "Створити на основі",
+                                    disabled:
+                                      isPending ||
+                                      copyingPostId === section.id,
+                                    onSelect: () =>
+                                      void handleCopyPostToDraft(section.id),
+                                  },
+                                ]
+                              : []),
+                            ...(section.status === "archived"
+                              ? [
+                                  {
+                                    key: "delete",
+                                    label: "Видалити",
+                                    tone: "danger" as const,
+                                    disabled: isPending,
+                                    onSelect: () =>
+                                      preparePostQuickAction(section, "delete"),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        />
+                      </div>
+                    </div>
                   );
                 })
               ) : (
-                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                  Повідомлень поки немає. Створи першу публікацію через кнопку зверху.
-                </div>
+                <EmptyState
+                  title={
+                    postLifecycleTab === "published"
+                      ? "Опублікованих матеріалів поки немає"
+                      : postLifecycleTab === "draft"
+                        ? "Чернеток публікацій поки немає"
+                        : "Архів публікацій поки порожній"
+                  }
+                  description={
+                    postLifecycleTab === "published"
+                      ? "Створіть публікацію та опублікуйте її для мешканців."
+                      : postLifecycleTab === "draft"
+                        ? "Нові матеріали та копії з’являтимуться тут."
+                        : "Архівовані публікації відображатимуться тут."
+                  }
+                  action={
+                    postLifecycleTab !== "archived" && housePageId ? (
+                      <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreatePost} className={adminButtonClasses({ variant: "primary" })}>
+                        Створити публікацію
+                      </button>
+                    ) : undefined
+                  }
+                />
               )}
+              </div>
             </div>
           </div>
         </>
       ) : null}
+
+      <PlatformConfirmModal
+        open={postQuickActionConfirm !== null}
+        title={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтвердити публікацію матеріалу?"
+            : postQuickActionConfirm?.action === "archive"
+              ? "Перенести матеріал в архів?"
+              : postLifecycleTab === "archived"
+                ? "Видалити архівний матеріал?"
+                : "Видалити чернетку матеріалу?"
+        }
+        description={
+          postQuickActionConfirm?.action === "publish"
+            ? "Після підтвердження матеріал стане видимим для мешканців на сторінці інформації."
+            : postQuickActionConfirm?.action === "archive"
+              ? "Після архівації матеріал зникне з публічної частини сайту. У CMS він залишиться доступним в архіві."
+              : postLifecycleTab === "archived"
+                ? "Архівний інформаційний матеріал буде видалено із системи без можливості відновлення."
+                : "Чернетку інформаційного матеріалу буде видалено без можливості відновлення."
+        }
+        confirmLabel={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтвердити публікацію"
+            : postQuickActionConfirm?.action === "archive"
+              ? "Архівувати матеріал"
+              : "Видалити матеріал"
+        }
+        pendingLabel={
+          postQuickActionConfirm?.action === "publish"
+            ? "Підтверджуємо..."
+            : postQuickActionConfirm?.action === "archive"
+              ? "Архівуємо..."
+              : "Видаляємо..."
+        }
+        tone={
+          postQuickActionConfirm?.action === "delete"
+            ? "destructive"
+            : postQuickActionConfirm?.action === "archive"
+              ? "warning"
+              : "publish"
+        }
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setPostQuickActionConfirm(null);
+          }
+        }}
+        onConfirm={() => {
+          void runPostQuickAction();
+        }}
+      />
 
       {mainTab === "materials" ? (
         <HouseDocumentsWorkspace
@@ -558,78 +1011,273 @@ export function HouseInformationWorkspace({
 
       {mainTab === "faq" ? (
         <>
-          {workspaceError ?? lastError ? (
+          {workspaceError ? (
             <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-              {workspaceError ?? lastError}
+              {workspaceError}
             </div>
           ) : null}
 
-          {!editingFaq && !faqCreateOpen ? (
-            <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
-              <div className="space-y-4">
-                {visibleFaqs.length > 0 ? (
-                  visibleFaqs.map((faq) => (
-                    <button
-                      key={faq.id}
-                      type="button"
-                      onClick={() => openFaqWorkspace(faq.id)}
-                      className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${getFaqStatusClass(faq.status)}`}
-                        >
-                          {getFaqStatusLabel(faq.status)}
-                        </span>
-                        <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                          Запитань: {faq.items.length}
-                        </span>
-                        <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-                          Оновлено: {formatDate(faq.updatedAt)}
-                        </span>
-                      </div>
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+            <div className="mb-5">
+              <AdminSegmentedTabs
+                activeKey={faqLifecycleTab}
+                onChange={(key) => {
+                  setVisibleFaqCount(20);
+                  setFaqLifecycleTab(key as InformationLifecycleTab);
+                }}
+                ariaLabel="Статус FAQ"
+                items={[
+                  { key: "published", label: "Опубліковані", count: faqs.filter((item) => item.status === "published").length },
+                  { key: "draft", label: "Чернетки", count: faqs.filter((item) => item.status === "draft").length },
+                  { key: "archived", label: "Архів", count: faqs.filter((item) => item.status === "archived").length },
+                ]}
+              />
+            </div>
 
-                      <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
-                        FAQ для мешканців
-                      </div>
+            <div className="space-y-4">
+              <WorkspaceListToolbar
+                searchQuery={faqSearchQuery}
+                sortMode={faqSortMode}
+                visible={visibleFaqCount}
+                total={visibleFaqs.length}
+                searchPlaceholder="Питання або текст відповіді"
+                onSearchChange={(value) => {
+                  setFaqSearchQuery(value);
+                  setVisibleFaqCount(20);
+                }}
+                onSortChange={(value) => {
+                  setFaqSortMode(value);
+                  setVisibleFaqCount(20);
+                }}
+                onShowMore={() =>
+                  setVisibleFaqCount((current) => current + 20)
+                }
+                trailingControls={
+                  <WorkspaceViewToggle value={faqViewMode} onChange={setFaqViewMode} ariaLabel="Вигляд FAQ" />
+                }
+              />
 
-                      <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                        {faq.status === "draft"
-                          ? "Чернетку можна редагувати, зберегти як шаблон або підтвердити для заміни активного FAQ."
-                          : faq.status === "published"
-                            ? "Цей FAQ зараз показується на публічній сторінці будинку."
-                            : "Архівна версія FAQ не показується на сайті."}
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] px-4 py-4 text-[var(--cms-text-muted)]">
-                    FAQ поки не створено. Створи першу FAQ-чернетку через кнопку зверху.
+              <div className={[
+                "grid gap-4",
+                faqViewMode === "grid" ? "md:grid-cols-2" : "grid-cols-1",
+              ].join(" ")}>
+              {visibleFaqs.length > 0 ? (
+                visibleFaqs.slice(0, visibleFaqCount).map((faq) => (
+                  <div
+                    key={faq.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openFaqWorkspace(faq.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openFaqWorkspace(faq.id);
+                      }
+                    }}
+                    className="relative block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-5 pr-16 text-left transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-elevated)]"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AdminStatusBadge tone={statusToneFor(faq.status)}>
+                        {statusLabelFor(faq.status)}
+                      </AdminStatusBadge>
+                      <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                        Запитань: {faq.items.length}
+                      </span>
+                      <span className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
+                        Оновлено: {formatAdminDate(faq.updatedAt, "Дату не вказано")}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 text-base font-semibold text-[var(--cms-text)]">
+                      FAQ для мешканців
+                    </div>
+
+                    <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                      {faq.status === "draft"
+                        ? "Чернетку можна редагувати, зберегти як шаблон або підтвердити для заміни активного FAQ."
+                        : faq.status === "published"
+                          ? "Цей FAQ зараз показується на публічній сторінці будинку."
+                          : "Архівна версія FAQ не показується на сайті."}
+                    </div>
+
+                    <div>
+                      <WorkspaceQuickActions
+                        actions={[
+                          ...(faq.status === "draft"
+                            ? [
+                                {
+                                  key: "publish",
+                                  label: "Опублікувати",
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "publish"),
+                                },
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "delete"),
+                                },
+                              ]
+                            : []),
+                          ...(faq.status === "published"
+                            ? [
+                                {
+                                  key: "archive",
+                                  label: "В архів",
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "archive"),
+                                },
+                                {
+                                  key: "duplicate",
+                                  label: "Створити на основі",
+                                  disabled:
+                                    isPending || copyingFaqId === faq.id,
+                                  onSelect: () =>
+                                    void handleCopyFaqToDraft(faq.id),
+                                },
+                              ]
+                            : []),
+                          ...(faq.status === "archived"
+                            ? [
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    prepareFaqQuickAction(faq, "delete"),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
+                    </div>
                   </div>
-                )}
+                ))
+              ) : (
+                <EmptyState
+                  title={
+                    faqLifecycleTab === "published"
+                      ? "Опублікованого FAQ поки немає"
+                      : faqLifecycleTab === "draft"
+                        ? "Чернеток FAQ поки немає"
+                        : "Архів FAQ поки порожній"
+                  }
+                  description={
+                    faqLifecycleTab === "published"
+                      ? "Створіть FAQ-чернетку та опублікуйте її."
+                      : faqLifecycleTab === "draft"
+                        ? "Нові FAQ та застосовані шаблони з’являтимуться тут."
+                        : "Архівні версії FAQ відображатимуться тут."
+                  }
+                  action={
+                    faqLifecycleTab !== "archived" ? (
+                      <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateFaqForm} className={adminButtonClasses({ variant: "primary" })}>
+                        Створити FAQ
+                      </button>
+                    ) : undefined
+                  }
+                />
+              )}
               </div>
             </div>
-          ) : null}
+          </div>
 
-          {faqCreateOpen ? (
-            <CreateInformationFaqForm
-              houseId={houseId}
-              templates={faqTemplates}
-              templateSlotLimit={3}
-              onClose={closeFaqWorkspace}
-            />
-          ) : null}
+          <PlatformConfirmModal
+            open={faqQuickActionConfirm !== null}
+            title={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Опублікувати FAQ?"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "Перенести FAQ до архіву?"
+                  : "Видалити FAQ?"
+            }
+            description={
+              faqQuickActionConfirm?.action === "publish"
+                ? "FAQ стане доступним мешканцям і замінить поточну опубліковану версію."
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "FAQ буде знято з публікації та переміщено до архіву."
+                  : "FAQ буде видалено без можливості відновлення."
+            }
+            confirmLabel={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Опублікувати"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "В архів"
+                  : "Видалити"
+            }
+            pendingLabel={
+              faqQuickActionConfirm?.action === "publish"
+                ? "Публікуємо..."
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "Архівуємо..."
+                  : "Видаляємо..."
+            }
+            tone={
+              faqQuickActionConfirm?.action === "delete"
+                ? "destructive"
+                : faqQuickActionConfirm?.action === "archive"
+                  ? "warning"
+                  : "publish"
+            }
+            isPending={isPending}
+            onCancel={() => {
+              if (!isPending) {
+                setFaqQuickActionConfirm(null);
+              }
+            }}
+            onConfirm={() => {
+              void runFaqQuickAction();
+            }}
+          />
 
-          {editingFaq ? (
-            <EditInformationFaqForm
-              houseId={houseId}
-              faq={editingFaq}
-              duplicateTargets={duplicateTargets}
-              templates={faqTemplates}
-              templateSlotLimit={3}
-              onClose={closeFaqWorkspace}
-            />
-          ) : null}
+          <AdminSidePanel
+            title="Новий FAQ"
+            description="Заповніть питання та відповіді. FAQ буде створено як чернетку."
+            isOpen={faqCreateOpen}
+            onClose={closeFaqWorkspace}
+            maxWidthClassName="max-w-2xl"
+          >
+            {faqCreateOpen ? (
+              <CreateInformationFaqForm
+                houseId={houseId}
+                templates={faqTemplates}
+                templateSlotLimit={3}
+                onClose={closeFaqWorkspace}
+              />
+            ) : null}
+          </AdminSidePanel>
+
+          <AdminSidePanel
+            title="Редагування FAQ"
+            description={
+              editingFaq ? (
+                <AdminStatusBadge tone={statusToneFor(editingFaq.status)}>
+                  {statusLabelFor(editingFaq.status)}
+                </AdminStatusBadge>
+              ) : null
+            }
+            isOpen={Boolean(editingFaq)}
+            onClose={closeFaqWorkspace}
+            maxWidthClassName="max-w-2xl"
+          >
+            {editingFaq ? (
+              <EditInformationFaqForm
+                houseId={houseId}
+                faq={editingFaq}
+                duplicateTargets={duplicateTargets}
+                templates={faqTemplates}
+                templateSlotLimit={3}
+                onClose={closeFaqWorkspace}
+              />
+            ) : null}
+          </AdminSidePanel>
         </>
       ) : null}
     </div>

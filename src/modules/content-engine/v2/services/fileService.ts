@@ -39,6 +39,23 @@ export async function trackFiles(
 /**
  * Removes files from Supabase Storage and house_content_files.
  */
+export async function removeUntrackedFiles(
+  supabase: SupabaseClient,
+  files: FileRef[],
+): Promise<void> {
+  for (const file of files) {
+    const { error } = await supabase.storage.from(file.bucket).remove([file.path]);
+
+    if (error) {
+      console.warn("Untracked upload cleanup failed:", {
+        bucket: file.bucket,
+        path: file.path,
+        message: error.message,
+      });
+    }
+  }
+}
+
 export async function cleanupFiles(
   supabase: SupabaseClient,
   refs: { entityType: string; entityId: string; fieldKeys?: string[] }[],

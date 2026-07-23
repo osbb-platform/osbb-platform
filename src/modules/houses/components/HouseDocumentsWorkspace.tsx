@@ -1,24 +1,39 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
+
+import {
+  AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo,
+  useRef,
+  useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
-} from "@/src/shared/utils/validators/pdfUpload";
+  } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
 
 import type {
   HouseDocumentCategory,
@@ -27,6 +42,7 @@ import type {
   HouseDocumentType,
   HouseDocumentLifecycle,
 } from "@/src/modules/houses/services/getHouseDocuments";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type HouseDocumentsWorkspaceProps = {
   houseId: string;
@@ -89,24 +105,6 @@ function getDocumentTypeLabel(documentType: HouseDocumentType | null) {
   );
 }
 
-function getLifecycleLabel(lifecycle: HouseDocumentLifecycle) {
-  if (lifecycle === "published") return "Активний";
-  if (lifecycle === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getLifecycleClasses(lifecycle: HouseDocumentLifecycle) {
-  if (lifecycle === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (lifecycle === "archived") {
-    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-[var(--cms-text-muted)]";
-  }
-
-  return "border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
-}
-
 function formatDate(value: string | null) {
   if (!value) return "Дату не вказано";
 
@@ -145,6 +143,10 @@ function formatFileSize(value: number | null) {
   return `${(value / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
+function createDocumentUploadFileName(fileExt: string) {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+}
+
 function getEmptyText(tab: WorkspaceTab, fallback: string) {
   if (tab === "active") {
     return "Зараз немає активних документів. Після підтвердження вони відображатимуться тут і на публічній сторінці.";
@@ -180,11 +182,14 @@ export function HouseDocumentsWorkspace({
   embedded = false,
   duplicateTargets = [],
 }: HouseDocumentsWorkspaceProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>(
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "documents",
+    "activeTab",
     startInCreateMode ? "draft" : "active",
+    ["active", "draft", "archive"],
   );
   const [isFormOpen, setIsFormOpen] = useState(startInCreateMode);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
@@ -192,9 +197,29 @@ export function HouseDocumentsWorkspace({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо документ...");
-  const [documentSearchQuery, setDocumentSearchQuery] = useState("");
+  const [documentSearchQuery, setDocumentSearchQuery] =
+    useWorkspaceMemory("documents", "searchQuery", "");
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    `documents-${documentScope}`,
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [visibleDocumentCount, setVisibleDocumentCount] = useState(20);
   const [documentSortMode, setDocumentSortMode] =
-    useState<DocumentSortMode>("updated_desc");
+    useWorkspaceMemory<DocumentSortMode>(
+      "documents",
+      "sortMode",
+      "updated_desc",
+      [
+        "updated_desc",
+        "updated_asc",
+        "title_asc",
+        "title_desc",
+        "year_desc",
+        "year_asc",
+      ],
+    );
 
   const [title, setTitle] = useState("");
   const [category, setCategory] =
@@ -207,6 +232,8 @@ export function HouseDocumentsWorkspace({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [removeAttachment, setRemoveAttachment] = useState(false);
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   const isFoundingScope = documentScope === "founding";
 
@@ -321,6 +348,12 @@ export function HouseDocumentsWorkspace({
   const isPublishedEdit = formMode === "edit" && lifecycle === "published";
   const isArchivedEdit = formMode === "edit" && lifecycle === "archived";
 
+  function markDirty() {
+    if (!panelDirty) {
+      setPanelDirty(true);
+    }
+  }
+
   function resetForm() {
     setTitle("");
     setCategory("regulations");
@@ -331,6 +364,7 @@ export function HouseDocumentsWorkspace({
     setSelectedFile(null);
     setFileError(null);
     setRemoveAttachment(false);
+    setPanelDirty(false);
     setSubmitIntent("save");
     setConfirmAction(null);
 
@@ -347,33 +381,73 @@ export function HouseDocumentsWorkspace({
     resetForm();
   }
 
-  function openCreateMode() {
-    if (!embedded) {
-      setActiveTab("draft");
-    }
+  function requestCloseForm() {
+    dirtyGuard.request(closeForm);
+  }
 
-    setSelectedDocumentId(null);
-    resetForm();
-    setIsFormOpen(true);
+  function openCreateMode() {
+    dirtyGuard.request(() => {
+      if (!embedded) {
+        setActiveTab("draft");
+      }
+
+      setSelectedDocumentId(null);
+      resetForm();
+      setIsFormOpen(true);
+    });
   }
 
   function switchToEditMode(document: HouseDocumentListItem) {
-    setIsFormOpen(true);
+    dirtyGuard.request(() => {
+      setIsFormOpen(true);
+      setSelectedDocumentId(document.id);
+      setActionError(null);
+      setTitle(document.title);
+      setCategory(document.category);
+      setLifecycle(document.lifecycle_status);
+      setDocumentYear(
+        document.document_year
+          ? String(document.document_year)
+          : YEAR_OPTIONS[0],
+      );
+      setDocumentType(document.document_type ?? "statute");
+      setDescription(document.description ?? "");
+      setSelectedFile(null);
+      setFileError(null);
+      setRemoveAttachment(false);
+      setPanelDirty(false);
+      setSubmitIntent("save");
+      setConfirmAction(null);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    });
+  }
+
+  function prepareQuickAction(
+    document: HouseDocumentListItem,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setIsFormOpen(false);
     setSelectedDocumentId(document.id);
     setActionError(null);
     setTitle(document.title);
     setCategory(document.category);
     setLifecycle(document.lifecycle_status);
     setDocumentYear(
-      document.document_year ? String(document.document_year) : YEAR_OPTIONS[0],
+      document.document_year
+        ? String(document.document_year)
+        : YEAR_OPTIONS[0],
     );
     setDocumentType(document.document_type ?? "statute");
     setDescription(document.description ?? "");
     setSelectedFile(null);
     setFileError(null);
     setRemoveAttachment(false);
+    setPanelDirty(false);
     setSubmitIntent("save");
-    setConfirmAction(null);
+    setConfirmAction(action);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -381,12 +455,14 @@ export function HouseDocumentsWorkspace({
   }
 
   function handleTabChange(tab: WorkspaceTab) {
-    setActiveTab(tab);
-    setIsFormOpen(false);
-    setSelectedDocumentId(null);
-    setActionError(null);
-    setConfirmAction(null);
-    resetForm();
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      setIsFormOpen(false);
+      setSelectedDocumentId(null);
+      setActionError(null);
+      setConfirmAction(null);
+      resetForm();
+    });
   }
 
   function buildDocumentYearPayload() {
@@ -405,7 +481,7 @@ export function HouseDocumentsWorkspace({
 
     const supabase = createSupabaseBrowserClient();
     const fileExt = selectedFile.name.split(".").pop() ?? "pdf";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const fileName = createDocumentUploadFileName(fileExt);
     const filePath = `${houseId}/${documentScope}-documents/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -615,9 +691,7 @@ export function HouseDocumentsWorkspace({
     setActiveTab("archive");
   }
 
-  async function copySelectedDocumentToDraft() {
-    if (!selectedDocument) return;
-
+  async function copyDocumentToDraft(document: HouseDocumentListItem) {
     setActionError(null);
     setSubmitIntent("copy");
     setActionLabel("Копіюємо документ у чернетку...");
@@ -627,7 +701,7 @@ export function HouseDocumentsWorkspace({
         type: "documents.duplicate",
         houseId,
         payload: {
-          sourceId: selectedDocument.id,
+          sourceId: document.id,
           targetHouseIds: [houseId],
         },
       },
@@ -645,12 +719,41 @@ export function HouseDocumentsWorkspace({
     }
   }
 
+  async function copySelectedDocumentToDraft() {
+    if (!selectedDocument) return;
+    await copyDocumentToDraft(selectedDocument);
+  }
+
   const hasExistingAttachment =
     selectedDocument?.attachment_status === "uploaded" &&
     Boolean(selectedDocument.storage_path);
 
   const shouldRenderForm =
     isFormOpen && (formMode === "create" || Boolean(selectedDocument));
+
+  const panelTitle = formMode === "edit" ? editTitle : createTitle;
+  const panelDescription = selectedDocument ? (
+    <div className="flex flex-wrap items-center gap-3">
+      <AdminStatusBadge tone={statusToneFor(selectedDocument.lifecycle_status)}>
+        {statusLabelFor(selectedDocument.lifecycle_status)}
+      </AdminStatusBadge>
+      <span>Оновлено: {formatDateTime(selectedDocument.updated_at)}</span>
+      {(isPublishedEdit || isArchivedEdit) ? (
+        <ContentWorkspaceActionButtons
+          houseId={houseId}
+          sourceId={selectedDocument.id}
+          commandType="documents.duplicate"
+          duplicateTargets={duplicateTargets}
+          disabled={isPending || Boolean(fileError)}
+          isCopying={isPending && submitIntent === "copy"}
+          onCopy={copySelectedDocumentToDraft}
+          duplicatePanelTitle="Копії документа в інші будинки"
+        />
+      ) : null}
+    </div>
+  ) : (
+    "Новий документ автоматично створюється як чернетка."
+  );
 
   return (
     <div className="relative space-y-6">
@@ -676,7 +779,7 @@ export function HouseDocumentsWorkspace({
               type="button"
               disabled={isPending}
               onClick={() => setConfirmAction("delete_archive")}
-              className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+              className={adminButtonClasses({ variant: "danger" })}
             >
               {isPending && confirmAction === "delete_archive"
                 ? "Видаляємо архів..."
@@ -685,9 +788,11 @@ export function HouseDocumentsWorkspace({
           ) : (
             <button
               type="button"
+              data-workspace-create-action="true"
+              title="Створити (N)"
               onClick={openCreateMode}
               disabled={isPending}
-              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+              className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
             >
               Новий документ
             </button>
@@ -697,7 +802,10 @@ export function HouseDocumentsWorkspace({
         <div className="mt-6">
           <AdminSegmentedTabs
             activeKey={activeTab}
-            onChange={(key) => handleTabChange(key as WorkspaceTab)}
+            onChange={(key) => {
+              setVisibleDocumentCount(20);
+              handleTabChange(key as WorkspaceTab);
+            }}
             items={[
               {
                 key: "active",
@@ -720,49 +828,18 @@ export function HouseDocumentsWorkspace({
       </div>
       ) : null}
 
-      {shouldRenderForm ? (
-        <form
-          onSubmit={handleFormSubmit}
-          className={`${adminSurfaceClass} p-6`}
-        >
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                {formMode === "edit" ? editTitle : createTitle}
-              </h3>
-              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                {formMode === "edit"
-                  ? "Картку відкрито у верхній формі. Тут можна змінити дані, замінити файл або виконати доступну дію."
-                  : "Новий документ автоматично створюється як чернетка. Завантаж один PDF файл перед збереженням."}
-              </p>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              {formMode === "edit" && (isPublishedEdit || isArchivedEdit) && selectedDocument ? (
-                <ContentWorkspaceActionButtons
-                  houseId={houseId}
-                  sourceId={selectedDocument.id}
-                  commandType="documents.duplicate"
-                  duplicateTargets={duplicateTargets}
-                  disabled={isPending || Boolean(fileError)}
-                  isCopying={isPending && submitIntent === "copy"}
-                  onCopy={copySelectedDocumentToDraft}
-                  duplicatePanelTitle="Копії документа в інші будинки"
-                />
-              ) : null}
-
-              <button
-                type="button"
-                onClick={closeForm}
-                aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
+      <AdminSidePanel
+        title={panelTitle}
+        description={panelDescription}
+        isOpen={shouldRenderForm}
+        onClose={requestCloseForm}
+      >
+        {shouldRenderForm ? (
+          <form
+            onSubmit={handleFormSubmit}
+            onChange={markDirty}
+            className="grid gap-4"
+          >
             <div>
               <label className={`mb-2 block ${adminTextLabelClass}`}>
                 Назва документа
@@ -835,10 +912,11 @@ export function HouseDocumentsWorkspace({
                 <label className={`mb-2 block ${adminTextLabelClass}`}>
                   PDF файл
                 </label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf"
+                <FileDropzone
+                  inputRef={fileInputRef}
+                  accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={hasExistingAttachment ? "Замінити PDF" : "Додати PDF"}
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
 
@@ -859,8 +937,12 @@ export function HouseDocumentsWorkspace({
 
                     setFileError(null);
                     setSelectedFile(file);
+                    setRemoveAttachment(false);
+                    markDirty();
                   }}
-                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  file={selectedFile}
+                  disabled={isPending}
+                  kind="pdf"
                 />
 
                 <p className="mt-2 text-xs text-[var(--cms-text-soft)]">
@@ -947,6 +1029,7 @@ export function HouseDocumentsWorkspace({
                               checked={removeAttachment}
                               onChange={(event) => {
                                 setRemoveAttachment(event.target.checked);
+                                markDirty();
                                 if (event.target.checked) {
                                   setSelectedFile(null);
                                   if (fileInputRef.current) {
@@ -971,34 +1054,38 @@ export function HouseDocumentsWorkspace({
                     <label className={`mb-2 block ${adminTextLabelClass}`}>
                       Завантажити новий файл
                     </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="application/pdf"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0] ?? null;
+                <FileDropzone
+                  inputRef={fileInputRef}
+                  accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={hasExistingAttachment ? "Замінити PDF" : "Додати PDF"}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
 
-                        if (!file) {
-                          setSelectedFile(null);
-                          setFileError(null);
-                          return;
-                        }
+                    if (!file) {
+                      setSelectedFile(null);
+                      setFileError(null);
+                      return;
+                    }
 
-                        const validation = validateSinglePdfFile(file);
+                    const validation = validateSinglePdfFile(file);
 
-                        if (!validation.isValid) {
-                          setSelectedFile(null);
-                          setFileError(validation.error);
-                          event.target.value = "";
-                          return;
-                        }
+                    if (!validation.isValid) {
+                      setSelectedFile(null);
+                      setFileError(validation.error);
+                      event.target.value = "";
+                      return;
+                    }
 
-                        setFileError(null);
-                        setSelectedFile(file);
-                        setRemoveAttachment(false);
-                      }}
-                      className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
-                    />
+                    setFileError(null);
+                    setSelectedFile(file);
+                    setRemoveAttachment(false);
+                    markDirty();
+                  }}
+                  file={selectedFile}
+                  disabled={isPending}
+                  kind="pdf"
+                />
 
                     {fileError ? (
                       <div role="alert" className="mt-2 text-xs text-[var(--cms-danger-text)]">{fileError}</div>
@@ -1015,22 +1102,22 @@ export function HouseDocumentsWorkspace({
               </div>
             ) : null}
 
-            {actionError ?? lastError ? (
+            {actionError ? (
               <div
                 role="alert"
                 className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
               >
-                {actionError ?? lastError}
+                {actionError}
               </div>
             ) : null}
 
-            <div className="overflow-x-auto">
-              <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-                <div className="flex flex-nowrap items-center gap-3">
+            <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
-                    type="submit"
+                    type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
                     disabled={isPending || Boolean(fileError)}
-                    className={`${adminPrimaryButtonClass} disabled:opacity-60`}
+                    className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
@@ -1042,7 +1129,7 @@ export function HouseDocumentsWorkspace({
                       type="button"
                       disabled={isPending || Boolean(fileError)}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "danger" })}
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -1054,9 +1141,9 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "success" })}
                   >
-                    {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                    {isPending && submitIntent === "publish" ? "Публікуємо..." : "Опублікувати"}
                   </button>
                 ) : null}
 
@@ -1065,19 +1152,19 @@ export function HouseDocumentsWorkspace({
                     type="button"
                     disabled={isPending || Boolean(fileError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] px-5 py-3 text-sm font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
-                    {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
+                    {isPending && submitIntent === "archive" ? "Переносимо..." : "В архів"}
                   </button>
                 ) : null}
               </div>
             </div>
-          </div>
-        </form>
-      ) : null}
+          </form>
+        ) : null}
+      </AdminSidePanel>
 
       <div className={`${adminSurfaceClass} p-6`}>
-        {baseVisibleDocuments.length > 0 ? (
+        {!isFoundingScope && baseVisibleDocuments.length > 0 ? (
           <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
@@ -1085,7 +1172,10 @@ export function HouseDocumentsWorkspace({
               </span>
               <input
                 value={documentSearchQuery}
-                onChange={(event) => setDocumentSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  setDocumentSearchQuery(event.target.value);
+                  setVisibleDocumentCount(20);
+                }}
                 placeholder="Назва, опис, файл або рік"
                 className={adminInputClass}
               />
@@ -1097,9 +1187,10 @@ export function HouseDocumentsWorkspace({
               </span>
               <select
                 value={documentSortMode}
-                onChange={(event) =>
-                  setDocumentSortMode(event.target.value as DocumentSortMode)
-                }
+                onChange={(event) => {
+                  setDocumentSortMode(event.target.value as DocumentSortMode);
+                  setVisibleDocumentCount(20);
+                }}
                 className={adminInputClass}
               >
                 <option value="updated_desc">Спочатку оновлені</option>
@@ -1113,25 +1204,52 @@ export function HouseDocumentsWorkspace({
           </div>
         ) : null}
 
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <WorkspacePaginationControls
+            visible={visibleDocumentCount}
+            total={visibleDocuments.length}
+            onShowMore={() =>
+              setVisibleDocumentCount((current) => current + 20)
+            }
+          />
+          <WorkspaceViewToggle value={viewMode} onChange={setViewMode} />
+        </div>
+
         {visibleDocuments.length === 0 ? (
-          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
-            {baseVisibleDocuments.length === 0
-              ? getEmptyText(activeTab, emptyTitle)
-              : "За цим пошуком документів не знайдено. Змініть запит або очистіть поле пошуку."}
-          </div>
+          <EmptyState
+            title={baseVisibleDocuments.length === 0 ? (activeTab === "draft" ? "Чернеток документів поки немає" : String(activeTab).startsWith("archiv") ? "Архів документів поки порожній" : "Активних документів поки немає") : "Документів за пошуком не знайдено"}
+            description={baseVisibleDocuments.length === 0 ? getEmptyText(activeTab, emptyTitle) : "Змініть запит або очистіть поле пошуку."}
+            action={baseVisibleDocuments.length === 0 && !String(activeTab).startsWith("archiv") ? (
+              <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити документ</button>
+            ) : undefined}
+          />
         ) : (
-          <div className="grid gap-4">
-            {visibleDocuments.map((document) => {
+          <div
+            className={[
+              "grid gap-4",
+              viewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+            ].join(" ")}
+          >
+            {visibleDocuments.slice(0, visibleDocumentCount).map((document) => {
               const isSelected = document.id === selectedDocumentId && isFormOpen;
               const hasAttachment = document.attachment_status === "uploaded";
 
               return (
-                <button
+                <div
                   key={document.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => switchToEditMode(document)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      switchToEditMode(document);
+                    }
+                  }}
                   className={[
-                    "w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 text-left transition",
+                    "relative w-full rounded-[var(--r-xl)] border bg-[var(--cms-surface-elevated)] p-5 pr-16 text-left transition",
                     isSelected
                       ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                       : "border-[var(--cms-border)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]",
@@ -1202,23 +1320,81 @@ export function HouseDocumentsWorkspace({
                     </div>
 
                     <div className="flex flex-col items-start gap-3 lg:items-end">
-                      <span
-                        className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${getLifecycleClasses(document.lifecycle_status)}`}
-                      >
-                        {getLifecycleLabel(document.lifecycle_status)}
-                      </span>
+                      <AdminStatusBadge tone={statusToneFor(document.lifecycle_status)}>
+                        {statusLabelFor(document.lifecycle_status)}
+                      </AdminStatusBadge>
+
+                      <WorkspaceQuickActions
+                        actions={[
+                          ...(document.lifecycle_status === "draft" && canConfirm
+                            ? [
+                                {
+                                  key: "publish",
+                                  label: "Опублікувати",
+                                  onSelect: () =>
+                                    prepareQuickAction(document, "publish"),
+                                },
+                              ]
+                            : []),
+                          ...(document.lifecycle_status === "published"
+                            ? [
+                                ...(canArchive
+                                  ? [
+                                      {
+                                        key: "archive",
+                                        label: "В архів",
+                                        onSelect: () =>
+                                          prepareQuickAction(document, "archive"),
+                                      },
+                                    ]
+                                  : []),
+                                {
+                                  key: "duplicate",
+                                  label: "Створити на основі",
+                                  disabled: isPending,
+                                  onSelect: () =>
+                                    void copyDocumentToDraft(document),
+                                },
+                              ]
+                            : []),
+                          ...((document.lifecycle_status === "draft" ||
+                          document.lifecycle_status === "archived") &&
+                          canDelete
+                            ? [
+                                {
+                                  key: "delete",
+                                  label: "Видалити",
+                                  tone: "danger" as const,
+                                  onSelect: () =>
+                                    prepareQuickAction(document, "delete"),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
 
                       <span className="text-xs text-[var(--cms-text-soft)]">
                         Натисни для редагування
                       </span>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}

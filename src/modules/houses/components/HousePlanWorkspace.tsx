@@ -1,22 +1,39 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
+import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
+
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
+
+import { AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useState } from "react";
+import { useMemo,
+  useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type PlanTaskStatus =
   | "draft"
@@ -36,6 +53,7 @@ const PLAN_ARCHIVE_YEARS = Array.from(
 );
 
 type WorkspaceTab = "active" | "draft" | "archive";
+type ActiveStageFilter = "all" | "planned" | "in_progress" | "completed";
 type WorkspaceMode = "idle" | "create" | "edit";
 type SubmitIntent = "save" | "delete" | "publish" | "archive" | "copy";
 type CreatePlanPlacement = "active" | "archive";
@@ -248,10 +266,31 @@ export function HousePlanWorkspace({
   duplicateTargets = [],
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const [tasks, setTasks] = useState<PlanTask[]>(() => normalizePlanTasks(plan));
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
+    "plan",
+    "activeTab",
+    "active",
+    ["active", "draft", "archive"],
+  );
+  const [searchQuery, setSearchQuery] =
+    useWorkspaceMemory("plan", "searchQuery", "");
+  const [sortMode, setSortMode] =
+    useWorkspaceMemory<WorkspaceListSortMode>(
+      "plan",
+      "sortMode",
+      "newest",
+      ["newest", "oldest", "title_asc"],
+    );
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "plan",
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [visibleCount, setVisibleCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PlanTask>(createEmptyTask());
@@ -265,6 +304,15 @@ export function HousePlanWorkspace({
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [removedDocumentIds, setRemovedDocumentIds] = useState<string[]>([]);
+  const [activeStageFilter, setActiveStageFilter] =
+    useWorkspaceMemory<ActiveStageFilter>(
+      "plan",
+      "stageFilter",
+      "all",
+      ["all", "planned", "in_progress", "completed"],
+    );
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   const counters = useMemo(
     () => ({
@@ -280,14 +328,18 @@ export function HousePlanWorkspace({
     [tasks],
   );
 
-  const visibleTasks = useMemo(() => {
+  const baseVisibleTasks = useMemo(() => {
     if (activeTab === "active") {
-      return tasks.filter(
+      const activeTasks = tasks.filter(
         (item) =>
           item.status === "planned" ||
           item.status === "in_progress" ||
           item.status === "completed",
       );
+
+      return activeStageFilter === "all"
+        ? activeTasks
+        : activeTasks.filter((item) => item.status === activeStageFilter);
     }
 
     if (activeTab === "archive") {
@@ -295,7 +347,23 @@ export function HousePlanWorkspace({
     }
 
     return tasks.filter((item) => item.status === "draft");
-  }, [tasks, activeTab]);
+  }, [tasks, activeTab, activeStageFilter]);
+
+  const visibleTasks = useMemo(
+    () =>
+      filterAndSortWorkspaceItems(
+        baseVisibleTasks,
+        searchQuery,
+        sortMode,
+      ),
+    [baseVisibleTasks, searchQuery, sortMode],
+  );
+
+  function markDirty() {
+    if (!panelDirty) {
+      setPanelDirty(true);
+    }
+  }
 
   function resetWorkspace() {
     setWorkspaceMode("idle");
@@ -310,25 +378,58 @@ export function HousePlanWorkspace({
     setPdfError(null);
     setSubmitIntent("save");
     setConfirmAction(null);
+    setPanelDirty(false);
+  }
+
+  function requestCloseWorkspace() {
+    dirtyGuard.request(resetWorkspace);
   }
 
   function openCreateMode() {
-    setActiveTab("draft");
-    setWorkspaceMode("create");
-    setSelectedTaskId(null);
-    setDraft(createEmptyTask());
-    setDraftPublishStatus("planned");
-    setCreatePlacement("active");
-    setSelectedImageFiles([]);
-    setSelectedPdfFiles([]);
-    setRemovedImageIds([]);
-    setRemovedDocumentIds([]);
-    setPdfError(null);
-    setSubmitIntent("save");
+    dirtyGuard.request(() => {
+      setActiveTab("draft");
+      setWorkspaceMode("create");
+      setSelectedTaskId(null);
+      setDraft(createEmptyTask());
+      setDraftPublishStatus("planned");
+      setCreatePlacement("active");
+      setSelectedImageFiles([]);
+      setSelectedPdfFiles([]);
+      setRemovedImageIds([]);
+      setRemovedDocumentIds([]);
+      setPdfError(null);
+      setSubmitIntent("save");
+      setPanelDirty(false);
+    });
   }
 
   function openEditMode(task: PlanTask) {
-    setWorkspaceMode("edit");
+    dirtyGuard.request(() => {
+      setWorkspaceMode("edit");
+      setSelectedTaskId(task.id);
+      setDraft(task);
+      setDraftPublishStatus(
+        task.status === "in_progress"
+          ? "in_progress"
+          : task.status === "completed"
+            ? "completed"
+            : "planned",
+      );
+      setSelectedImageFiles([]);
+      setSelectedPdfFiles([]);
+      setRemovedImageIds([]);
+      setRemovedDocumentIds([]);
+      setPdfError(null);
+      setSubmitIntent("save");
+      setPanelDirty(false);
+    });
+  }
+
+  function prepareQuickAction(
+    task: PlanTask,
+    action: "publish" | "archive" | "delete",
+  ) {
+    setWorkspaceMode("idle");
     setSelectedTaskId(task.id);
     setDraft(task);
     setDraftPublishStatus(
@@ -344,6 +445,18 @@ export function HousePlanWorkspace({
     setRemovedDocumentIds([]);
     setPdfError(null);
     setSubmitIntent("save");
+    setPanelDirty(false);
+    setConfirmAction(action);
+  }
+
+  function handleTabChange(tab: WorkspaceTab) {
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      setWorkspaceMode("idle");
+      setSelectedTaskId(null);
+      setConfirmAction(null);
+      setPanelDirty(false);
+    });
   }
 
   function updateStatus(next: PlanTaskStatus) {
@@ -397,11 +510,13 @@ export function HousePlanWorkspace({
 
   function clearSelectedImages() {
     setSelectedImageFiles([]);
+    markDirty();
   }
 
   function clearSelectedPdfs() {
     setSelectedPdfFiles([]);
     setPdfError(null);
+    markDirty();
   }
 
   function removeExistingImage(attachmentId: string) {
@@ -412,6 +527,7 @@ export function HousePlanWorkspace({
     setRemovedImageIds((prev) =>
       prev.includes(attachmentId) ? prev : [...prev, attachmentId],
     );
+    markDirty();
   }
 
   function removeExistingDocument(attachmentId: string) {
@@ -422,6 +538,7 @@ export function HousePlanWorkspace({
     setRemovedDocumentIds((prev) =>
       prev.includes(attachmentId) ? prev : [...prev, attachmentId],
     );
+    markDirty();
   }
 
   async function uploadSelectedFiles(taskId: string): Promise<UploadedPlanFile[] | null> {
@@ -496,8 +613,8 @@ export function HousePlanWorkspace({
     return uploadedFiles;
   }
 
-  async function copyPlanTaskToDraft() {
-    if (!selectedTaskId || draft.status === "draft") return;
+  async function copyPlanTaskToDraftByTask(task: PlanTask) {
+    if (task.status === "draft") return;
 
     setSubmitIntent("copy");
     setActionLabel("Копіюємо завдання в чернетку...");
@@ -506,7 +623,7 @@ export function HousePlanWorkspace({
       type: "plan.duplicate",
       houseId,
       payload: {
-        sourceId: selectedTaskId,
+        sourceId: task.id,
         targetHouseIds: [houseId],
       },
     });
@@ -515,6 +632,11 @@ export function HousePlanWorkspace({
 
     resetWorkspace();
     setActiveTab("draft");
+  }
+
+  async function copyPlanTaskToDraft() {
+    if (!selectedTaskId || draft.status === "draft") return;
+    await copyPlanTaskToDraftByTask(draft);
   }
 
   async function submitTask(intent: SubmitIntent) {
@@ -793,66 +915,87 @@ export function HousePlanWorkspace({
       />
 
       <div className={`${adminSurfaceClass} p-6`}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
-            <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
-            </p>
-          </div>
-
-          <button type="button" onClick={openCreateMode} className={adminPrimaryButtonClass}>
-            Нове завдання
-          </button>
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--cms-text)]">План робіт будинку</h2>
+          <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
+            Керування завданнями будинку за строками, пріоритетами та етапами виконання з публікацією для мешканців.
+          </p>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            {[
-              ["active", "Активні", counters.active],
-              ["draft", "Чернетки", counters.draft],
-              ["archive", "Архів", counters.archive],
-            ].map(([key, label, count]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveTab(key as WorkspaceTab)}
-                className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
-                  activeTab === key
-                    ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                    : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                }`}
-              >
-                <span>{label}</span>
-                <span
-                  className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
-                    activeTab === key
-                      ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                      : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            ))}
-          </div>
+          <AdminSegmentedTabs
+            items={[
+              { key: "active", label: "Активні", count: counters.active },
+              { key: "draft", label: "Чернетки", count: counters.draft },
+              { key: "archive", label: "Архів", count: counters.archive },
+            ]}
+            activeKey={activeTab}
+            onChange={(key) => handleTabChange(key as WorkspaceTab)}
+            ariaLabel="Фільтр плану робіт"
+          />
         </div>
       </div>
 
-      {workspaceMode !== "idle" ? (
-        <div className={`${adminSurfaceClass} p-6`}>
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-                {workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
-              </h3>
-              <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                Нове завдання спочатку зберігається як чернетка. Після збереження картку можна повторно відкрити та змінити її статус.
-              </p>
+      <div className={`${adminSurfaceClass} px-4 py-3`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {activeTab === "active" ? (
+            <div className="flex min-w-0 flex-wrap gap-2">
+              {[
+                ["all", "Усі етапи", counters.active],
+                [
+                  "planned",
+                  "Заплановано",
+                  tasks.filter((item) => item.status === "planned").length,
+                ],
+                [
+                  "in_progress",
+                  "В роботі",
+                  tasks.filter((item) => item.status === "in_progress").length,
+                ],
+                [
+                  "completed",
+                  "Виконано",
+                  tasks.filter((item) => item.status === "completed").length,
+                ],
+              ].map(([key, label, count]) => (
+                <button
+                  key={String(key)}
+                  type="button"
+                  onClick={() => setActiveStageFilter(key as ActiveStageFilter)}
+                  className={adminButtonClasses({
+                    variant: activeStageFilter === key ? "primary" : "secondary",
+                  })}
+                >
+                  {label} · {count}
+                </button>
+              ))}
             </div>
+          ) : (
+            <div />
+          )}
 
-            <div className="flex shrink-0 items-center gap-2">
-              {workspaceMode === "edit" && draft.status !== "draft" && selectedTaskId ? (
+          <button
+            type="button"
+            data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode}
+            className={`${adminButtonClasses({ variant: "primary" })} shrink-0`}
+          >
+            Нове завдання
+          </button>
+        </div>
+      </div>
+
+      <AdminSidePanel
+        title={workspaceMode === "edit" ? "Редагування завдання" : "Нове завдання"}
+        description={
+          workspaceMode === "edit" ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <AdminStatusBadge tone={statusToneFor(draft.status)}>
+                {statusLabelFor(draft.status, { completed: "Виконано" })}
+              </AdminStatusBadge>
+              <span>Оновлено: {new Date(draft.updatedAt).toLocaleString("uk-UA")}</span>
+              {draft.status !== "draft" && selectedTaskId ? (
                 <ContentWorkspaceActionButtons
                   houseId={houseId}
                   sourceId={selectedTaskId}
@@ -864,19 +1007,16 @@ export function HousePlanWorkspace({
                   duplicatePanelTitle="Копії завдання в інші будинки"
                 />
               ) : null}
-
-              <button
-                type="button"
-                onClick={resetWorkspace}
-                aria-label="Закрити форму"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-xl font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-              >
-                ×
-              </button>
             </div>
-          </div>
-
-          <div className="grid gap-4">
+          ) : (
+            "Нове завдання спочатку зберігається як чернетка."
+          )
+        }
+        isOpen={workspaceMode !== "idle"}
+        onClose={requestCloseWorkspace}
+      >
+        {workspaceMode !== "idle" ? (
+          <div className="grid gap-4" onChange={markDirty}>
             <input
               value={draft.title}
               onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
@@ -1019,19 +1159,22 @@ export function HousePlanWorkspace({
                 </div>
               ) : null}
 
-              <input
-                type="file"
+              <FileDropzone
+                inputId="plan-image-files-input"
                 accept="image/*"
+                hint="До 5 зображень."
+                label="Додати фото"
                 multiple
+                disabled={uploadImageDisabled}
                 onChange={handleImageChange}
-                className="hidden"
-                id="plan-image-files-input"
+                files={selectedImageFiles}
+                kind="image"
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-image-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
+                  className={`hidden inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadImageDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
@@ -1085,19 +1228,23 @@ export function HousePlanWorkspace({
                 </div>
               ) : null}
 
-              <input
-                type="file"
-                accept="application/pdf"
+              <FileDropzone
+                inputId="plan-pdf-files-input"
+                accept="application/pdf,.pdf"
+                hint="До 2 PDF, кожен — до 15 МБ."
+                label="Додати PDF"
                 multiple
+                disabled={uploadPdfDisabled}
                 onChange={handlePdfChange}
-                className="hidden"
-                id="plan-pdf-files-input"
+                files={selectedPdfFiles}
+                error={pdfError}
+                kind="pdf"
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="plan-pdf-files-input"
-                  className={`inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
+                  className={`hidden inline-flex cursor-pointer items-center justify-center rounded-[var(--r-lg)] border px-4 py-3 text-sm font-medium transition ${
                     uploadPdfDisabled
                       ? "pointer-events-none cursor-not-allowed border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text-soft)]"
                       : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text)] hover:bg-[var(--cms-pill-bg)]"
@@ -1174,14 +1321,14 @@ export function HousePlanWorkspace({
               </div>
             ) : null}
 
-            <div className="overflow-x-auto">
-              <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-                <div className="flex flex-nowrap items-center gap-3">
+            <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={() => void submitTask("save")}
-                    className={`${adminPrimaryButtonClass} min-h-16 px-10 py-5 text-2xl disabled:opacity-60`}
+                    className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-60`}
                   >
                     {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                   </button>
@@ -1192,7 +1339,7 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("delete")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-danger-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "danger" })}
                     >
                       {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                     </button>
@@ -1205,9 +1352,9 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("publish")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "success" })}
                     >
-                      {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                      {isPending && submitIntent === "publish" ? "Публікуємо..." : "Опублікувати"}
                     </button>
                   </div>
                 ) : workspaceMode === "edit" &&
@@ -1218,35 +1365,50 @@ export function HousePlanWorkspace({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmAction("archive")}
-                      className="inline-flex min-h-16 items-center justify-center rounded-[var(--r-xl)] border border-[var(--cms-warning-border)] px-10 py-5 text-2xl font-medium text-[var(--cms-warning-text)] transition hover:opacity-90 disabled:opacity-60"
+                      className={adminButtonClasses({ variant: "secondary" })}
                     >
-                      {isPending && submitIntent === "archive" ? "Архівуємо..." : "Архівувати"}
+                      {isPending && submitIntent === "archive" ? "Переносимо..." : "В архів"}
                     </button>
                   </div>
                 ) : null}
               </div>
             </div>
-
-            {lastError ? (
-              <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                {lastError}
-              </div>
-            ) : null}
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AdminSidePanel>
 
-      <div className="space-y-4">
+      <div
+        className={[
+          "grid gap-4",
+          viewMode === "grid" ? "md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+        ].join(" ")}
+      >
+        <WorkspaceListToolbar
+          className="col-span-full"
+          searchQuery={searchQuery}
+          sortMode={sortMode}
+          visible={visibleCount}
+          total={visibleTasks.length}
+          searchPlaceholder="Назва або опис завдання"
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setVisibleCount(20);
+          }}
+          onSortChange={(value) => {
+            setSortMode(value);
+            setVisibleCount(20);
+          }}
+          onShowMore={() => setVisibleCount((current) => current + 20)}
+          trailingControls={<WorkspaceViewToggle value={viewMode} onChange={setViewMode} />}
+        />
+
         {visibleTasks.length === 0 ? (
-          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-sm leading-6 text-[var(--cms-text-muted)]">
-            {activeTab === "active"
-              ? "Зараз немає активних завдань. Після підтвердження та запуску робіт картки з’являться тут."
-              : activeTab === "draft"
-                ? "Чернеток поки немає. Нове завдання з’явиться тут одразу після збереження."
-                : "Архів завдань поки порожній. Перенесені картки відображатимуться тут."}
-          </div>
+          <EmptyState
+            title={activeTab === "active" ? "Активних завдань поки немає" : activeTab === "draft" ? "Чернеток поки немає" : "Архів завдань поки порожній"}
+            description={activeTab === "active" ? "Після підтвердження та запуску робіт картки з’являться тут." : activeTab === "draft" ? "Нове завдання з’явиться тут одразу після збереження." : "Перенесені картки відображатимуться тут."}
+          />
         ) : (
-          visibleTasks.map((task) => {
+          visibleTasks.slice(0, visibleCount).map((task) => {
             const isSelected = workspaceMode === "edit" && selectedTaskId === task.id;
             const priorityLabel =
               task.priority === "high"
@@ -1262,34 +1424,19 @@ export function HousePlanWorkspace({
                   ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
                   : "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
 
-            const statusLabel =
-              task.status === "planned"
-                ? "Заплановано"
-                : task.status === "in_progress"
-                  ? "В роботі"
-                  : task.status === "completed"
-                    ? "Виконано"
-                    : task.status === "archived"
-                      ? "Архів"
-                      : "Чернетка";
-
-            const statusClasses =
-              task.status === "planned"
-                ? "border border-sky-300 bg-sky-100 text-sky-700"
-                : task.status === "in_progress"
-                  ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                  : task.status === "completed"
-                    ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                    : task.status === "archived"
-                      ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]"
-                      : "border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] text-[var(--cms-text)]";
-
             return (
-              <button
+              <div
                 key={task.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => openEditMode(task)}
-                className={`block w-full rounded-[var(--r-lg)] border p-4 text-left transition ${
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openEditMode(task);
+                  }
+                }}
+                className={`relative block w-full rounded-[var(--r-lg)] border p-4 pr-16 text-left transition ${
                   isSelected
                     ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface)]"
                     : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface)]"
@@ -1299,9 +1446,9 @@ export function HousePlanWorkspace({
                   <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${priorityClasses}`}>
                     {priorityLabel}
                   </span>
-                  <span className={`inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusClasses}`}>
-                    {statusLabel}
-                  </span>
+                  <AdminStatusBadge tone={statusToneFor(task.status)}>
+                    {statusLabelFor(task.status, { completed: "Виконано" })}
+                  </AdminStatusBadge>
                 </div>
 
                 <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
@@ -1312,17 +1459,72 @@ export function HousePlanWorkspace({
                   {task.description || "Опис завдання поки не заповнено."}
                 </p>
 
+                <div>
+                  <WorkspaceQuickActions
+                    actions={[
+                      ...(task.status === "draft" && workflowAccessGranted
+                        ? [
+                            {
+                              key: "publish",
+                              label: "Опублікувати",
+                              onSelect: () => prepareQuickAction(task, "publish"),
+                            },
+                          ]
+                        : []),
+                      ...(task.status !== "draft" &&
+                      task.status !== "archived" &&
+                      workflowAccessGranted
+                        ? [
+                            {
+                              key: "archive",
+                              label: "В архів",
+                              onSelect: () => prepareQuickAction(task, "archive"),
+                            },
+                            {
+                              key: "duplicate",
+                              label: "Створити на основі",
+                              disabled: isPending,
+                              onSelect: () =>
+                                void copyPlanTaskToDraftByTask(task),
+                            },
+                          ]
+                        : []),
+                      ...(task.status === "draft" || task.status === "archived"
+                        ? [
+                            {
+                              key: "delete",
+                              label: "Видалити",
+                              tone: "danger" as const,
+                              onSelect: () => prepareQuickAction(task, "delete"),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                </div>
+
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-[var(--cms-text-soft)]">
                   <span>{getDatePreview(task)}</span>
                   <span>{task.archiveYear}</span>
                   {task.contractor ? <span>{task.contractor}</span> : null}
                   <span>Фото: {task.images.length} · PDF: {task.documents.length}</span>
                 </div>
-              </button>
+              </div>
             );
           })
         )}
       </div>
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}

@@ -67,7 +67,11 @@ export const duplicateCommand: CommandSpec = {
     if (sourceItemsError) return err(sourceItemsError.message, "INTERNAL");
 
     const items = normalizeFaqItems(sourceItems ?? []);
-    const created: Array<{ targetHouseId: string; createdId: string }> = [];
+    const created: Array<{
+      targetHouseId: string;
+      createdId: string;
+      lockVersion: number;
+    }> = [];
     const now = new Date().toISOString();
 
     for (const targetHouseId of targetHouseIds) {
@@ -96,6 +100,7 @@ export const duplicateCommand: CommandSpec = {
       created.push({
         targetHouseId,
         createdId: faq.id,
+        lockVersion: faq.lock_version,
       });
     }
 

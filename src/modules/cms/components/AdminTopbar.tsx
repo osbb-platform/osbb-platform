@@ -1,6 +1,6 @@
 export function AdminTopbar() {
   return (
-    <header className="hidden shrink-0 border-b border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-sm)] lg:block">
+    <header className="hidden">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--cms-text-soft)]">

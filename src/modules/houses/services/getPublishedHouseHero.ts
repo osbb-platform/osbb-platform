@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 
 import type { HouseHeroSnapshot } from "./getAdminHouseHero";
 
@@ -39,11 +42,12 @@ async function loadPublishedHouseHero(houseId: string): Promise<HouseHeroSnapsho
     .maybeSingle();
 
   if (error) {
-    console.error("Failed to load published house hero:", {
+    throwRequiredPublicReadError({
+      section: "hero",
+      resource: "house_hero",
       houseId,
-      message: error.message,
+      error,
     });
-    return null;
   }
 
   if (!data) {
@@ -57,7 +61,7 @@ export const getPublishedHouseHero = cache(
   async (houseId: string): Promise<HouseHeroSnapshot | null> => {
     return unstable_cache(
       () => loadPublishedHouseHero(houseId),
-      ["published-house-hero", houseId],
+      ["published-house-hero-v2", houseId],
       {
         tags: [`house:${houseId}:hero`, `house:${houseId}`],
         revalidate: 300,

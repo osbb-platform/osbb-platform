@@ -1,18 +1,36 @@
 "use client";
 
+import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
+import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
+import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
+import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
+
+import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
+import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
+import { useDirtyGuard } from "@/src/shared/hooks/useDirtyGuard";
+
+import { AdminStatusBadge,
+  statusLabelFor,
+  statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
+
+import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
+
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo,
+  useRef,
+  useState } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
+import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import {
   adminInputClass,
-  adminPrimaryButtonClass,
   adminSurfaceClass,
   adminTextLabelClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import {
   getSinglePdfHintMessage,
@@ -24,6 +42,7 @@ import type {
   HouseReportLifecycle,
   HouseReportPeriodType,
 } from "@/src/modules/houses/services/getAdminHouseReports";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 function createClientUploadId(prefix: string) {
   const randomId =
@@ -43,7 +62,9 @@ type Props = {
   duplicateTargets?: CrossHouseDuplicateTarget[];
 };
 
-type TabKey = "current" | "past" | "draft" | "archive";
+type TabKey = "published" | "draft" | "archive";
+type PublishedPeriodFilter = "current" | "past" | "none";
+type DraftPeriodContext = "current" | "past";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "restore" | "delete" | "delete_archive" | null;
 type SubmitIntent = "save" | "publish" | "archive" | "restore" | "delete" | "copy";
@@ -138,37 +159,6 @@ function getMonthLabel(value: string | null | undefined) {
   );
 }
 
-function formatDate(value: string | null) {
-  if (!value) return "Дату не вказано";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function getStatusLabel(status: HouseReportLifecycle) {
-  if (status === "published") return "Активна";
-  if (status === "archived") return "Архів";
-  return "Чернетка";
-}
-
-function getStatusBadgeClasses(status: HouseReportLifecycle) {
-  if (status === "published") {
-    return "border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]";
-  }
-
-  if (status === "archived") {
-    return "border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] text-[var(--cms-text-muted)]";
-  }
-
-  return "border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]";
-}
-
 function isReportPeriodKind(value: unknown): value is HouseReportPeriodKind {
   return (
     value === "none" ||
@@ -205,24 +195,27 @@ function getQuarterLabel(value: string | number | null | undefined) {
   );
 }
 
-function getDefaultYear(tab: TabKey) {
+function getDefaultYear(tab: DraftPeriodContext) {
   const year = new Date().getFullYear();
   return tab === "past" ? year - 1 : year;
 }
 
 function getLegacyPeriodType(
   periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
 ): HouseReportPeriodType {
-  return periodKind === "quarter" || periodKind === "year"
-    ? "past"
-    : "current";
+  if (periodKind === "none" || periodYear === null) {
+    return "current";
+  }
+
+  return periodYear < new Date().getFullYear() ? "past" : "current";
 }
 
-function getDefaultPeriodKind(tab: TabKey): HouseReportPeriodKind {
+function getDefaultPeriodKind(tab: DraftPeriodContext): HouseReportPeriodKind {
   return tab === "past" ? "year" : "month";
 }
 
-function getEmptyPeriodDraft(tab: TabKey): ReportPeriodDraft {
+function getEmptyPeriodDraft(tab: DraftPeriodContext): ReportPeriodDraft {
   const periodKind = getDefaultPeriodKind(tab);
 
   return {
@@ -233,7 +226,7 @@ function getEmptyPeriodDraft(tab: TabKey): ReportPeriodDraft {
   };
 }
 
-function getEmptyDraft(tab: TabKey, firstCategory: string) {
+function getEmptyDraft(tab: DraftPeriodContext, firstCategory: string) {
   const now = new Date().toISOString();
   const period = getEmptyPeriodDraft(tab);
 
@@ -242,7 +235,7 @@ function getEmptyDraft(tab: TabKey, firstCategory: string) {
     description: "",
     categoryTitle: firstCategory,
     reportDate: "",
-    periodType: getLegacyPeriodType(period.periodKind),
+    periodType: getLegacyPeriodType(period.periodKind, period.periodYear),
     periodKind: period.periodKind,
     periodMonth: period.periodMonth,
     periodQuarter: period.periodQuarter,
@@ -317,7 +310,7 @@ function mapReportToDraft(report: HouseReportSnapshot) {
     description: report.description,
     categoryTitle: report.categoryTitle,
     reportDate: report.reportDate ?? "",
-    periodType: getLegacyPeriodType(period.periodKind),
+    periodType: getLegacyPeriodType(period.periodKind, period.periodYear),
     periodKind: period.periodKind,
     periodMonth: period.periodMonth,
     periodQuarter: period.periodQuarter,
@@ -361,7 +354,7 @@ function buildDraftPeriodPayload(draft: ReportDraft) {
   };
 }
 
-function getDraftTab(draft: ReportDraft): TabKey {
+function getDraftTab(draft: ReportDraft): DraftPeriodContext {
   return draft.periodKind === "quarter" || draft.periodKind === "year"
     ? "past"
     : "current";
@@ -405,13 +398,6 @@ function getReportResultLockVersion(
   return fallback;
 }
 
-function getReportResultPeriodType(
-  report: RawReportCommandResult | null,
-  fallback: HouseReportPeriodType,
-) {
-  return report?.periodType ?? report?.period_type ?? fallback;
-}
-
 function getReportResultLifecycleStatus(
   report: RawReportCommandResult | null,
   fallback: HouseReportLifecycle,
@@ -426,22 +412,58 @@ export function HouseReportsWorkspace({
   categories,
   duplicateTargets = [],
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const reportPdfInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("current");
+  const [activeTab, setActiveTab] = useWorkspaceMemory<TabKey>(
+    "reports",
+    "activeTab",
+    "published",
+    ["published", "draft", "archive"],
+  );
+  const [publishedPeriodFilter, setPublishedPeriodFilter] =
+    useWorkspaceMemory<PublishedPeriodFilter>(
+      "reports",
+      "periodFilter",
+      "current",
+      ["current", "past", "none"],
+    );
+  const [publishedCategoryFilter, setPublishedCategoryFilter] =
+    useWorkspaceMemory("reports", "categoryFilter", "all");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [actionLabel, setActionLabel] = useState("Обробляємо звіт...");
-  const [reportSearchQuery, setReportSearchQuery] = useState("");
+  const [reportSearchQuery, setReportSearchQuery] =
+    useWorkspaceMemory("reports", "searchQuery", "");
+  const [viewMode, setViewMode] = useWorkspaceMemory<WorkspaceViewMode>(
+    "reports",
+    "viewMode",
+    "rows",
+    ["rows", "grid"],
+  );
+  const [visibleReportCount, setVisibleReportCount] = useState(20);
   const [reportSortMode, setReportSortMode] =
-    useState<ReportSortMode>("updated_desc");
+    useWorkspaceMemory<ReportSortMode>(
+      "reports",
+      "sortMode",
+      "updated_desc",
+      [
+        "updated_desc",
+        "updated_asc",
+        "title_asc",
+        "title_desc",
+        "year_desc",
+        "year_asc",
+      ],
+    );
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [removeReportPdf, setRemoveReportPdf] = useState(false);
   const [reportPdfError, setReportPdfError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [panelDirty, setPanelDirty] = useState(false);
+  const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   const categoryOptions = useMemo(() => {
     const fromCategories = categories.map((item) => normalizeReportCategory(item.title));
@@ -472,24 +494,27 @@ export function HouseReportsWorkspace({
     [reports, selectedReportId],
   );
 
-  const currentReports = useMemo(
-    () =>
-      reports.filter(
-        (item) =>
-          item.periodType === "current" &&
-          item.lifecycleStatus === "published",
-      ),
+  const publishedReports = useMemo(
+    () => reports.filter((item) => item.lifecycleStatus === "published"),
     [reports],
   );
 
+  const currentReports = useMemo(
+    () => publishedReports.filter((item) => item.periodType === "current"),
+    [publishedReports],
+  );
+
   const pastReports = useMemo(
+    () => publishedReports.filter((item) => item.periodType === "past"),
+    [publishedReports],
+  );
+
+  const noPeriodReports = useMemo(
     () =>
-      reports.filter(
-        (item) =>
-          item.periodType === "past" &&
-          item.lifecycleStatus === "published",
+      publishedReports.filter(
+        (item) => getReportPeriodDraft(item).periodKind === "none",
       ),
-    [reports],
+    [publishedReports],
   );
 
   const draftReports = useMemo(
@@ -503,11 +528,33 @@ export function HouseReportsWorkspace({
   );
 
   const baseVisibleReports = useMemo(() => {
-    if (activeTab === "current") return currentReports;
-    if (activeTab === "past") return pastReports;
     if (activeTab === "draft") return draftReports;
-    return archivedReports;
-  }, [activeTab, archivedReports, currentReports, draftReports, pastReports]);
+    if (activeTab === "archive") return archivedReports;
+
+    const periodFiltered =
+      publishedPeriodFilter === "past"
+        ? pastReports
+        : publishedPeriodFilter === "none"
+          ? noPeriodReports
+          : currentReports;
+
+    if (publishedCategoryFilter === "all") return periodFiltered;
+
+    return periodFiltered.filter(
+      (report) =>
+        normalizeReportCategory(report.categoryTitle) ===
+        publishedCategoryFilter,
+    );
+  }, [
+    activeTab,
+    archivedReports,
+    currentReports,
+    draftReports,
+    noPeriodReports,
+    pastReports,
+    publishedCategoryFilter,
+    publishedPeriodFilter,
+  ]);
 
   const visibleReports = useMemo(() => {
     const normalizedQuery = reportSearchQuery.trim().toLowerCase();
@@ -588,42 +635,79 @@ export function HouseReportsWorkspace({
     }
   }
 
-  function resetWorkspace(nextTab = activeTab) {
+  function markDirty() {
+    if (!panelDirty) setPanelDirty(true);
+  }
+
+  function resetWorkspace(nextTab: TabKey = activeTab) {
     setWorkspaceMode("idle");
     setSelectedReportId(null);
     setConfirmAction(null);
     setSubmitIntent("save");
     setActionLabel("Обробляємо звіт...");
     setActionError(null);
+    setPanelDirty(false);
     resetPdfInput();
-    setDraft(getEmptyDraft(nextTab, firstCategory));
+    setDraft(getEmptyDraft("current", firstCategory));
+    setActiveTab(nextTab);
+  }
+
+  function requestCloseWorkspace() {
+    dirtyGuard.request(() => resetWorkspace());
   }
 
   function openCreateMode() {
-    setActiveTab("draft");
-    setSelectedReportId(null);
-    setWorkspaceMode("create");
-    setActionError(null);
-    resetPdfInput();
-    setDraft(getEmptyDraft(activeTab === "past" ? "past" : "current", firstCategory));
+    dirtyGuard.request(() => {
+      setActiveTab("draft");
+      setSelectedReportId(null);
+      setWorkspaceMode("create");
+      setActionError(null);
+      setPanelDirty(false);
+      resetPdfInput();
+      setDraft(
+        getEmptyDraft(
+          publishedPeriodFilter === "past" ? "past" : "current",
+          firstCategory,
+        ),
+      );
+    });
   }
 
   function openEditMode(report: HouseReportSnapshot) {
+    dirtyGuard.request(() => {
+      setSelectedReportId(report.id);
+      setWorkspaceMode("edit");
+      setActionError(null);
+      setPanelDirty(false);
+      resetPdfInput();
+      setDraft(mapReportToDraft(report));
+    });
+  }
+
+  function prepareQuickAction(
+    report: HouseReportSnapshot,
+    action: "publish" | "archive" | "delete",
+  ) {
     setSelectedReportId(report.id);
-    setWorkspaceMode("edit");
+    setWorkspaceMode("idle");
     setActionError(null);
+    setPanelDirty(false);
     resetPdfInput();
     setDraft(mapReportToDraft(report));
+    setConfirmAction(action);
   }
 
   function handleTabChange(tab: TabKey) {
-    setActiveTab(tab);
-    setWorkspaceMode("idle");
-    setSelectedReportId(null);
-    setConfirmAction(null);
-    setActionError(null);
-    resetPdfInput();
-    setDraft(getEmptyDraft(tab, firstCategory));
+    dirtyGuard.request(() => {
+      setActiveTab(tab);
+      setWorkspaceMode("idle");
+      setSelectedReportId(null);
+      setConfirmAction(null);
+      setActionError(null);
+      setPanelDirty(false);
+      resetPdfInput();
+      setDraft(getEmptyDraft("current", firstCategory));
+    });
   }
 
   function handleReportPdfChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -647,6 +731,7 @@ export function HouseReportsWorkspace({
     setReportPdfError(null);
     setSelectedPdf(file);
     setRemoveReportPdf(false);
+    markDirty();
   }
 
   async function uploadSelectedPdf(targetId: string) {
@@ -683,7 +768,7 @@ export function HouseReportsWorkspace({
   }
 
   function buildPayload(pdf: Awaited<ReturnType<typeof uploadSelectedPdf>>) {
-    const legacyPeriodType = getLegacyPeriodType(draft.periodKind);
+    const legacyPeriodType = getLegacyPeriodType(draft.periodKind, draft.periodYear);
     const legacyMonth = draft.periodKind === "month" ? draft.periodMonth || null : null;
     const legacyYear =
       draft.periodKind === "month" ||
@@ -800,11 +885,7 @@ export function HouseReportsWorkspace({
           );
 
           if (!published) return;
-          resetWorkspace(
-            getReportResultPeriodType(created, getLegacyPeriodType(draft.periodKind)) === "past"
-              ? "past"
-              : "current",
-          );
+          resetWorkspace("published");
           return;
         }
 
@@ -847,22 +928,18 @@ export function HouseReportsWorkspace({
 
         if (!lifecycleResult) return;
 
-        resetWorkspace(
-          intent === "publish"
-            ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
-              ? "past"
-              : "current"
-            : "archive",
-        );
+        resetWorkspace(intent === "publish" ? "published" : "archive");
         return;
       }
 
       resetWorkspace(
-        getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "published"
-          ? getReportResultPeriodType(updated, getLegacyPeriodType(draft.periodKind)) === "past"
-            ? "past"
-            : "current"
-          : getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) === "archived"
+        getReportResultLifecycleStatus(updated, selectedReport.lifecycleStatus) ===
+          "published"
+          ? "published"
+          : getReportResultLifecycleStatus(
+                updated,
+                selectedReport.lifecycleStatus,
+              ) === "archived"
             ? "archive"
             : "draft",
       );
@@ -895,9 +972,7 @@ export function HouseReportsWorkspace({
     resetWorkspace("archive");
   }
 
-  async function copySelectedReportToDraft() {
-    if (!selectedReport) return;
-
+  async function copyReportToDraft(report: HouseReportSnapshot) {
     setActionError(null);
     setSubmitIntent("copy");
     setActionLabel("Копіюємо звіт у чернетку...");
@@ -907,7 +982,7 @@ export function HouseReportsWorkspace({
         type: "reports.duplicate",
         houseId,
         payload: {
-          sourceId: selectedReport.id,
+          sourceId: report.id,
           targetHouseIds: [houseId],
         },
       },
@@ -918,6 +993,11 @@ export function HouseReportsWorkspace({
 
     resetWorkspace("draft");
     setActiveTab("draft");
+  }
+
+  async function copySelectedReportToDraft() {
+    if (!selectedReport) return;
+    await copyReportToDraft(selectedReport);
   }
 
   async function handleCategoriesSync() {
@@ -960,87 +1040,89 @@ export function HouseReportsWorkspace({
             </p>
           </div>
 
-          {activeTab === "archive" ? (
-            archivedReports.length > 0 && !readOnlyMode ? (
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => setConfirmAction("delete_archive")}
-                className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
-              >
-                {isPending && submitIntent === "delete"
-                  ? "Видаляємо архів..."
-                  : "Видалити все"}
-              </button>
-            ) : <div />
-          ) : (
-            <button
-              type="button"
+          <div className="flex flex-wrap items-center gap-3">
+            {activeTab === "archive" ? (
+              archivedReports.length > 0 && !readOnlyMode ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => setConfirmAction("delete_archive")}
+                  className={adminButtonClasses({ variant: "danger" })}
+                >
+                  {isPending && submitIntent === "delete"
+                    ? "Видаляємо архів..."
+                    : "Видалити все"}
+                </button>
+              ) : null
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={readOnlyMode || isPending}
+                  onClick={() => void handleCategoriesSync()}
+                  className={adminButtonClasses({ variant: "secondary" })}
+                >
+                  Синхронізувати категорії
+                </button>
+                <button
+                  type="button"
+                  data-workspace-create-action="true"
+              title="Створити (N)"
               onClick={openCreateMode}
-              disabled={readOnlyMode || isPending}
-              className={`${adminPrimaryButtonClass} disabled:opacity-60`}
-            >
-              Створити звіт
-            </button>
-          )}
+                  disabled={readOnlyMode || isPending}
+                  className={adminButtonClasses({ variant: "primary" })}
+                >
+                  Новий звіт
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            {[
-              ["current", "Поточний рік", currentReports.length],
-              ["past", "Минулі роки", pastReports.length],
-              ["draft", "Чернетки", draftReports.length],
-              ["archive", "Архів", archivedReports.length],
-            ].map(([key, label, count]) => {
-              const isActive = activeTab === key;
+          <AdminSegmentedTabs
+            items={[
+              {
+                key: "published",
+                label: "Опубліковані",
+                count: publishedReports.length,
+              },
+              { key: "draft", label: "Чернетки", count: draftReports.length },
+              { key: "archive", label: "Архів", count: archivedReports.length },
+            ]}
+            activeKey={activeTab}
+            onChange={(key) => {
+              setVisibleReportCount(20);
+              handleTabChange(key as TabKey);
+            }}
+            ariaLabel="Фільтр звітів"
+          />
 
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleTabChange(key as TabKey)}
-                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
-                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
-                  }`}
-                >
-                  <span>{label}</span>
-                  <span
-                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
-                      isActive
-                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
-                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            disabled={readOnlyMode || isPending}
-            onClick={() => void handleCategoriesSync()}
-            className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border)] px-4 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
-          >
-            Синхронізувати категорії
-          </button>
         </div>
       </div>
 
-      {workspaceMode !== "idle" ? (
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitReport("save");
-          }}
-          className={`${adminSurfaceClass} p-6`}
-        >
-          <div className="flex items-start justify-between gap-4">
+      <AdminSidePanel
+        title={workspaceMode === "edit" ? "Редагування звіту" : "Новий звіт"}
+        description={selectedReport ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <AdminStatusBadge tone={statusToneFor(selectedReport.lifecycleStatus)}>
+              {statusLabelFor(selectedReport.lifecycleStatus)}
+            </AdminStatusBadge>
+            <span>Оновлено: {formatAdminDate(selectedReport.updatedAt)}</span>
+          </div>
+        ) : "Новий звіт створюється як чернетка."}
+        isOpen={workspaceMode !== "idle"}
+        onClose={requestCloseWorkspace}
+      >
+        {workspaceMode !== "idle" ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitReport("save");
+            }}
+            onChange={markDirty}
+          >
+          <div className="hidden">
             <div>
               <div className="text-lg font-semibold text-[var(--cms-text)]">
                 {workspaceMode === "edit"
@@ -1071,7 +1153,7 @@ export function HouseReportsWorkspace({
 
               <button
                 type="button"
-                onClick={() => resetWorkspace()}
+                onClick={requestCloseWorkspace}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] text-lg text-[var(--cms-text-muted)] transition hover:bg-[var(--cms-pill-bg)] hover:text-[var(--cms-text)]"
                 aria-label="Закрити форму"
               >
@@ -1080,9 +1162,9 @@ export function HouseReportsWorkspace({
             </div>
           </div>
 
-          {actionError || lastError ? (
+          {actionError ? (
             <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-              {actionError ?? lastError}
+              {actionError}
             </div>
           ) : null}
 
@@ -1166,7 +1248,12 @@ export function HouseReportsWorkspace({
 
                   setDraft((prev) => ({
                     ...prev,
-                    periodType: getLegacyPeriodType(nextKind),
+                    periodType: getLegacyPeriodType(
+                      nextKind,
+                      nextKind === "none"
+                        ? null
+                        : prev.periodYear ?? getDefaultYear(getDraftTab(prev)),
+                    ),
                     periodKind: nextKind,
                     periodMonth: nextKind === "month" ? prev.periodMonth : "",
                     periodQuarter:
@@ -1355,6 +1442,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     onClick={() => {
                       setRemoveReportPdf(true);
+                      markDirty();
                       setSelectedPdf(null);
                       setReportPdfError(null);
                       if (reportPdfInputRef.current) {
@@ -1374,19 +1462,22 @@ export function HouseReportsWorkspace({
                 </div>
               ) : null}
 
-              <label className="mt-4 block">
+              <div className="mt-4 block">
                 <span className={`mb-2 block ${adminTextLabelClass}`}>
                   Завантажити / замінити PDF
                 </span>
-                <input
-                  ref={reportPdfInputRef}
-                  key={`${workspaceMode}-${selectedReportId ?? "new"}`}
-                  type="file"
+                <FileDropzone
+                  inputRef={reportPdfInputRef}
                   accept="application/pdf,.pdf"
+                  hint={getSinglePdfHintMessage()}
+                  label={selectedReport?.pdf?.path ? "Замінити PDF" : "Додати PDF"}
                   onChange={handleReportPdfChange}
-                  className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)] file:mr-4 file:rounded-[var(--r-sm)] file:border-0 file:bg-[var(--cms-primary)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--cms-primary-contrast)]"
+                  file={selectedPdf}
+                  disabled={isPending}
+                  saving={isPending && !selectedPdf}
+                  kind="pdf"
                 />
-              </label>
+              </div>
 
               <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
                 {getSinglePdfHintMessage()}
@@ -1461,13 +1552,13 @@ export function HouseReportsWorkspace({
             </>
           ) : null}
 
-          <div className="overflow-x-auto">
-            <div className="mt-6 flex min-w-max flex-nowrap items-end justify-between gap-6">
-              <div className="flex flex-nowrap items-center gap-3">
+          <div className="sticky bottom-0 z-20 -mx-6 mt-6 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
-                  type="submit"
+                  type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
                   disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   {isPending && submitIntent === "save" ? "Зберігаємо..." : "Зберегти"}
                 </button>
@@ -1477,7 +1568,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "danger" })}
                   >
                     {isPending && submitIntent === "delete" ? "Видаляємо..." : "Видалити"}
                   </button>
@@ -1490,9 +1581,9 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("publish")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] bg-[var(--cms-success-bg)] border border-[var(--cms-success-border)] px-5 py-3 text-sm font-medium text-[var(--cms-success-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "success" })}
                   >
-                    {isPending && submitIntent === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                    {isPending && submitIntent === "publish" ? "Публікуємо..." : "Опублікувати"}
                   </button>
                 </div>
               ) : null}
@@ -1503,7 +1594,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending || Boolean(reportPdfError)}
                     onClick={() => setConfirmAction("archive")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
                     {isPending && submitIntent === "archive" ? "Архівуємо..." : "В архів"}
                   </button>
@@ -1516,7 +1607,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("restore")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-5 py-3 text-sm font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-surface-muted)] disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "secondary" })}
                   >
                     Відновити
                   </button>
@@ -1524,7 +1615,7 @@ export function HouseReportsWorkspace({
                     type="button"
                     disabled={readOnlyMode || isPending}
                     onClick={() => setConfirmAction("delete")}
-                    className="inline-flex items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-5 py-3 text-sm font-medium text-[var(--cms-danger-text)] transition hover:opacity-90 disabled:opacity-60"
+                    className={adminButtonClasses({ variant: "danger" })}
                   >
                     Видалити
                   </button>
@@ -1533,37 +1624,40 @@ export function HouseReportsWorkspace({
             </div>
           </div>
         </form>
-      ) : null}
+        ) : null}
+      </AdminSidePanel>
 
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-[var(--cms-text)]">
-              {activeTab === "current"
-                ? "Поточний рік"
-                : activeTab === "past"
-                  ? "Минулі роки"
-                  : activeTab === "draft"
-                    ? "Чернетки"
-                    : "Архів"}
+              {activeTab === "published"
+                ? "Опубліковані звіти"
+                : activeTab === "draft"
+                  ? "Чернетки"
+                  : "Архів"}
             </h3>
             <p className="mt-1 text-sm text-[var(--cms-text-muted)]">
               Відкрий картку для редагування, публікації або архівації.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               value={reportSearchQuery}
-              onChange={(event) => setReportSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setReportSearchQuery(event.target.value);
+                setVisibleReportCount(20);
+              }}
               placeholder="Пошук за назвою, категорією, роком..."
               className={`${adminInputClass} sm:w-80`}
             />
             <select
               value={reportSortMode}
-              onChange={(event) =>
-                setReportSortMode(event.target.value as ReportSortMode)
-              }
+              onChange={(event) => {
+                setReportSortMode(event.target.value as ReportSortMode);
+                setVisibleReportCount(20);
+              }}
               className={adminInputClass}
             >
               <option value="updated_desc">Новіші оновлення</option>
@@ -1573,28 +1667,105 @@ export function HouseReportsWorkspace({
               <option value="year_desc">Рік ↓</option>
               <option value="year_asc">Рік ↑</option>
             </select>
+            <WorkspaceViewToggle value={viewMode} onChange={setViewMode} />
           </div>
+
+          <WorkspacePaginationControls
+            visible={visibleReportCount}
+            total={visibleReports.length}
+            onShowMore={() =>
+              setVisibleReportCount((current) => current + 20)
+            }
+          />
         </div>
 
-        {visibleReports.length === 0 ? (
-          <div className="mt-6 rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-6 text-sm text-[var(--cms-text-muted)]">
-            У цьому списку поки немає звітів.
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-4 xl:grid-cols-2">
-            {visibleReports.map((report) => (
+        {activeTab === "published" ? (
+          <div className="mt-5 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["current", "Поточний рік", currentReports.length],
+                ["past", "Минулі роки", pastReports.length],
+                ["none", "Без періоду", noPeriodReports.length],
+              ].map(([key, label, count]) => (
+                <button
+                  key={String(key)}
+                  type="button"
+                  onClick={() =>
+                    setPublishedPeriodFilter(key as PublishedPeriodFilter)
+                  }
+                  className={adminButtonClasses({
+                    variant:
+                      publishedPeriodFilter === key ? "primary" : "secondary",
+                  })}
+                >
+                  {label} · {count}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
               <button
-                key={report.id}
                 type="button"
+                onClick={() => setPublishedCategoryFilter("all")}
+                className={adminButtonClasses({
+                  variant:
+                    publishedCategoryFilter === "all"
+                      ? "primary"
+                      : "secondary",
+                })}
+              >
+                Усі категорії
+              </button>
+              {categoryOptions.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setPublishedCategoryFilter(category)}
+                  className={adminButtonClasses({
+                    variant:
+                      publishedCategoryFilter === category
+                        ? "primary"
+                        : "secondary",
+                  })}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {visibleReports.length === 0 ? (
+          <EmptyState className="mt-6" title="У цьому списку поки немає звітів" description="Створіть новий звіт або змініть активні фільтри." action={!String(activeTab).startsWith("archiv") ? (
+            <button type="button" data-workspace-create-action="true"
+              title="Створити (N)"
+              onClick={openCreateMode} className={adminButtonClasses({ variant: "primary" })}>Створити звіт</button>
+          ) : undefined} />
+        ) : (
+          <div
+            className={[
+              "mt-6 grid gap-3",
+              viewMode === "grid" ? "md:grid-cols-2" : "grid-cols-1",
+            ].join(" ")}
+          >
+            {visibleReports.slice(0, visibleReportCount).map((report) => (
+              <div
+                key={report.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => openEditMode(report)}
-                className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openEditMode(report);
+                  }
+                }}
+                className="relative rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5 pr-16 text-left transition hover:-translate-y-0.5 hover:border-[var(--cms-border-strong)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={getStatusBadgeClasses(report.lifecycleStatus)}>
-                    <span className="inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium">
-                      {getStatusLabel(report.lifecycleStatus)}
-                    </span>
-                  </span>
+                  <AdminStatusBadge tone={statusToneFor(report.lifecycleStatus)}>
+                    {statusLabelFor(report.lifecycleStatus)}
+                  </AdminStatusBadge>
                   <span className="rounded-[var(--r-pill)] bg-[var(--cms-surface-muted)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
                     {normalizeReportCategory(report.categoryTitle) || "Без категорії"}
                   </span>
@@ -1618,8 +1789,57 @@ export function HouseReportsWorkspace({
                   {report.description || "Опис не додано."}
                 </p>
 
+                {!readOnlyMode ? (
+                  <div>
+                    <WorkspaceQuickActions
+                      actions={[
+                        ...(report.lifecycleStatus === "draft"
+                          ? [
+                              {
+                                key: "publish",
+                                label: "Опублікувати",
+                                onSelect: () => prepareQuickAction(report, "publish"),
+                              },
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                onSelect: () => prepareQuickAction(report, "delete"),
+                              },
+                            ]
+                          : []),
+                        ...(report.lifecycleStatus === "published"
+                          ? [
+                              {
+                                key: "archive",
+                                label: "В архів",
+                                onSelect: () => prepareQuickAction(report, "archive"),
+                              },
+                              {
+                                key: "duplicate",
+                                label: "Створити на основі",
+                                disabled: isPending,
+                                onSelect: () => void copyReportToDraft(report),
+                              },
+                            ]
+                          : []),
+                        ...(report.lifecycleStatus === "archived"
+                          ? [
+                              {
+                                key: "delete",
+                                label: "Видалити",
+                                tone: "danger" as const,
+                                onSelect: () => prepareQuickAction(report, "delete"),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </div>
+                ) : null}
+
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--cms-text-soft)]">
-                  <span>{formatDate(report.reportDate)}</span>
+                  <span>{formatAdminDate(report.reportDate, "Дату не вказано")}</span>
                   <span>·</span>
                   <span>
                     {formatReportPeriodLabel(report)}
@@ -1627,11 +1847,22 @@ export function HouseReportsWorkspace({
                   <span>·</span>
                   <span>{report.pdf ? report.pdf.originalName ?? "PDF додано" : "PDF не додано"}</span>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      <PlatformConfirmModal
+        open={dirtyGuard.confirmOpen}
+        title="Є незбережені зміни"
+        description="Якщо продовжити, внесені зміни буде втрачено."
+        confirmLabel="Вийти без збереження"
+        cancelLabel="Продовжити редагування"
+        tone="warning"
+        onCancel={dirtyGuard.cancel}
+        onConfirm={dirtyGuard.discardAndContinue}
+      />
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}

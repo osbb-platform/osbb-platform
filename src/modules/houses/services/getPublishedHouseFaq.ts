@@ -2,6 +2,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import {
+  throwRequiredPublicReadError,
+} from "./publicContentResilience";
 import type {
   HouseFaqItemSnapshot,
   HouseFaqLifecycleStatus,
@@ -64,11 +67,12 @@ async function loadPublishedHouseFaq(houseId: string): Promise<HouseFaqSnapshot 
     .maybeSingle();
 
   if (faqError) {
-    console.error("Failed to load published house FAQ:", {
+    throwRequiredPublicReadError({
+      section: "faq",
+      resource: "house_faq",
       houseId,
-      message: faqError.message,
+      error: faqError,
     });
-    return null;
   }
 
   if (!faq) {
@@ -85,12 +89,15 @@ async function loadPublishedHouseFaq(houseId: string): Promise<HouseFaqSnapshot 
     .order("id", { ascending: true });
 
   if (itemsError) {
-    console.error("Failed to load published house FAQ items:", {
+    throwRequiredPublicReadError({
+      section: "faq",
+      resource: "house_faq_items",
       houseId,
-      faqId: faqRow.id,
-      message: itemsError.message,
+      error: itemsError,
+      details: {
+        faqId: faqRow.id,
+      },
     });
-    return mapFaq(faqRow, []);
   }
 
   return mapFaq(faqRow, (items ?? []) as HouseFaqItemRow[]);
@@ -100,7 +107,7 @@ export const getPublishedHouseFaq = cache(
   async (houseId: string): Promise<HouseFaqSnapshot | null> => {
     return unstable_cache(
       () => loadPublishedHouseFaq(houseId),
-      ["published-house-faq", houseId],
+      ["published-house-faq-v2", houseId],
       {
         tags: [`house:${houseId}:faq`, `house:${houseId}:information`, `house:${houseId}`],
         revalidate: 300,

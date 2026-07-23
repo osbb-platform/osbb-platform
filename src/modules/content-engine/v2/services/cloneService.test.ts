@@ -29,7 +29,7 @@ describe("cloneService tracked file duplication contract", () => {
     expect(source).toContain("copyCapableBucket.copy(file.storage_path, targetPath)");
     expect(source).toContain("bucket.download(file.storage_path)");
     expect(source).toContain("bucket.upload(targetPath");
-    expect(source).not.toContain("path: file.storage_path,");
+    expect(source.match(/path: targetPath,/g)).toHaveLength(2);
   });
 
   it("registers copied files under the new entity id in house_content_files", () => {
@@ -52,5 +52,14 @@ describe("cloneService tracked file duplication contract", () => {
     expect(source).toContain("buildTargetFilePath: params.buildTargetFilePath");
     expect(source).toContain("await registerCopiedFiles");
     expect(source).toContain("copiedFiles");
+  });
+});
+
+describe("cloneService B11 result contract", () => {
+  it("returns the fresh lock version for every created draft", () => {
+    const source = cloneServiceSource();
+    expect(source).toContain("lockVersion: number");
+    expect(source).toContain("inserted.lock_version");
+    expect(source).toContain("lockVersion: insertedLockVersion");
   });
 });

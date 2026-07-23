@@ -298,6 +298,10 @@ function formatLegacyMonth(value: number): string {
   return String(value).padStart(2, "0");
 }
 
+function getLegacyPeriodTypeForYear(year: number): HouseReportPeriodType {
+  return year < new Date().getFullYear() ? "past" : "current";
+}
+
 export function toLegacyPeriodColumns(
   payload: PeriodPayload,
   period: HouseReportPeriod,
@@ -316,7 +320,7 @@ export function toLegacyPeriodColumns(
 
   if (period.kind === "month") {
     return {
-      period_type: "current",
+      period_type: getLegacyPeriodTypeForYear(period.year),
       month: formatLegacyMonth(period.month),
       year: period.year,
     };
@@ -324,7 +328,7 @@ export function toLegacyPeriodColumns(
 
   if (period.kind === "year" || period.kind === "quarter") {
     return {
-      period_type: "past",
+      period_type: getLegacyPeriodTypeForYear(period.year),
       month: null,
       year: period.year,
     };

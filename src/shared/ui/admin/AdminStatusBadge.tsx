@@ -42,7 +42,6 @@ export function statusToneFor(status: string | null | undefined): AdminStatusTon
 
   if (
     [
-      "active",
       "published",
       "publish",
       "completed",
@@ -58,7 +57,6 @@ export function statusToneFor(status: string | null | undefined): AdminStatusTon
   if (
     [
       "draft",
-      "scheduled",
       "pending",
       "review",
       "in_review",
@@ -70,10 +68,12 @@ export function statusToneFor(status: string | null | undefined): AdminStatusTon
     return "warning";
   }
 
+  if (["archived", "archive"].includes(value)) {
+    return "neutral";
+  }
+
   if (
     [
-      "archived",
-      "archive",
       "deleted",
       "cancelled",
       "canceled",
@@ -85,11 +85,44 @@ export function statusToneFor(status: string | null | undefined): AdminStatusTon
     return "danger";
   }
 
-  if (["planned", "new", "created", "info"].includes(value)) {
+  if (
+    ["planned", "scheduled", "active", "new", "created", "info"].includes(value)
+  ) {
     return "info";
   }
 
   return "neutral";
+}
+
+export function statusLabelFor(
+  status: string | null | undefined,
+  overrides: Partial<Record<string, string>> = {},
+) {
+  const value = String(status ?? "").trim().toLowerCase();
+
+  if (overrides[value]) {
+    return overrides[value];
+  }
+
+  const labels: Record<string, string> = {
+    draft: "Чернетка",
+    published: "Опубліковано",
+    publish: "Опубліковано",
+    archived: "Архів",
+    archive: "Архів",
+    planned: "Заплановано",
+    scheduled: "Заплановано",
+    in_progress: "В роботі",
+    "in-progress": "В роботі",
+    active: "Голосування",
+    review: "На перевірці",
+    in_review: "На перевірці",
+    completed: "Завершені",
+    complete: "Завершені",
+    done: "Завершені",
+  };
+
+  return labels[value] ?? String(status ?? "");
 }
 
 export function AdminStatusBadge({

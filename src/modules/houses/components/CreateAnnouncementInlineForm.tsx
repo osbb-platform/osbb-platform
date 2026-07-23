@@ -1,20 +1,20 @@
 "use client";
 
-import { FormEvent, useRef, useState, type ChangeEvent } from "react";
+import {
+  FormEvent,
+  useRef,
+  useState,
+  type ChangeEvent } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { AnnouncementPdfUploadBlock } from "@/src/modules/houses/components/AnnouncementPdfUploadBlock";
 import {
   createClientUuid,
   uploadAnnouncementPdf,
-} from "@/src/modules/houses/components/announcementPdfUpload";
+  } from "@/src/modules/houses/components/announcementPdfUpload";
 import {
-  adminBodyClass,
-  adminIconButtonClass,
   adminInputClass,
-  adminInsetPaddingClass,
-  adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
 
@@ -23,6 +23,7 @@ type CreateAnnouncementInlineFormProps = {
   houseSlug: string;
   housePageId: string;
   onClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 export function CreateAnnouncementInlineForm({
@@ -30,13 +31,22 @@ export function CreateAnnouncementInlineForm({
   houseSlug,
   housePageId,
   onClose,
+  onDirtyChange,
 }: CreateAnnouncementInlineFormProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  function markDirty() {
+    if (!isDirty) {
+      setIsDirty(true);
+      onDirtyChange?.(true);
+    }
+  }
 
   function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
@@ -58,6 +68,7 @@ export function CreateAnnouncementInlineForm({
 
     setPdfError(null);
     setSelectedPdf(file);
+    markDirty();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -89,7 +100,11 @@ export function CreateAnnouncementInlineForm({
           },
         },
         {
-          onSuccess: () => onClose?.(),
+          onSuccess: () => {
+            setIsDirty(false);
+            onDirtyChange?.(false);
+            onClose?.();
+          },
           onError: setSubmitError,
         },
       );
@@ -110,30 +125,8 @@ export function CreateAnnouncementInlineForm({
   const isBusy = isPending || isUploading;
 
   return (
-    <div className={[adminInsetSurfaceClass, adminInsetPaddingClass].join(" ")}>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-medium text-[var(--cms-text)]">
-            Нове оголошення
-          </div>
-          <div className={["mt-1", adminBodyClass].join(" ")}>
-            Нове оголошення створюється як чернетка у вкладці «Чернетки».
-          </div>
-        </div>
-
-        {onClose ? (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрити форму"
-            className={adminIconButtonClass}
-          >
-            ×
-          </button>
-        ) : null}
-      </div>
-
-      <form onSubmit={handleSubmit} className="grid gap-4">
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} onChange={markDirty} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення
@@ -202,17 +195,17 @@ export function CreateAnnouncementInlineForm({
           onChange={handlePdfChange}
         />
 
-        {lastError || submitError ? (
+        {submitError ? (
           <p role="alert" className="text-sm text-[var(--cms-danger-text)]">
-            {submitError ?? lastError}
+            {submitError}
           </p>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="sticky bottom-0 z-20 -mx-6 mt-4 flex flex-wrap gap-3 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
           <button
-            type="submit"
+            type="submit" title="Зберегти (Ctrl/Cmd+Enter)"
             disabled={isBusy || Boolean(pdfError)}
-            className={[adminPrimaryButtonClass, "min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60"].join(" ")}
+            className={adminButtonClasses({ variant: "primary" })}
           >
             {isBusy
               ? selectedPdf
@@ -227,6 +220,7 @@ export function CreateAnnouncementInlineForm({
               disabled={isBusy}
               onClick={() => {
                 setSelectedPdf(null);
+                markDirty();
                 setPdfError(null);
                 if (pdfInputRef.current) {
                   pdfInputRef.current.value = "";

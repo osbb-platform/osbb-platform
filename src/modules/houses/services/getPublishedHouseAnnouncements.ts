@@ -71,11 +71,17 @@ async function loadPublishedHouseAnnouncements(
     .order("published_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load published announcements:", {
+    console.error("PUBLIC_CONTENT_READ_FAILED", {
+      section: "announcements",
+      resource: "house_announcements",
       houseId,
+      code: error.code,
       message: error.message,
     });
-    return [];
+
+    throw new Error(
+      `Failed to load published announcements for house ${houseId}: ${error.message}`,
+    );
   }
 
   const announcements = (data ?? []) as unknown as AnnouncementRow[];
@@ -101,8 +107,11 @@ async function loadPublishedHouseAnnouncements(
       .in("entity_id", announcementIds);
 
     if (filesError) {
-      console.error("Failed to load published announcement files:", {
+      console.error("PUBLIC_CONTENT_OPTIONAL_READ_FAILED", {
+        section: "announcements",
+        resource: "house_content_files",
         houseId,
+        code: filesError.code,
         message: filesError.message,
       });
     } else {
@@ -125,7 +134,7 @@ export const getPublishedHouseAnnouncements = cache(
   async (houseId: string): Promise<PublishedHouseAnnouncement[]> => {
     return unstable_cache(
       () => loadPublishedHouseAnnouncements(houseId),
-      ["published-house-announcements", houseId],
+      ["published-house-announcements-v2", houseId],
       {
         tags: [`house:${houseId}:announcements`, `house:${houseId}`],
         revalidate: 300,

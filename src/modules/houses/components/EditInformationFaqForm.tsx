@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState } from "react";
 
 import type { CrossHouseDuplicateTarget } from "@/src/modules/houses/components/CrossHouseDuplicatePanel";
 import { ContentWorkspaceActionButtons } from "@/src/modules/houses/components/ContentWorkspaceActionButtons";
@@ -10,13 +12,10 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
-  adminDangerButtonClass,
-  adminIconButtonClass,
+  adminButtonClasses,
   adminInputClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
-  adminSuccessButtonClass,
+  adminIconButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type FaqCommand = "archive" | "restore" | "delete";
@@ -50,7 +49,7 @@ export function EditInformationFaqForm({
   templates = [],
   templateSlotLimit = 3,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [localError, setLocalError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [currentLockVersion, setCurrentLockVersion] = useState(faq.lockVersion);
@@ -325,7 +324,7 @@ export function EditInformationFaqForm({
     );
   }
 
-  const error = localError ?? lastError;
+  const error = localError;
   const isArchived = currentStatus === "archived";
   const canPublish = currentStatus === "draft";
   const canArchive = currentStatus === "published";
@@ -361,7 +360,7 @@ export function EditInformationFaqForm({
             />
           ) : null}
 
-          <button type="button" onClick={onClose} className={adminIconButtonClass} aria-label="Закрити форму FAQ">
+          <button type="button" onClick={onClose} className={adminIconButtonClasses()} aria-label="Закрити форму FAQ">
             ×
           </button>
         </div>
@@ -394,7 +393,7 @@ export function EditInformationFaqForm({
                   onClick={() => removeItem(index)}
                   disabled={isPending || isArchived || items.length <= 1}
                   className={[
-                    adminDangerButtonClass,
+                    adminButtonClasses({ variant: "danger" }),
                     "disabled:cursor-not-allowed disabled:opacity-40",
                   ].join(" ")}
                 >
@@ -412,7 +411,7 @@ export function EditInformationFaqForm({
           onClick={addItem}
           disabled={isPending || isArchived}
           className={[
-            adminPrimaryButtonClass,
+            adminButtonClasses({ variant: "primary" }),
             "disabled:cursor-not-allowed disabled:opacity-40",
           ].join(" ")}
         >
@@ -439,7 +438,7 @@ export function EditInformationFaqForm({
             disabled={isPending || isArchived}
             onClick={() => saveFaqItems()}
             className={[
-              adminPrimaryButtonClass,
+              adminButtonClasses({ variant: "primary" }),
               "disabled:cursor-not-allowed disabled:opacity-40",
             ].join(" ")}
           >
@@ -450,7 +449,7 @@ export function EditInformationFaqForm({
             type="button"
             disabled={isPending}
             onClick={() => runCommand("delete")}
-            className={adminDangerButtonClass}
+            className={adminButtonClasses({ variant: "danger" })}
           >
             Видалити FAQ
           </button>
@@ -463,7 +462,7 @@ export function EditInformationFaqForm({
               disabled={isPending || isSavingTemplate}
               onClick={() => void saveFaqDraftAsTemplate()}
               className={[
-                adminSecondaryButtonClass,
+                adminButtonClasses({ variant: "secondary" }),
                 "disabled:cursor-not-allowed disabled:opacity-40",
               ].join(" ")}
             >
@@ -476,7 +475,7 @@ export function EditInformationFaqForm({
               type="button"
               disabled={isPending}
               onClick={() => runCommand("restore")}
-              className={adminPrimaryButtonClass}
+              className={adminButtonClasses({ variant: "primary" })}
             >
               Відновити
             </button>
@@ -487,7 +486,7 @@ export function EditInformationFaqForm({
               type="button"
               disabled={isPending}
               onClick={() => runCommand("archive")}
-              className={adminDangerButtonClass}
+              className={adminButtonClasses({ variant: "danger" })}
             >
               В архів
             </button>
@@ -499,11 +498,11 @@ export function EditInformationFaqForm({
               disabled={isPending || isArchived}
               onClick={publishFaq}
               className={[
-                adminSuccessButtonClass,
+                adminButtonClasses({ variant: "success" }),
                 "disabled:cursor-not-allowed disabled:opacity-40",
               ].join(" ")}
             >
-              Підтвердити
+              Опублікувати
             </button>
           ) : null}
         </div>

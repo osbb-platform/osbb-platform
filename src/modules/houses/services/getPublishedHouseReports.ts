@@ -63,13 +63,6 @@ type HouseReportCategoryRow = {
   updated_at: string;
 };
 
-function emptyReports(): PublishedHouseReportsData {
-  return {
-    reports: [],
-    categories: [],
-  };
-}
-
 function mapCategory(row: HouseReportCategoryRow): HouseReportCategorySnapshot {
   return {
     id: row.id,
@@ -105,8 +98,15 @@ function formatMonth(value: number | null) {
   return value ? String(value).padStart(2, "0") : null;
 }
 
-function getLegacyPeriodType(periodKind: HouseReportPeriodKind): HouseReportPeriodType {
-  return periodKind === "quarter" || periodKind === "year" ? "past" : "current";
+function getLegacyPeriodType(
+  periodKind: HouseReportPeriodKind,
+  periodYear: number | null,
+): HouseReportPeriodType {
+  if (periodKind === "none" || periodYear === null) {
+    return "current";
+  }
+
+  return periodYear < new Date().getFullYear() ? "past" : "current";
 }
 
 function getLegacyMonth(
@@ -144,7 +144,7 @@ function mapReport(
     categoryId: row.category_id,
     categoryTitle: row.category_title,
     reportDate: row.report_date,
-    periodType: getLegacyPeriodType(periodKind),
+    periodType: getLegacyPeriodType(periodKind, periodYear),
     month: getLegacyMonth(periodKind, periodMonth),
     year: getLegacyYear(periodKind, periodYear),
     periodKind,
@@ -221,22 +221,27 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
   ]);
 
   if (reportsResult.error) {
-    console.error("Failed to load published house reports:", {
+    console.error("PUBLIC_CONTENT_READ_FAILED", {
+      section: "reports",
+      resource: "house_reports",
       houseId,
+      code: reportsResult.error.code,
       message: reportsResult.error.message,
     });
-    return emptyReports();
+
+    throw new Error(
+      `Failed to load published house reports for house ${houseId}: ${reportsResult.error.message}`,
+    );
   }
 
   if (categoriesResult.error) {
-    console.error("Failed to load published house report categories:", {
+    console.error("PUBLIC_CONTENT_OPTIONAL_READ_FAILED", {
+      section: "reports",
+      resource: "house_report_categories",
       houseId,
+      code: categoriesResult.error.code,
       message: categoriesResult.error.message,
     });
-    return {
-      reports: [],
-      categories: [],
-    };
   }
 
   const reports = (reportsResult.data ?? []) as unknown as HouseReportRow[];
@@ -263,8 +268,11 @@ async function loadPublishedHouseReports(houseId: string): Promise<PublishedHous
       .in("entity_id", reportIds);
 
     if (filesError) {
-      console.error("Failed to load published house report files:", {
+      console.error("PUBLIC_CONTENT_OPTIONAL_READ_FAILED", {
+        section: "reports",
+        resource: "house_content_files",
         houseId,
+        code: filesError.code,
         message: filesError.message,
       });
     } else {
@@ -289,7 +297,7 @@ export const getPublishedHouseReports = cache(
   async (houseId: string): Promise<PublishedHouseReportsData> => {
     return unstable_cache(
       () => loadPublishedHouseReports(houseId),
-      ["published-house-reports", houseId],
+      ["published-house-reports-v3", houseId],
       {
         tags: [`house:${houseId}:reports`, `house:${houseId}`],
         revalidate: 300,

@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useState } from "react";
 
 import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type { HouseFaqSnapshot } from "@/src/modules/houses/services/getAdminHouseFaq";
 
 import {
-  adminDangerButtonClass,
+  adminButtonClasses,
   adminInputClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
 
 type Props = {
@@ -44,7 +43,7 @@ export function CreateInformationFaqForm({
   templates = [],
   templateSlotLimit = 3,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const [items, setItems] = useState<DraftFaqItem[]>([
     { question: "", answer: "" },
   ]);
@@ -167,7 +166,7 @@ export function CreateInformationFaqForm({
     setIsSavingTemplate(false);
   }
 
-  const error = localError ?? lastError;
+  const error = localError;
   const actionsDisabled = isPending || isSavingTemplate;
 
   return (
@@ -206,7 +205,7 @@ export function CreateInformationFaqForm({
                   onClick={() => removeItem(index)}
                   disabled={actionsDisabled || items.length <= 1}
                   className={[
-                    adminDangerButtonClass,
+                    adminButtonClasses({ variant: "danger" }),
                     "disabled:cursor-not-allowed disabled:opacity-40",
                   ].join(" ")}
                 >
@@ -224,7 +223,7 @@ export function CreateInformationFaqForm({
           onClick={addItem}
           disabled={actionsDisabled}
           className={[
-            adminPrimaryButtonClass,
+            adminButtonClasses({ variant: "primary" }),
             "disabled:cursor-not-allowed disabled:opacity-40",
           ].join(" ")}
         >
@@ -251,7 +250,7 @@ export function CreateInformationFaqForm({
             disabled={actionsDisabled}
             onClick={() => void saveFaqDraft()}
             className={[
-              adminPrimaryButtonClass,
+              adminButtonClasses({ variant: "primary" }),
               "disabled:cursor-not-allowed disabled:opacity-40",
             ].join(" ")}
           >
@@ -263,7 +262,7 @@ export function CreateInformationFaqForm({
             disabled={actionsDisabled}
             onClick={onClose}
             className={[
-              adminSecondaryButtonClass,
+              adminButtonClasses({ variant: "secondary" }),
               "disabled:cursor-not-allowed disabled:opacity-40",
             ].join(" ")}
           >
@@ -276,7 +275,7 @@ export function CreateInformationFaqForm({
           disabled={actionsDisabled}
           onClick={() => void saveCurrentFormAsTemplate()}
           className={[
-            adminSecondaryButtonClass,
+            adminButtonClasses({ variant: "secondary" }),
             "disabled:cursor-not-allowed disabled:opacity-40",
           ].join(" ")}
         >

@@ -11,6 +11,7 @@ type AdminSidePanelProps = {
   isOpen: boolean;
   onClose: () => void;
   footer?: ReactNode;
+  maxWidthClassName?: "max-w-2xl" | "max-w-4xl";
   children: ReactNode;
 };
 
@@ -20,6 +21,7 @@ export function AdminSidePanel({
   isOpen,
   onClose,
   footer = null,
+  maxWidthClassName = "max-w-2xl",
   children,
 }: AdminSidePanelProps) {
   const titleId = useId();
@@ -57,7 +59,10 @@ export function AdminSidePanel({
       onMouseDown={onClose}
     >
       <aside
-        className="ml-auto flex h-full w-full max-w-2xl flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)] motion-safe:animate-[osbb-pop_.2s_ease]"
+        className={[
+          "ml-auto flex h-full w-full flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface)] shadow-[var(--cms-shadow-lg)] motion-safe:animate-[osbb-pop_.2s_ease]",
+          maxWidthClassName,
+        ].join(" ")}
         onMouseDown={(event) => {
           event.stopPropagation();
         }}
@@ -107,7 +112,12 @@ export function AdminSidePanel({
         </div>
 
         {footer ? (
-          <div className="fixed bottom-0 right-0 w-full max-w-2xl border-t border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-up)]">
+          <div
+            className={[
+              "fixed bottom-0 right-0 w-full border-t border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-up)]",
+              maxWidthClassName,
+            ].join(" ")}
+          >
             {footer}
           </div>
         ) : null}

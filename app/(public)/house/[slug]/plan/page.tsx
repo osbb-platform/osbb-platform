@@ -23,16 +23,22 @@ type PlanTaskDateMode = "deadline" | "range";
 
 type PlanTaskImage = {
   id: string;
+  fieldKey: string;
   path: string;
   url?: string;
+  fileName?: string;
+  bucket: string;
   kind: "image";
   createdAt: string;
 };
 
 type PlanTaskDocument = {
   id: string;
+  fieldKey: string;
   path: string;
   url?: string;
+  fileName?: string;
+  bucket: string;
   kind: "pdf";
   createdAt: string;
 };
@@ -176,15 +182,21 @@ export default async function PublicPlanPage({ params, searchParams }: Props) {
       contractor: task.content.contractor,
       images: task.content.images.map((image) => ({
         id: image.fieldKey,
+        fieldKey: image.fieldKey,
         path: image.path,
         url: image.url ?? undefined,
+        fileName: image.fileName,
+        bucket: image.bucket,
         kind: "image" as const,
         createdAt: image.createdAt,
       })),
       documents: task.content.documents.map((document) => ({
         id: document.fieldKey,
+        fieldKey: document.fieldKey,
         path: document.path,
         url: document.url ?? undefined,
+        fileName: document.fileName,
+        bucket: document.bucket,
         kind: "pdf" as const,
         createdAt: document.createdAt,
       })),

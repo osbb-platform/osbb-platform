@@ -4,10 +4,15 @@ import { useMemo, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
+import { Button } from "@/src/shared/ui/admin/Button";
+import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import {
-  adminDangerButtonClass,
-  adminPrimaryButtonClass,
+  adminBodyClass,
+  adminInsetSurfaceClass,
+  adminMetaClass,
+  adminSectionTitleClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { formatAdminDate } from "@/src/shared/utils/format/formatAdminDate";
 
 export type TemplateSectionKind = "faq" | "specialists" | "information_post";
 
@@ -34,19 +39,6 @@ type Props = {
   disabled?: boolean;
   onApplyTemplateKeys: (templateKeys: string[]) => Promise<boolean | void>;
 };
-
-function formatDate(value?: string) {
-  if (!value) return "Дата не вказана";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дата не вказана";
-
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 function getTemplatePreview(template: ContentTemplateSlot) {
   const payload = template.payload;
@@ -75,7 +67,7 @@ export function ContentTemplateSlotsPanel({
   disabled = false,
   onApplyTemplateKeys,
 }: Props) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
@@ -98,7 +90,7 @@ export function ContentTemplateSlotsPanel({
   }, [templates]);
 
   const busy = isPending || Boolean(applyingKey) || Boolean(deletingKey);
-  const error = localError ?? lastError;
+  const error = localError;
 
   async function applyTemplate(template: ContentTemplateSlot) {
     setLocalError(null);
@@ -151,39 +143,33 @@ export function ContentTemplateSlotsPanel({
   }
 
   return (
-    <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+    <div className="space-y-5">
       <div>
-        <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cms-text-soft)]">
-          Шаблони
-        </div>
-        <h3 className="mt-1 text-lg font-semibold text-[var(--cms-text)]">
-          {title}
-        </h3>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--cms-text-muted)]">
-          {description}
-        </p>
+        <div className={adminMetaClass}>Шаблони</div>
+        <h3 className={["mt-1", adminSectionTitleClass].join(" ")}>{title}</h3>
+        <p className={["mt-1", adminBodyClass].join(" ")}>{description}</p>
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
           {error}
         </div>
       ) : null}
 
       {localSuccess ? (
-        <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
           {localSuccess}
         </div>
       ) : null}
 
-      <div className="mt-4 max-h-[68vh] space-y-3 overflow-y-auto pr-1">
+      <div className="space-y-3">
         {orderedTemplates.length > 0 ? (
           orderedTemplates.map((template) => (
             <article
               key={template.id}
-              className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
+              className={[adminInsetSurfaceClass, "p-4"].join(" ")}
             >
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <div>
                   <div className="text-base font-semibold text-[var(--cms-text)]">
                     {template.name || template.title || "Шаблон без назви"}
@@ -191,40 +177,45 @@ export function ContentTemplateSlotsPanel({
                   <div className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
                     {template.description || getTemplatePreview(template)}
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] uppercase tracking-wide text-[var(--cms-text-soft)]">
-                    <span>Створено: {formatDate(template.createdAt)}</span>
-                    <span>·</span>
+                  <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--cms-text-soft)]">
+                    <span>
+                      Створено: {formatAdminDate(template.createdAt, "Дата не вказана")}
+                    </span>
+                    <span aria-hidden="true">·</span>
                     <span>Слот {template.slotIndex} із {slotLimit}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap justify-end gap-2">
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
                     onClick={() => setTemplateToApply(template)}
                     disabled={disabled || busy}
-                    className={[adminPrimaryButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    loading={applyingKey === template.templateKey}
                   >
-                    {applyingKey === template.templateKey ? "Застосовуємо..." : "Застосувати"}
-                  </button>
+                    Застосувати
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
+                    variant="danger"
                     onClick={() => setTemplateToDelete(template)}
                     disabled={disabled || busy}
-                    className={[adminDangerButtonClass, "disabled:cursor-not-allowed disabled:opacity-40"].join(" ")}
+                    loading={deletingKey === template.templateKey}
                   >
-                    {deletingKey === template.templateKey ? "Видаляємо..." : "Видалити"}
-                  </button>
+                    Видалити
+                  </Button>
                 </div>
               </div>
             </article>
           ))
         ) : (
-          <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-6 text-sm leading-6 text-[var(--cms-text-muted)]">
-            Шаблонів поки немає. Створіть чернетку, заповніть її та натисніть
-            «Запамʼятати як шаблон» у правому нижньому куті форми.
-          </div>
+          <EmptyState
+            title="Шаблонів поки немає"
+            description="Створіть чернетку спеціаліста, заповніть її та збережіть як шаблон у формі."
+          />
         )}
       </div>
 

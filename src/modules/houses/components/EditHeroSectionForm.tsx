@@ -1,3 +1,4 @@
+// LEGACY v1: не використовується, кандидат на видалення разом із карантином legacy
 "use client";
 
 import type { FormEvent } from "react";
@@ -48,7 +49,7 @@ export function EditHeroSectionForm({
   houseId,
   hero,
 }: EditHeroSectionFormProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
 
   const initialSnapshot = useMemo(() => normalizeSnapshot(hero), [hero]);
 
@@ -167,12 +168,6 @@ export function EditHeroSectionForm({
           />
         </div>
       </div>
-
-      {lastError ? (
-        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {lastError}
-        </div>
-      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

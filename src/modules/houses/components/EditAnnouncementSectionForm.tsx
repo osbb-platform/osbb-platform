@@ -1,14 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import {
-  adminDangerButtonClass,
-  adminIconButtonClass,
   adminInputClass,
   adminInsetSurfaceClass,
-  adminPrimaryButtonClass,
-  adminSuccessButtonClass,
-  adminWarningButtonClass,
+  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
 import { FormEvent, useRef, useState, type ChangeEvent } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -19,9 +14,9 @@ import {
   uploadAnnouncementPdf,
 } from "@/src/modules/houses/components/announcementPdfUpload";
 import { validateSinglePdfFile } from "@/src/shared/utils/validators/pdfUpload";
+import { formatAdminDateTime } from "@/src/shared/utils/format/formatAdminDate";
 
 type EditAnnouncementSectionFormProps = {
-  headerActions?: ReactNode;
   houseId: string;
   houseSlug: string;
   housePageId?: string | null;
@@ -32,21 +27,8 @@ type EditAnnouncementSectionFormProps = {
     content: Record<string, unknown>;
   };
   onClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
-
-function formatDateTime(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return "Не опубліковано";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Не опубліковано";
-  }
-
-  return date.toLocaleString("ru-RU");
-}
 
 function getLevelLabel(level: string) {
   if (level === "danger") {
@@ -61,14 +43,14 @@ function getLevelLabel(level: string) {
 }
 
 export function EditAnnouncementSectionForm({
-  headerActions,
   houseId,
   houseSlug,
   housePageId,
   section,
   onClose,
+  onDirtyChange,
 }: EditAnnouncementSectionFormProps) {
-  const { dispatch, isPending, lastError } = useAdminContentCommand();
+  const { dispatch, isPending } = useAdminContentCommand();
   const formRef = useRef<HTMLFormElement | null>(null);
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -79,6 +61,7 @@ export function EditAnnouncementSectionForm({
   const [pendingAction, setPendingAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
+  const [isDirty, setIsDirty] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "publish" | "archive" | "delete" | null
   >(null);
@@ -89,8 +72,8 @@ export function EditAnnouncementSectionForm({
     typeof section.content.level === "string" ? section.content.level : "info";
 
   const currentPdf = normalizeAnnouncementPdfFromContent(section.content.pdf);
-  const publishedAt = formatDateTime(section.content.publishedAt);
-  const updatedAt = formatDateTime(section.content.updatedAt);
+  const publishedAt = formatAdminDateTime(section.content.publishedAt);
+  const updatedAt = formatAdminDateTime(section.content.updatedAt);
 
   const isDraftLike =
     section.status === "draft";
@@ -105,6 +88,13 @@ export function EditAnnouncementSectionForm({
     }
 
     return new FormData(formElement);
+  }
+
+  function markDirty() {
+    if (!isDirty) {
+      setIsDirty(true);
+      onDirtyChange?.(true);
+    }
   }
 
   function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
@@ -128,6 +118,7 @@ export function EditAnnouncementSectionForm({
     setPdfError(null);
     setSelectedPdf(file);
     setRemovePdf(false);
+    markDirty();
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -163,7 +154,11 @@ export function EditAnnouncementSectionForm({
           },
         },
         {
-          onSuccess: () => onClose?.(),
+          onSuccess: () => {
+            setIsDirty(false);
+            onDirtyChange?.(false);
+            onClose?.();
+          },
           onError: setActionError,
         },
       );
@@ -203,7 +198,11 @@ export function EditAnnouncementSectionForm({
           },
         },
         {
-          onSuccess: () => onClose?.(),
+          onSuccess: () => {
+            setIsDirty(false);
+            onDirtyChange?.(false);
+            onClose?.();
+          },
           onError: setActionError,
         },
       );
@@ -221,37 +220,12 @@ export function EditAnnouncementSectionForm({
   void houseSlug;
   void housePageId;
 
-  const combinedError = actionError ?? lastError;
+  const combinedError = actionError;
   const buttonsDisabled = isPending || pendingAction !== null;
   const saveDisabled = buttonsDisabled || isSaving || Boolean(pdfError);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-medium text-[var(--cms-text)]">
-            Редагування оголошення
-          </div>
-          <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
-            Зміни зберігаються в секції та історії версій.
-          </div>
-        </div>
-
-        {onClose ? (
-          <div className="flex shrink-0 items-center gap-2">
-            {headerActions}
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Закрити редактор"
-              className={adminIconButtonClass}
-            >
-              ×
-            </button>
-          </div>
-        ) : null}
-      </div>
-
       <div className="grid gap-4 md:grid-cols-3">
         <div className={[adminInsetSurfaceClass, "px-4 py-3"].join(" ")}>
           <div className="text-sm text-[var(--cms-text-muted)]">Дата публікації</div>
@@ -271,7 +245,7 @@ export function EditAnnouncementSectionForm({
         </div>
       </div>
 
-      <form ref={formRef} onSubmit={handleSave} className="grid gap-4">
+      <form ref={formRef} onSubmit={handleSave} onChange={markDirty} className="grid gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
             Заголовок оголошення
@@ -341,6 +315,7 @@ export function EditAnnouncementSectionForm({
           onChange={handlePdfChange}
           onRemoveCurrent={() => {
             setRemovePdf(true);
+            markDirty();
             setSelectedPdf(null);
             setPdfError(null);
             if (pdfInputRef.current) {
@@ -355,9 +330,9 @@ export function EditAnnouncementSectionForm({
           </div>
         ) : null}
 
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max flex-nowrap items-end justify-between gap-6">
-            <div className="flex flex-nowrap items-center gap-3">
+        <div className="sticky bottom-0 z-20 -mx-6 mt-4 border-t border-[var(--cms-border)] bg-[var(--cms-surface)] px-6 py-4 shadow-[var(--cms-shadow-up)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 disabled={saveDisabled}
@@ -365,7 +340,7 @@ export function EditAnnouncementSectionForm({
                   setActionError(null);
                   formRef.current?.requestSubmit();
                 }}
-                className={`${adminPrimaryButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl ${
+                className={`${adminButtonClasses({ variant: "primary" })} ${
                   isSaving ? "cursor-wait opacity-90" : ""
                 } disabled:opacity-60`}
               >
@@ -381,7 +356,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "danger" })} disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
@@ -394,9 +369,9 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("publish")}
-                  className={`${adminSuccessButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "success" })} disabled:opacity-60`}
                 >
-                  {pendingAction === "publish" ? "Підтверджуємо..." : "Підтвердити"}
+                  {pendingAction === "publish" ? "Публікуємо..." : "Опублікувати"}
                 </button>
               </div>
             ) : null}
@@ -407,9 +382,9 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("archive")}
-                  className={`${adminWarningButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-60`}
                 >
-                  {pendingAction === "archive" ? "Архівуємо..." : "Архівувати"}
+                  {pendingAction === "archive" ? "Переносимо..." : "В архів"}
                 </button>
               </div>
             ) : null}
@@ -420,7 +395,7 @@ export function EditAnnouncementSectionForm({
                   type="button"
                   disabled={buttonsDisabled}
                   onClick={() => setConfirmAction("delete")}
-                  className={`${adminDangerButtonClass} min-h-16 rounded-[var(--r-xl)] px-10 py-5 text-2xl disabled:opacity-60`}
+                  className={`${adminButtonClasses({ variant: "danger" })} disabled:opacity-60`}
                 >
                   {pendingAction === "delete" ? "Видаляємо..." : "Видалити"}
                 </button>
