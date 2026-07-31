@@ -20,6 +20,12 @@ export type HousePlanTask = {
   task_status: HousePlanTaskStatus;
   priority: HousePlanTaskPriority;
   contractor: string | null;
+  contractor_id: string | null;
+  automation_enabled: boolean;
+  automation_interval_days: number | null;
+  automation_paused_at: string | null;
+  automation_anchor_at: string | null;
+  automation_next_due_at: string | null;
   archive_year: number | null;
   sort_order: number;
   lifecycle_status: HousePlanTaskLifecycle;
@@ -55,6 +61,9 @@ export type CreatePlanTaskPayload = {
   taskStatus?: HousePlanTaskStatus;
   priority?: HousePlanTaskPriority;
   contractor?: string | null;
+  contractorId?: string | null;
+  automationEnabled?: boolean;
+  automationIntervalDays?: number | null;
   archiveYear?: number | null;
   sortOrder?: number;
   files?: HousePlanFileInput[];
@@ -67,6 +76,12 @@ export type PublishPlanTaskPayload = PlanIdAndLock & {
 };
 
 export type DeletePlanTaskPayload = PlanIdAndLock;
+export type PlanAutomationCommandPayload = PlanIdAndLock;
+
+export type TransitionPlanTaskStatusPayload = PlanIdAndLock & {
+  toStatus: Exclude<HousePlanTaskStatus, "archived">;
+};
+
 
 export type AddPlanFilesPayload = PlanIdAndLock & {
   files: HousePlanFileInput[];

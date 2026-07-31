@@ -1,4 +1,9 @@
 import type { HandlerContext } from "../../../types/pipeline";
+import {
+  normalizeAutomationEnabled,
+  normalizeAutomationIntervalDays,
+  validateAutomationConfiguration,
+} from "../automation";
 import { err, ok, type Result } from "../../../types/result";
 import {
   HOUSE_PLAN_DOCUMENTS_BUCKET,
@@ -119,6 +124,18 @@ export async function getPlanTask(
   }
 
   return ok(data as HousePlanTask);
+}
+
+export function readAutomationConfiguration(payload: {
+  automationEnabled?: unknown;
+  automationIntervalDays?: unknown;
+}) {
+  const enabled = normalizeAutomationEnabled(payload.automationEnabled);
+  const intervalDays = normalizeAutomationIntervalDays(payload.automationIntervalDays);
+  if (!validateAutomationConfiguration({ enabled, intervalDays })) {
+    return err("Для автоматизації вкажіть інтервал від 1 до 365 днів.", "VALIDATION_FAILED");
+  }
+  return ok({ enabled, intervalDays: enabled ? intervalDays : null });
 }
 
 export function normalizeFiles(value: unknown): HousePlanFileInput[] {

@@ -49,6 +49,17 @@ export type HousePlanTaskSnapshot = {
     startDate: string | null;
     endDate: string | null;
     contractor: string | null;
+    contractorId: string | null;
+
+    automationEnabled: boolean;
+
+    automationIntervalDays: number | null;
+
+    automationPausedAt: string | null;
+
+    automationAnchorAt: string | null;
+
+    automationNextDueAt: string | null;
     archiveYear: number | null;
     sortOrder: number;
     images: HousePlanAttachmentSnapshot[];
@@ -131,6 +142,17 @@ export function mapHousePlanTask(
       startDate: task.start_date,
       endDate: task.end_date,
       contractor: task.contractor,
+      contractorId: task.contractor_id,
+
+      automationEnabled: task.automation_enabled,
+
+      automationIntervalDays: task.automation_interval_days,
+
+      automationPausedAt: task.automation_paused_at,
+
+      automationAnchorAt: task.automation_anchor_at,
+
+      automationNextDueAt: task.automation_next_due_at,
       archiveYear: task.archive_year,
       sortOrder: task.sort_order,
       images,

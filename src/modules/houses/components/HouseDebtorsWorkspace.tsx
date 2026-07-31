@@ -1,26 +1,19 @@
 "use client";
 
-import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
-import { WorkspacePaginationControls } from "@/src/modules/houses/components/WorkspacePaginationControls";
-
 import { useMemo, useRef, useState } from "react";
-
-import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
-import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
-import { Input } from "@/src/shared/ui/admin/Input";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
-import { exportDebtorsRegistry,
-  parseDebtorsImportFile,
-  type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
+import { HouseDebtors1cImportPanel } from "@/src/modules/import-buffer/components/HouseDebtors1cImportPanel";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import {
   adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
   adminSurfaceClass,
-  adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
-import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 
 type WorkspaceTab = "all" | "published" | "draft";
 
@@ -196,6 +189,24 @@ function formatSummaryAmount(items: DebtSnapshotItem[]) {
   }).format(total);
 }
 
+function getPreviousCalendarPeriod(now = new Date()) {
+  const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  return {
+    year: previousMonth.getFullYear(),
+    month: previousMonth.getMonth() + 1,
+  };
+}
+
+const MONTH_OPTIONS = [
+  "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+  "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+];
+
+function formatPeriodLabel(year: number, month: number) {
+  return `${MONTH_OPTIONS[month - 1] ?? month} ${year}`;
+}
+
 export function HouseDebtorsWorkspace({
   houseId,
   houseSlug,
@@ -205,18 +216,12 @@ export function HouseDebtorsWorkspace({
 }: Props) {
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
-  const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
-    "debtors",
-    "activeTab",
-    "all",
-    ["all", "published", "draft"],
-  );
-  const [searchQuery, setSearchQuery] =
-    useWorkspaceMemory("debtors", "searchQuery", "");
-  const [visibleRowCount, setVisibleRowCount] = useState(20);
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
+  const [is1cImportOpen, setIs1cImportOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "publish_draft" | "delete_draft" | null
   >(null);
@@ -225,6 +230,10 @@ export function HouseDebtorsWorkspace({
   >(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const previousPeriod = useMemo(() => getPreviousCalendarPeriod(), []);
+  const [periodYear, setPeriodYear] = useState(previousPeriod.year);
+  const [periodMonth, setPeriodMonth] = useState(previousPeriod.month);
+  const [periodConfirmed, setPeriodConfirmed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const content =
@@ -236,6 +245,9 @@ export function HouseDebtorsWorkspace({
           draftItems: debtors.draftItems,
           updatedAt: debtors.updatedAt,
           settingsLockVersion: debtors.settingsLockVersion,
+          monthSnapshots: debtors.monthSnapshots,
+          draftMonthSnapshots: debtors.draftMonthSnapshots,
+          latestPublishedMonth: debtors.latestPublishedMonth,
         }
       : {};
 
@@ -247,6 +259,9 @@ export function HouseDebtorsWorkspace({
   );
   const activeItems = normalizeSnapshotItems(content.activeItems);
   const draftItems = normalizeSnapshotItems(content.draftItems);
+  const monthSnapshots = debtors?.monthSnapshots ?? [];
+  const draftMonthSnapshot = debtors?.draftMonthSnapshots[0] ?? null;
+  const latestPublishedMonth = debtors?.latestPublishedMonth ?? null;
 
   const overlayItems = draftItems.length > 0 ? draftItems : activeItems;
 
@@ -277,6 +292,20 @@ export function HouseDebtorsWorkspace({
     () => previewItems.filter((item) => isDebtBalance(item.amount)).length,
     [previewItems],
   );
+
+  const monthlyImportRows = useMemo(
+    () =>
+      previewItems.map((item) => ({
+        accountNumber: item.accountNumber,
+        closingBalance: parseBalanceAmount(item.amount),
+        debtSourceValue: isDebtBalance(item.amount)
+          ? Math.abs(parseBalanceAmount(item.amount))
+          : null,
+      })),
+    [previewItems],
+  );
+
+  const monthlyMissingApartmentsCount = workingRows.length - previewItems.length;
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -347,29 +376,31 @@ export function HouseDebtorsWorkspace({
   }
 
   async function submitDraftSave() {
-    if (!debtors) return;
+    if (!debtors || !periodConfirmed) return;
 
     setSubmittedMode("save_draft");
 
     const saved = await dispatch({
-      type: "debtors.saveDraftItems",
+      type: "debtors.importMonthDraft",
       houseId,
       payload: {
-        items: previewItems.map((item) => ({
-          apartmentId: item.apartmentId,
-          apartmentLabel: item.apartmentLabel,
-          accountNumber: item.accountNumber,
-          ownerName: item.ownerName,
-          area: item.area,
-          amount: normalizeDecimalInput(item.amount),
-          days: item.days.trim(),
-        })),
+        periodYear,
+        periodMonth,
+        source: "manual_import",
+        importMeta: {
+          flow: "admin_cleaned_import",
+          confirmedPeriod: `${periodYear}-${String(periodMonth).padStart(2, "0")}`,
+          rowsCount: monthlyImportRows.length,
+          missingApartmentsCount: monthlyMissingApartmentsCount,
+        },
+        rows: monthlyImportRows,
       },
     });
 
     if (!saved) return;
 
     setIsPreviewOpen(false);
+    setPeriodConfirmed(false);
     setActiveTab("draft");
   }
 
@@ -420,14 +451,17 @@ export function HouseDebtorsWorkspace({
   }
 
   async function publishDraft() {
-    if (!debtors) return;
+    if (!debtors || !draftMonthSnapshot) return;
 
     setSubmittedMode("publish_draft");
 
     const published = await dispatch({
-      type: "debtors.publishDraft",
+      type: "debtors.publishMonthSnapshot",
       houseId,
-      payload: {},
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+      },
     });
 
     if (!published) return;
@@ -436,19 +470,41 @@ export function HouseDebtorsWorkspace({
   }
 
   async function deleteDraft() {
-    if (!debtors) return;
+    if (!debtors || !draftMonthSnapshot) return;
 
     setSubmittedMode("delete_draft");
 
     const deleted = await dispatch({
-      type: "debtors.deleteDraft",
+      type: "debtors.discardMonthSnapshot",
       houseId,
-      payload: {},
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+      },
     });
 
     if (!deleted) return;
 
     setActiveTab("all");
+  }
+
+  async function relabelDraftMonth() {
+    if (!debtors || !draftMonthSnapshot) return;
+
+    const relabelled = await dispatch({
+      type: "debtors.relabelMonthSnapshot",
+      houseId,
+      payload: {
+        id: draftMonthSnapshot.id,
+        lockVersion: draftMonthSnapshot.lockVersion,
+        periodYear,
+        periodMonth,
+      },
+    });
+
+    if (!relabelled) return;
+
+    setPeriodConfirmed(false);
   }
 
   function buildReferenceRows(rows: DebtSnapshotItem[]): DebtorsSpreadsheetRow[] {
@@ -565,8 +621,8 @@ export function HouseDebtorsWorkspace({
     isDebtBalance(item.amount),
   ).length;
   void draftDebtorsCount;
-  const isDraftEmpty = draftBalanceRowsCount === 0;
-  const isPublishedEmpty = publishedBalanceRowsCount === 0;
+  const isDraftEmpty = draftMonthSnapshot === null;
+  const isPublishedEmpty = latestPublishedMonth === null;
   const isPreviewEmpty = previewItems.length === 0;
   const trimmedPaymentUrl = payment.url.trim();
   const hasPaymentUrl = Boolean(trimmedPaymentUrl);
@@ -605,23 +661,48 @@ export function HouseDebtorsWorkspace({
             </p>
           </div>
 
-          <AdminSegmentedTabs
-            items={[
+          <div className="flex flex-wrap gap-3">
+            {[
               { key: "all", label: "Усі квартири", count: totalApartmentsCount },
               { key: "published", label: "Опубліковано", count: publishedBalanceRowsCount },
               { key: "draft", label: "Чернетка", count: draftBalanceRowsCount },
-            ]}
-            activeKey={activeTab}
-            onChange={(key) => {
-              setVisibleRowCount(20);
-              setActiveTab(key as WorkspaceTab);
-            }}
-            ariaLabel="Фільтр боржників"
-          />
+            ].map((tab) => {
+              const isActive = activeTab === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key as WorkspaceTab)}
+                  className={`inline-flex items-center gap-3 rounded-[var(--r-lg)] px-4 py-3 text-sm font-medium transition ${
+                    isActive
+                      ? "border border-[var(--cms-tab-active-bg)] bg-[var(--cms-tab-active-bg)] text-[var(--cms-tab-active-text)]"
+                      : "border border-[var(--cms-border)] bg-[var(--cms-surface)] text-[var(--cms-text)]"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`inline-flex min-w-6 items-center justify-center rounded-[var(--r-pill)] px-2 py-0.5 text-xs font-semibold ${
+                      isActive
+                        ? "bg-[var(--cms-tab-active-count-bg)] text-[var(--cms-tab-active-text)]"
+                        : "bg-[var(--cms-surface-muted)] text-[var(--cms-text-muted)]"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
+        {lastError ? (
+        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+          {lastError}
+        </div>
+      ) : null}
 
       {importError ? (
         <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
@@ -637,25 +718,80 @@ export function HouseDebtorsWorkspace({
         className="hidden"
       />
 
+      {activeTab === "all" ? (
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_180px] lg:items-end">
+            <div>
+              <div className="text-sm font-semibold text-[var(--cms-text)]">Звітний період</div>
+              <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
+                За замовчуванням вибрано попередній календарний місяць.
+              </p>
+            </div>
+            <select
+              value={periodMonth}
+              onChange={(event) => {
+                setPeriodMonth(Number(event.target.value));
+                setPeriodConfirmed(false);
+              }}
+              className={adminInputClass}
+            >
+              {MONTH_OPTIONS.map((label, index) => (
+                <option key={label} value={index + 1}>{label}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min={2000}
+              max={2100}
+              value={periodYear}
+              onChange={(event) => {
+                setPeriodYear(Number(event.target.value));
+                setPeriodConfirmed(false);
+              }}
+              className={adminInputClass}
+            />
+          </div>
+
+          <label className="mt-4 flex items-start gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3">
+            <input
+              type="checkbox"
+              checked={periodConfirmed}
+              onChange={(event) => setPeriodConfirmed(event.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm text-[var(--cms-text)]">
+              Підтвердіть місяць: {formatPeriodLabel(periodYear, periodMonth)}
+            </span>
+          </label>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
-        <Input
-          type="search"
+        <input
+          type="text"
           value={searchQuery}
-          onChange={(event) => {
-            setSearchQuery(event.target.value);
-            setVisibleRowCount(20);
-          }}
+          onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Пошук: квартира / особовий рахунок / власник"
-          aria-label="Пошук у реєстрі боржників"
+          className={adminInputClass}
         />
 
         {activeTab === "all" ? (
           <>
             <button
               type="button"
+              onClick={() => setIs1cImportOpen(true)}
+              className="inline-flex h-10 min-w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)]"
+              aria-label="Імпорт боржників з 1С"
+              title="Імпорт з 1С"
+            >
+              1С
+            </button>
+
+            <button
+              type="button"
               onClick={openImportPicker}
               disabled={isImporting}
-              className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-50`}
+              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
             >
               {isImporting ? "Імпорт..." : "Імпорт"}
             </button>
@@ -663,15 +799,15 @@ export function HouseDebtorsWorkspace({
             <button
               type="button"
               onClick={handleExport}
-              className={adminButtonClasses({ variant: "secondary" })}
+              className={adminSecondaryButtonClass}
             >
-              Експорт
+              Export
             </button>
 
             <button
               type="button"
               onClick={clearAllDebtFields}
-              className={adminButtonClasses({ variant: "secondary" })}
+              className={adminSecondaryButtonClass}
             >
               Очистити
             </button>
@@ -680,7 +816,7 @@ export function HouseDebtorsWorkspace({
               type="button"
               disabled={!hasAnyEditableValue}
               onClick={openPreview}
-              className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+              className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
             >
               Зберегти
             </button>
@@ -688,52 +824,167 @@ export function HouseDebtorsWorkspace({
         ) : null}
       </div>
 
-      <WorkspacePaginationControls
-        visible={visibleRowCount}
-        total={filteredRows.length}
-        onShowMore={() => setVisibleRowCount((current) => current + 20)}
-      />
-
       {activeTab === "draft" && isDraftEmpty ? (
-        <EmptyState title="Чернетка поки порожня" description="Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут." />
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+          Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
+        </div>
       ) : null}
-      {activeTab === "draft" && !isDraftEmpty ? (
-        <div className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[var(--cms-warning-text)]">
-              Чернетка готова до публікації
-            </p>
-            <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
-              Після публікації поточний опублікований список буде повністю замінено.
-            </p>
+      {activeTab === "draft" && draftMonthSnapshot ? (
+        <div className="space-y-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[var(--cms-warning-text)]">
+                Чернетка готова до публікації
+              </p>
+              <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
+                {formatPeriodLabel(
+                  draftMonthSnapshot.periodYear,
+                  draftMonthSnapshot.periodMonth,
+                )} · Ревізія {draftMonthSnapshot.revision} · Рядків: {draftMonthSnapshot.rowsCount}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setConfirmAction("delete_draft")}
+                disabled={isPending}
+                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              >
+                Видалити чернетку
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setConfirmAction("publish_draft")}
+                disabled={isPending}
+                className={`${adminPrimaryButtonClass} disabled:opacity-50`}
+              >
+                Підтвердити публікацію
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => setConfirmAction("delete_draft")}
-              disabled={isPending}
-              className={`${adminButtonClasses({ variant: "secondary" })} disabled:opacity-50`}
-            >
-              Видалити чернетку
-            </button>
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-surface)] p-4">
+            <div className="text-sm font-medium text-[var(--cms-text)]">
+              Змінити період чернетки
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+              <select
+                value={periodMonth}
+                onChange={(event) =>
+                  setPeriodMonth(Number(event.target.value))
+                }
+                className={adminInputClass}
+              >
+                {MONTH_OPTIONS.map((label, index) => (
+                  <option key={label} value={index + 1}>
+                    {label}
+                  </option>
+                ))}
+              </select>
 
-            <button
-              type="button"
-              onClick={() => setConfirmAction("publish_draft")}
-              disabled={isPending}
-              className={`${adminButtonClasses({ variant: "primary" })} disabled:opacity-50`}
-            >
-              Підтвердити публікацію
-            </button>
+              <input
+                type="number"
+                min={2000}
+                max={2100}
+                value={periodYear}
+                onChange={(event) =>
+                  setPeriodYear(Number(event.target.value))
+                }
+                className={adminInputClass}
+              />
+
+              <button
+                type="button"
+                onClick={relabelDraftMonth}
+                disabled={
+                  isPending ||
+                  (
+                    periodYear === draftMonthSnapshot.periodYear &&
+                    periodMonth === draftMonthSnapshot.periodMonth
+                  )
+                }
+                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              >
+                Змінити період
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
 
 
       {activeTab === "published" && isPublishedEmpty ? (
-        <EmptyState title="Опублікований список поки порожній" description="Після підтвердження чернетки тут з’являться опубліковані баланси." />
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
+        </div>
       ) : null}
+
+      {latestPublishedMonth ? (
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--cms-success-text)]">
+            Актуальний опублікований період
+          </div>
+          <div className="mt-2 text-base font-semibold text-[var(--cms-success-text)]">
+            {formatPeriodLabel(
+              latestPublishedMonth.periodYear,
+              latestPublishedMonth.periodMonth,
+            )} · Ревізія {latestPublishedMonth.revision}
+          </div>
+          <div className="mt-1 text-xs text-[var(--cms-success-text)]">
+            Рядків: {latestPublishedMonth.rowsCount}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+        <div className="text-base font-semibold text-[var(--cms-text)]">
+          Історія по місяцях
+        </div>
+
+        {monthSnapshots.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--cms-text-muted)]">
+            Місячних знімків поки немає.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {monthSnapshots.map((snapshot) => {
+              const statusLabel =
+                snapshot.status === "published"
+                  ? "Опубліковано"
+                  : snapshot.status === "draft"
+                    ? "Чернетка"
+                    : snapshot.status === "superseded"
+                      ? "Замінено"
+                      : "Відхилено";
+
+              return (
+                <div
+                  key={snapshot.id}
+                  className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <div className="text-sm font-medium text-[var(--cms-text)]">
+                      {formatPeriodLabel(
+                        snapshot.periodYear,
+                        snapshot.periodMonth,
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                      Ревізія {snapshot.revision} · Рядків: {snapshot.rowsCount}
+                    </div>
+                  </div>
+
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                    {statusLabel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       {activeTab === "all" ? (
         <div
           className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
@@ -887,7 +1138,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={savePaymentSettings}
                   disabled={!debtors || !paymentDirty || !isPaymentUrlValid || isPending}
-                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_payment"
                     ? "Зберігаємо..."
@@ -898,7 +1149,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setPayment(DEFAULT_PAYMENT)}
                   disabled={!paymentDirty || isPending}
-                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
                 </button>
@@ -1095,7 +1346,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={saveCalculatorSettings}
                   disabled={!debtors || (calculator.enabled && !calculatorDirty) || isPending}
-                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isPending && submittedMode === "save_calculator"
                     ? "Зберігаємо..."
@@ -1106,7 +1357,7 @@ export function HouseDebtorsWorkspace({
                   type="button"
                   onClick={() => setCalculator(DEFAULT_CALCULATOR)}
                   disabled={!calculatorDirty || isPending}
-                  className={`${adminButtonClasses({ variant: "secondary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Скинути
                 </button>
@@ -1117,7 +1368,9 @@ export function HouseDebtorsWorkspace({
       ) : null}
 
       {activeTab === "all" && filteredRows.length === 0 ? (
-        <EmptyState title="У будинку поки немає квартир" description="Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр заборгованості." />
+        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+          У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
+        </div>
       ) : filteredRows.length > 0 ? (
         <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
           <div className="max-h-[70vh] overflow-auto">
@@ -1134,7 +1387,7 @@ export function HouseDebtorsWorkspace({
               </thead>
 
               <tbody>
-                {filteredRows.slice(0, visibleRowCount).map((row) => (
+                {filteredRows.map((row) => (
                   <tr
                     key={row.apartmentId}
                     className="border-b border-[var(--cms-border)]"
@@ -1195,6 +1448,50 @@ export function HouseDebtorsWorkspace({
         </div>
       ) : null}
 
+      <PlatformConfirmModal
+        open={confirmAction === "publish_draft"}
+        title="Опублікувати чернетку боржників?"
+        description="Поточний опублікований список буде повністю замінено даними з чернетки."
+        confirmLabel="Опублікувати"
+        pendingLabel="Публікуємо..."
+        tone="publish"
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void publishDraft();
+        }}
+      />
+
+      <PlatformConfirmModal
+        open={confirmAction === "delete_draft"}
+        title="Видалити чернетку боржників?"
+        description="Усі дані поточної чернетки буде видалено без можливості відновлення."
+        confirmLabel="Видалити"
+        pendingLabel="Видаляємо..."
+        tone="destructive"
+        isPending={isPending}
+        onCancel={() => {
+          if (!isPending) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={() => {
+          setConfirmAction(null);
+          void deleteDraft();
+        }}
+      />
+
+      <HouseDebtors1cImportPanel
+        houseId={houseId}
+        isOpen={is1cImportOpen}
+        onClose={() => setIs1cImportOpen(false)}
+      />
+
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm">
           <button
@@ -1224,6 +1521,12 @@ export function HouseDebtorsWorkspace({
                 </span>
                 <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                   Загальна сума: {formatSummaryAmount(previewItems)}
+                </span>
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                  Період: {formatPeriodLabel(periodYear, periodMonth)}
+                </span>
+                <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
+                  Квартир без рядка: {monthlyMissingApartmentsCount}
                 </span>
               </div>
             </div>
@@ -1268,18 +1571,23 @@ export function HouseDebtorsWorkspace({
                 <button
                   type="button"
                   onClick={closePreview}
-                  className={adminButtonClasses({ variant: "secondary" })}
+                  className={adminSecondaryButtonClass}
                 >
                   Назад
                 </button>
 
                 <button
                   type="button"
-                  disabled={isPreviewEmpty || !debtors || isPending}
+                  disabled={
+                    isPreviewEmpty ||
+                    !debtors ||
+                    !periodConfirmed ||
+                    isPending
+                  }
                   onClick={submitDraftSave}
-                  className={`${adminButtonClasses({ variant: "primary" })} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
-                  {isPending ? "Зберігаємо..." : "Зберегти в чернетку"}
+                  {isPending ? "Зберігаємо..." : "Створити місячну чернетку"}
                 </button>
               </div>
             </div>
@@ -1287,44 +1595,6 @@ export function HouseDebtorsWorkspace({
         </div>
       ) : null}
       </div>
-
-      <PlatformConfirmModal
-        open={confirmAction === "publish_draft"}
-        title="Опублікувати чернетку боржників?"
-        description="Поточний опублікований список буде повністю замінено даними з чернетки."
-        confirmLabel="Опублікувати"
-        pendingLabel="Публікуємо..."
-        tone="publish"
-        isPending={isPending && submittedMode === "publish_draft"}
-        onCancel={() => {
-          if (!isPending) {
-            setConfirmAction(null);
-          }
-        }}
-        onConfirm={() => {
-          setConfirmAction(null);
-          void publishDraft();
-        }}
-      />
-
-      <PlatformConfirmModal
-        open={confirmAction === "delete_draft"}
-        title="Видалити чернетку боржників?"
-        description="Усі дані поточної чернетки буде видалено без можливості відновлення."
-        confirmLabel="Видалити"
-        pendingLabel="Видаляємо..."
-        tone="destructive"
-        isPending={isPending && submittedMode === "delete_draft"}
-        onCancel={() => {
-          if (!isPending) {
-            setConfirmAction(null);
-          }
-        }}
-        onConfirm={() => {
-          setConfirmAction(null);
-          void deleteDraft();
-        }}
-      />
     </div>
   );
 }

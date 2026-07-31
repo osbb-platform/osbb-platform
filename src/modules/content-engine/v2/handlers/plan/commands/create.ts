@@ -14,6 +14,7 @@ import {
   normalizeText,
   planHistoryMetadata,
   planTaskTitle,
+  readAutomationConfiguration,
   publicPlanPaths,
   toPlanFileTracks,
   validatePlanDates,
@@ -31,7 +32,7 @@ export const createCommand: CommandSpec = {
     }
 
     const dateMode = normalizeDateMode(payload.dateMode);
-    if (
+if (
       !validatePlanDates({
         dateMode,
         deadlineAt: normalizeNullableDate(payload.deadlineAt),
@@ -42,13 +43,19 @@ export const createCommand: CommandSpec = {
       return err("Заповніть дату або період виконання завдання.", "VALIDATION_FAILED");
     }
 
-    return ok(undefined);
+    const automationResult = readAutomationConfiguration(payload);
+    if (!automationResult.ok) return automationResult;
+return ok(undefined);
   },
 
   async execute(rawPayload, ctx) {
     const payload = rawPayload as CreatePlanTaskPayload;
     const now = new Date().toISOString();
     const dateMode = normalizeDateMode(payload.dateMode);
+
+    const automationResult = readAutomationConfiguration(payload);
+    if (!automationResult.ok) return automationResult;
+    const automation = automationResult.data;
 
     const { data, error } = await ctx.supabase
       .from("house_plan_tasks")
@@ -64,6 +71,15 @@ export const createCommand: CommandSpec = {
         task_status: normalizeTaskStatus(payload.taskStatus),
         priority: normalizePriority(payload.priority),
         contractor: normalizeOptionalText(payload.contractor),
+        contractor_id:
+          typeof payload.contractorId === "string" && payload.contractorId.trim()
+            ? payload.contractorId.trim()
+            : null,
+        automation_enabled: automation.enabled,
+        automation_interval_days: automation.intervalDays,
+        automation_paused_at: null,
+        automation_anchor_at: null,
+        automation_next_due_at: null,
         archive_year: normalizeArchiveYear(payload.archiveYear),
         sort_order: normalizeSortOrder(payload.sortOrder),
         lifecycle_status: "draft",
