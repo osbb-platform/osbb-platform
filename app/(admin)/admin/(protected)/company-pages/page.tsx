@@ -4,6 +4,8 @@ import { CompanyRequestsCarousel } from "@/src/modules/company/components/Compan
 import { getCompanyContactRequests } from "@/src/modules/company/services/getCompanyContactRequests";
 import { getCompanySearchStats } from "@/src/modules/company/services/getCompanySearchStats";
 import { getCompanyUnreadRequestsCount } from "@/src/modules/company/services/getCompanyUnreadRequestsCount";
+import { SiteLeadNotificationSettingsForm } from "@/src/modules/site/components/admin/SiteLeadNotificationSettingsForm";
+import { getSiteNotificationSettings } from "@/src/modules/site/services/getSiteNotificationSettings";
 import { assertTopLevelAccess } from "@/src/shared/permissions/rbac.guards";
 
 function EyeIcon() {
@@ -25,11 +27,18 @@ function EyeIcon() {
 }
 
 export default async function AdminCompanyPagesPage() {
-  const [currentUser, unreadRequestsCount, searchStats, requests] = await Promise.all([
+  const [
+    currentUser,
+    unreadRequestsCount,
+    searchStats,
+    requests,
+    notificationSettings,
+  ] = await Promise.all([
     getCurrentAdminUser(),
     getCompanyUnreadRequestsCount(),
     getCompanySearchStats(),
     getCompanyContactRequests(),
+    getSiteNotificationSettings(),
   ]);
 
   assertTopLevelAccess(currentUser?.role, "companyPages");
@@ -73,6 +82,30 @@ export default async function AdminCompanyPagesPage() {
               Поиски: {searchStats.totalSearches}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6">
+        <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <div className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-text-muted)]">
+              Заявки та сповіщення
+            </div>
+
+            <h2 className="mt-4 text-xl font-semibold text-[var(--cms-text)]">
+              Email-одержувачі заявок
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+              Тут налаштовуються адреси, на які надходитимуть
+              нові заявки з публічного сайту. Telegram додамо
+              пізніше в цьому ж блоці.
+            </p>
+          </div>
+
+          <SiteLeadNotificationSettingsForm
+            settings={notificationSettings}
+          />
         </div>
       </div>
 
