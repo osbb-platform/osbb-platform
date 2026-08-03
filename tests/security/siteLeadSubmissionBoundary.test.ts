@@ -102,6 +102,21 @@ describe("site lead submission boundary", () => {
     }
   });
 
+  it("returns the created lead identity for post-insert notifications", () => {
+    expect(source).toContain(
+      '.select("id, created_at")',
+    );
+    expect(source).toContain(
+      "data: createdLead",
+    );
+    expect(source).toContain(
+      "sendSiteLeadEmailNotifications",
+    );
+    expect(source).toContain(
+      "Promise.allSettled",
+    );
+  });
+
   it("does not expose internal database errors to the visitor", () => {
     expect(source).toContain("console.error");
     expect(source).not.toContain(

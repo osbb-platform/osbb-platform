@@ -5,6 +5,7 @@ import { cookies, headers } from "next/headers";
 import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { sendSiteLeadEmailNotifications } from "@/src/modules/site/services/sendSiteLeadEmailNotifications";
 
 const MIN_FORM_FILL_MS = 3_000;
 const MAX_FORM_AGE_MS = 24 * 60 * 60 * 1_000;
@@ -385,7 +386,10 @@ export async function submitSiteLead(
       };
     }
 
-    const { error: insertError } = await supabase
+    const {
+      data: createdLead,
+      error: insertError,
+    } = await supabase
       .from("site_leads")
       .insert({
         name: validation.data.name,
@@ -406,9 +410,11 @@ export async function submitSiteLead(
         first_seen_at: normalizeFirstSeenAt(
           attribution.first_seen_at,
         ),
-      });
+      })
+      .select("id, created_at")
+      .single();
 
-    if (insertError) {
+    if (insertError || !createdLead) {
       console.error("site lead insert failed", {
         message: insertError.message,
       });
@@ -421,6 +427,38 @@ export async function submitSiteLead(
         fieldErrors: {},
         retryAfterSeconds: null,
       };
+    }
+
+    const notificationResults = await Promise.allSettled([
+      sendSiteLeadEmailNotifications({
+        id: String(createdLead.id),
+        createdAt: String(createdLead.created_at),
+        name: validation.data.name,
+        phone: validation.data.phone,
+        city: validation.data.city,
+        role: validation.data.role,
+        message: validation.data.message,
+        utmSource: attribution.utm_source,
+        utmMedium: attribution.utm_medium,
+        utmCampaign: attribution.utm_campaign,
+        landingPage: attribution.landing_page,
+        referrer: attribution.referrer,
+      }),
+    ]);
+
+    const rejectedNotification =
+      notificationResults.find(
+        (result) => result.status === "rejected",
+      );
+
+    if (rejectedNotification?.status === "rejected") {
+      console.error("site lead notification pipeline failed", {
+        leadId: createdLead.id,
+        message:
+          rejectedNotification.reason instanceof Error
+            ? rejectedNotification.reason.message
+            : "Unknown notification error",
+      });
     }
 
     return {
