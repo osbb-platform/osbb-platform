@@ -42,7 +42,7 @@ export default function FindHousePage() {
               <p>
                 {city.status === "live"
                   ? `${city.housesCount} будинків уже в системі.`
-                  : "Підготовка до запуску восени 2026 року."}
+                  : "Збираємо заявки на підключення в цьому місті."}
               </p>
 
               <span
@@ -52,7 +52,7 @@ export default function FindHousePage() {
                     : "osbb-badge osbb-badge--soon"
                 }
               >
-                {city.status === "live" ? "Працює" : "Восени 2026"}
+                {city.status === "live" ? "Працює" : "Відкриваємо місто"}
               </span>
             </Card>
           ))}

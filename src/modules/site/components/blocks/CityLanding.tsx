@@ -27,7 +27,7 @@ export function CityLanding({ city }: CityLandingProps) {
         <div className="osbb-city-intro">
           <div>
             <Eyebrow>Статус</Eyebrow>
-            <h2>Початок роботи — восени 2026 року</h2>
+            <h2>Збираємо заявки на підключення</h2>
 
             <p className="osbb-lead">
               Зараз ми збираємо заявки від голів ОСББ, управляючих компаній
@@ -37,7 +37,7 @@ export function CityLanding({ city }: CityLandingProps) {
 
           <div className="osbb-city-status-panel">
             <span className="osbb-badge osbb-badge--soon">
-              Восени 2026
+              Відкриваємо місто
             </span>
 
             <p>

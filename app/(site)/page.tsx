@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Accordion } from "@/src/modules/site/components/ui/Accordion";
 import { CabinetMockup } from "@/src/modules/site/components/blocks/CabinetMockup";
-import { CityCards } from "@/src/modules/site/components/blocks/CityCards";
+import { UkraineMap } from "@/src/modules/site/components/blocks/UkraineMap";
 import { CtaBlock } from "@/src/modules/site/components/blocks/CtaBlock";
 import { Testimonials } from "@/src/modules/site/components/blocks/Testimonials";
 import { Card } from "@/src/modules/site/components/ui/Card";
@@ -300,7 +300,7 @@ export default function SiteHomePage() {
           <h2>Запоріжжя — працюємо. Київ і Одеса — відкриваємо</h2>
         </div>
 
-        <CityCards cities={siteCities} />
+        <UkraineMap cities={siteCities} />
 
         <p className="osbb-section-note">
           У кожному місті працює свій представник — він приїжджає на

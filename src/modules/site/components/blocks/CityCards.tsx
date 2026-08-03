@@ -27,7 +27,7 @@ export function CityCards({ cities }: CityCardsProps) {
             <p>
               {city.status === "live"
                 ? `${city.housesCount} будинків`
-                : "Відкриття восени 2026"}
+                : "Збираємо заявки на підключення"}
             </p>
           </div>
 
@@ -38,7 +38,7 @@ export function CityCards({ cities }: CityCardsProps) {
                 : "osbb-badge osbb-badge--soon"
             }
           >
-            {city.status === "live" ? "Працює" : "Восени 2026"}
+            {city.status === "live" ? "Працює" : "Відкриваємо місто"}
           </span>
         </Link>
       ))}

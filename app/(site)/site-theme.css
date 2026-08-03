@@ -2356,3 +2356,231 @@
     border-top: 1px solid var(--border);
   }
 }
+
+/* ===== A4: карта України ===== */
+
+.osbb-ukraine-map {
+  width: 100%;
+}
+
+.osbb-ukraine-map__canvas {
+  position: relative;
+
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  aspect-ratio: 1000 / 650;
+}
+
+.osbb-ukraine-map__shape {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+}
+
+.osbb-ukraine-map__country {
+  fill: var(--bg-quiet);
+  stroke: var(--border-strong);
+  stroke-linejoin: round;
+  stroke-width: 5;
+}
+
+.osbb-ukraine-map__markers {
+  position: absolute;
+  inset: 0;
+}
+
+.osbb-ukraine-map__marker {
+  position: absolute;
+  z-index: 2;
+
+  transform: translate(-50%, -50%);
+}
+
+.osbb-ukraine-map__marker-button {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+
+  border: 0;
+
+  background: transparent;
+  color: var(--text);
+
+  cursor: pointer;
+}
+
+.osbb-ukraine-map__marker-dot {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--accent-strong);
+  border-radius: 50%;
+
+  background: var(--surface);
+  color: var(--accent-ink);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  box-shadow:
+    0 0 0 5px rgb(255 255 255 / 70%),
+    var(--shadow-sm);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.osbb-ukraine-map__marker--live .osbb-ukraine-map__marker-dot {
+  background: var(--accent-strong);
+  color: var(--accent-contrast);
+}
+
+.osbb-ukraine-map__marker--opening .osbb-ukraine-map__marker-dot {
+  background: var(--surface);
+}
+
+.osbb-ukraine-map__marker--opening
+  .osbb-ukraine-map__marker-dot::after {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+
+  background: var(--accent-strong);
+
+  content: "";
+}
+
+.osbb-ukraine-map__marker-name {
+  padding: 4px 8px;
+  border-radius: var(--r-pill);
+
+  background: rgb(255 255 255 / 84%);
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  backdrop-filter: blur(6px);
+}
+
+.osbb-ukraine-map__marker-button:hover
+  .osbb-ukraine-map__marker-dot,
+.osbb-ukraine-map__marker-button:focus-visible
+  .osbb-ukraine-map__marker-dot {
+  transform: scale(1.08);
+
+  box-shadow:
+    0 0 0 7px rgb(255 255 255 / 78%),
+    var(--shadow-md);
+}
+
+.osbb-ukraine-map__marker-button:focus-visible {
+  border-radius: var(--r-lg);
+
+  outline: 3px solid var(--focus);
+  outline-offset: 5px;
+}
+
+.osbb-ukraine-map__tooltip {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  min-width: 190px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+
+  background: var(--surface);
+  color: var(--text);
+
+  opacity: 0;
+  pointer-events: none;
+
+  box-shadow: var(--shadow-md);
+
+  transform: translate(-50%, 6px);
+
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.osbb-ukraine-map__tooltip::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+
+  background: var(--surface);
+
+  content: "";
+
+  transform: translate(-50%, -6px) rotate(45deg);
+}
+
+.osbb-ukraine-map__tooltip strong {
+  font-size: 15px;
+}
+
+.osbb-ukraine-map__tooltip span {
+  color: var(--text-muted);
+
+  font-size: 13px;
+}
+
+.osbb-ukraine-map__marker:hover .osbb-ukraine-map__tooltip,
+.osbb-ukraine-map__marker:focus-within .osbb-ukraine-map__tooltip {
+  opacity: 1;
+
+  transform: translate(-50%, 0);
+}
+
+.osbb-ukraine-map__mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .osbb-ukraine-map__marker-name {
+    font-size: 16px;
+  }
+
+  .osbb-ukraine-map__marker-dot {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 479px) {
+  .osbb-ukraine-map__canvas {
+    display: none;
+  }
+
+  .osbb-ukraine-map__mobile {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .osbb-ukraine-map__marker-dot,
+  .osbb-ukraine-map__tooltip {
+    transition: none;
+  }
+}

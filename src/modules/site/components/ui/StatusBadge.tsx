@@ -3,7 +3,7 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({
-  children = "Восени 2026",
+  children = "Скоро",
 }: StatusBadgeProps) {
   return (
     <span className="osbb-badge osbb-badge--soon">
