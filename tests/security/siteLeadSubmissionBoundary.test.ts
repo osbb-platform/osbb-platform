@@ -41,6 +41,25 @@ describe("site lead submission boundary", () => {
     );
   });
 
+  it("uses Zod for the complete server-side form schema", () => {
+    expect(source).toContain('import { z } from "zod"');
+    expect(source).toContain(
+      "const siteLeadSubmissionSchema = z.object({",
+    );
+    expect(source).toContain(
+      "siteLeadSubmissionSchema.safeParse({",
+    );
+    expect(source).toContain(
+      '.min(2, "Вкажіть ім’я — щонайменше 2 символи.")',
+    );
+    expect(source).toContain(
+      '.max(80, "Ім’я не може перевищувати 80 символів.")',
+    );
+    expect(source).toMatch(
+      /\.max\(\s*1000,/,
+    );
+  });
+
   it("normalizes and validates Ukrainian phone numbers", () => {
     expect(source).toContain("normalizeUkrainianPhone");
     expect(source).toContain("/^380\\d{9}$/");

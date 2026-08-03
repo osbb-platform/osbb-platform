@@ -2,6 +2,7 @@
 
 import { createHmac } from "node:crypto";
 import { cookies, headers } from "next/headers";
+import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 
@@ -68,15 +69,6 @@ function value(formData: FormData, key: string, maxLength: number) {
     .slice(0, maxLength);
 }
 
-function nullableValue(
-  formData: FormData,
-  key: string,
-  maxLength: number,
-) {
-  const normalized = value(formData, key, maxLength);
-  return normalized || null;
-}
-
 function normalizeUkrainianPhone(rawValue: string) {
   const digits = rawValue.replace(/\D/g, "");
 
@@ -96,48 +88,109 @@ function normalizeRole(rawRole: string) {
   return allowedRoles.has(mapped) ? mapped : null;
 }
 
-function validateSubmission(formData: FormData) {
-  const name = value(formData, "name", 80);
-  const phoneRaw = value(formData, "phone", 40);
-  const phone = normalizeUkrainianPhone(phoneRaw);
-  const city = value(formData, "city", 80);
-  const role = normalizeRole(value(formData, "role", 40));
-  const message = nullableValue(formData, "message", 1001);
+const siteLeadSubmissionSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Вкажіть ім’я — щонайменше 2 символи.")
+    .max(80, "Ім’я не може перевищувати 80 символів."),
 
-  const fieldErrors: SubmitSiteLeadState["fieldErrors"] = {};
+  phone: z
+    .string()
+    .trim()
+    .max(40, "Номер телефону має некоректний формат.")
+    .refine(
+      (rawPhone) => normalizeUkrainianPhone(rawPhone) !== null,
+      "Вкажіть український номер у форматі +380XXXXXXXXX.",
+    )
+    .transform((rawPhone) => normalizeUkrainianPhone(rawPhone) as string),
 
-  if (name.length < 2) {
-    fieldErrors.name = "Вкажіть ім’я — щонайменше 2 символи.";
-  }
+  city: z
+    .string()
+    .trim()
+    .min(2, "Вкажіть місто.")
+    .max(80, "Назва міста не може перевищувати 80 символів."),
 
-  if (!phone) {
-    fieldErrors.phone =
-      "Вкажіть український номер у форматі +380XXXXXXXXX.";
-  }
+  role: z
+    .string()
+    .trim()
+    .max(40, "Оберіть вашу роль.")
+    .refine(
+      (rawRole) => normalizeRole(rawRole) !== null,
+      "Оберіть вашу роль.",
+    )
+    .transform((rawRole) => normalizeRole(rawRole) as string),
 
-  if (city.length < 2) {
-    fieldErrors.city = "Вкажіть місто.";
-  }
+  message: z
+    .string()
+    .trim()
+    .max(
+      1000,
+      "Повідомлення не може перевищувати 1000 символів.",
+    )
+    .transform((message) => message || null),
+});
 
-  if (!role) {
-    fieldErrors.role = "Оберіть вашу роль.";
-  }
+type ValidSiteLeadSubmission = {
+  valid: true;
+  fieldErrors: SubmitSiteLeadState["fieldErrors"];
+  data: {
+    name: string;
+    phone: string;
+    phoneRaw: string;
+    city: string;
+    role: string;
+    message: string | null;
+  };
+};
 
-  if (message && message.length > 1000) {
-    fieldErrors.message =
-      "Повідомлення не може перевищувати 1000 символів.";
+type InvalidSiteLeadSubmission = {
+  valid: false;
+  fieldErrors: SubmitSiteLeadState["fieldErrors"];
+  data: null;
+};
+
+function validateSubmission(
+  formData: FormData,
+): ValidSiteLeadSubmission | InvalidSiteLeadSubmission {
+  const phoneRaw = String(formData.get("phone") ?? "").trim();
+
+  const result = siteLeadSubmissionSchema.safeParse({
+    name: String(formData.get("name") ?? ""),
+    phone: phoneRaw,
+    city: String(formData.get("city") ?? ""),
+    role: String(formData.get("role") ?? ""),
+    message: String(formData.get("message") ?? ""),
+  });
+
+  if (!result.success) {
+    const fieldErrors: SubmitSiteLeadState["fieldErrors"] = {};
+
+    for (const issue of result.error.issues) {
+      const field = issue.path[0];
+
+      if (
+        typeof field === "string" &&
+        ["name", "phone", "city", "role", "message"].includes(field) &&
+        !fieldErrors[field as SiteLeadField]
+      ) {
+        fieldErrors[field as SiteLeadField] = issue.message;
+      }
+    }
+
+    return {
+      valid: false,
+      fieldErrors,
+      data: null,
+    };
   }
 
   return {
-    valid: Object.keys(fieldErrors).length === 0,
-    fieldErrors,
+    valid: true,
+    fieldErrors: {},
     data: {
-      name,
-      phone,
-      phoneRaw,
-      city,
-      role,
-      message,
+      ...result.data,
+      phoneRaw: phoneRaw.slice(0, 40),
     },
   };
 }
