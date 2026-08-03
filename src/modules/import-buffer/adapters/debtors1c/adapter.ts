@@ -22,10 +22,7 @@ import {
   DEBTORS_1C_TITLE_MARKER,
   DEBTORS_1C_TOTAL_MARKER,
 } from "./constants";
-import type {
-  Debtors1cGroupKind,
-  Debtors1cRow,
-} from "./types";
+import type { Debtors1cGroupKind, Debtors1cRow } from "./types";
 
 const REQUIRED_HEADER_KEYS = [
   "account",
@@ -38,6 +35,33 @@ const REQUIRED_HEADER_KEYS = [
   "closing",
   "debt",
 ] as const;
+
+const DEBTORS_1C_MONTH_ALIASES: Readonly<Record<string, number>> = {
+  січень: 1,
+  январь: 1,
+  лютий: 2,
+  февраль: 2,
+  березень: 3,
+  март: 3,
+  квітень: 4,
+  апрель: 4,
+  травень: 5,
+  май: 5,
+  червень: 6,
+  июнь: 6,
+  липень: 7,
+  июль: 7,
+  серпень: 8,
+  август: 8,
+  вересень: 9,
+  сентябрь: 9,
+  жовтень: 10,
+  октябрь: 10,
+  листопад: 11,
+  ноябрь: 11,
+  грудень: 12,
+  декабрь: 12,
+};
 
 type HeaderKey = (typeof REQUIRED_HEADER_KEYS)[number];
 
@@ -69,36 +93,53 @@ export const debtors1cAdapter: ImportAdapter<Debtors1cRow> = {
   },
 };
 
-export function extractDebtors1cPeriod(
-  sheet: RawSheet,
-): PeriodGuess | null {
+export function extractDebtors1cPeriod(sheet: RawSheet): PeriodGuess | null {
   for (const row of sheet.rows) {
-    const rowText = row.map(toCellText).filter(Boolean).join(" ");
+    const rowText = row
+      .map(toCellText)
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/gu, " ")
+      .trim();
 
-    if (!rowText.includes(DEBTORS_1C_TITLE_MARKER)) {
+    const normalized = rowText.toLocaleLowerCase("uk-UA");
+
+    const isSummaryReport =
+      normalized.includes("зведена відомість") ||
+      normalized.includes("сводная ведомость") ||
+      normalized.includes(DEBTORS_1C_TITLE_MARKER.toLocaleLowerCase("uk-UA"));
+
+    if (!isSummaryReport) {
       continue;
     }
 
-    const match = rowText.match(
-      /за\s+([А-ЯІЇЄҐа-яіїєґ]+)\s+(\d{4})\s*р\.?/u,
+    const normalizedMatch = normalized.match(
+      /за\s+([а-яіїєґ]+)\s+(\d{4})\s*(?:р|г)\.?/u,
     );
 
-    if (!match) {
-      return null;
+    const sourceMatch = rowText.match(
+      /за\s+([А-ЯІЇЄҐа-яіїєґ]+)\s+(\d{4})\s*(?:р|г)\.?/u,
+    );
+
+    if (!normalizedMatch || !sourceMatch) {
+      continue;
     }
 
-    const monthName = match[1].toLocaleLowerCase("uk-UA");
-    const month = DEBTORS_1C_PROVEN_MONTHS[monthName];
-    const year = Number(match[2]);
+    const monthName = normalizedMatch[1];
+    const month =
+      DEBTORS_1C_MONTH_ALIASES[monthName] ??
+      DEBTORS_1C_PROVEN_MONTHS[monthName];
 
-    if (!month || !Number.isInteger(year)) {
-      return null;
+    const year = Number(normalizedMatch[2]);
+
+    if (!month || !Number.isInteger(year) || year < 2000 || year > 2100) {
+      continue;
     }
 
     return {
       year,
       month,
-      sourceText: match[0],
+      sourceText: sourceMatch[0],
     };
   }
 
@@ -108,24 +149,13 @@ export function extractDebtors1cPeriod(
 export function locateDebtors1cHeader(
   sheet: RawSheet,
 ): ImportResult<HeaderMap> {
-  for (
-    let rowIndex = 0;
-    rowIndex < sheet.rows.length - 1;
-    rowIndex += 1
-  ) {
+  for (let rowIndex = 0; rowIndex < sheet.rows.length - 1; rowIndex += 1) {
     const topRow = sheet.rows[rowIndex];
     const secondRow = sheet.rows[rowIndex + 1];
 
-    const columns = resolveHeaderColumns(
-      topRow,
-      secondRow,
-    );
+    const columns = resolveHeaderColumns(topRow, secondRow);
 
-    if (
-      REQUIRED_HEADER_KEYS.every(
-        (key) => columns[key] !== undefined,
-      )
-    ) {
+    if (REQUIRED_HEADER_KEYS.every((key) => columns[key] !== undefined)) {
       return {
         ok: true,
         value: {
@@ -140,8 +170,7 @@ export function locateDebtors1cHeader(
     ok: false,
     error: {
       code: "HEADER_NOT_FOUND",
-      message:
-        "Не вдалося знайти підтверджені колонки файлу 1С",
+      message: "Не вдалося знайти підтверджені колонки файлу 1С",
     },
   };
 }
@@ -175,46 +204,36 @@ export function parseDebtors1cRows(
       continue;
     }
 
-    const nextGroup = classifyGroupRow(rowText);
+    const nextGroup = classifyGroupRow(rowText, row, header);
 
     if (nextGroup) {
       group = nextGroup;
 
       parsed.push({
         rowIndex,
-        classification:
-          group === "providers"
-            ? "skip_provider"
-            : "skip_group",
+        classification: group === "providers" ? "skip_provider" : "skip_group",
         value: null,
         warnings: [],
       });
       continue;
     }
 
-    const accountRaw = getTextCell(
-      row,
-      header.columns.account,
-    );
+    const accountRaw = getTextCell(row, header.columns.account);
 
     if (!accountRaw) {
       continue;
     }
 
-    const accountNumberNormalized =
-      normalizeAccountNumber(accountRaw, {
-        prefixes: DEBTORS_1C_ACCOUNT_PREFIXES,
-        removableSymbols: DEBTORS_1C_ACCOUNT_SYMBOLS,
-      });
+    const accountNumberNormalized = normalizeAccountNumber(accountRaw, {
+      prefixes: DEBTORS_1C_ACCOUNT_PREFIXES,
+      removableSymbols: DEBTORS_1C_ACCOUNT_SYMBOLS,
+    });
 
     if (!accountNumberNormalized) {
       continue;
     }
 
-    const apartmentLabel = getTextCell(
-      row,
-      header.columns.apartment,
-    );
+    const apartmentLabel = getTextCell(row, header.columns.apartment);
 
     if (group === "non_residential") {
       parsed.push({
@@ -226,16 +245,11 @@ export function parseDebtors1cRows(
       continue;
     }
 
-    if (
-      group === "providers" ||
-      isServiceLabel(apartmentLabel)
-    ) {
+    if (group === "providers" || isServiceLabel(apartmentLabel)) {
       parsed.push({
         rowIndex,
         classification:
-          group === "providers"
-            ? "skip_provider"
-            : "skip_service",
+          group === "providers" ? "skip_provider" : "skip_service",
         value: null,
         warnings: [],
       });
@@ -246,10 +260,7 @@ export function parseDebtors1cRows(
       continue;
     }
 
-    const debtValue = getNumberCell(
-      row,
-      header.columns.debt,
-    );
+    const debtValue = getNumberCell(row, header.columns.debt);
 
     parsed.push({
       rowIndex,
@@ -258,30 +269,12 @@ export function parseDebtors1cRows(
         accountNumberRaw: accountRaw,
         accountNumberNormalized,
         apartmentLabel,
-        ownerName: getTextCell(
-          row,
-          header.columns.owner,
-        ),
-        area: getNumberCell(
-          row,
-          header.columns.area,
-        ),
-        openingBalance: getNumberCell(
-          row,
-          header.columns.opening,
-        ),
-        accrued: getNumberCell(
-          row,
-          header.columns.accrued,
-        ),
-        paid: getNumberCell(
-          row,
-          header.columns.paid,
-        ),
-        closingBalance: getNumberCell(
-          row,
-          header.columns.closing,
-        ),
+        ownerName: getTextCell(row, header.columns.owner),
+        area: getNumberCell(row, header.columns.area),
+        openingBalance: getNumberCell(row, header.columns.opening),
+        accrued: getNumberCell(row, header.columns.accrued),
+        paid: getNumberCell(row, header.columns.paid),
+        closingBalance: getNumberCell(row, header.columns.closing),
         debtValue,
         osbbBalance: toOsbbBalance(debtValue),
       },
@@ -298,9 +291,7 @@ export function parseDebtors1cRows(
  * 1C source debt is positive for debt and negative for credit.
  * OSBB signed balance is negative for debt and positive for credit.
  */
-export function toOsbbBalance(
-  debtValue: number | null,
-): number | null {
+export function toOsbbBalance(debtValue: number | null): number | null {
   return debtValue === null ? null : -debtValue;
 }
 
@@ -332,6 +323,8 @@ function resolveHeaderColumns(
 
 function classifyGroupRow(
   rowText: string,
+  row: readonly unknown[],
+  header: HeaderMap,
 ): Debtors1cGroupKind | null {
   if (rowText.includes(DEBTORS_1C_NON_RESIDENTIAL_MARKER)) {
     return "non_residential";
@@ -341,10 +334,23 @@ function classifyGroupRow(
     return "providers";
   }
 
+  /*
+   * The first aggregate building row after the header starts
+   * the residential section. Its address differs for every house,
+   * so detection must use the 1C row structure rather than a
+   * hard-coded address such as Sobornyi 186.
+   */
+  const accountCell = getTextCell(row, header.columns.account);
+  const apartmentCell = getTextCell(row, header.columns.apartment);
+  const ownerCell = getTextCell(row, header.columns.owner);
+  const closingValue = getNumberCell(row, header.columns.closing);
+  const debtValue = getNumberCell(row, header.columns.debt);
+
   if (
-    rowText.includes("м.Запоріжжя") &&
-    rowText.includes("пр.Соборний") &&
-    rowText.includes("№ 186")
+    accountCell &&
+    !apartmentCell &&
+    !ownerCell &&
+    (closingValue !== null || debtValue !== null)
   ) {
     return "residential";
   }
@@ -352,15 +358,13 @@ function classifyGroupRow(
   return null;
 }
 
-function isServiceLabel(
-  apartmentLabel: string | null,
-): boolean {
+function isServiceLabel(apartmentLabel: string | null): boolean {
   if (!apartmentLabel) {
     return false;
   }
 
-  return DEBTORS_1C_SERVICE_LABEL_PREFIXES.some(
-    (prefix) => apartmentLabel.startsWith(prefix),
+  return DEBTORS_1C_SERVICE_LABEL_PREFIXES.some((prefix) =>
+    apartmentLabel.startsWith(prefix),
   );
 }
 
