@@ -12,10 +12,10 @@ import { Section } from "@/src/modules/site/components/ui/Section";
 import { StatFigure } from "@/src/modules/site/components/ui/StatFigure";
 import {
   siteCities,
-  sitePrototypeFigures,
   siteSettings,
   siteTestimonials,
 } from "@/src/modules/site/data/siteContent";
+import { getSiteCounters } from "@/src/modules/site/services/getSiteCounters";
 import { getCabinetMockup } from "@/src/modules/site/data/mockupData";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 
@@ -69,8 +69,11 @@ const currentProblems = [
   "Що вирішили на зборах?",
 ] as const;
 
-export default function SiteHomePage() {
-  const homeMockup = getCabinetMockup("home");
+export default async function SiteHomePage() {
+  const [homeMockup, siteCounters] = await Promise.all([
+    Promise.resolve(getCabinetMockup("home")),
+    getSiteCounters(),
+  ]);
 
   if (!homeMockup) {
     throw new Error("Home cabinet mockup is missing");
@@ -117,26 +120,28 @@ export default function SiteHomePage() {
         </div>
       </section>
 
-      <Section tight tone="quiet">
-        <div className="osbb-grid osbb-grid--4">
-          <StatFigure
-            label="будинків у системі"
-            value={sitePrototypeFigures.houses}
-          />
-          <StatFigure
-            label="районів Запоріжжя"
-            value={sitePrototypeFigures.districts}
-          />
-          <StatFigure
-            label="місто присутності"
-            value={sitePrototypeFigures.cities}
-          />
-          <StatFigure
-            label="розділів кабінету"
-            value={sitePrototypeFigures.cabinetSections}
-          />
-        </div>
-      </Section>
+      {siteCounters ? (
+        <Section tight tone="quiet">
+          <div className="osbb-grid osbb-grid--4">
+            <StatFigure
+              label="будинків у системі"
+              value={siteCounters.housesLive}
+            />
+            <StatFigure
+              label="матеріалів опубліковано за 30 днів"
+              value={siteCounters.materialsLast30}
+            />
+            <StatFigure
+              label="міст присутності"
+              value={siteCounters.citiesLive}
+            />
+            <StatFigure
+              label="розділів кабінету"
+              value={siteCounters.sectionsCount}
+            />
+          </div>
+        </Section>
+      ) : null}
 
       <Section>
         <div className="osbb-split">
