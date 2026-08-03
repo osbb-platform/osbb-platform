@@ -12,11 +12,13 @@ import { useRouter } from "next/navigation";
 import {
   confirmDebtors1cImportPeriod,
   discardDebtors1cImportBuffer,
-  INITIAL_DEBTORS_1C_IMPORT_STATE,
   parseDebtors1cImportBuffer,
   transferDebtors1cImportBuffer,
-  type Debtors1cImportState,
 } from "@/src/modules/import-buffer/actions/debtors1cImportBufferActions";
+import {
+  INITIAL_DEBTORS_1C_IMPORT_STATE,
+  type Debtors1cImportState,
+} from "@/src/modules/import-buffer/debtors1cImportState";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import {
