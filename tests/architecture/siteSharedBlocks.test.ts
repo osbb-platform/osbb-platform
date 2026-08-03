@@ -17,19 +17,24 @@ describe("site A3 shared blocks", () => {
     expect(cta).toContain('id="zayavka"');
   });
 
-  it("does not create a content server action during A3", () => {
+  it("keeps the C1 lead action inside the site module boundary", () => {
     const siteRoot = path.join(root, "src/modules/site");
-    const source = fs
-      .readdirSync(siteRoot, {
-        recursive: true,
-        withFileTypes: true,
-      })
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name)
-      .join("\n");
+    const actionPath = path.join(
+      siteRoot,
+      "actions",
+      "submitSiteLead.ts",
+    );
 
-    expect(source).not.toContain("submitSiteLead");
-    expect(fs.existsSync(path.join(siteRoot, "actions"))).toBe(false);
+    expect(fs.existsSync(actionPath)).toBe(true);
+
+    const source = fs.readFileSync(actionPath, "utf8");
+
+    expect(source).toContain('"use server"');
+    expect(source).toContain(
+      "export async function submitSiteLead",
+    );
+    expect(source).toContain("createSupabaseAdminClient");
+    expect(source).not.toContain("createSupabaseServerClient");
   });
 
   it("keeps all cabinet demonstrations in mockupData", () => {

@@ -9,6 +9,77 @@ import { createSupabaseMiddlewareClient } from "./src/integrations/supabase/serv
 
 const WWW_HOST = `www.${ROOT_DOMAIN}`;
 
+const SITE_ATTRIBUTION_COOKIE_NAME = "osbb_attr";
+const SITE_ATTRIBUTION_MAX_AGE_SECONDS = 90 * 24 * 60 * 60;
+
+type SiteAttribution = {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  landing_page: string;
+  referrer: string | null;
+  first_seen_at: string;
+};
+
+function cleanAttributionValue(value: string | null, maxLength: number) {
+  const normalized = value?.trim().slice(0, maxLength) ?? "";
+  return normalized || null;
+}
+
+function withFirstTouchAttribution(
+  request: NextRequest,
+  response: NextResponse,
+) {
+  if (request.cookies.has(SITE_ATTRIBUTION_COOKIE_NAME)) {
+    return response;
+  }
+
+  const searchParams = request.nextUrl.searchParams;
+
+  const attribution: SiteAttribution = {
+    utm_source: cleanAttributionValue(
+      searchParams.get("utm_source"),
+      200,
+    ),
+    utm_medium: cleanAttributionValue(
+      searchParams.get("utm_medium"),
+      200,
+    ),
+    utm_campaign: cleanAttributionValue(
+      searchParams.get("utm_campaign"),
+      200,
+    ),
+    utm_content: cleanAttributionValue(
+      searchParams.get("utm_content"),
+      200,
+    ),
+    landing_page: `${request.nextUrl.pathname}${request.nextUrl.search}`.slice(
+      0,
+      1000,
+    ),
+    referrer: cleanAttributionValue(
+      request.headers.get("referer"),
+      1000,
+    ),
+    first_seen_at: new Date().toISOString(),
+  };
+
+  response.cookies.set(
+    SITE_ATTRIBUTION_COOKIE_NAME,
+    JSON.stringify(attribution),
+    {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: SITE_ATTRIBUTION_MAX_AGE_SECONDS,
+    },
+  );
+
+  return response;
+}
+
 function getHostname(hostHeader: string | null) {
   return (hostHeader ?? "").split(":")[0].toLowerCase();
 }
@@ -104,7 +175,10 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    return NextResponse.next();
+    return withFirstTouchAttribution(
+      request,
+      NextResponse.next(),
+    );
   }
 
   // ADMIN subdomain:
