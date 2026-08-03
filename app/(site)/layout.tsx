@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import "./site-theme.css";
+
 import { siteSettings } from "@/src/modules/site/data/siteContent";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 
@@ -37,7 +39,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white text-zinc-950">
+    <div className="site-theme-root">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

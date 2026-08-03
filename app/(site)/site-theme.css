@@ -1,0 +1,212 @@
+/*
+ * OSBB Platform product-site theme.
+ *
+ * Scope is intentionally limited to .site-theme-root so these variables and
+ * typography rules cannot affect the admin workspace or house cabinets.
+ */
+
+.site-theme-root {
+  /* Основа */
+  --bg: #efeadd;
+  --bg-quiet: #f4efe4;
+  --surface: #fbf8f1;
+  --surface-raised: #ffffff;
+  --border: #e3dacb;
+  --border-strong: #d3c7b3;
+
+  /* Текст */
+  --text: #211d17;
+  --text-muted: #6e6557;
+  --text-soft: #6b6154;
+
+  /* Акцент */
+  --accent: #a87f3c;
+  --accent-strong: #8c6a30;
+  --accent-ink: #7a5c29;
+  --accent-contrast: #fffcf5;
+  --accent-soft: #efe7d6;
+  --accent-soft-text: #4a4234;
+
+  /* Темна акцентна поверхня */
+  --deep: #2a231a;
+  --deep-quiet: #3a3126;
+  --deep-text: #f4efe4;
+  --deep-text-muted: #c4b8a4;
+  --deep-accent: #c79b52;
+
+  /* Семантика статусів */
+  --ok-bg: #e6eee3;
+  --ok-border: #bfd3bb;
+  --ok-text: #3f6b47;
+
+  --bad-bg: #f4e4e0;
+  --bad-border: #e1c2ba;
+  --bad-text: #9e463c;
+
+  --soon-bg: #f6ecd7;
+  --soon-border: #e4d2a8;
+  --soon-text: #8a6321;
+
+  --info-bg: #e7eaf0;
+  --info-border: #c7cedc;
+  --info-text: #4c5c73;
+
+  /* Типографіка */
+  --font-display:
+    var(--font-serif-lora), "Iowan Old Style", Georgia, "Times New Roman",
+    serif;
+  --font-body:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Arial, sans-serif;
+
+  /* Радіуси */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 26px;
+  --r-pill: 999px;
+
+  /* Тіні */
+  --shadow-sm: 0 1px 2px rgba(60, 48, 28, 0.06);
+  --shadow-md: 0 10px 30px rgba(60, 48, 28, 0.1);
+  --shadow-lg: 0 24px 64px rgba(60, 48, 28, 0.16);
+
+  /* Сітка */
+  --container: 1180px;
+  --pad: 24px;
+  --gap: 24px;
+  --section-y: 112px;
+  --header-h: 76px;
+
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  background: var(--bg);
+  color: var(--text);
+
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.65;
+
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+
+  color-scheme: light;
+}
+
+.site-theme-root,
+.site-theme-root *,
+.site-theme-root *::before,
+.site-theme-root *::after {
+  box-sizing: border-box;
+}
+
+.site-theme-root img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.site-theme-root a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.site-theme-root a:hover {
+  color: var(--accent-strong);
+}
+
+.site-theme-root button,
+.site-theme-root input,
+.site-theme-root textarea,
+.site-theme-root select {
+  font: inherit;
+  color: inherit;
+}
+
+.site-theme-root h1,
+.site-theme-root h2,
+.site-theme-root h3,
+.site-theme-root h4 {
+  margin: 0;
+
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.site-theme-root h1 {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.08;
+}
+
+.site-theme-root h2 {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.site-theme-root h3 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.site-theme-root p {
+  margin: 0;
+}
+
+.site-theme-root ul,
+.site-theme-root ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-theme-root :focus-visible {
+  border-radius: var(--r-sm);
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+.site-theme-root a:focus-visible,
+.site-theme-root button:focus-visible {
+  outline-color: var(--accent-strong);
+}
+
+@media (max-width: 1180px) {
+  .site-theme-root h1 {
+    font-size: 46px;
+  }
+
+  .site-theme-root h2 {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-theme-root {
+    --pad: 18px;
+    --section-y: 80px;
+
+    font-size: 17px;
+  }
+
+  .site-theme-root h1 {
+    font-size: 34px;
+  }
+
+  .site-theme-root h2 {
+    font-size: 27px;
+  }
+
+  .site-theme-root h3 {
+    font-size: 21px;
+  }
+}

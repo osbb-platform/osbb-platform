@@ -5,13 +5,14 @@ import "./globals.css";
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
   variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const lora = Lora({
   subsets: ["latin", "cyrillic"],
   variable: "--font-serif-lora",
-  weight: ["500", "600"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
