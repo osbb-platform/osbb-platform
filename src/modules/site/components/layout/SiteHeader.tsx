@@ -69,9 +69,13 @@ export function SiteHeader() {
 
       <header className="osbb-header">
         <div className="osbb-container osbb-header__in">
-          <Link className="osbb-brand" href={ROUTES.site.home}>
-            <SiteMark />
-            OSBB Platform
+          <Link
+            aria-label="OSBB Platform — головна"
+            className="osbb-brand"
+            href={ROUTES.site.home}
+          >
+            <SiteMark className="osbb-brand__mark" />
+            <span>OSBB Platform</span>
           </Link>
 
           <nav aria-label="Основне меню" className="osbb-nav">
@@ -83,10 +87,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="osbb-header__act">
-            <Link
-              className="osbb-header__link"
-              href={ROUTES.site.findHouse}
-            >
+            <Link className="osbb-header__link" href={ROUTES.site.findHouse}>
               Знайти свій будинок
             </Link>
 
@@ -120,12 +121,13 @@ export function SiteHeader() {
       >
         <div className="osbb-mob__top">
           <Link
+            aria-label="OSBB Platform — головна"
             className="osbb-brand"
             href={ROUTES.site.home}
             onClick={closeMenu}
           >
-            <SiteMark />
-            OSBB Platform
+            <SiteMark className="osbb-brand__mark" />
+            <span>OSBB Platform</span>
           </Link>
 
           <button

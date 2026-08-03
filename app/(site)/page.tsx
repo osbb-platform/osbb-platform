@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Accordion } from "@/src/modules/site/components/ui/Accordion";
 import { CabinetMockup } from "@/src/modules/site/components/blocks/CabinetMockup";
+import { HouseHeroVisual } from "@/src/modules/site/components/blocks/HouseHeroVisual";
 import { UkraineMap } from "@/src/modules/site/components/blocks/UkraineMap";
 import { CtaBlock } from "@/src/modules/site/components/blocks/CtaBlock";
 import { Testimonials } from "@/src/modules/site/components/blocks/Testimonials";
@@ -109,14 +110,9 @@ export default async function SiteHomePage() {
                 Подивитись демо
               </Link>
             </div>
-
-            <div className="osbb-home-hero__access">
-              <span>Доступ за персональним кодом</span>
-              <CodeCells code={siteSettings.demoHouseCode} />
-            </div>
           </div>
 
-          <CabinetMockup data={homeMockup} />
+          <HouseHeroVisual />
         </div>
       </section>
 
