@@ -48,11 +48,7 @@ const MONTHS = [
   "Грудень",
 ];
 
-export function HouseDebtors1cImportPanel({
-  houseId,
-  isOpen,
-  onClose,
-}: Props) {
+export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
   const router = useRouter();
   const [serverState, parseAction, isParsePending] = useActionState(
     parseDebtors1cImportBuffer,
@@ -81,6 +77,26 @@ export function HouseDebtors1cImportPanel({
         : 0,
     [state],
   );
+
+  const amountTotals = useMemo(() => {
+    if (!state.ok) {
+      return {
+        sourceDebt: 0,
+        systemBalance: 0,
+      };
+    }
+
+    return state.rows.reduce(
+      (totals, row) => ({
+        sourceDebt: totals.sourceDebt + (row.debtValue ?? 0),
+        systemBalance: totals.systemBalance + (row.osbbBalance ?? 0),
+      }),
+      {
+        sourceDebt: 0,
+        systemBalance: 0,
+      },
+    );
+  }, [state]);
 
   async function execute(
     action:
@@ -192,9 +208,7 @@ export function HouseDebtors1cImportPanel({
               </AdminStatusBadge>
               <AdminStatusBadge
                 tone={
-                  state.unknownSourceAccounts.length > 0
-                    ? "danger"
-                    : "success"
+                  state.unknownSourceAccounts.length > 0 ? "danger" : "success"
                 }
               >
                 Невідомих: {state.unknownSourceAccounts.length}
@@ -204,12 +218,27 @@ export function HouseDebtors1cImportPanel({
               >
                 Попереджень: {state.warningCount}
               </AdminStatusBadge>
+
+              <AdminStatusBadge tone="neutral">
+                Борг з 1С:{" "}
+                {amountTotals.sourceDebt.toLocaleString("uk-UA", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </AdminStatusBadge>
+
+              <AdminStatusBadge tone="neutral">
+                Баланс у системі:{" "}
+                {amountTotals.systemBalance.toLocaleString("uk-UA", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </AdminStatusBadge>
             </div>
 
             {state.unknownSourceAccounts.length > 0 ? (
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                <strong>Передача заблокована.</strong>{" "}
-                Невідомі особові рахунки:{" "}
+                <strong>Передача заблокована.</strong> Невідомі особові рахунки:{" "}
                 {state.unknownSourceAccounts.join(", ")}
               </div>
             ) : null}
@@ -278,12 +307,24 @@ export function HouseDebtors1cImportPanel({
                 <table className="min-w-full border-collapse">
                   <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
                     <tr className="border-b border-[var(--cms-border)] text-left">
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Кв.</th>
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Л/С</th>
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Власник</th>
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Борг 1С</th>
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Баланс OSBB</th>
-                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">Статус</th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Кв.
+                      </th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Л/С
+                      </th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Власник
+                      </th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Борг 1С
+                      </th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Баланс OSBB
+                      </th>
+                      <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
+                        Статус
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
