@@ -4,7 +4,11 @@ import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { HouseDebtors1cImportPanel } from "@/src/modules/import-buffer/components/HouseDebtors1cImportPanel";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
-import { exportDebtorsRegistry, parseDebtorsImportFile, type DebtorsSpreadsheetRow } from "@/src/modules/houses/utils/debtorsSpreadsheet";
+import {
+  exportDebtorsRegistry,
+  parseDebtorsImportFile,
+  type DebtorsSpreadsheetRow,
+} from "@/src/modules/houses/utils/debtorsSpreadsheet";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
@@ -108,7 +112,8 @@ function normalizePayment(value: unknown): DebtorsPayment {
   return {
     url: String(raw.url ?? "").trim(),
     title:
-      String(raw.title ?? DEFAULT_PAYMENT.title).trim() || DEFAULT_PAYMENT.title,
+      String(raw.title ?? DEFAULT_PAYMENT.title).trim() ||
+      DEFAULT_PAYMENT.title,
     note: String(raw.note ?? "").trim(),
     buttonLabel:
       String(raw.buttonLabel ?? DEFAULT_PAYMENT.buttonLabel).trim() ||
@@ -135,8 +140,9 @@ function normalizeCalculator(value: unknown): DebtorsCalculator {
       String(raw.inflationRate ?? DEFAULT_CALCULATOR.inflationRate).trim() ||
       DEFAULT_CALCULATOR.inflationRate,
     enforcementRate:
-      String(raw.enforcementRate ?? DEFAULT_CALCULATOR.enforcementRate).trim() ||
-      DEFAULT_CALCULATOR.enforcementRate,
+      String(
+        raw.enforcementRate ?? DEFAULT_CALCULATOR.enforcementRate,
+      ).trim() || DEFAULT_CALCULATOR.enforcementRate,
     title:
       String(raw.title ?? DEFAULT_CALCULATOR.title).trim() ||
       DEFAULT_CALCULATOR.title,
@@ -170,7 +176,9 @@ function parseBalanceAmount(value: string) {
 function hasBalanceAmount(value: string) {
   if (!value.trim()) return false;
 
-  return Number.isFinite(Number(normalizeDecimalInput(value).replace(/\s+/g, "")));
+  return Number.isFinite(
+    Number(normalizeDecimalInput(value).replace(/\s+/g, "")),
+  );
 }
 
 function isDebtBalance(value: string) {
@@ -199,8 +207,18 @@ function getPreviousCalendarPeriod(now = new Date()) {
 }
 
 const MONTH_OPTIONS = [
-  "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
-  "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+  "Січень",
+  "Лютий",
+  "Березень",
+  "Квітень",
+  "Травень",
+  "Червень",
+  "Липень",
+  "Серпень",
+  "Вересень",
+  "Жовтень",
+  "Листопад",
+  "Грудень",
 ];
 
 function formatPeriodLabel(year: number, month: number) {
@@ -220,36 +238,40 @@ export function HouseDebtorsWorkspace({
   const [searchQuery, setSearchQuery] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
-  const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] = useState(false);
+  const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] =
+    useState(false);
   const [is1cImportOpen, setIs1cImportOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "publish_draft" | "delete_draft" | null
   >(null);
   const [submittedMode, setSubmittedMode] = useState<
-    "save_draft" | "publish_draft" | "delete_draft" | "save_payment" | "save_calculator" | null
+    | "save_draft"
+    | "publish_draft"
+    | "delete_draft"
+    | "save_payment"
+    | "save_calculator"
+    | null
   >(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const previousPeriod = useMemo(() => getPreviousCalendarPeriod(), []);
   const [periodYear, setPeriodYear] = useState(previousPeriod.year);
   const [periodMonth, setPeriodMonth] = useState(previousPeriod.month);
-  const [periodConfirmed, setPeriodConfirmed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const content =
-    debtors
-      ? {
-          payment: debtors.payment,
-          calculator: debtors.calculator,
-          activeItems: debtors.activeItems,
-          draftItems: debtors.draftItems,
-          updatedAt: debtors.updatedAt,
-          settingsLockVersion: debtors.settingsLockVersion,
-          monthSnapshots: debtors.monthSnapshots,
-          draftMonthSnapshots: debtors.draftMonthSnapshots,
-          latestPublishedMonth: debtors.latestPublishedMonth,
-        }
-      : {};
+  const content = debtors
+    ? {
+        payment: debtors.payment,
+        calculator: debtors.calculator,
+        activeItems: debtors.activeItems,
+        draftItems: debtors.draftItems,
+        updatedAt: debtors.updatedAt,
+        settingsLockVersion: debtors.settingsLockVersion,
+        monthSnapshots: debtors.monthSnapshots,
+        draftMonthSnapshots: debtors.draftMonthSnapshots,
+        latestPublishedMonth: debtors.latestPublishedMonth,
+      }
+    : {};
 
   const [payment, setPayment] = useState<DebtorsPayment>(
     normalizePayment(content.payment),
@@ -305,7 +327,8 @@ export function HouseDebtorsWorkspace({
     [previewItems],
   );
 
-  const monthlyMissingApartmentsCount = workingRows.length - previewItems.length;
+  const monthlyMissingApartmentsCount =
+    workingRows.length - previewItems.length;
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -330,10 +353,7 @@ export function HouseDebtorsWorkspace({
   }, [activeItems, activeTab, draftItems, searchQuery, workingRows]);
 
   const hasAnyEditableValue = useMemo(
-    () =>
-      workingRows.some(
-        (item) => item.amount.trim() || item.days.trim(),
-      ),
+    () => workingRows.some((item) => item.amount.trim() || item.days.trim()),
     [workingRows],
   );
 
@@ -376,7 +396,7 @@ export function HouseDebtorsWorkspace({
   }
 
   async function submitDraftSave() {
-    if (!debtors || !periodConfirmed) return;
+    if (!debtors) return;
 
     setSubmittedMode("save_draft");
 
@@ -400,7 +420,6 @@ export function HouseDebtorsWorkspace({
     if (!saved) return;
 
     setIsPreviewOpen(false);
-    setPeriodConfirmed(false);
     setActiveTab("draft");
   }
 
@@ -503,11 +522,11 @@ export function HouseDebtorsWorkspace({
     });
 
     if (!relabelled) return;
-
-    setPeriodConfirmed(false);
   }
 
-  function buildReferenceRows(rows: DebtSnapshotItem[]): DebtorsSpreadsheetRow[] {
+  function buildReferenceRows(
+    rows: DebtSnapshotItem[],
+  ): DebtorsSpreadsheetRow[] {
     return rows.map((row) => ({
       apartmentLabel: row.apartmentLabel,
       accountNumber: row.accountNumber,
@@ -558,11 +577,7 @@ export function HouseDebtorsWorkspace({
 
       const importedMap = new Map(
         result.rows.map((row) => [
-          [
-            row.apartmentLabel,
-            row.accountNumber,
-            row.ownerName,
-          ].join("||"),
+          [row.apartmentLabel, row.accountNumber, row.ownerName].join("||"),
           row,
         ]),
       );
@@ -628,8 +643,7 @@ export function HouseDebtorsWorkspace({
   const hasPaymentUrl = Boolean(trimmedPaymentUrl);
 
   const isPaymentUrlValid =
-    !hasPaymentUrl ||
-    /^https?:\/\//i.test(trimmedPaymentUrl);
+    !hasPaymentUrl || /^https?:\/\//i.test(trimmedPaymentUrl);
 
   const paymentBlockReady = hasPaymentUrl && isPaymentUrlValid;
 
@@ -646,25 +660,34 @@ export function HouseDebtorsWorkspace({
     Boolean(calculator.enforcementRate.trim());
 
   const calculatorBlockReady =
-    calculator.enabled &&
-    hasCalculatorValues &&
-    publishedDebtorsCount > 0;
+    calculator.enabled && hasCalculatorValues && publishedDebtorsCount > 0;
 
   return (
     <div className="space-y-6">
       <div className={`${adminSurfaceClass} p-6`}>
         <div className="flex flex-col gap-5">
           <div>
-            <h2 className="text-xl font-semibold text-[var(--cms-text)]">Боржники</h2>
+            <h2 className="text-xl font-semibold text-[var(--cms-text)]">
+              Боржники
+            </h2>
             <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
-              Керування балансами особових рахунків, чернеткою публікації та списком боржників для мешканців.
+              Керування балансами особових рахунків, чернеткою публікації та
+              списком боржників для мешканців.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             {[
-              { key: "all", label: "Усі квартири", count: totalApartmentsCount },
-              { key: "published", label: "Опубліковано", count: publishedBalanceRowsCount },
+              {
+                key: "all",
+                label: "Усі квартири",
+                count: totalApartmentsCount,
+              },
+              {
+                key: "published",
+                label: "Опубліковано",
+                count: publishedBalanceRowsCount,
+              },
               { key: "draft", label: "Чернетка", count: draftBalanceRowsCount },
             ].map((tab) => {
               const isActive = activeTab === tab.key;
@@ -699,901 +722,985 @@ export function HouseDebtorsWorkspace({
 
       <div className={`space-y-5 ${adminSurfaceClass} p-6`}>
         {lastError ? (
-        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {lastError}
-        </div>
-      ) : null}
-
-      {importError ? (
-        <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-          {importError}
-        </div>
-      ) : null}
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".csv,.xls,.xlsx"
-        onChange={handleImportFileChange}
-        className="hidden"
-      />
-
-      {activeTab === "all" ? (
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-5">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_180px] lg:items-end">
-            <div>
-              <div className="text-sm font-semibold text-[var(--cms-text)]">Звітний період</div>
-              <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
-                За замовчуванням вибрано попередній календарний місяць.
-              </p>
-            </div>
-            <select
-              value={periodMonth}
-              onChange={(event) => {
-                setPeriodMonth(Number(event.target.value));
-                setPeriodConfirmed(false);
-              }}
-              className={adminInputClass}
-            >
-              {MONTH_OPTIONS.map((label, index) => (
-                <option key={label} value={index + 1}>{label}</option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min={2000}
-              max={2100}
-              value={periodYear}
-              onChange={(event) => {
-                setPeriodYear(Number(event.target.value));
-                setPeriodConfirmed(false);
-              }}
-              className={adminInputClass}
-            />
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+            {lastError}
           </div>
+        ) : null}
 
-          <label className="mt-4 flex items-start gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] px-4 py-3">
-            <input
-              type="checkbox"
-              checked={periodConfirmed}
-              onChange={(event) => setPeriodConfirmed(event.target.checked)}
-              className="mt-1"
-            />
-            <span className="text-sm text-[var(--cms-text)]">
-              Підтвердіть місяць: {formatPeriodLabel(periodYear, periodMonth)}
-            </span>
-          </label>
-        </div>
-      ) : null}
+        {importError ? (
+          <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
+            {importError}
+          </div>
+        ) : null}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
         <input
-          type="text"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="Пошук: квартира / особовий рахунок / власник"
-          className={adminInputClass}
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,.xls,.xlsx"
+          onChange={handleImportFileChange}
+          className="hidden"
         />
 
-        {activeTab === "all" ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setIs1cImportOpen(true)}
-              className="inline-flex h-10 min-w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)]"
-              aria-label="Імпорт боржників з 1С"
-              title="Імпорт з 1С"
-            >
-              1С
-            </button>
-
-            <button
-              type="button"
-              onClick={openImportPicker}
-              disabled={isImporting}
-              className={`${adminSecondaryButtonClass} disabled:opacity-50`}
-            >
-              {isImporting ? "Імпорт..." : "Імпорт"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExport}
-              className={adminSecondaryButtonClass}
-            >
-              Export
-            </button>
-
-            <button
-              type="button"
-              onClick={clearAllDebtFields}
-              className={adminSecondaryButtonClass}
-            >
-              Очистити
-            </button>
-
-            <button
-              type="button"
-              disabled={!hasAnyEditableValue}
-              onClick={openPreview}
-              className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              Зберегти
-            </button>
-          </>
-        ) : null}
-      </div>
-
-      {activeTab === "draft" && isDraftEmpty ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Чернетка поки порожня. Після підготовки балансів і збереження попереднього перегляду чернетка з’явиться тут.
-        </div>
-      ) : null}
-      {activeTab === "draft" && draftMonthSnapshot ? (
-        <div className="space-y-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-[var(--cms-warning-text)]">
-                Чернетка готова до публікації
-              </p>
-              <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
-                {formatPeriodLabel(
-                  draftMonthSnapshot.periodYear,
-                  draftMonthSnapshot.periodMonth,
-                )} · Ревізія {draftMonthSnapshot.revision} · Рядків: {draftMonthSnapshot.rowsCount}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setConfirmAction("delete_draft")}
-                disabled={isPending}
-                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
-              >
-                Видалити чернетку
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setConfirmAction("publish_draft")}
-                disabled={isPending}
-                className={`${adminPrimaryButtonClass} disabled:opacity-50`}
-              >
-                Підтвердити публікацію
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-surface)] p-4">
-            <div className="text-sm font-medium text-[var(--cms-text)]">
-              Змінити період чернетки
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_140px_auto]">
-              <select
-                value={periodMonth}
-                onChange={(event) =>
-                  setPeriodMonth(Number(event.target.value))
-                }
-                className={adminInputClass}
-              >
-                {MONTH_OPTIONS.map((label, index) => (
-                  <option key={label} value={index + 1}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                min={2000}
-                max={2100}
-                value={periodYear}
-                onChange={(event) =>
-                  setPeriodYear(Number(event.target.value))
-                }
-                className={adminInputClass}
-              />
-
-              <button
-                type="button"
-                onClick={relabelDraftMonth}
-                disabled={
-                  isPending ||
-                  (
-                    periodYear === draftMonthSnapshot.periodYear &&
-                    periodMonth === draftMonthSnapshot.periodMonth
-                  )
-                }
-                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
-              >
-                Змінити період
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-
-      {activeTab === "published" && isPublishedEmpty ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          Опублікований список поки порожній. Після підтвердження чернетки тут з’являться опубліковані баланси.
-        </div>
-      ) : null}
-
-      {latestPublishedMonth ? (
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--cms-success-text)]">
-            Актуальний опублікований період
-          </div>
-          <div className="mt-2 text-base font-semibold text-[var(--cms-success-text)]">
-            {formatPeriodLabel(
-              latestPublishedMonth.periodYear,
-              latestPublishedMonth.periodMonth,
-            )} · Ревізія {latestPublishedMonth.revision}
-          </div>
-          <div className="mt-1 text-xs text-[var(--cms-success-text)]">
-            Рядків: {latestPublishedMonth.rowsCount}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
-        <div className="text-base font-semibold text-[var(--cms-text)]">
-          Історія по місяцях
-        </div>
-
-        {monthSnapshots.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--cms-text-muted)]">
-            Місячних знімків поки немає.
-          </p>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {monthSnapshots.map((snapshot) => {
-              const statusLabel =
-                snapshot.status === "published"
-                  ? "Опубліковано"
-                  : snapshot.status === "draft"
-                    ? "Чернетка"
-                    : snapshot.status === "superseded"
-                      ? "Замінено"
-                      : "Відхилено";
-
-              return (
-                <div
-                  key={snapshot.id}
-                  className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-[var(--cms-text)]">
-                      {formatPeriodLabel(
-                        snapshot.periodYear,
-                        snapshot.periodMonth,
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
-                      Ревізія {snapshot.revision} · Рядків: {snapshot.rowsCount}
-                    </div>
-                  </div>
-
-                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                    {statusLabel}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      {activeTab === "all" ? (
-        <div
-          className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]"
-        >
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setIsPaymentSettingsOpen(true)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                setIsPaymentSettingsOpen(true);
-              }
-            }}
-            className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-          >
-            <div>
-              <p className="text-sm font-medium text-[var(--cms-text)]">
-                Блок оплати заборгованості
-              </p>
-              <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
-                Заповніть посилання, заголовок і текст для публічного блоку оплати, який побачать мешканці на сайті будинку.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
-                paymentBlockReady
-                  ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                  : hasPaymentUrl && !isPaymentUrlValid
-                    ? "bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
-                    : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
-              }`}>
-                {paymentBlockReady
-                  ? "Блок оплати заповнено"
-                  : hasPaymentUrl && !isPaymentUrlValid
-                    ? "Перевірте формат посилання"
-                    : "Заповніть блок оплати"}
-              </div>
-            </div>
-          </div>
-
-          {paymentSaveSuccess ? (
-            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
-              Налаштування блоку оплати збережено.
-            </div>
-          ) : null}
-
-          {isPaymentSettingsOpen ? (
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsPaymentSettingsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                  aria-label="Закрити налаштування оплати"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Посилання загальної оплати
-                </div>
-                <input
-                  value={payment.url}
-                  onChange={(event) =>
-                    setPayment((prev) => ({ ...prev, url: event.target.value }))
-                  }
-                  placeholder="https://pay.example.com/debtors"
-                  className={`w-full rounded-[var(--r-lg)] border px-4 py-3 text-sm text-[var(--cms-text)] ${
-                    hasPaymentUrl && !isPaymentUrlValid
-                      ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)]"
-                      : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)]"
-                  }`}
-                />
-                <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
-                  Це посилання буде використовуватися в публічному блоці оплати для переходу мешканця до оплати заборгованості.
-                </div>
-                {hasPaymentUrl && !isPaymentUrlValid ? (
-                  <div className="mt-2 text-xs text-[var(--cms-warning-text)]">
-                    Посилання має починатися з http:// або https://
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Текст кнопки
-                </div>
-                <input
-                  value={payment.buttonLabel}
-                  onChange={(event) =>
-                    setPayment((prev) => ({
-                      ...prev,
-                      buttonLabel: event.target.value,
-                    }))
-                  }
-                  placeholder="Оплатити"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Заголовок блоку
-                </div>
-                <input
-                  value={payment.title}
-                  onChange={(event) =>
-                    setPayment((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                  placeholder="Оплата заборгованості"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Опис для мешканця
-                </div>
-                <textarea
-                  value={payment.note}
-                  onChange={(event) =>
-                    setPayment((prev) => ({ ...prev, note: event.target.value }))
-                  }
-                  placeholder="Наприклад: введіть особовий рахунок, перевірте суму боргу та перейдіть до оплати."
-                  rows={3}
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
-                  Попередній перегляд публічного блоку
-                </div>
-                <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
-                  {payment.title || "Оплата заборгованості"}
-                </div>
-                <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
-                  {payment.note || "Опис блоку оплати з’явиться тут."}
-                </div>
-                <div className="mt-4 inline-flex rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)]">
-                  {payment.buttonLabel || "Оплатити"}
-                </div>
-              </div>
-
-              <div className="md:col-span-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={savePaymentSettings}
-                  disabled={!debtors || !paymentDirty || !isPaymentUrlValid || isPending}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  {isPending && submittedMode === "save_payment"
-                    ? "Зберігаємо..."
-                    : "Зберегти"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPayment(DEFAULT_PAYMENT)}
-                  disabled={!paymentDirty || isPending}
-                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  Скинути
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {activeTab === "all" ? (
-        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setIsCalculatorSettingsOpen(true)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                setIsCalculatorSettingsOpen(true);
-              }
-            }}
-            className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-          >
-            <div>
-              <p className="text-sm font-medium text-[var(--cms-text)]">
-                Калькулятор судових витрат
-              </p>
-              <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
-                Налаштуйте дефолтні суми і відсотки для публічного калькулятора. На сайті він з’явиться тільки після збереження та за наявності опублікованого списку боржників.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
-                calculatorBlockReady
-                  ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
-                  : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
-              }`}>
-                {calculatorBlockReady ? "Калькулятор збережено" : "Калькулятор не збережено"}
-              </div>
-            </div>
-          </div>
-
-          {calculatorSaveSuccess ? (
-            <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
-              Налаштування калькулятора збережено.
-            </div>
-          ) : null}
-
-          {isCalculatorSettingsOpen ? (
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsCalculatorSettingsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
-                  aria-label="Закрити налаштування калькулятора"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Заголовок калькулятора
-                </div>
-                <input
-                  value={calculator.title}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                  placeholder="Калькулятор судових витрат"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Судовий збір, грн
-                </div>
-                <input
-                  value={calculator.courtFee}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({
-                      ...prev,
-                      courtFee: event.target.value.replace(/[^\d.,]/g, ""),
-                    }))
-                  }
-                  inputMode="decimal"
-                  placeholder="302.80"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Правнича допомога, грн
-                </div>
-                <input
-                  value={calculator.legalAid}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({
-                      ...prev,
-                      legalAid: event.target.value.replace(/[^\d.,]/g, ""),
-                    }))
-                  }
-                  inputMode="decimal"
-                  placeholder="1000"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Інфляційні / 3% річних, %
-                </div>
-                <input
-                  value={calculator.inflationRate}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({
-                      ...prev,
-                      inflationRate: event.target.value.replace(/[^\d.,]/g, ""),
-                    }))
-                  }
-                  inputMode="decimal"
-                  placeholder="20"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Виконавчий збір, %
-                </div>
-                <input
-                  value={calculator.enforcementRate}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({
-                      ...prev,
-                      enforcementRate: event.target.value.replace(/[^\d.,]/g, ""),
-                    }))
-                  }
-                  inputMode="decimal"
-                  placeholder="10"
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Опис для мешканця
-                </div>
-                <textarea
-                  value={calculator.note}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({ ...prev, note: event.target.value }))
-                  }
-                  rows={3}
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
-                  Дисклеймер
-                </div>
-                <textarea
-                  value={calculator.disclaimer}
-                  onChange={(event) =>
-                    setCalculator((prev) => ({ ...prev, disclaimer: event.target.value }))
-                  }
-                  rows={2}
-                  className={adminInputClass}
-                />
-              </div>
-
-              <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
-                  Попередній перегляд параметрів
-                </div>
-                <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
-                  {calculator.title || DEFAULT_CALCULATOR.title}
-                </div>
-                <div className="mt-3 grid gap-2 text-sm text-[var(--cms-text-muted)] sm:grid-cols-2">
-                  <div>Судовий збір: {calculator.courtFee || "0"} грн</div>
-                  <div>Правнича допомога: {calculator.legalAid || "0"} грн</div>
-                  <div>Інфляційні / 3%: {calculator.inflationRate || "0"}%</div>
-                  <div>Виконавчий збір: {calculator.enforcementRate || "0"}%</div>
-                </div>
-              </div>
-
-              <div className="md:col-span-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={saveCalculatorSettings}
-                  disabled={!debtors || (calculator.enabled && !calculatorDirty) || isPending}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  {isPending && submittedMode === "save_calculator"
-                    ? "Зберігаємо..."
-                    : "Зберегти калькулятор"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCalculator(DEFAULT_CALCULATOR)}
-                  disabled={!calculatorDirty || isPending}
-                  className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  Скинути
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {activeTab === "all" && filteredRows.length === 0 ? (
-        <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-          У цьому будинку поки немає квартир для роботи із заборгованістю. Спочатку додайте квартири в розділі «Квартири», після цього тут з’явиться реєстр.
-        </div>
-      ) : filteredRows.length > 0 ? (
-        <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
-          <div className="max-h-[70vh] overflow-auto">
-            <table className="min-w-full border-collapse">
-              <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
-                <tr className="border-b border-[var(--cms-border)] text-left">
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Кв.</th>
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Л/С</th>
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Власник</th>
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Площа</th>
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Борг</th>
-                  <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Дні</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredRows.map((row) => (
-                  <tr
-                    key={row.apartmentId}
-                    className="border-b border-[var(--cms-border)]"
-                  >
-                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
-                      {row.apartmentLabel}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
-                      {row.accountNumber}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
-                      {row.ownerName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
-                      {formatArea(row.area)}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {activeTab === "all" ? (
-                        <input
-                          value={row.amount}
-                          onChange={(event) =>
-                            updateField(row.apartmentId, "amount", event.target.value)
-                          }
-                          inputMode="decimal"
-                          placeholder="-1500.00 або 250.00"
-                          className="w-[140px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
-                        />
-                      ) : (
-                        <span className="text-sm text-[var(--cms-text)]">
-                          {row.amount || "—"}
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {activeTab === "all" ? (
-                        <input
-                          value={row.days}
-                          onChange={(event) =>
-                            updateField(row.apartmentId, "days", event.target.value)
-                          }
-                          inputMode="numeric"
-                          placeholder="—"
-                          className="w-[100px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
-                        />
-                      ) : (
-                        <span className="text-sm text-[var(--cms-text)]">
-                          {row.days || "—"}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : null}
-
-      <PlatformConfirmModal
-        open={confirmAction === "publish_draft"}
-        title="Опублікувати чернетку боржників?"
-        description="Поточний опублікований список буде повністю замінено даними з чернетки."
-        confirmLabel="Опублікувати"
-        pendingLabel="Публікуємо..."
-        tone="publish"
-        isPending={isPending}
-        onCancel={() => {
-          if (!isPending) {
-            setConfirmAction(null);
-          }
-        }}
-        onConfirm={() => {
-          setConfirmAction(null);
-          void publishDraft();
-        }}
-      />
-
-      <PlatformConfirmModal
-        open={confirmAction === "delete_draft"}
-        title="Видалити чернетку боржників?"
-        description="Усі дані поточної чернетки буде видалено без можливості відновлення."
-        confirmLabel="Видалити"
-        pendingLabel="Видаляємо..."
-        tone="destructive"
-        isPending={isPending}
-        onCancel={() => {
-          if (!isPending) {
-            setConfirmAction(null);
-          }
-        }}
-        onConfirm={() => {
-          setConfirmAction(null);
-          void deleteDraft();
-        }}
-      />
-
-      <HouseDebtors1cImportPanel
-        houseId={houseId}
-        isOpen={is1cImportOpen}
-        onClose={() => setIs1cImportOpen(false)}
-      />
-
-      {isPreviewOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm">
-          <button
-            type="button"
-            onClick={closePreview}
-            className="absolute inset-0"
-            aria-label="Закрити попередній перегляд"
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Пошук: квартира / особовий рахунок / власник"
+            className={adminInputClass}
           />
 
-          <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
-            <div className="border-b border-[var(--cms-border)] px-6 py-5">
-              <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                Попередній перегляд перед збереженням
+          {activeTab === "all" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setIs1cImportOpen(true)}
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface)] px-3 text-sm font-semibold text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)]"
+                aria-label="Імпорт боржників з 1С"
+                title="Імпорт з 1С"
+              >
+                1С
+              </button>
+
+              <button
+                type="button"
+                onClick={openImportPicker}
+                disabled={isImporting}
+                className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+              >
+                {isImporting ? "Імпорт..." : "Імпорт"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExport}
+                className={adminSecondaryButtonClass}
+              >
+                Export
+              </button>
+
+              <button
+                type="button"
+                onClick={clearAllDebtFields}
+                className={adminSecondaryButtonClass}
+              >
+                Очистити
+              </button>
+
+              <button
+                type="button"
+                disabled={!hasAnyEditableValue}
+                onClick={openPreview}
+                className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                Зберегти
+              </button>
+            </>
+          ) : null}
+        </div>
+
+        {activeTab === "draft" && isDraftEmpty ? (
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+            Чернетка поки порожня. Після підготовки балансів і збереження
+            попереднього перегляду чернетка з’явиться тут.
+          </div>
+        ) : null}
+        {activeTab === "draft" && draftMonthSnapshot ? (
+          <div className="space-y-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--cms-warning-text)]">
+                  Чернетка готова до публікації
+                </p>
+                <p className="mt-1 text-xs text-[var(--cms-warning-text)]">
+                  {formatPeriodLabel(
+                    draftMonthSnapshot.periodYear,
+                    draftMonthSnapshot.periodMonth,
+                  )}{" "}
+                  · Ревізія {draftMonthSnapshot.revision} · Рядків:{" "}
+                  {draftMonthSnapshot.rowsCount}
+                </p>
               </div>
 
-              <h2 className="mt-3 text-2xl font-semibold text-[var(--cms-text)]">
-                Перевірте список боржників
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                У чернетку будуть збережені лише квартири, де заповнена сума боргу.
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Боржників: {previewDebtorsCount}
-                </span>
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Загальна сума: {formatSummaryAmount(previewItems)}
-                </span>
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Період: {formatPeriodLabel(periodYear, periodMonth)}
-                </span>
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
-                  Квартир без рядка: {monthlyMissingApartmentsCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
-              {isPreviewEmpty ? (
-                <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
-                  У попередньому перегляді немає рядків для збереження. Вкажіть суму боргу хоча б для однієї квартири.
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
-                  <table className="min-w-full border-collapse">
-                    <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
-                      <tr className="border-b border-[var(--cms-border)] text-left">
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Кв.</th>
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Л/С</th>
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Власник</th>
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Площа</th>
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Борг</th>
-                        <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">Дні</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewItems.map((row) => (
-                        <tr key={row.apartmentId} className="border-b border-[var(--cms-border)]">
-                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.apartmentLabel}</td>
-                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.accountNumber}</td>
-                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.ownerName}</td>
-                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{formatArea(row.area)}</td>
-                          <td className="px-4 py-3 text-sm font-medium text-[var(--cms-text)]">{row.amount}</td>
-                          <td className="px-4 py-3 text-sm text-[var(--cms-text)]">{row.days || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-[var(--cms-border)] px-6 py-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
-                  onClick={closePreview}
-                  className={adminSecondaryButtonClass}
+                  onClick={() => setConfirmAction("delete_draft")}
+                  disabled={isPending}
+                  className={`${adminSecondaryButtonClass} disabled:opacity-50`}
                 >
-                  Назад
+                  Видалити чернетку
                 </button>
 
                 <button
                   type="button"
-                  disabled={
-                    isPreviewEmpty ||
-                    !debtors ||
-                    !periodConfirmed ||
-                    isPending
-                  }
-                  onClick={submitDraftSave}
-                  className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  onClick={() => setConfirmAction("publish_draft")}
+                  disabled={isPending}
+                  className={`${adminPrimaryButtonClass} disabled:opacity-50`}
                 >
-                  {isPending ? "Зберігаємо..." : "Створити місячну чернетку"}
+                  Підтвердити публікацію
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-surface)] p-4">
+              <div className="text-sm font-medium text-[var(--cms-text)]">
+                Змінити період чернетки
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+                <select
+                  value={periodMonth}
+                  onChange={(event) =>
+                    setPeriodMonth(Number(event.target.value))
+                  }
+                  className={adminInputClass}
+                >
+                  {MONTH_OPTIONS.map((label, index) => (
+                    <option key={label} value={index + 1}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min={2000}
+                  max={2100}
+                  value={periodYear}
+                  onChange={(event) =>
+                    setPeriodYear(Number(event.target.value))
+                  }
+                  className={adminInputClass}
+                />
+
+                <button
+                  type="button"
+                  onClick={relabelDraftMonth}
+                  disabled={
+                    isPending ||
+                    (periodYear === draftMonthSnapshot.periodYear &&
+                      periodMonth === draftMonthSnapshot.periodMonth)
+                  }
+                  className={`${adminSecondaryButtonClass} disabled:opacity-50`}
+                >
+                  Змінити період
                 </button>
               </div>
             </div>
           </div>
+        ) : null}
+
+        {activeTab === "published" && isPublishedEmpty ? (
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+            Опублікований список поки порожній. Після підтвердження чернетки тут
+            з’являться опубліковані баланси.
+          </div>
+        ) : null}
+
+        {latestPublishedMonth ? (
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--cms-success-text)]">
+              Актуальний опублікований період
+            </div>
+            <div className="mt-2 text-base font-semibold text-[var(--cms-success-text)]">
+              {formatPeriodLabel(
+                latestPublishedMonth.periodYear,
+                latestPublishedMonth.periodMonth,
+              )}{" "}
+              · Ревізія {latestPublishedMonth.revision}
+            </div>
+            <div className="mt-1 text-xs text-[var(--cms-success-text)]">
+              Рядків: {latestPublishedMonth.rowsCount}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
+          <div className="text-base font-semibold text-[var(--cms-text)]">
+            Історія по місяцях
+          </div>
+
+          {monthSnapshots.length === 0 ? (
+            <p className="mt-3 text-sm text-[var(--cms-text-muted)]">
+              Місячних знімків поки немає.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {monthSnapshots.map((snapshot) => {
+                const statusLabel =
+                  snapshot.status === "published"
+                    ? "Опубліковано"
+                    : snapshot.status === "draft"
+                      ? "Чернетка"
+                      : snapshot.status === "superseded"
+                        ? "Замінено"
+                        : "Відхилено";
+
+                return (
+                  <div
+                    key={snapshot.id}
+                    className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-[var(--cms-text)]">
+                        {formatPeriodLabel(
+                          snapshot.periodYear,
+                          snapshot.periodMonth,
+                        )}
+                      </div>
+                      <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                        Ревізія {snapshot.revision} · Рядків:{" "}
+                        {snapshot.rowsCount}
+                      </div>
+                    </div>
+
+                    <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                      {statusLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      ) : null}
+        {activeTab === "all" ? (
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsPaymentSettingsOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setIsPaymentSettingsOpen(true);
+                }
+              }}
+              className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+            >
+              <div>
+                <p className="text-sm font-medium text-[var(--cms-text)]">
+                  Блок оплати заборгованості
+                </p>
+                <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                  Заповніть посилання, заголовок і текст для публічного блоку
+                  оплати, який побачать мешканці на сайті будинку.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
+                    paymentBlockReady
+                      ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                      : hasPaymentUrl && !isPaymentUrlValid
+                        ? "bg-[var(--cms-warning-bg)] text-[var(--cms-warning-text)]"
+                        : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
+                  }`}
+                >
+                  {paymentBlockReady
+                    ? "Блок оплати заповнено"
+                    : hasPaymentUrl && !isPaymentUrlValid
+                      ? "Перевірте формат посилання"
+                      : "Заповніть блок оплати"}
+                </div>
+              </div>
+            </div>
+
+            {paymentSaveSuccess ? (
+              <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+                Налаштування блоку оплати збережено.
+              </div>
+            ) : null}
+
+            {isPaymentSettingsOpen ? (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsPaymentSettingsOpen(false)}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                    aria-label="Закрити налаштування оплати"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Посилання загальної оплати
+                  </div>
+                  <input
+                    value={payment.url}
+                    onChange={(event) =>
+                      setPayment((prev) => ({
+                        ...prev,
+                        url: event.target.value,
+                      }))
+                    }
+                    placeholder="https://pay.example.com/debtors"
+                    className={`w-full rounded-[var(--r-lg)] border px-4 py-3 text-sm text-[var(--cms-text)] ${
+                      hasPaymentUrl && !isPaymentUrlValid
+                        ? "border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)]"
+                        : "border-[var(--cms-border)] bg-[var(--cms-surface-elevated)]"
+                    }`}
+                  />
+                  <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
+                    Це посилання буде використовуватися в публічному блоці
+                    оплати для переходу мешканця до оплати заборгованості.
+                  </div>
+                  {hasPaymentUrl && !isPaymentUrlValid ? (
+                    <div className="mt-2 text-xs text-[var(--cms-warning-text)]">
+                      Посилання має починатися з http:// або https://
+                    </div>
+                  ) : null}
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Текст кнопки
+                  </div>
+                  <input
+                    value={payment.buttonLabel}
+                    onChange={(event) =>
+                      setPayment((prev) => ({
+                        ...prev,
+                        buttonLabel: event.target.value,
+                      }))
+                    }
+                    placeholder="Оплатити"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Заголовок блоку
+                  </div>
+                  <input
+                    value={payment.title}
+                    onChange={(event) =>
+                      setPayment((prev) => ({
+                        ...prev,
+                        title: event.target.value,
+                      }))
+                    }
+                    placeholder="Оплата заборгованості"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Опис для мешканця
+                  </div>
+                  <textarea
+                    value={payment.note}
+                    onChange={(event) =>
+                      setPayment((prev) => ({
+                        ...prev,
+                        note: event.target.value,
+                      }))
+                    }
+                    placeholder="Наприклад: введіть особовий рахунок, перевірте суму боргу та перейдіть до оплати."
+                    rows={3}
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
+                    Попередній перегляд публічного блоку
+                  </div>
+                  <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
+                    {payment.title || "Оплата заборгованості"}
+                  </div>
+                  <div className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                    {payment.note || "Опис блоку оплати з’явиться тут."}
+                  </div>
+                  <div className="mt-4 inline-flex rounded-[var(--r-lg)] bg-[var(--cms-primary)] px-4 py-2 text-sm font-medium text-[var(--cms-primary-contrast)]">
+                    {payment.buttonLabel || "Оплатити"}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={savePaymentSettings}
+                    disabled={
+                      !debtors ||
+                      !paymentDirty ||
+                      !isPaymentUrlValid ||
+                      isPending
+                    }
+                    className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {isPending && submittedMode === "save_payment"
+                      ? "Зберігаємо..."
+                      : "Зберегти"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPayment(DEFAULT_PAYMENT)}
+                    disabled={!paymentDirty || isPending}
+                    className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    Скинути
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {activeTab === "all" ? (
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsCalculatorSettingsOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setIsCalculatorSettingsOpen(true);
+                }
+              }}
+              className="flex cursor-pointer flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+            >
+              <div>
+                <p className="text-sm font-medium text-[var(--cms-text)]">
+                  Калькулятор судових витрат
+                </p>
+                <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                  Налаштуйте дефолтні суми і відсотки для публічного
+                  калькулятора. На сайті він з’явиться тільки після збереження
+                  та за наявності опублікованого списку боржників.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={`inline-flex rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium ${
+                    calculatorBlockReady
+                      ? "bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                      : "bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)]"
+                  }`}
+                >
+                  {calculatorBlockReady
+                    ? "Калькулятор збережено"
+                    : "Калькулятор не збережено"}
+                </div>
+              </div>
+            </div>
+
+            {calculatorSaveSuccess ? (
+              <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
+                Налаштування калькулятора збережено.
+              </div>
+            ) : null}
+
+            {isCalculatorSettingsOpen ? (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsCalculatorSettingsOpen(false)}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] text-lg font-medium text-[var(--cms-text)] transition hover:bg-[var(--cms-pill-bg)]"
+                    aria-label="Закрити налаштування калькулятора"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Заголовок калькулятора
+                  </div>
+                  <input
+                    value={calculator.title}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        title: event.target.value,
+                      }))
+                    }
+                    placeholder="Калькулятор судових витрат"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Судовий збір, грн
+                  </div>
+                  <input
+                    value={calculator.courtFee}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        courtFee: event.target.value.replace(/[^\d.,]/g, ""),
+                      }))
+                    }
+                    inputMode="decimal"
+                    placeholder="302.80"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Правнича допомога, грн
+                  </div>
+                  <input
+                    value={calculator.legalAid}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        legalAid: event.target.value.replace(/[^\d.,]/g, ""),
+                      }))
+                    }
+                    inputMode="decimal"
+                    placeholder="1000"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Інфляційні / 3% річних, %
+                  </div>
+                  <input
+                    value={calculator.inflationRate}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        inflationRate: event.target.value.replace(
+                          /[^\d.,]/g,
+                          "",
+                        ),
+                      }))
+                    }
+                    inputMode="decimal"
+                    placeholder="20"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Виконавчий збір, %
+                  </div>
+                  <input
+                    value={calculator.enforcementRate}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        enforcementRate: event.target.value.replace(
+                          /[^\d.,]/g,
+                          "",
+                        ),
+                      }))
+                    }
+                    inputMode="decimal"
+                    placeholder="10"
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Опис для мешканця
+                  </div>
+                  <textarea
+                    value={calculator.note}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        note: event.target.value,
+                      }))
+                    }
+                    rows={3}
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="mb-2 text-sm font-medium text-[var(--cms-text)]">
+                    Дисклеймер
+                  </div>
+                  <textarea
+                    value={calculator.disclaimer}
+                    onChange={(event) =>
+                      setCalculator((prev) => ({
+                        ...prev,
+                        disclaimer: event.target.value,
+                      }))
+                    }
+                    rows={2}
+                    className={adminInputClass}
+                  />
+                </div>
+
+                <div className="md:col-span-2 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--cms-text-muted)]">
+                    Попередній перегляд параметрів
+                  </div>
+                  <div className="mt-3 text-lg font-semibold text-[var(--cms-text)]">
+                    {calculator.title || DEFAULT_CALCULATOR.title}
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--cms-text-muted)] sm:grid-cols-2">
+                    <div>Судовий збір: {calculator.courtFee || "0"} грн</div>
+                    <div>
+                      Правнича допомога: {calculator.legalAid || "0"} грн
+                    </div>
+                    <div>
+                      Інфляційні / 3%: {calculator.inflationRate || "0"}%
+                    </div>
+                    <div>
+                      Виконавчий збір: {calculator.enforcementRate || "0"}%
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={saveCalculatorSettings}
+                    disabled={
+                      !debtors ||
+                      (calculator.enabled && !calculatorDirty) ||
+                      isPending
+                    }
+                    className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {isPending && submittedMode === "save_calculator"
+                      ? "Зберігаємо..."
+                      : "Зберегти калькулятор"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCalculator(DEFAULT_CALCULATOR)}
+                    disabled={!calculatorDirty || isPending}
+                    className={`${adminSecondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    Скинути
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {activeTab === "all" && filteredRows.length === 0 ? (
+          <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
+            У цьому будинку поки немає квартир для роботи із заборгованістю.
+            Спочатку додайте квартири в розділі «Квартири», після цього тут
+            з’явиться реєстр.
+          </div>
+        ) : filteredRows.length > 0 ? (
+          <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
+            <div className="max-h-[70vh] overflow-auto">
+              <table className="min-w-full border-collapse">
+                <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
+                  <tr className="border-b border-[var(--cms-border)] text-left">
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Кв.
+                    </th>
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Л/С
+                    </th>
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Власник
+                    </th>
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Площа
+                    </th>
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Борг
+                    </th>
+                    <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                      Дні
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredRows.map((row) => (
+                    <tr
+                      key={row.apartmentId}
+                      className="border-b border-[var(--cms-border)]"
+                    >
+                      <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                        {row.apartmentLabel}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                        {row.accountNumber}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                        {row.ownerName}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                        {formatArea(row.area)}
+                      </td>
+
+                      <td className="px-4 py-3">
+                        {activeTab === "all" ? (
+                          <input
+                            value={row.amount}
+                            onChange={(event) =>
+                              updateField(
+                                row.apartmentId,
+                                "amount",
+                                event.target.value,
+                              )
+                            }
+                            inputMode="decimal"
+                            placeholder="-1500.00 або 250.00"
+                            className="w-[140px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                          />
+                        ) : (
+                          <span className="text-sm text-[var(--cms-text)]">
+                            {row.amount || "—"}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3">
+                        {activeTab === "all" ? (
+                          <input
+                            value={row.days}
+                            onChange={(event) =>
+                              updateField(
+                                row.apartmentId,
+                                "days",
+                                event.target.value,
+                              )
+                            }
+                            inputMode="numeric"
+                            placeholder="—"
+                            className="w-[100px] rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                          />
+                        ) : (
+                          <span className="text-sm text-[var(--cms-text)]">
+                            {row.days || "—"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+
+        <PlatformConfirmModal
+          open={confirmAction === "publish_draft"}
+          title="Опублікувати чернетку боржників?"
+          description="Поточний опублікований список буде повністю замінено даними з чернетки."
+          confirmLabel="Опублікувати"
+          pendingLabel="Публікуємо..."
+          tone="publish"
+          isPending={isPending}
+          onCancel={() => {
+            if (!isPending) {
+              setConfirmAction(null);
+            }
+          }}
+          onConfirm={() => {
+            setConfirmAction(null);
+            void publishDraft();
+          }}
+        />
+
+        <PlatformConfirmModal
+          open={confirmAction === "delete_draft"}
+          title="Видалити чернетку боржників?"
+          description="Усі дані поточної чернетки буде видалено без можливості відновлення."
+          confirmLabel="Видалити"
+          pendingLabel="Видаляємо..."
+          tone="destructive"
+          isPending={isPending}
+          onCancel={() => {
+            if (!isPending) {
+              setConfirmAction(null);
+            }
+          }}
+          onConfirm={() => {
+            setConfirmAction(null);
+            void deleteDraft();
+          }}
+        />
+
+        <HouseDebtors1cImportPanel
+          houseId={houseId}
+          isOpen={is1cImportOpen}
+          onClose={() => setIs1cImportOpen(false)}
+        />
+
+        {isPreviewOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--cms-overlay)] px-4 py-6 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={closePreview}
+              className="absolute inset-0"
+              aria-label="Закрити попередній перегляд"
+            />
+
+            <div className="relative z-10 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
+              <div className="border-b border-[var(--cms-border)] px-6 py-5">
+                <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                  Попередній перегляд перед збереженням
+                </div>
+
+                <h2 className="mt-3 text-2xl font-semibold text-[var(--cms-text)]">
+                  Перевірте список боржників
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
+                  У чернетку будуть збережені лише квартири, де заповнена сума
+                  боргу.
+                </p>
+
+                <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
+                  <div className="text-sm font-semibold text-[var(--cms-text)]">
+                    Місяць для історії
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                    Перевірте місяць і рік перед створенням чернетки.
+                  </p>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_160px]">
+                    <select
+                      value={periodMonth}
+                      onChange={(event) =>
+                        setPeriodMonth(Number(event.target.value))
+                      }
+                      className={adminInputClass}
+                    >
+                      {MONTH_OPTIONS.map((label, index) => (
+                        <option key={label} value={index + 1}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="number"
+                      min={2000}
+                      max={2100}
+                      value={periodYear}
+                      onChange={(event) =>
+                        setPeriodYear(Number(event.target.value))
+                      }
+                      className={adminInputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                    Боржників: {previewDebtorsCount}
+                  </span>
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                    Загальна сума: {formatSummaryAmount(previewItems)}
+                  </span>
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
+                    Період: {formatPeriodLabel(periodYear, periodMonth)}
+                  </span>
+                  <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
+                    Квартир без рядка: {monthlyMissingApartmentsCount}
+                  </span>
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
+                {isPreviewEmpty ? (
+                  <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
+                    У попередньому перегляді немає рядків для збереження.
+                    Вкажіть суму боргу хоча б для однієї квартири.
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
+                    <table className="min-w-full border-collapse">
+                      <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
+                        <tr className="border-b border-[var(--cms-border)] text-left">
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Кв.
+                          </th>
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Л/С
+                          </th>
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Власник
+                          </th>
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Площа
+                          </th>
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Борг
+                          </th>
+                          <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
+                            Дні
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewItems.map((row) => (
+                          <tr
+                            key={row.apartmentId}
+                            className="border-b border-[var(--cms-border)]"
+                          >
+                            <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                              {row.apartmentLabel}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                              {row.accountNumber}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                              {row.ownerName}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                              {formatArea(row.area)}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-[var(--cms-text)]">
+                              {row.amount}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-[var(--cms-text)]">
+                              {row.days || "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-[var(--cms-border)] px-6 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={closePreview}
+                    className={adminSecondaryButtonClass}
+                  >
+                    Назад
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isPreviewEmpty || !debtors || isPending}
+                    onClick={submitDraftSave}
+                    className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {isPending ? "Зберігаємо..." : "Створити місячну чернетку"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

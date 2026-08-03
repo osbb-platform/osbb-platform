@@ -9,15 +9,10 @@ import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdmin
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { assertWorkspaceAction } from "@/src/shared/permissions/actionAccess";
 
-import {
-  debtors1cAdapter,
-  toOsbbBalance,
-} from "../adapters/debtors1c";
+import { debtors1cAdapter, toOsbbBalance } from "../adapters/debtors1c";
 import { validateImportFileDescriptor } from "../fileSecurity";
 import { reconcileDebtors1cRows } from "../matching";
-import type {
-  ActiveApartmentRegistryRow,
-} from "../workflowTypes";
+import type { ActiveApartmentRegistryRow } from "../workflowTypes";
 import type { Debtors1cImportState } from "../debtors1cImportState";
 import type { RawSheet } from "../types";
 
@@ -96,7 +91,10 @@ export async function parseDebtors1cImportBuffer(
     .is("archived_at", null);
 
   if (registryResult.error) {
-    return { ok: false, error: "Не вдалося завантажити активний реєстр квартир." };
+    return {
+      ok: false,
+      error: "Не вдалося завантажити активний реєстр квартир.",
+    };
   }
 
   const registry: ActiveApartmentRegistryRow[] = (
@@ -106,16 +104,15 @@ export async function parseDebtors1cImportBuffer(
     accountNumber: String(row.account_number ?? "").trim(),
     apartmentLabel: String(row.apartment_label ?? "").trim(),
     ownerName: String(row.owner_name ?? "").trim(),
-    area:
-      row.area === null || row.area === undefined
-        ? null
-        : Number(row.area),
+    area: row.area === null || row.area === undefined ? null : Number(row.area),
   }));
 
   const reconciliation = reconcileDebtors1cRows(
     { period, rows: parsedRows },
     registry,
   );
+
+  const registryById = new Map(registry.map((row) => [row.id, row]));
 
   const uploadInsert = await supabase
     .from("import_buffer_uploads")
@@ -132,10 +129,8 @@ export async function parseDebtors1cImportBuffer(
       stats: {
         matchedCount: reconciliation.matchedCount,
         warningCount: reconciliation.warningCount,
-        unknownSourceAccounts:
-          reconciliation.unknownSourceAccountNumbers,
-        missingRegistryAccounts:
-          reconciliation.registryAccountsMissingFromFile,
+        unknownSourceAccounts: reconciliation.unknownSourceAccountNumbers,
+        missingRegistryAccounts: reconciliation.registryAccountsMissingFromFile,
       },
       created_by: access.user.id,
     })
@@ -199,20 +194,27 @@ export async function parseDebtors1cImportBuffer(
     confirmedPeriod: null,
     rows: reconciliation.rows
       .filter((row) => row.classification === "data")
-      .map((row) => ({
-        rowIndex: row.rowIndex,
-        accountNumber: row.source.accountNumberNormalized,
-        apartmentLabel: row.source.apartmentLabel,
-        ownerName: row.source.ownerName,
-        debtValue: row.source.debtValue,
-        osbbBalance: row.source.osbbBalance,
-        matchStatus: row.matchStatus,
-        warnings: row.warnings,
-      })),
-    unknownSourceAccounts:
-      reconciliation.unknownSourceAccountNumbers,
-    missingRegistryAccounts:
-      reconciliation.registryAccountsMissingFromFile,
+      .map((row) => {
+        const registryRow = row.matchedApartmentId
+          ? (registryById.get(row.matchedApartmentId) ?? null)
+          : null;
+
+        return {
+          rowIndex: row.rowIndex,
+          accountNumber: row.source.accountNumberNormalized,
+          apartmentLabel:
+            registryRow?.apartmentLabel ?? row.source.apartmentLabel,
+          ownerName: registryRow?.ownerName ?? row.source.ownerName,
+          sourceApartmentLabel: row.source.apartmentLabel,
+          sourceOwnerName: row.source.ownerName,
+          debtValue: row.source.debtValue,
+          osbbBalance: row.source.osbbBalance,
+          matchStatus: row.matchStatus,
+          warnings: row.warnings,
+        };
+      }),
+    unknownSourceAccounts: reconciliation.unknownSourceAccountNumbers,
+    missingRegistryAccounts: reconciliation.registryAccountsMissingFromFile,
     warningCount: reconciliation.warningCount,
     message: "Файл оброблено. Перевірте preview і підтвердьте період.",
   };
@@ -432,8 +434,7 @@ export async function transferDebtors1cImportBuffer(
   if (mark.error || !mark.data) {
     return {
       ok: false,
-      error:
-        "Чернетку створено, але буфер не вдалося позначити переданим.",
+      error: "Чернетку створено, але буфер не вдалося позначити переданим.",
     };
   }
 
@@ -492,13 +493,10 @@ function readFirstSheet(buffer: ArrayBuffer): RawSheet {
 
   return {
     name,
-    rows: XLSX.utils.sheet_to_json<unknown[]>(
-      workbook.Sheets[name],
-      {
-        header: 1,
-        raw: true,
-        defval: null,
-      },
-    ),
+    rows: XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[name], {
+      header: 1,
+      raw: true,
+      defval: null,
+    }),
   };
 }

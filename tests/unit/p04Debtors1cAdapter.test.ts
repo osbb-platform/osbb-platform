@@ -7,51 +7,32 @@ import {
   debtors1cAdapter,
   toOsbbBalance,
 } from "../../src/modules/import-buffer/adapters/debtors1c";
-import {
-  runImportPipeline,
-} from "../../src/modules/import-buffer/pipeline";
-import {
-  registerBuiltInImportAdapters,
-} from "../../src/modules/import-buffer/registerBuiltInAdapters";
-import {
-  resetImportAdapterRegistryForTests,
-} from "../../src/modules/import-buffer/registry";
-import type {
-  RawSheet,
-} from "../../src/modules/import-buffer/types";
-import type {
-  Debtors1cRow,
-} from "../../src/modules/import-buffer/adapters/debtors1c";
+import { runImportPipeline } from "../../src/modules/import-buffer/pipeline";
+import { registerBuiltInImportAdapters } from "../../src/modules/import-buffer/registerBuiltInAdapters";
+import { resetImportAdapterRegistryForTests } from "../../src/modules/import-buffer/registry";
+import type { RawSheet } from "../../src/modules/import-buffer/types";
+import type { Debtors1cRow } from "../../src/modules/import-buffer/adapters/debtors1c";
 
 function loadFixtureSheet(): RawSheet {
-  const fixture = join(
-    process.cwd(),
-    "tests/fixtures/1c/Соборний,186.xls",
-  );
+  const fixture = join(process.cwd(), "tests/fixtures/1c/Соборний,186.xls");
 
-  const workbook = XLSX.read(
-    readFileSync(fixture),
-    {
-      type: "buffer",
-      raw: true,
-      cellDates: false,
-      dense: true,
-    },
-  );
+  const workbook = XLSX.read(readFileSync(fixture), {
+    type: "buffer",
+    raw: true,
+    cellDates: false,
+    dense: true,
+  });
 
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
   return {
     name: sheetName,
-    rows: XLSX.utils.sheet_to_json<unknown[]>(
-      worksheet,
-      {
-        header: 1,
-        raw: true,
-        defval: null,
-      },
-    ),
+    rows: XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+      header: 1,
+      raw: true,
+      defval: null,
+    }),
   };
 }
 
@@ -65,9 +46,7 @@ describe("P04 debtors_1c adapter", () => {
       reason: undefined,
     });
 
-    expect(
-      debtors1cAdapter.extractPeriod(sheet),
-    ).toEqual({
+    expect(debtors1cAdapter.extractPeriod(sheet)).toEqual({
       year: 2026,
       month: 5,
       sourceText: "за Травень 2026 р.",
@@ -100,8 +79,7 @@ describe("P04 debtors_1c adapter", () => {
 
   it("classifies fixture rows and preserves control totals", () => {
     const sheet = loadFixtureSheet();
-    const headerResult =
-      debtors1cAdapter.locateHeader(sheet);
+    const headerResult = debtors1cAdapter.locateHeader(sheet);
 
     expect(headerResult.ok).toBe(true);
 
@@ -109,33 +87,22 @@ describe("P04 debtors_1c adapter", () => {
       return;
     }
 
-    const rows = debtors1cAdapter.parseRows(
-      sheet,
-      headerResult.value,
-    );
+    const rows = debtors1cAdapter.parseRows(sheet, headerResult.value);
 
-    const dataRows = rows.filter(
-      (row) => row.classification === "data",
-    );
+    const dataRows = rows.filter((row) => row.classification === "data");
 
     expect(dataRows).toHaveLength(132);
 
     expect(
-      rows.filter(
-        (row) => row.classification === "skip_provider",
-      ),
+      rows.filter((row) => row.classification === "skip_provider"),
     ).toHaveLength(8);
 
     expect(
-      rows.filter(
-        (row) => row.classification === "skip_group",
-      ),
+      rows.filter((row) => row.classification === "skip_group"),
     ).toHaveLength(22);
 
     expect(
-      rows.filter(
-        (row) => row.classification === "skip_total",
-      ),
+      rows.filter((row) => row.classification === "skip_total"),
     ).toHaveLength(1);
 
     const values = dataRows.map((row) => {
@@ -146,12 +113,10 @@ describe("P04 debtors_1c adapter", () => {
     const sums = values.reduce(
       (acc, row) => ({
         area: acc.area + (row.area ?? 0),
-        opening:
-          acc.opening + (row.openingBalance ?? 0),
+        opening: acc.opening + (row.openingBalance ?? 0),
         accrued: acc.accrued + (row.accrued ?? 0),
         paid: acc.paid + (row.paid ?? 0),
-        closing:
-          acc.closing + (row.closingBalance ?? 0),
+        closing: acc.closing + (row.closingBalance ?? 0),
         debt: acc.debt + (row.debtValue ?? 0),
       }),
       {
@@ -174,8 +139,7 @@ describe("P04 debtors_1c adapter", () => {
 
   it("normalizes account numbers without inventing leading zeros", () => {
     const sheet = loadFixtureSheet();
-    const headerResult =
-      debtors1cAdapter.locateHeader(sheet);
+    const headerResult = debtors1cAdapter.locateHeader(sheet);
 
     expect(headerResult.ok).toBe(true);
 
@@ -183,10 +147,7 @@ describe("P04 debtors_1c adapter", () => {
       return;
     }
 
-    const rows = debtors1cAdapter.parseRows(
-      sheet,
-      headerResult.value,
-    );
+    const rows = debtors1cAdapter.parseRows(sheet, headerResult.value);
 
     const values = rows
       .filter((row) => row.classification === "data")
@@ -194,14 +155,12 @@ describe("P04 debtors_1c adapter", () => {
 
     expect(
       values.every((row) => {
-        const digitsFromSource =
-          row.accountNumberRaw.replace(/\D+/gu, "");
+        const digitsFromSource = row.accountNumberRaw.replace(/\D+/gu, "");
 
         return (
           /^\d+$/u.test(row.accountNumberNormalized) &&
           row.accountNumberNormalized === digitsFromSource &&
-          row.accountNumberNormalized.length ===
-            digitsFromSource.length
+          row.accountNumberNormalized.length === digitsFromSource.length
         );
       }),
     ).toBe(true);
@@ -236,16 +195,60 @@ describe("P04 debtors_1c adapter", () => {
       sourceText: "за Травень 2026 р.",
     });
     expect(result.value.stats.dataRows).toBe(132);
-    expect(result.value.stats.byClassification)
-      .toMatchObject({
-        data: 132,
-        skip_provider: 8,
-        skip_group: 22,
-        skip_total: 1,
-      });
+    expect(result.value.stats.byClassification).toMatchObject({
+      data: 132,
+      skip_provider: 8,
+      skip_group: 22,
+      skip_total: 1,
+    });
   });
 
-  it("rejects an unproven month instead of inventing parser rules", () => {
+  it.each([
+    ["Січень", 1],
+    ["Лютий", 2],
+    ["Березень", 3],
+    ["Квітень", 4],
+    ["Травень", 5],
+    ["Червень", 6],
+    ["Липень", 7],
+    ["Серпень", 8],
+    ["Вересень", 9],
+    ["Жовтень", 10],
+    ["Листопад", 11],
+    ["Грудень", 12],
+  ])("extracts Ukrainian month %s", (monthName, expectedMonth) => {
+    const fixture = loadFixtureSheet();
+
+    const changed: RawSheet = {
+      ...fixture,
+      rows: fixture.rows.map((row) =>
+        row.map((cell) =>
+          typeof cell === "string" ? cell.replace("Травень", monthName) : cell,
+        ),
+      ),
+    };
+
+    expect(debtors1cAdapter.extractPeriod(changed)).toEqual({
+      year: 2026,
+      month: expectedMonth,
+      sourceText: `за ${monthName} 2026 р.`,
+    });
+  });
+
+  it.each([
+    ["Январь", 1],
+    ["Февраль", 2],
+    ["Март", 3],
+    ["Апрель", 4],
+    ["Май", 5],
+    ["Июнь", 6],
+    ["Июль", 7],
+    ["Август", 8],
+    ["Сентябрь", 9],
+    ["Октябрь", 10],
+    ["Ноябрь", 11],
+    ["Декабрь", 12],
+  ])("extracts Russian month %s", (monthName, expectedMonth) => {
     const fixture = loadFixtureSheet();
 
     const changed: RawSheet = {
@@ -253,18 +256,21 @@ describe("P04 debtors_1c adapter", () => {
       rows: fixture.rows.map((row) =>
         row.map((cell) =>
           typeof cell === "string"
-            ? cell.replace("Травень", "Червень")
+            ? cell
+                .replace(
+                  "Коротка зведена відомість",
+                  "Краткая сводная ведомость",
+                )
+                .replace("Травень 2026 р.", `${monthName} 2026 г.`)
             : cell,
         ),
       ),
     };
 
-    expect(
-      debtors1cAdapter.extractPeriod(changed),
-    ).toBeNull();
-
-    expect(
-      debtors1cAdapter.detect(changed).matched,
-    ).toBe(false);
+    expect(debtors1cAdapter.extractPeriod(changed)).toEqual({
+      year: 2026,
+      month: expectedMonth,
+      sourceText: `за ${monthName} 2026 г.`,
+    });
   });
 });

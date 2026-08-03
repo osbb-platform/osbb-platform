@@ -1,12 +1,12 @@
-import type {
-  ImportReconciliationWarning,
-} from "./workflowTypes";
+import type { ImportReconciliationWarning } from "./workflowTypes";
 
 export type Debtors1cPreviewRow = {
   rowIndex: number;
   accountNumber: string;
   apartmentLabel: string | null;
   ownerName: string | null;
+  sourceApartmentLabel: string | null;
+  sourceOwnerName: string | null;
   debtValue: number | null;
   osbbBalance: number | null;
   matchStatus: "matched" | "unmatched";

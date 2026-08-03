@@ -3,18 +3,27 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
-  join(process.cwd(), "src/modules/houses/components/HouseDebtorsWorkspace.tsx"),
+  join(
+    process.cwd(),
+    "src/modules/houses/components/HouseDebtorsWorkspace.tsx",
+  ),
   "utf8",
 );
 
 describe("P03 monthly debtor import UX", () => {
-  it("uses previous month defaults and explicit confirmation", () => {
+  it("selects the history period inside preview", () => {
     expect(source).toContain("getPreviousCalendarPeriod");
-    expect(source).toContain("periodConfirmed");
-    expect(source).toContain("Підтвердіть місяць");
+    expect(source).toContain("Місяць для історії");
+    expect(source).toContain(
+      "Перевірте місяць і рік перед створенням чернетки",
+    );
+
+    expect(source).not.toContain("periodConfirmed");
+    expect(source).not.toContain("Підтвердіть місяць");
+    expect(source).not.toContain('type="checkbox"');
   });
 
-  it("dispatches importMonthDraft with period and all valid balances", () => {
+  it("dispatches importMonthDraft with the preview period", () => {
     expect(source).toContain('type: "debtors.importMonthDraft"');
     expect(source).toContain("periodYear");
     expect(source).toContain("periodMonth");
