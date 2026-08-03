@@ -2,16 +2,14 @@ import { CtaBlock } from "@/src/modules/site/components/blocks/CtaBlock";
 import { PageHero } from "@/src/modules/site/components/blocks/PageHero";
 import { Eyebrow } from "@/src/modules/site/components/ui/Eyebrow";
 import { Section } from "@/src/modules/site/components/ui/Section";
-import { siteReleases } from "@/src/modules/site/data/siteContent";
+import { getSiteCmsContent } from "@/src/modules/site/services/getSiteCmsContent";
 
-export default function ReleasesPage() {
-  const released = siteReleases.filter(
-    (release) => release.status === "released",
-  );
+export default async function ReleasesPage() {
+  const { releases } = await getSiteCmsContent();
 
-  const planned = siteReleases.filter(
-    (release) => release.status === "planned",
-  );
+  const released = releases.filter((release) => release.status === "released");
+
+  const planned = releases.filter((release) => release.status === "planned");
 
   return (
     <main id="main">
@@ -61,9 +59,7 @@ export default function ReleasesPage() {
                 {release.statusLabel}
               </span>
 
-              <h3 className="osbb-release-card__title">
-                {release.title}
-              </h3>
+              <h3 className="osbb-release-card__title">{release.title}</h3>
 
               <p>{release.summary}</p>
             </article>

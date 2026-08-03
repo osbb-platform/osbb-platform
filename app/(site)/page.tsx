@@ -10,11 +10,7 @@ import { CodeCells } from "@/src/modules/site/components/ui/CodeCells";
 import { Eyebrow } from "@/src/modules/site/components/ui/Eyebrow";
 import { Section } from "@/src/modules/site/components/ui/Section";
 import { StatFigure } from "@/src/modules/site/components/ui/StatFigure";
-import {
-  siteCities,
-  siteSettings,
-  siteTestimonials,
-} from "@/src/modules/site/data/siteContent";
+import { getSiteCmsContent } from "@/src/modules/site/services/getSiteCmsContent";
 import { getSiteCounters } from "@/src/modules/site/services/getSiteCounters";
 import { getCabinetMockup } from "@/src/modules/site/data/mockupData";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
@@ -70,10 +66,17 @@ const currentProblems = [
 ] as const;
 
 export default async function SiteHomePage() {
-  const [homeMockup, siteCounters] = await Promise.all([
+  const [homeMockup, siteCounters, siteContent] = await Promise.all([
     Promise.resolve(getCabinetMockup("home")),
     getSiteCounters(),
+    getSiteCmsContent(),
   ]);
+
+  const {
+    settings: siteSettings,
+    cities: siteCities,
+    testimonials: siteTestimonials,
+  } = siteContent;
 
   if (!homeMockup) {
     throw new Error("Home cabinet mockup is missing");
@@ -89,16 +92,13 @@ export default async function SiteHomePage() {
             <h1>Голова керує будинком. Рутину ведемо ми.</h1>
 
             <p className="osbb-lead">
-              Кожен будинок отримує особистий кабінет: оголошення, звіти,
-              збори, борги і документи — в одному місці. Наповнює й оновлює
-              його наша команда. Мешканці заходять за 6-значним кодом.
+              Кожен будинок отримує особистий кабінет: оголошення, звіти, збори,
+              борги і документи — в одному місці. Наповнює й оновлює його наша
+              команда. Мешканці заходять за 6-значним кодом.
             </p>
 
             <div className="osbb-actions">
-              <Link
-                className="osbb-btn osbb-btn--primary"
-                href="#zayavka"
-              >
+              <Link className="osbb-btn osbb-btn--primary" href="#zayavka">
                 Підключити будинок
               </Link>
 
@@ -147,12 +147,10 @@ export default async function SiteHomePage() {
         <div className="osbb-split">
           <div>
             <Eyebrow>Як є зараз</Eyebrow>
-            <h2>
-              Коли системи немає, голова стає довідковою службою будинку
-            </h2>
+            <h2>Коли системи немає, голова стає довідковою службою будинку</h2>
             <p className="osbb-lead">
-              Постійні дзвінки. Пересилання документів у месенджерах. Ті
-              самі пояснення кожному окремо. Це забирає вечори і перетворює
+              Постійні дзвінки. Пересилання документів у месенджерах. Ті самі
+              пояснення кожному окремо. Це забирає вечори і перетворює
               управління будинком на нескінченний ручний режим.
             </p>
           </div>
@@ -171,8 +169,8 @@ export default async function SiteHomePage() {
             <Eyebrow>Рішення</Eyebrow>
             <h2>Один захищений кабінет — і всі відповіді всередині</h2>
             <p className="osbb-lead osbb-lead--deep">
-              Без дзвінків. Без паперових оголошень на дверях. Без
-              загублених документів у чатах.
+              Без дзвінків. Без паперових оголошень на дверях. Без загублених
+              документів у чатах.
             </p>
           </div>
 
@@ -182,10 +180,7 @@ export default async function SiteHomePage() {
               розділ — його просто немає в кабінеті.
             </p>
 
-            <Link
-              className="osbb-link-arrow"
-              href={ROUTES.site.capabilities}
-            >
+            <Link className="osbb-link-arrow" href={ROUTES.site.capabilities}>
               Подивитись усі можливості →
             </Link>
           </div>
@@ -201,16 +196,12 @@ export default async function SiteHomePage() {
         <div className="osbb-grid osbb-grid--4">
           <Card>
             <h3>Голова ОСББ</h3>
-            <p>
-              Вирішує, що публікується, і залишається господарем ситуації.
-            </p>
+            <p>Вирішує, що публікується, і залишається господарем ситуації.</p>
           </Card>
 
           <Card>
             <h3>Кабінет будинку</h3>
-            <p>
-              Оголошення, звіти, збори і документи — в одному місці.
-            </p>
+            <p>Оголошення, звіти, збори і документи — в одному місці.</p>
           </Card>
 
           <Card>
@@ -290,8 +281,8 @@ export default async function SiteHomePage() {
             </a>
 
             <p className="osbb-note">
-              Це показовий будинок із вигаданими даними. Так виглядає
-              кабінет для мешканця.
+              Це показовий будинок із вигаданими даними. Так виглядає кабінет
+              для мешканця.
             </p>
           </div>
 
@@ -340,19 +331,15 @@ export default async function SiteHomePage() {
 
         <ul className="osbb-soon-list">
           <li>
-            <span className="osbb-badge osbb-badge--soon">
-              Восени 2026
-            </span>
+            <span className="osbb-badge osbb-badge--soon">Восени 2026</span>
             <p>
-              Бот у Viber і Telegram: оновлення будинку приходять у
-              месенджер, заходити в кабінет щоразу не обов&apos;язково.
+              Бот у Viber і Telegram: оновлення будинку приходять у месенджер,
+              заходити в кабінет щоразу не обов&apos;язково.
             </p>
           </li>
 
           <li>
-            <span className="osbb-badge osbb-badge--soon">
-              Восени 2026
-            </span>
+            <span className="osbb-badge osbb-badge--soon">Восени 2026</span>
             <p>
               Кабінет як застосунок на телефоні — іконка на екрані, без
               магазинів застосунків.

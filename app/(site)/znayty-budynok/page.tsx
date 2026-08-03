@@ -5,7 +5,7 @@ import { PageHero } from "@/src/modules/site/components/blocks/PageHero";
 import { Card } from "@/src/modules/site/components/ui/Card";
 import { Eyebrow } from "@/src/modules/site/components/ui/Eyebrow";
 import { Section } from "@/src/modules/site/components/ui/Section";
-import { siteCities } from "@/src/modules/site/data/siteContent";
+import { getSiteCmsContent } from "@/src/modules/site/services/getSiteCmsContent";
 
 export const metadata: Metadata = {
   robots: {
@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FindHousePage() {
+export default async function FindHousePage() {
+  const { cities } = await getSiteCmsContent();
+
   return (
     <main id="main">
       <PageHero
@@ -36,7 +38,7 @@ export default function FindHousePage() {
         </div>
 
         <div className="osbb-grid osbb-grid--3">
-          {siteCities.map((city) => (
+          {cities.map((city) => (
             <Card key={city.slug}>
               <h3>{city.name}</h3>
               <p>
@@ -65,9 +67,8 @@ export default function FindHousePage() {
           <h2>Можливо, ваш будинок ще не підключений</h2>
 
           <p className="osbb-lead osbb-lead--deep">
-            Передайте голові або правлінню посилання на OSBB Platform.
-            Після підключення будинок отримає окрему адресу і власний код
-            доступу.
+            Передайте голові або правлінню посилання на OSBB Platform. Після
+            підключення будинок отримає окрему адресу і власний код доступу.
           </p>
         </div>
       </Section>

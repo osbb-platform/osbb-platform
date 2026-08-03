@@ -31,10 +31,7 @@ describe("site A3 complete HTML migration", () => {
   it("removes the temporary route placeholder implementation", () => {
     expect(
       fs.existsSync(
-        path.join(
-          root,
-          "src/modules/site/components/SiteRoutePlaceholder.tsx",
-        ),
+        path.join(root, "src/modules/site/components/SiteRoutePlaceholder.tsx"),
       ),
     ).toBe(false);
 
@@ -49,22 +46,43 @@ describe("site A3 complete HTML migration", () => {
     }
   });
 
-  it("uses centralized blog and release content", () => {
+  it("uses centralized CMS blog and release content", () => {
     const blog = read("app/(site)/blog/page.tsx");
     const article = read("app/(site)/blog/[slug]/page.tsx");
     const releases = read("app/(site)/onovlennya/page.tsx");
 
-    expect(blog).toContain("sitePosts");
-    expect(article).toContain("getSitePost");
+    const cmsServiceImport = "@/src/modules/site/services/getSiteCmsContent";
+
+    expect(blog).toContain(cmsServiceImport);
+    expect(blog).toContain("const { posts } = await getSiteCmsContent()");
+
+    expect(article).toContain(cmsServiceImport);
+    expect(article).toContain("const { posts } = await getSiteCmsContent()");
+    expect(article).toContain("posts.find((item) => item.slug === slug)");
+
+    // Build-time route generation keeps the approved static fallback.
     expect(article).toContain("generateStaticParams");
-    expect(releases).toContain("siteReleases");
+    expect(article).toContain(
+      'import { sitePosts } from "@/src/modules/site/data/siteContent"',
+    );
+    expect(article).toContain("return sitePosts.map((post) => ({");
+
+    expect(releases).toContain(cmsServiceImport);
+    expect(releases).toContain(
+      "const { releases } = await getSiteCmsContent()",
+    );
+
+    expect(blog).not.toContain(
+      'import { sitePosts } from "@/src/modules/site/data/siteContent"',
+    );
+    expect(releases).not.toContain(
+      'import { siteReleases } from "@/src/modules/site/data/siteContent"',
+    );
   });
 
   it("uses centralized contact and legal values", () => {
     const contacts = read("app/(site)/kontakty/page.tsx");
-    const privacy = read(
-      "app/(site)/polityka-konfidentsiynosti/page.tsx",
-    );
+    const privacy = read("app/(site)/polityka-konfidentsiynosti/page.tsx");
 
     expect(contacts).toContain("siteSettings.primaryPhone");
     expect(contacts).toContain("siteSettings.email");

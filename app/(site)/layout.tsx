@@ -6,7 +6,7 @@ import "./site-theme.css";
 import { SiteFooter } from "@/src/modules/site/components/layout/SiteFooter";
 import { SiteHeader } from "@/src/modules/site/components/layout/SiteHeader";
 import { JsonLd } from "@/src/modules/site/components/seo/JsonLd";
-import { siteSettings } from "@/src/modules/site/data/siteContent";
+import { getSiteCmsContent } from "@/src/modules/site/services/getSiteCmsContent";
 
 type SiteLayoutProps = Readonly<{
   children: ReactNode;
@@ -29,13 +29,15 @@ export const metadata: Metadata = {
     : undefined,
 };
 
-export default function SiteLayout({ children }: SiteLayoutProps) {
+export default async function SiteLayout({ children }: SiteLayoutProps) {
+  const { settings } = await getSiteCmsContent();
+
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: siteSettings.organizationName,
-    email: siteSettings.email,
-    telephone: siteSettings.primaryPhone,
+    name: settings.organizationName,
+    email: settings.email,
+    telephone: settings.primaryPhone,
     url: "https://osbb-platform.com.ua",
   };
 
