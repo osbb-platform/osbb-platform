@@ -107,10 +107,25 @@ export async function parseDebtors1cImportBuffer(
     area: row.area === null || row.area === undefined ? null : Number(row.area),
   }));
 
-  const reconciliation = reconcileDebtors1cRows(
-    { period, rows: parsedRows },
-    registry,
-  );
+  let reconciliation;
+  try {
+    reconciliation = reconcileDebtors1cRows(
+      { period, rows: parsedRows },
+      registry,
+    );
+  } catch (error) {
+    console.error("[P04 debtors 1C] Failed to reconcile import rows", {
+      houseId: access.house.id,
+      fileName: file.name,
+      error,
+    });
+
+    return {
+      ok: false,
+      error:
+        "Реєстр квартир містить конфліктні або некоректні особові рахунки. Перевірте реєстр перед повторним імпортом.",
+    };
+  }
 
   const registryById = new Map(registry.map((row) => [row.id, row]));
 

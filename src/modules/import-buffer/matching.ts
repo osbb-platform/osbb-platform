@@ -6,6 +6,7 @@ import type {
   MatchedDebtors1cRow,
   SkippedImportRow,
 } from "./workflowTypes";
+import { normalizeAccountNumber } from "./normalization";
 
 const AREA_TOLERANCE = 0.01;
 
@@ -13,39 +14,28 @@ export function reconcileDebtors1cRows(
   input: ParsedDebtors1cPreviewInput,
   registryRows: readonly ActiveApartmentRegistryRow[],
 ): ImportReconciliationResult {
-  const registryByAccount = new Map(
-    registryRows.map((row) => [
-      row.accountNumber.trim(),
-      row,
-    ]),
-  );
+  const registryByAccount = buildRegistryByNormalizedAccount(registryRows);
 
   const sourceAccounts = new Set<string>();
   const unknownSourceAccounts = new Set<string>();
-  const rows: Array<
-    MatchedDebtors1cRow | SkippedImportRow
-  > = [];
+  const rows: Array<MatchedDebtors1cRow | SkippedImportRow> = [];
 
   let matchedCount = 0;
   let warningCount = 0;
 
   for (const row of input.rows) {
-    if (
-      row.classification !== "data" ||
-      row.value === null
-    ) {
+    if (row.classification !== "data" || row.value === null) {
       rows.push({
         rowIndex: row.rowIndex,
         classification:
-          row.classification === "data"
-            ? "skip_group"
-            : row.classification,
+          row.classification === "data" ? "skip_group" : row.classification,
       });
       continue;
     }
 
-    const account =
-      row.value.accountNumberNormalized.trim();
+    const account = normalizeAccountForMatching(
+      row.value.accountNumberNormalized,
+    );
 
     sourceAccounts.add(account);
 
@@ -73,17 +63,15 @@ export function reconcileDebtors1cRows(
   }
 
   const registryAccountsMissingFromFile = registryRows
-    .map((row) => row.accountNumber.trim())
+    .map((row) => normalizeAccountForMatching(row.accountNumber))
     .filter(
-      (accountNumber) =>
-        accountNumber &&
-        !sourceAccounts.has(accountNumber),
+      (accountNumber) => accountNumber && !sourceAccounts.has(accountNumber),
     )
     .sort(compareAccountNumbers);
 
-  const unknownSourceAccountNumbers = [
-    ...unknownSourceAccounts,
-  ].sort(compareAccountNumbers);
+  const unknownSourceAccountNumbers = [...unknownSourceAccounts].sort(
+    compareAccountNumbers,
+  );
 
   return {
     rows,
@@ -93,6 +81,51 @@ export function reconcileDebtors1cRows(
     warningCount,
     blocked: unknownSourceAccountNumbers.length > 0,
   };
+}
+
+const ACCOUNT_NUMBER_PREFIXES = [
+  "л/с №",
+  "л/с№",
+  "л/с",
+  "особ. рахунок №",
+  "особ. рахунок",
+  "особовий рахунок №",
+  "особовий рахунок",
+] as const;
+
+const ACCOUNT_NUMBER_REMOVABLE_SYMBOLS = ["№"] as const;
+
+function normalizeAccountForMatching(value: unknown): string {
+  return (
+    normalizeAccountNumber(value, {
+      prefixes: ACCOUNT_NUMBER_PREFIXES,
+      removableSymbols: ACCOUNT_NUMBER_REMOVABLE_SYMBOLS,
+    }) ?? String(value ?? "").trim()
+  );
+}
+
+function buildRegistryByNormalizedAccount(
+  registryRows: readonly ActiveApartmentRegistryRow[],
+): Map<string, ActiveApartmentRegistryRow> {
+  const registryByAccount = new Map<string, ActiveApartmentRegistryRow>();
+
+  for (const row of registryRows) {
+    const account = normalizeAccountForMatching(row.accountNumber);
+
+    if (!account) {
+      continue;
+    }
+
+    const existing = registryByAccount.get(account);
+
+    if (existing && existing.id !== row.id) {
+      throw new Error(`DUPLICATE_NORMALIZED_ACCOUNT_NUMBER:${account}`);
+    }
+
+    registryByAccount.set(account, row);
+  }
+
+  return registryByAccount;
 }
 
 function buildReconciliationWarnings(
@@ -138,19 +171,11 @@ function buildReconciliationWarnings(
   return warnings;
 }
 
-function normalizeComparableText(
-  value: string | null,
-): string {
-  return (value ?? "")
-    .trim()
-    .replace(/\s+/gu, " ")
-    .toLocaleLowerCase("uk-UA");
+function normalizeComparableText(value: string | null): string {
+  return (value ?? "").trim().replace(/\s+/gu, " ").toLocaleLowerCase("uk-UA");
 }
 
-function areasEqual(
-  source: number | null,
-  registry: number | null,
-): boolean {
+function areasEqual(source: number | null, registry: number | null): boolean {
   if (source === null || registry === null) {
     return source === registry;
   }
@@ -158,10 +183,7 @@ function areasEqual(
   return Math.abs(source - registry) <= AREA_TOLERANCE;
 }
 
-function compareAccountNumbers(
-  left: string,
-  right: string,
-): number {
+function compareAccountNumbers(left: string, right: string): number {
   return left.localeCompare(right, "uk", {
     numeric: true,
   });
