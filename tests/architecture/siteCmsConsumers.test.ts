@@ -21,7 +21,7 @@ describe("site CMS consumers", () => {
     expect(layout).toContain("telephone: settings.primaryPhone");
 
     expect(home).toContain(cmsServiceImport);
-    expect(home).toContain("getSiteCmsContent(),");
+    expect(home).toContain("await getSiteCmsContent();");
     expect(home).toContain("settings: siteSettings");
     expect(home).toContain("cities: siteCities");
     expect(home).toContain("testimonials: siteTestimonials");
