@@ -11,22 +11,16 @@ function read(relativePath: string) {
 
 describe("site B1 live counters", () => {
   it("implements one cached server-side counter service", () => {
-    const source = read(
-      "src/modules/site/services/getSiteCounters.ts",
-    );
+    const source = read("src/modules/site/services/getSiteCounters.ts");
 
     expect(source).toContain("unstable_cache");
     expect(source).toContain("revalidate: SITE_COUNTERS_REVALIDATE_SECONDS");
-    expect(source).toContain(
-      "const SITE_COUNTERS_REVALIDATE_SECONDS = 600",
-    );
+    expect(source).toContain("const SITE_COUNTERS_REVALIDATE_SECONDS = 600");
     expect(source).toContain('tags: ["site:counters"]');
   });
 
   it("counts only active non-archived houses", () => {
-    const source = read(
-      "src/modules/site/services/getSiteCounters.ts",
-    );
+    const source = read("src/modules/site/services/getSiteCounters.ts");
 
     expect(source).toContain('.from("houses")');
     expect(source).toContain('.eq("is_active", true)');
@@ -36,9 +30,7 @@ describe("site B1 live counters", () => {
   });
 
   it("counts live cities and recent publication events", () => {
-    const source = read(
-      "src/modules/site/services/getSiteCounters.ts",
-    );
+    const source = read("src/modules/site/services/getSiteCounters.ts");
 
     expect(source).toContain('.from("site_cities")');
     expect(source).toContain('.eq("status", "live")');
@@ -48,9 +40,7 @@ describe("site B1 live counters", () => {
   });
 
   it("returns null instead of breaking the site on database errors", () => {
-    const source = read(
-      "src/modules/site/services/getSiteCounters.ts",
-    );
+    const source = read("src/modules/site/services/getSiteCounters.ts");
 
     expect(source).toContain("Promise<SiteCounters | null>");
     expect(source).toContain("return null");
@@ -58,21 +48,21 @@ describe("site B1 live counters", () => {
     expect(source).toContain("catch (error)");
   });
 
-  it("renders every homepage number from the live service", () => {
+  it("renders the approved homepage figures from the design source", () => {
     const home = read("app/(site)/page.tsx");
 
-    expect(home).toContain("await Promise.all");
-    expect(home).toContain("getSiteCounters()");
-    expect(home).toContain("{siteCounters ? (");
-    expect(home).toContain("siteCounters.housesLive");
-    expect(home).toContain("siteCounters.materialsLast30");
-    expect(home).toContain("siteCounters.citiesLive");
-    expect(home).toContain("siteCounters.sectionsCount");
+    expect(home).toContain("value={70}");
+    expect(home).toContain("value={12}");
+    expect(home).toContain('value="понад 15"');
+    expect(home).toContain('value="понад 250"');
 
+    expect(home).toContain('label="будинків у системі"');
+    expect(home).toContain('label="розділів кабінету"');
+    expect(home).toContain('label="років досвіду компанії-партнера"');
+    expect(home).toContain('label="об’єктів під супроводом партнера"');
+
+    expect(home).not.toContain("getSiteCounters()");
+    expect(home).not.toContain("siteCounters.");
     expect(home).not.toContain("sitePrototypeFigures");
-    expect(home).not.toContain('value={250}');
-    expect(home).not.toContain('value={9}');
-    expect(home).not.toContain('value={1}');
-    expect(home).not.toContain('value={12}');
   });
 });

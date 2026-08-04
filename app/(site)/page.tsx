@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Accordion } from "@/src/modules/site/components/ui/Accordion";
-import { CabinetMockup } from "@/src/modules/site/components/blocks/CabinetMockup";
+import { DemoHouseVisual } from "@/src/modules/site/components/blocks/DemoHouseVisual";
 import { HouseHeroVisual } from "@/src/modules/site/components/blocks/HouseHeroVisual";
 import { UkraineMap } from "@/src/modules/site/components/blocks/UkraineMap";
 import { CtaBlock } from "@/src/modules/site/components/blocks/CtaBlock";
@@ -12,8 +12,6 @@ import { Eyebrow } from "@/src/modules/site/components/ui/Eyebrow";
 import { Section } from "@/src/modules/site/components/ui/Section";
 import { StatFigure } from "@/src/modules/site/components/ui/StatFigure";
 import { getSiteCmsContent } from "@/src/modules/site/services/getSiteCmsContent";
-import { getSiteCounters } from "@/src/modules/site/services/getSiteCounters";
-import { getCabinetMockup } from "@/src/modules/site/data/mockupData";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 
 const commonQuestions = [
@@ -67,21 +65,13 @@ const currentProblems = [
 ] as const;
 
 export default async function SiteHomePage() {
-  const [homeMockup, siteCounters, siteContent] = await Promise.all([
-    Promise.resolve(getCabinetMockup("home")),
-    getSiteCounters(),
-    getSiteCmsContent(),
-  ]);
+  const siteContent = await getSiteCmsContent();
 
   const {
     settings: siteSettings,
     cities: siteCities,
     testimonials: siteTestimonials,
   } = siteContent;
-
-  if (!homeMockup) {
-    throw new Error("Home cabinet mockup is missing");
-  }
 
   return (
     <main id="main">
@@ -116,28 +106,23 @@ export default async function SiteHomePage() {
         </div>
       </section>
 
-      {siteCounters ? (
-        <Section tight tone="quiet">
-          <div className="osbb-grid osbb-grid--4">
-            <StatFigure
-              label="будинків у системі"
-              value={siteCounters.housesLive}
-            />
-            <StatFigure
-              label="матеріалів опубліковано за 30 днів"
-              value={siteCounters.materialsLast30}
-            />
-            <StatFigure
-              label="міст присутності"
-              value={siteCounters.citiesLive}
-            />
-            <StatFigure
-              label="розділів кабінету"
-              value={siteCounters.sectionsCount}
-            />
-          </div>
-        </Section>
-      ) : null}
+      <Section tight tone="quiet">
+        <div
+          aria-label="Показники OSBB Platform"
+          className="osbb-grid osbb-grid--4 osbb-home-stats"
+        >
+          <StatFigure label="будинків у системі" value={70} />
+          <StatFigure label="розділів кабінету" value={12} />
+          <StatFigure
+            label="років досвіду компанії-партнера"
+            value="понад 15"
+          />
+          <StatFigure
+            label="об’єктів під супроводом партнера"
+            value="понад 250"
+          />
+        </div>
+      </Section>
 
       <Section>
         <div className="osbb-split">
@@ -189,33 +174,37 @@ export default async function SiteHomePage() {
           <h2>Ми знімаємо рутину, а не повноваження</h2>
         </div>
 
-        <div className="osbb-grid osbb-grid--4">
-          <Card>
-            <h3>Голова ОСББ</h3>
-            <p>Вирішує, що публікується, і залишається господарем ситуації.</p>
-          </Card>
+        <ol className="osbb-home-workflow">
+          <li>
+            <span aria-hidden="true">1</span>
+            <div>
+              <h3>Ви передаєте матеріали</h3>
+              <p>
+                Документи, реквізити, контакти та інформацію, яка вже є у вашого
+                будинку.
+              </p>
+            </div>
+          </li>
 
-          <Card>
-            <h3>Кабінет будинку</h3>
-            <p>Оголошення, звіти, збори і документи — в одному місці.</p>
-          </Card>
+          <li>
+            <span aria-hidden="true">2</span>
+            <div>
+              <h3>Ми наповнюємо кабінет</h3>
+              <p>
+                Наш менеджер публікує матеріали й регулярно оновлює потрібні
+                розділи.
+              </p>
+            </div>
+          </li>
 
-          <Card>
-            <h3>Представник у місті</h3>
-            <p>
-              Приїжджає на об’єкт, збирає матеріали і тримає зв’язок із
-              будинком.
-            </p>
-          </Card>
-
-          <Card>
-            <h3>OSBB Platform</h3>
-            <p>
-              Наповнює й оновлює всі розділи кабінету. Від вас — тільки
-              матеріали.
-            </p>
-          </Card>
-        </div>
+          <li>
+            <span aria-hidden="true">3</span>
+            <div>
+              <h3>Мешканці відкривають кабінет</h3>
+              <p>За 6-значним кодом, із телефона або комп’ютера.</p>
+            </div>
+          </li>
+        </ol>
       </Section>
 
       <Section tone="quiet">
@@ -282,7 +271,10 @@ export default async function SiteHomePage() {
             </p>
           </div>
 
-          <CabinetMockup data={homeMockup} />
+          <DemoHouseVisual
+            address={siteSettings.demoHouseAddress}
+            name={siteSettings.demoHouseName}
+          />
         </div>
       </Section>
 
