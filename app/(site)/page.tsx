@@ -64,6 +64,14 @@ const currentProblems = [
   "Що вирішили на зборах?",
 ] as const;
 
+function getDemoHouseDisplayAddress(url: string) {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  }
+}
+
 export default async function SiteHomePage() {
   const siteContent = await getSiteCmsContent();
 
@@ -97,7 +105,7 @@ export default async function SiteHomePage() {
                 className="osbb-btn osbb-btn--secondary"
                 href={ROUTES.site.demo}
               >
-                Подивитись демо
+                Подивитись демо-кабінет
               </Link>
             </div>
           </div>
@@ -245,7 +253,7 @@ export default async function SiteHomePage() {
             <dl className="osbb-details-list">
               <div>
                 <dt>Адреса кабінету</dt>
-                <dd>demo.osbb-platform.com.ua</dd>
+                <dd>{getDemoHouseDisplayAddress(siteSettings.demoHouseUrl)}</dd>
               </div>
 
               <div>
