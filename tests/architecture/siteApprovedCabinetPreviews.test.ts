@@ -51,7 +51,10 @@ describe("approved cabinet previews", () => {
       "documents",
       "polls",
     ]) {
-      expect(icon).toContain(id);
+      expect(icon).toContain(`data-icon="${id}"`);
+      expect(icon).toContain(`${id}:`);
     }
+
+    expect(icon.match(/data-icon="/g)).toHaveLength(8);
   });
 });
