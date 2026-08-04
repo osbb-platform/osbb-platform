@@ -1,49 +1,80 @@
-import type { CabinetMockupData } from "@/src/modules/site/data/mockupData";
+import { ApprovedCabinetPreview } from "@/src/modules/site/components/blocks/ApprovedCabinetPreview";
+import { FeatureLineIcon } from "@/src/modules/site/components/blocks/FeatureLineIcon";
+import { Section } from "@/src/modules/site/components/ui/Section";
 
-import { CabinetMockup } from "./CabinetMockup";
-import { Eyebrow } from "../ui/Eyebrow";
-import { Section } from "../ui/Section";
+type RealPreviewKind = "home" | "announcements" | "reports" | "plan";
+
+type IconKind =
+  | "information"
+  | "meetings"
+  | "debtors"
+  | "board"
+  | "specialists"
+  | "requisites"
+  | "documents"
+  | "polls";
 
 type FeatureShowcaseProps = {
-  index: number;
-  title: string;
-  subtitle: string;
   bullets: readonly string[];
-  mockup: CabinetMockupData;
+  id: string;
+  index: number;
   reverse?: boolean;
+  subtitle: string;
+  title: string;
+  visual: RealPreviewKind | IconKind;
 };
 
+const realPreviewKinds = new Set<RealPreviewKind>([
+  "home",
+  "announcements",
+  "reports",
+  "plan",
+]);
+
+function isRealPreview(
+  visual: RealPreviewKind | IconKind,
+): visual is RealPreviewKind {
+  return realPreviewKinds.has(visual as RealPreviewKind);
+}
+
 export function FeatureShowcase({
-  index,
-  title,
-  subtitle,
   bullets,
-  mockup,
+  id,
+  index,
   reverse = false,
+  subtitle,
+  title,
+  visual,
 }: FeatureShowcaseProps) {
   return (
-    <Section
-      className={reverse ? "osbb-feature osbb-feature--reverse" : "osbb-feature"}
-      tone={index % 2 === 0 ? "quiet" : "default"}
-    >
-      <div className="osbb-feature__copy">
-        <Eyebrow>Розділ {index} з 12</Eyebrow>
-        <h2>{title}</h2>
-        <p className="osbb-lead">{subtitle}</p>
+    <Section tone={index % 2 === 0 ? "quiet" : undefined}>
+      <article
+        className={`osbb-feature ${reverse ? "osbb-feature--reverse" : ""}`}
+        id={id}
+      >
+        <div className="osbb-feature__copy">
+          <span className="osbb-feature__index">
+            {String(index).padStart(2, "0")}
+          </span>
 
-        <ul className="osbb-check-list">
-          {bullets.map((bullet) => (
-            <li key={bullet}>{bullet}</li>
-          ))}
-        </ul>
-      </div>
+          <h2>{title}</h2>
+          <p className="osbb-feature__subtitle">{subtitle}</p>
 
-      <div className="osbb-feature__visual">
-        <CabinetMockup data={mockup} />
-        <p className="osbb-note">
-          Макет показового будинку з вигаданими даними.
-        </p>
-      </div>
+          <ul className="osbb-check-list">
+            {bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="osbb-feature__visual">
+          {isRealPreview(visual) ? (
+            <ApprovedCabinetPreview kind={visual} />
+          ) : (
+            <FeatureLineIcon kind={visual} />
+          )}
+        </div>
+      </article>
     </Section>
   );
 }

@@ -4,10 +4,6 @@ import { PageHero } from "@/src/modules/site/components/blocks/PageHero";
 import { Card } from "@/src/modules/site/components/ui/Card";
 import { Eyebrow } from "@/src/modules/site/components/ui/Eyebrow";
 import { Section } from "@/src/modules/site/components/ui/Section";
-import {
-  cabinetMockups,
-  type CabinetMockupData,
-} from "@/src/modules/site/data/mockupData";
 
 const sections = [
   {
@@ -180,16 +176,6 @@ const commonFeatures = [
   },
 ] as const;
 
-function requireMockup(id: string): CabinetMockupData {
-  const mockup = cabinetMockups.find((item) => item.id === id);
-
-  if (!mockup) {
-    throw new Error(`Cabinet mockup is missing: ${id}`);
-  }
-
-  return mockup;
-}
-
 export default function CapabilitiesPage() {
   return (
     <main id="main">
@@ -204,12 +190,13 @@ export default function CapabilitiesPage() {
       {sections.map((section, index) => (
         <FeatureShowcase
           bullets={section.bullets}
+          id={section.id}
           index={index + 1}
           key={section.id}
-          mockup={requireMockup(section.id)}
           reverse={index % 2 === 1}
           subtitle={section.subtitle}
           title={section.title}
+          visual={section.id}
         />
       ))}
 
@@ -236,20 +223,20 @@ export default function CapabilitiesPage() {
 
           <ul className="osbb-check-list osbb-check-list--deep">
             <li>
-              У кожного будинку — власний код доступу. Мешканець одного
-              будинку не потрапить у кабінет іншого.
+              У кожного будинку — власний код доступу. Мешканець одного будинку
+              не потрапить у кабінет іншого.
             </li>
             <li>
-              Документи і звіти лежать у закритому сховищі: файл не
-              відкрити просто за посиланням.
+              Документи і звіти лежать у закритому сховищі: файл не відкрити
+              просто за посиланням.
             </li>
             <li>
               Кожна зміна в кабінеті фіксується — видно, що і коли було
               оновлено.
             </li>
             <li>
-              Код доступу можна замінити в будь-який момент — старі входи
-              одразу перестають працювати.
+              Код доступу можна замінити в будь-який момент — старі входи одразу
+              перестають працювати.
             </li>
           </ul>
         </div>
