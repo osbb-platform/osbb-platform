@@ -135,7 +135,7 @@ describe("P04 account-based import for different houses", () => {
     });
   });
 
-  it("blocks transfer when the file contains an unknown account", () => {
+  it("keeps an unknown account visible without treating it as a global blocker", () => {
     const reconciliation = reconcileDebtors1cRows(
       {
         period: null,
@@ -153,12 +153,12 @@ describe("P04 account-based import for different houses", () => {
       registry,
     );
 
-    expect(reconciliation.blocked).toBe(true);
+    expect(reconciliation.blocked).toBe(false);
     expect(reconciliation.unknownSourceAccountNumbers).toEqual(["999999999"]);
 
     expect(buildDebtorsMonthTransferRows(reconciliation)).toEqual({
       ok: false,
-      error: "Файл містить невідомі особові рахунки. Передача не виконана.",
+      error: "Файл не містить зіставлених рядків для передачі.",
     });
   });
 });

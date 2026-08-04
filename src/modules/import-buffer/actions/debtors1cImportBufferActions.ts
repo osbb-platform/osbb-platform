@@ -330,13 +330,6 @@ export async function transferDebtors1cImportBuffer(
     return { ok: false, error: "Спочатку підтвердьте період." };
   }
 
-  if (state.unknownSourceAccounts.length > 0) {
-    return {
-      ok: false,
-      error: "Файл містить невідомі особові рахунки. Передача заблокована.",
-    };
-  }
-
   const access = await requireAccess(
     String(formData.get("houseId") ?? "").trim(),
   );

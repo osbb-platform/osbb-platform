@@ -100,7 +100,7 @@ describe("P04 registry account normalization", () => {
     ).toThrow("DUPLICATE_NORMALIZED_ACCOUNT_NUMBER:609740004");
   });
 
-  it("keeps a genuinely unknown account blocked", () => {
+  it("keeps a genuinely unknown account visible without global blocking", () => {
     const result = reconcileDebtors1cRows(
       {
         period: { year: 2026, month: 7 },
@@ -117,7 +117,7 @@ describe("P04 registry account normalization", () => {
       ],
     );
 
-    expect(result.blocked).toBe(true);
+    expect(result.blocked).toBe(false);
     expect(result.matchedCount).toBe(0);
     expect(result.unknownSourceAccountNumbers).toEqual(["609740999"]);
   });

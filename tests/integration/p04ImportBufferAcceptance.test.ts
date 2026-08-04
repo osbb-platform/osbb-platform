@@ -1,9 +1,4 @@
-import {
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buildDebtorsMonthTransferRows,
@@ -13,9 +8,7 @@ import {
   transferImportBufferToDebtors,
   validateImportFileDescriptor,
 } from "../../src/modules/import-buffer";
-import type {
-  Debtors1cRow,
-} from "../../src/modules/import-buffer/adapters/debtors1c";
+import type { Debtors1cRow } from "../../src/modules/import-buffer/adapters/debtors1c";
 import type {
   ImportBufferPreview,
   ImportBufferRepository,
@@ -23,10 +16,7 @@ import type {
   ParsedDebtors1cPreviewInput,
 } from "../../src/modules/import-buffer";
 
-function createSourceRow(
-  accountNumber: string,
-  debtValue = 100,
-): Debtors1cRow {
+function createSourceRow(accountNumber: string, debtValue = 100): Debtors1cRow {
   return {
     accountNumberRaw: `л/с №${accountNumber}`,
     accountNumberNormalized: accountNumber,
@@ -132,14 +122,12 @@ describe("P04 final acceptance", () => {
       {
         name: "debtors.xlsx",
         size: 0,
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
       {
         name: "debtors.xlsx",
         size: 15 * 1024 * 1024 + 1,
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
       {
         name: "debtors.xlsx",
@@ -147,43 +135,34 @@ describe("P04 final acceptance", () => {
         type: "application/pdf",
       },
     ]) {
-      expect(
-        validateImportFileDescriptor(invalid).ok,
-      ).toBe(false);
+      expect(validateImportFileDescriptor(invalid).ok).toBe(false);
     }
   });
 
-  it("blocks the entire transfer when one source account is unknown", () => {
-    const parsed = createParsedInput([
-      "609740004",
-      "UNKNOWN",
+  it("keeps unmatched source accounts visible without blocking matched rows", () => {
+    const parsed = createParsedInput(["609740004", "UNKNOWN"]);
+
+    const reconciliation = reconcileDebtors1cRows(parsed, [
+      {
+        id: "apartment-1",
+        accountNumber: "609740004",
+        apartmentLabel: "1",
+        ownerName: "Власник",
+        area: 50,
+      },
     ]);
 
-    const reconciliation = reconcileDebtors1cRows(
-      parsed,
-      [
-        {
-          id: "apartment-1",
-          accountNumber: "609740004",
-          apartmentLabel: "1",
-          ownerName: "Власник",
-          area: 50,
-        },
-      ],
-    );
+    expect(reconciliation.blocked).toBe(false);
+    expect(reconciliation.unknownSourceAccountNumbers).toEqual(["UNKNOWN"]);
 
-    expect(reconciliation.blocked).toBe(true);
-    expect(
-      reconciliation.unknownSourceAccountNumbers,
-    ).toEqual(["UNKNOWN"]);
+    const transfer = buildDebtorsMonthTransferRows(reconciliation);
 
-    expect(
-      buildDebtorsMonthTransferRows(reconciliation),
-    ).toEqual({
-      ok: false,
-      error:
-        "Файл містить невідомі особові рахунки. Передача не виконана.",
-    });
+    expect(transfer.ok).toBe(true);
+
+    if (transfer.ok) {
+      expect(transfer.rows).toHaveLength(1);
+      expect(transfer.rows[0]?.accountNumber).toBe("609740004");
+    }
   });
 
   it("keeps apartment label, owner and area differences as warnings", () => {
@@ -209,12 +188,11 @@ describe("P04 final acceptance", () => {
     if (row.classification !== "data") return;
 
     expect(row.matchStatus).toBe("matched");
-    expect(row.warnings.map((warning) => warning.code))
-      .toEqual([
-        "APARTMENT_LABEL_MISMATCH",
-        "OWNER_NAME_MISMATCH",
-        "AREA_MISMATCH",
-      ]);
+    expect(row.warnings.map((warning) => warning.code)).toEqual([
+      "APARTMENT_LABEL_MISMATCH",
+      "OWNER_NAME_MISMATCH",
+      "AREA_MISMATCH",
+    ]);
   });
 
   it("treats registry accounts absent from file as warnings, not blockers", () => {
@@ -239,9 +217,9 @@ describe("P04 final acceptance", () => {
     );
 
     expect(reconciliation.blocked).toBe(false);
-    expect(
-      reconciliation.registryAccountsMissingFromFile,
-    ).toEqual(["609740005"]);
+    expect(reconciliation.registryAccountsMissingFromFile).toEqual([
+      "609740005",
+    ]);
   });
 
   it("rejects stale period confirmation", async () => {
@@ -253,15 +231,12 @@ describe("P04 final acceptance", () => {
       }),
     );
 
-    const result = await confirmImportBufferPeriod(
-      repository,
-      {
-        uploadId: "upload-1",
-        year: 2026,
-        month: 5,
-        expectedLockVersion: 6,
-      },
-    );
+    const result = await confirmImportBufferPeriod(repository, {
+      uploadId: "upload-1",
+      year: 2026,
+      month: 5,
+      expectedLockVersion: 6,
+    });
 
     expect(result).toEqual({
       ok: false,
@@ -271,26 +246,17 @@ describe("P04 final acceptance", () => {
   });
 
   it("rejects discard for completed buffers", async () => {
-    for (const status of [
-      "transferred",
-      "discarded",
-    ] as const) {
-      const repository = createRepository(
-        createUpload({ status }),
-      );
+    for (const status of ["transferred", "discarded"] as const) {
+      const repository = createRepository(createUpload({ status }));
 
-      const result = await discardImportBuffer(
-        repository,
-        {
-          uploadId: "upload-1",
-          expectedLockVersion: 3,
-        },
-      );
+      const result = await discardImportBuffer(repository, {
+        uploadId: "upload-1",
+        expectedLockVersion: 3,
+      });
 
       expect(result).toEqual({
         ok: false,
-        error:
-          "Завершений буфер не можна скасувати повторно.",
+        error: "Завершений буфер не можна скасувати повторно.",
       });
       expect(repository.discard).not.toHaveBeenCalled();
     }
@@ -316,29 +282,22 @@ describe("P04 final acceptance", () => {
         sourceText: "за Травень 2026 р.",
       },
       confirmedPeriod: null,
-      reconciliation: reconcileDebtors1cRows(
-        createParsedInput(["609740004"]),
-        [
-          {
-            id: "apartment-1",
-            accountNumber: "609740004",
-            apartmentLabel: "1",
-            ownerName: "Власник",
-            area: 50,
-          },
-        ],
-      ),
+      reconciliation: reconcileDebtors1cRows(createParsedInput(["609740004"]), [
+        {
+          id: "apartment-1",
+          accountNumber: "609740004",
+          apartmentLabel: "1",
+          ownerName: "Власник",
+          area: 50,
+        },
+      ]),
     };
 
-    const result = await transferImportBufferToDebtors(
-      repository,
-      gateway,
-      {
-        uploadId: "upload-1",
-        expectedLockVersion: 3,
-        preview,
-      },
-    );
+    const result = await transferImportBufferToDebtors(repository, gateway, {
+      uploadId: "upload-1",
+      expectedLockVersion: 3,
+      preview,
+    });
 
     expect(result).toEqual({
       ok: false,
@@ -384,15 +343,11 @@ describe("P04 final acceptance", () => {
       })),
     };
 
-    const result = await transferImportBufferToDebtors(
-      repository,
-      gateway,
-      {
-        uploadId: "upload-1",
-        expectedLockVersion: 3,
-        preview,
-      },
-    );
+    const result = await transferImportBufferToDebtors(repository, gateway, {
+      uploadId: "upload-1",
+      expectedLockVersion: 3,
+      preview,
+    });
 
     expect(result).toEqual({
       ok: true,
@@ -401,31 +356,29 @@ describe("P04 final acceptance", () => {
       },
     });
 
-    expect(gateway.importMonthDraft)
-      .toHaveBeenCalledWith(
-        expect.objectContaining({
-          houseId: "house-1",
-          periodYear: 2026,
-          periodMonth: 5,
-          source: "buffer_1c",
-          rows: [
-            {
-              accountNumber: "609740004",
-              accrued: 0,
-              paid: 0,
-              closingBalance: -100,
-              debtSourceValue: 100,
-            },
-          ],
-        }),
-      );
+    expect(gateway.importMonthDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        houseId: "house-1",
+        periodYear: 2026,
+        periodMonth: 5,
+        source: "buffer_1c",
+        rows: [
+          {
+            accountNumber: "609740004",
+            accrued: 0,
+            paid: 0,
+            closingBalance: -100,
+            debtSourceValue: 100,
+          },
+        ],
+      }),
+    );
 
-    expect(repository.markTransferred)
-      .toHaveBeenCalledWith({
-        uploadId: "upload-1",
-        expectedLockVersion: 3,
-        snapshotId: "snapshot-1",
-      });
+    expect(repository.markTransferred).toHaveBeenCalledWith({
+      uploadId: "upload-1",
+      expectedLockVersion: 3,
+      snapshotId: "snapshot-1",
+    });
   });
 
   it("does not mutate source identity fields during transfer", () => {

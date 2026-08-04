@@ -1,4 +1,3 @@
-
 import {
   buildDebtPublicationPlan,
   type DebtorHistorySnapshot,
@@ -59,7 +58,10 @@ function normalizeOptionalNumber(value: unknown) {
   }
 
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return err("Числові поля містять некоректне значення.", "VALIDATION_FAILED");
+    return err(
+      "Числові поля містять некоректне значення.",
+      "VALIDATION_FAILED",
+    );
   }
 
   return ok(value);
@@ -91,7 +93,10 @@ export function normalizeImportMonthPayload(
 
   for (const rawRow of raw.rows) {
     if (!rawRow || typeof rawRow !== "object") {
-      return err("Рядки імпорту мають некоректний формат.", "VALIDATION_FAILED");
+      return err(
+        "Рядки імпорту мають некоректний формат.",
+        "VALIDATION_FAILED",
+      );
     }
 
     const row = rawRow as Record<string, unknown>;
@@ -121,22 +126,23 @@ export function normalizeImportMonthPayload(
 
     const accrued = normalizeOptionalNumber(row.accrued);
     if (!accrued.ok) return accrued;
-    if (
-      accrued.data !== null &&
-      Math.abs(accrued.data) > 9_999_999_999.99
-    ) {
-      return err("Сума нарахувань виходить за допустимі межі.", "VALIDATION_FAILED");
+    if (accrued.data !== null && Math.abs(accrued.data) > 9_999_999_999.99) {
+      return err(
+        "Сума нарахувань виходить за допустимі межі.",
+        "VALIDATION_FAILED",
+      );
     }
 
     const paid = normalizeOptionalNumber(row.paid);
     if (!paid.ok) return paid;
     if (paid.data !== null && Math.abs(paid.data) > 9_999_999_999.99) {
-      return err("Сума оплати виходить за допустимі межі.", "VALIDATION_FAILED");
+      return err(
+        "Сума оплати виходить за допустимі межі.",
+        "VALIDATION_FAILED",
+      );
     }
 
-    const debtSourceValue = normalizeOptionalNumber(
-      row.debtSourceValue,
-    );
+    const debtSourceValue = normalizeOptionalNumber(row.debtSourceValue);
     if (!debtSourceValue.ok) return debtSourceValue;
     if (
       debtSourceValue.data !== null &&
@@ -164,10 +170,7 @@ export function normalizeImportMonthPayload(
 
   return ok({
     ...period.data,
-    source: sourceText as Exclude<
-      HouseDebtorMonthSource,
-      "migration_legacy"
-    >,
+    source: sourceText as Exclude<HouseDebtorMonthSource, "migration_legacy">,
     importMeta,
     rows,
   });
@@ -217,9 +220,7 @@ export function readRelabelMonthPayload(
   });
 }
 
-function mapSnapshotRow(
-  row: HouseDebtorMonthRow,
-) {
+function mapSnapshotRow(row: HouseDebtorMonthRow) {
   return {
     apartmentId: row.apartment_id,
     accountNumber: row.account_number,
@@ -230,9 +231,7 @@ function mapSnapshotRow(
     paid: row.paid === null ? null : Number(row.paid),
     closingBalance: Number(row.closing_balance),
     debtSourceValue:
-      row.debt_source_value === null
-        ? null
-        : Number(row.debt_source_value),
+      row.debt_source_value === null ? null : Number(row.debt_source_value),
   };
 }
 
@@ -300,8 +299,7 @@ async function getPublishedSnapshots(
     return err("Не вдалося завантажити історію боргів.", "INTERNAL");
   }
 
-  const snapshots =
-    (snapshotsResult.data ?? []) as HouseDebtorMonthSnapshot[];
+  const snapshots = (snapshotsResult.data ?? []) as HouseDebtorMonthSnapshot[];
 
   if (snapshots.length === 0) {
     return ok([]);
@@ -384,9 +382,7 @@ export async function getMissingRegistryAccounts(
   return ok(missing);
 }
 
-export function mapDebtorHistoryRpcError(
-  message: string,
-): Result<never> {
+export function mapDebtorHistoryRpcError(message: string): Result<never> {
   if (message.includes("P03_STALE")) {
     return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
   }
@@ -403,7 +399,7 @@ export function mapDebtorHistoryRpcError(
     const details = message.split("P03_UNKNOWN_ACCOUNT:")[1]?.trim();
     return err(
       details
-        ? `Невідомі особові рахунки: ${details}. Імпорт не виконано.`
+        ? `Не знайдено в реєстрі квартир: ${details}. Імпорт не виконано.`
         : "Файл містить невідомі особові рахунки. Імпорт не виконано.",
       "VALIDATION_FAILED",
     );

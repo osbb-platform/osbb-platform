@@ -35,8 +35,9 @@ describe("P04 T6 admin import flow", () => {
   });
 
   it("shows blockers, warnings and period confirmation", () => {
-    expect(panel).toContain("Передача заблокована");
-    expect(panel).toContain("Невідомі особові рахунки");
+    expect(panel).toContain("Непорівняні рядки буде пропущено");
+    expect(panel).toContain("Не знайдено в");
+    expect(panel).toContain("реєстрі квартир:");
     expect(panel).toContain("Попереджень:");
     expect(panel).toContain("Підтвердити");
   });

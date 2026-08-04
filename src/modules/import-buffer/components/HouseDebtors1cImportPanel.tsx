@@ -119,10 +119,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
     }
   }
 
-  const transferBlocked =
-    !state.ok ||
-    state.status !== "confirmed" ||
-    state.unknownSourceAccounts.length > 0;
+  const transferBlocked = !state.ok || state.status !== "confirmed";
 
   return (
     <AdminSidePanel
@@ -238,8 +235,8 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
 
             {state.unknownSourceAccounts.length > 0 ? (
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                <strong>Передача заблокована.</strong> Невідомі особові рахунки:{" "}
-                {state.unknownSourceAccounts.join(", ")}
+                <strong>Непорівняні рядки буде пропущено.</strong> Не знайдено в
+                реєстрі квартир: {state.unknownSourceAccounts.join(", ")}
               </div>
             ) : null}
 

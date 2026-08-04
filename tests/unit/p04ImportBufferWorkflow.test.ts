@@ -1,9 +1,4 @@
-import {
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buildDebtorsMonthTransferRows,
@@ -13,9 +8,7 @@ import {
   transferImportBufferToDebtors,
   validateImportFileDescriptor,
 } from "../../src/modules/import-buffer";
-import type {
-  Debtors1cRow,
-} from "../../src/modules/import-buffer/adapters/debtors1c";
+import type { Debtors1cRow } from "../../src/modules/import-buffer/adapters/debtors1c";
 import type {
   ImportBufferPreview,
   ImportBufferRepository,
@@ -126,39 +119,33 @@ describe("P04 import-buffer T5 workflow", () => {
       validateImportFileDescriptor({
         name: "debtors.xlsx",
         size: 15 * 1024 * 1024 + 1,
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }).ok,
     ).toBe(false);
   });
 
   it("matches by account and keeps registry fields authoritative", () => {
-    const result = reconcileDebtors1cRows(
-      parsedInput,
-      [
-        {
-          id: "apartment-1",
-          accountNumber: "609740004",
-          apartmentLabel: "01",
-          ownerName: "Інший власник",
-          area: 46,
-        },
-        {
-          id: "apartment-2",
-          accountNumber: "609740005",
-          apartmentLabel: "2",
-          ownerName: "Другий власник",
-          area: 50,
-        },
-      ],
-    );
+    const result = reconcileDebtors1cRows(parsedInput, [
+      {
+        id: "apartment-1",
+        accountNumber: "609740004",
+        apartmentLabel: "01",
+        ownerName: "Інший власник",
+        area: 46,
+      },
+      {
+        id: "apartment-2",
+        accountNumber: "609740005",
+        apartmentLabel: "2",
+        ownerName: "Другий власник",
+        area: 50,
+      },
+    ]);
 
     expect(result.blocked).toBe(false);
     expect(result.matchedCount).toBe(1);
     expect(result.warningCount).toBe(3);
-    expect(
-      result.registryAccountsMissingFromFile,
-    ).toEqual(["609740005"]);
+    expect(result.registryAccountsMissingFromFile).toEqual(["609740005"]);
 
     const matched = result.rows[0];
 
@@ -168,57 +155,39 @@ describe("P04 import-buffer T5 workflow", () => {
       return;
     }
 
-    expect(matched.matchedApartmentId).toBe(
-      "apartment-1",
-    );
-    expect(matched.warnings.map((item) => item.code))
-      .toEqual([
-        "APARTMENT_LABEL_MISMATCH",
-        "OWNER_NAME_MISMATCH",
-        "AREA_MISMATCH",
-      ]);
-    expect(matched.source.ownerName).toBe(
-      "Тестовий Власник",
-    );
+    expect(matched.matchedApartmentId).toBe("apartment-1");
+    expect(matched.warnings.map((item) => item.code)).toEqual([
+      "APARTMENT_LABEL_MISMATCH",
+      "OWNER_NAME_MISMATCH",
+      "AREA_MISMATCH",
+    ]);
+    expect(matched.source.ownerName).toBe("Тестовий Власник");
   });
 
-  it("blocks the whole transfer for an unknown source account", () => {
-    const reconciliation = reconcileDebtors1cRows(
-      parsedInput,
-      [],
-    );
+  it("keeps an unknown source account visible and rejects an empty matched payload", () => {
+    const reconciliation = reconcileDebtors1cRows(parsedInput, []);
 
-    expect(reconciliation.blocked).toBe(true);
-    expect(
-      reconciliation.unknownSourceAccountNumbers,
-    ).toEqual(["609740004"]);
+    expect(reconciliation.blocked).toBe(false);
+    expect(reconciliation.unknownSourceAccountNumbers).toEqual(["609740004"]);
 
-    expect(
-      buildDebtorsMonthTransferRows(reconciliation),
-    ).toEqual({
+    expect(buildDebtorsMonthTransferRows(reconciliation)).toEqual({
       ok: false,
-      error:
-        "Файл містить невідомі особові рахунки. Передача не виконана.",
+      error: "Файл не містить зіставлених рядків для передачі.",
     });
   });
 
   it("maps debt sign once and preserves source debt", () => {
-    const reconciliation = reconcileDebtors1cRows(
-      parsedInput,
-      [
-        {
-          id: "apartment-1",
-          accountNumber: "609740004",
-          apartmentLabel: "1",
-          ownerName: "Тестовий Власник",
-          area: 45.5,
-        },
-      ],
-    );
+    const reconciliation = reconcileDebtors1cRows(parsedInput, [
+      {
+        id: "apartment-1",
+        accountNumber: "609740004",
+        apartmentLabel: "1",
+        ownerName: "Тестовий Власник",
+        area: 45.5,
+      },
+    ]);
 
-    expect(
-      buildDebtorsMonthTransferRows(reconciliation),
-    ).toEqual({
+    expect(buildDebtorsMonthTransferRows(reconciliation)).toEqual({
       ok: true,
       rows: [
         {
@@ -240,15 +209,12 @@ describe("P04 import-buffer T5 workflow", () => {
       }),
     );
 
-    const result = await confirmImportBufferPeriod(
-      repository,
-      {
-        uploadId: "upload-1",
-        year: 2026,
-        month: 5,
-        expectedLockVersion: 3,
-      },
-    );
+    const result = await confirmImportBufferPeriod(repository, {
+      uploadId: "upload-1",
+      year: 2026,
+      month: 5,
+      expectedLockVersion: 3,
+    });
 
     expect(result.ok).toBe(true);
     expect(repository.confirmPeriod).toHaveBeenCalledWith({
@@ -270,13 +236,10 @@ describe("P04 import-buffer T5 workflow", () => {
       }),
     );
 
-    const result = await discardImportBuffer(
-      repository,
-      {
-        uploadId: "upload-1",
-        expectedLockVersion: 4,
-      },
-    );
+    const result = await discardImportBuffer(repository, {
+      uploadId: "upload-1",
+      expectedLockVersion: 4,
+    });
 
     expect(result).toEqual({
       ok: false,
@@ -286,18 +249,15 @@ describe("P04 import-buffer T5 workflow", () => {
   });
 
   it("transfers only a confirmed fully matched buffer", async () => {
-    const reconciliation = reconcileDebtors1cRows(
-      parsedInput,
-      [
-        {
-          id: "apartment-1",
-          accountNumber: "609740004",
-          apartmentLabel: "1",
-          ownerName: "Тестовий Власник",
-          area: 45.5,
-        },
-      ],
-    );
+    const reconciliation = reconcileDebtors1cRows(parsedInput, [
+      {
+        id: "apartment-1",
+        accountNumber: "609740004",
+        apartmentLabel: "1",
+        ownerName: "Тестовий Власник",
+        area: 45.5,
+      },
+    ]);
 
     const preview: ImportBufferPreview = {
       adapterKey: "debtors_1c",
@@ -314,15 +274,11 @@ describe("P04 import-buffer T5 workflow", () => {
       })),
     };
 
-    const result = await transferImportBufferToDebtors(
-      repository,
-      gateway,
-      {
-        uploadId: "upload-1",
-        expectedLockVersion: 3,
-        preview,
-      },
-    );
+    const result = await transferImportBufferToDebtors(repository, gateway, {
+      uploadId: "upload-1",
+      expectedLockVersion: 3,
+      preview,
+    });
 
     expect(result).toEqual({
       ok: true,
@@ -349,11 +305,10 @@ describe("P04 import-buffer T5 workflow", () => {
       }),
     );
 
-    expect(repository.markTransferred)
-      .toHaveBeenCalledWith({
-        uploadId: "upload-1",
-        expectedLockVersion: 3,
-        snapshotId: "snapshot-1",
-      });
+    expect(repository.markTransferred).toHaveBeenCalledWith({
+      uploadId: "upload-1",
+      expectedLockVersion: 3,
+      snapshotId: "snapshot-1",
+    });
   });
 });

@@ -79,7 +79,7 @@ export function reconcileDebtors1cRows(
     registryAccountsMissingFromFile,
     matchedCount,
     warningCount,
-    blocked: unknownSourceAccountNumbers.length > 0,
+    blocked: false,
   };
 }
 
