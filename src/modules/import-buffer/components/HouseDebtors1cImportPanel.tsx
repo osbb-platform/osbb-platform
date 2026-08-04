@@ -119,7 +119,54 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
     }
   }
 
-  const transferBlocked = !state.ok || state.status !== "confirmed";
+  async function confirmAndTransfer() {
+    if (!state.ok) return;
+
+    setIsCommandPending(true);
+
+    try {
+      let currentState: Debtors1cImportState = state;
+
+      if (currentState.status === "parsed") {
+        const confirmData = new FormData();
+        confirmData.set("houseId", houseId);
+        confirmData.set("periodYear", String(periodYear));
+        confirmData.set("periodMonth", String(periodMonth));
+
+        currentState = await confirmDebtors1cImportPeriod(
+          currentState,
+          confirmData,
+        );
+        setState(currentState);
+
+        if (!currentState.ok || currentState.status !== "confirmed") {
+          return;
+        }
+      }
+
+      if (currentState.status !== "confirmed") {
+        return;
+      }
+
+      const transferData = new FormData();
+      transferData.set("houseId", houseId);
+
+      const result = await transferDebtors1cImportBuffer(
+        currentState,
+        transferData,
+      );
+      setState(result);
+
+      if (result.ok && result.status === "transferred") {
+        router.refresh();
+      }
+    } finally {
+      setIsCommandPending(false);
+    }
+  }
+
+  const transferBlocked =
+    !state.ok || state.status === "discarded" || state.status === "transferred";
 
   return (
     <AdminSidePanel
@@ -153,15 +200,17 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
               type="button"
               disabled={transferBlocked || isCommandPending}
               onClick={() => {
-                const data = new FormData();
-                data.set("houseId", houseId);
                 startTransition(() => {
-                  void execute(transferDebtors1cImportBuffer, data);
+                  void confirmAndTransfer();
                 });
               }}
               className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
             >
-              {isCommandPending ? "Передаємо..." : "Передати в чернетку"}
+              {isCommandPending
+                ? "Передаємо..."
+                : state.ok && state.status === "parsed"
+                  ? "Підтвердити та передати"
+                  : "Передати в чернетку"}
             </button>
           </div>
         ) : null
@@ -232,6 +281,13 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
                 })}
               </AdminStatusBadge>
             </div>
+
+            {state.ok && state.status === "parsed" ? (
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 text-sm text-[var(--cms-warning-text)]">
+                Перевірте звітний період. Кнопка «Підтвердити та передати»
+                підтвердить вибраний місяць і рік та одразу створить чернетку.
+              </div>
+            ) : null}
 
             {state.unknownSourceAccounts.length > 0 ? (
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">

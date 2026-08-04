@@ -48,9 +48,7 @@ describe("P04 server/security boundary", () => {
     expect(actions).not.toContain(
       '.from("house_debtor_month_snapshots").insert',
     );
-    expect(actions).not.toContain(
-      '.from("house_debtor_month_rows").insert',
-    );
+    expect(actions).not.toContain('.from("house_debtor_month_rows").insert');
   });
 
   it("enforces file and hourly limits server-side", () => {
@@ -70,18 +68,14 @@ describe("P04 server/security boundary", () => {
     );
     expect(normalized).not.toContain("to anon");
     expect(normalized).not.toContain("to public");
-    expect(normalized).toContain(
-      "public.admin_has_house_access",
-    );
+    expect(normalized).toContain("public.admin_has_house_access");
   });
 
-  it("keeps transfer disabled until confirmation and matching pass", () => {
-    expect(ui).toContain(
-      'state.status !== "confirmed"',
-    );
-    expect(ui).toContain(
-      "state.unknownSourceAccounts.length > 0",
-    );
+  it("keeps server confirmation guard while allowing confirm-and-transfer UX", () => {
+    expect(ui).toContain("confirmAndTransfer");
+    expect(ui).toContain('currentState.status !== "confirmed"');
+    expect(ui).toContain('"Підтвердити та передати"');
+    expect(ui).toContain("state.unknownSourceAccounts.length > 0");
     expect(ui).toContain("transferBlocked");
   });
 });

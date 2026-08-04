@@ -366,18 +366,18 @@ export async function transferDebtors1cImportBuffer(
     return { ok: false, error: "Не вдалося завантажити staged rows." };
   }
 
-  if (
-    staged.data.some(
-      (row) =>
-        row.match_status !== "matched" ||
-        !row.matched_apartment_id ||
-        !row.account_number_normalized ||
-        row.debt_value === null,
-    )
-  ) {
+  const matchedRows = staged.data.filter(
+    (row) =>
+      row.match_status === "matched" &&
+      Boolean(row.matched_apartment_id) &&
+      Boolean(row.account_number_normalized) &&
+      row.debt_value !== null,
+  );
+
+  if (matchedRows.length === 0) {
     return {
       ok: false,
-      error: "Не всі рядки зіставлено з активним реєстром квартир.",
+      error: "Не знайдено зіставлених рядків для передачі.",
     };
   }
 
@@ -396,7 +396,7 @@ export async function transferDebtors1cImportBuffer(
         warningCount: state.warningCount,
         missingRegistryAccounts: state.missingRegistryAccounts,
       },
-      rows: staged.data.map((row) => ({
+      rows: matchedRows.map((row) => ({
         accountNumber: String(row.account_number_normalized),
         accrued: row.accrued === null ? null : Number(row.accrued),
         paid: row.paid === null ? null : Number(row.paid),
