@@ -1,9 +1,6 @@
 export const IMPORT_BUFFER_MAX_FILE_SIZE = 15 * 1024 * 1024;
 
-const ALLOWED_EXTENSIONS = new Set([
-  "xls",
-  "xlsx",
-]);
+const ALLOWED_EXTENSIONS = new Set(["xls", "xlsx"]);
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.ms-excel",
@@ -52,7 +49,14 @@ export function validateImportFileDescriptor(
     };
   }
 
-  if (!ALLOWED_MIME_TYPES.has(file.type.toLowerCase())) {
+  const normalizedMime = file.type.toLowerCase();
+
+  const isLegacyExcelMime =
+    normalizedMime === "" ||
+    normalizedMime === "application/octet-stream" ||
+    ALLOWED_MIME_TYPES.has(normalizedMime);
+
+  if (!isLegacyExcelMime) {
     return {
       ok: false,
       error: "Тип файлу не відповідає формату XLS або XLSX.",
