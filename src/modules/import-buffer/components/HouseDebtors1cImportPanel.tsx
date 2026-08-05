@@ -5,6 +5,7 @@ import {
   useActionState,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,7 @@ import {
   INITIAL_DEBTORS_1C_IMPORT_STATE,
   type Debtors1cImportState,
 } from "@/src/modules/import-buffer/debtors1cImportState";
+import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import {
@@ -58,6 +60,8 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
     INITIAL_DEBTORS_1C_IMPORT_STATE,
   );
   const [isCommandPending, setIsCommandPending] = useState(false);
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
   const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
 
@@ -97,6 +101,62 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
       },
     );
   }, [state]);
+
+  const hasDiscardableBuffer =
+    state.ok && (state.status === "parsed" || state.status === "confirmed");
+
+  function resetLocalImportState() {
+    setState(INITIAL_DEBTORS_1C_IMPORT_STATE);
+    setPeriodYear(new Date().getFullYear());
+    setPeriodMonth(new Date().getMonth() + 1);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function closeCleanPanel() {
+    setIsDiscardConfirmOpen(false);
+    resetLocalImportState();
+    onClose();
+  }
+
+  function requestClose() {
+    if (isParsePending || isCommandPending || isDiscardConfirmOpen) return;
+
+    if (hasDiscardableBuffer) {
+      setIsDiscardConfirmOpen(true);
+      return;
+    }
+
+    closeCleanPanel();
+  }
+
+  async function discardAndClose() {
+    if (!state.ok) {
+      closeCleanPanel();
+      return;
+    }
+
+    setIsCommandPending(true);
+
+    try {
+      const data = new FormData();
+      data.set("houseId", houseId);
+
+      const result = await discardDebtors1cImportBuffer(state, data);
+
+      if (!result.ok || result.status !== "discarded") {
+        setState(result);
+        setIsDiscardConfirmOpen(false);
+        return;
+      }
+
+      closeCleanPanel();
+    } finally {
+      setIsCommandPending(false);
+    }
+  }
 
   async function execute(
     action:
@@ -171,9 +231,8 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
   return (
     <AdminSidePanel
       isOpen={isOpen}
-      onClose={() => {
-        if (!isParsePending && !isCommandPending) onClose();
-      }}
+      onClose={requestClose}
+      maxWidthClassName="max-w-4xl"
       title="Імпорт боржників з 1С"
       description="Завантажте XLS/XLSX, перевірте звірку, підтвердьте період і передайте дані в місячну чернетку."
       footer={
@@ -185,11 +244,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
               type="button"
               disabled={isCommandPending}
               onClick={() => {
-                const data = new FormData();
-                data.set("houseId", houseId);
-                startTransition(() => {
-                  void execute(discardDebtors1cImportBuffer, data);
-                });
+                setIsDiscardConfirmOpen(true);
               }}
               className={`${adminSecondaryButtonClass} disabled:opacity-50`}
             >
@@ -232,6 +287,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
         <form action={parseAction} className="space-y-4">
           <input type="hidden" name="houseId" value={houseId} />
           <input
+            ref={fileInputRef}
             type="file"
             name="file"
             accept=".xls,.xlsx"
@@ -433,6 +489,27 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
           </>
         ) : null}
       </div>
+
+      <PlatformConfirmModal
+        open={isDiscardConfirmOpen}
+        title="Скасувати імпорт з 1С?"
+        description="Завантажений preview і тимчасовий буфер буде видалено. Після закриття файл потрібно буде завантажити повторно."
+        confirmLabel="Скасувати імпорт"
+        cancelLabel="Продовжити перевірку"
+        tone="warning"
+        isPending={isCommandPending}
+        pendingLabel="Скасовуємо..."
+        onConfirm={() => {
+          startTransition(() => {
+            void discardAndClose();
+          });
+        }}
+        onCancel={() => {
+          if (!isCommandPending) {
+            setIsDiscardConfirmOpen(false);
+          }
+        }}
+      />
     </AdminSidePanel>
   );
 }

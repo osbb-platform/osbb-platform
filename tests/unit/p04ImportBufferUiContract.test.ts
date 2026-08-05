@@ -34,9 +34,20 @@ describe("P04 T6 admin import flow", () => {
     expect(panel).toContain('accept=".xls,.xlsx"');
   });
 
+  it("guards destructive closing and uses the table-sized panel", () => {
+    expect(panel).toContain("PlatformConfirmModal");
+    expect(panel).toContain("requestClose");
+    expect(panel).toContain("discardAndClose");
+    expect(panel).toContain("resetLocalImportState");
+    expect(panel).toContain('maxWidthClassName="max-w-4xl"');
+    expect(panel).toContain("Скасувати імпорт з 1С?");
+    expect(panel).toContain("Продовжити перевірку");
+    expect(panel).toContain("fileInputRef.current.value");
+  });
+
   it("shows blockers, warnings and period confirmation", () => {
     expect(panel).toContain("Непорівняні рядки буде пропущено");
-    expect(panel).toContain("Не знайдено в");
+    expect(panel).toContain("Не знайдено");
     expect(panel).toContain("реєстрі квартир:");
     expect(panel).toContain("Попереджень:");
     expect(panel).toContain("Підтвердити");
