@@ -13,27 +13,22 @@ const source = readFileSync(
 
 describe("P03 debtor month lifecycle UX", () => {
   it("publishes and discards monthly snapshots with optimistic locking", () => {
-    expect(source).toContain(
-      'type: "debtors.publishMonthSnapshot"',
-    );
-    expect(source).toContain(
-      'type: "debtors.discardMonthSnapshot"',
-    );
+    expect(source).toContain('type: "debtors.publishMonthSnapshot"');
+    expect(source).toContain('type: "debtors.discardMonthSnapshot"');
     expect(source).toContain("draftMonthSnapshot.id");
     expect(source).toContain("draftMonthSnapshot.lockVersion");
   });
 
   it("supports relabelling a draft month before publication", () => {
-    expect(source).toContain(
-      'type: "debtors.relabelMonthSnapshot"',
-    );
+    expect(source).toContain('type: "debtors.relabelMonthSnapshot"');
     expect(source).toContain("Змінити період чернетки");
   });
 
-  it("renders month history with revision and lifecycle status", () => {
-    expect(source).toContain("Історія по місяцях");
-    expect(source).toContain("monthSnapshots.map");
-    expect(source).toContain("Ревізія");
+  it("renders current month summary and moves revision history to a side panel", () => {
+    expect(source).toContain("Актуальна місячна версія");
+    expect(source).toContain("HouseDebtorMonthHistoryPanel");
+    expect(source).toContain("Історія версій");
+    expect(source).not.toContain("Історія по місяцях");
     expect(source).toContain("Опубліковано");
     expect(source).toContain("Замінено");
     expect(source).toContain("Відхилено");

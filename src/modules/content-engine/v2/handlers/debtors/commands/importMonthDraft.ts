@@ -32,7 +32,7 @@ export const importMonthDraftCommand: CommandSpec = {
     const adminSupabase = createSupabaseAdminClient();
 
     const { data, error } = await adminSupabase.rpc(
-      "import_house_debtor_month_draft",
+      "import_house_debtor_month_draft_idempotent",
       {
         p_house_id: ctx.house.id,
         p_created_by: ctx.user.id,

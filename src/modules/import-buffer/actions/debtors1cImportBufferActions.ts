@@ -11,6 +11,10 @@ import { assertWorkspaceAction } from "@/src/shared/permissions/actionAccess";
 
 import { debtors1cAdapter, toOsbbBalance } from "../adapters/debtors1c";
 import { validateImportFileDescriptor } from "../fileSecurity";
+import {
+  recoverConfirmedDebtors1cImportState,
+  recoverTransferredDebtors1cImportState,
+} from "../debtors1cImportRecovery";
 import { reconcileDebtors1cRows } from "../matching";
 import type { ActiveApartmentRegistryRow } from "../workflowTypes";
 import type { Debtors1cImportState } from "../debtors1cImportState";
@@ -275,17 +279,44 @@ export async function confirmDebtors1cImportPeriod(
     .select("lock_version")
     .maybeSingle();
 
-  if (update.error || !update.data) {
-    return { ok: false, error: "Дані застаріли. Завантажте preview повторно." };
+  if (!update.error && update.data) {
+    return {
+      ...state,
+      status: "confirmed",
+      lockVersion: Number(update.data.lock_version),
+      confirmedPeriod: { year, month },
+      message: "Період підтверджено.",
+    };
   }
 
-  return {
-    ...state,
-    status: "confirmed",
-    lockVersion: Number(update.data.lock_version),
-    confirmedPeriod: { year, month },
-    message: "Період підтверджено.",
-  };
+  const current = await supabase
+    .from("import_buffer_uploads")
+    .select(
+      "status, lock_version, confirmed_period_year, confirmed_period_month, stats",
+    )
+    .eq("id", state.uploadId)
+    .eq("house_id", access.house.id)
+    .maybeSingle();
+
+  if (!current.error && current.data) {
+    const recovered = recoverConfirmedDebtors1cImportState(
+      state,
+      current.data,
+      { year, month },
+    );
+
+    if (recovered) return recovered;
+  }
+
+  if (update.error) {
+    console.error("[P04 debtors 1C] Failed to confirm import period", {
+      houseId: access.house.id,
+      uploadId: state.uploadId,
+      error: update.error.message,
+    });
+  }
+
+  return { ok: false, error: "Дані застаріли. Завантажте preview повторно." };
 }
 
 export async function discardDebtors1cImportBuffer(
@@ -339,14 +370,27 @@ export async function transferDebtors1cImportBuffer(
 
   const upload = await supabase
     .from("import_buffer_uploads")
-    .select("id, status, lock_version")
+    .select(
+      "id, status, lock_version, confirmed_period_year, confirmed_period_month, stats, original_file_name",
+    )
     .eq("id", state.uploadId)
     .eq("house_id", access.house.id)
     .maybeSingle();
 
+  if (upload.error || !upload.data) {
+    return { ok: false, error: "Буфер імпорту не знайдено." };
+  }
+
+  const alreadyTransferred = recoverTransferredDebtors1cImportState(
+    state,
+    upload.data,
+  );
+
+  if (alreadyTransferred) {
+    return alreadyTransferred;
+  }
+
   if (
-    upload.error ||
-    !upload.data ||
     upload.data.status !== "confirmed" ||
     Number(upload.data.lock_version) !== state.lockVersion
   ) {
@@ -428,6 +472,7 @@ export async function transferDebtors1cImportBuffer(
       importMeta: {
         importBufferUploadId: state.uploadId,
         adapterKey: "debtors_1c",
+        originalFileName: String(upload.data.original_file_name ?? "").trim(),
         detectedPeriod: state.detectedPeriod,
         confirmedPeriod: state.confirmedPeriod,
         warningCount: state.warningCount,
@@ -479,6 +524,27 @@ export async function transferDebtors1cImportBuffer(
     .maybeSingle();
 
   if (mark.error || !mark.data) {
+    const current = await supabase
+      .from("import_buffer_uploads")
+      .select(
+        "status, lock_version, confirmed_period_year, confirmed_period_month, stats",
+      )
+      .eq("id", state.uploadId)
+      .eq("house_id", access.house.id)
+      .maybeSingle();
+
+    if (!current.error && current.data) {
+      const recovered = recoverTransferredDebtors1cImportState(
+        {
+          ...state,
+          snapshotId,
+        },
+        current.data,
+      );
+
+      if (recovered) return recovered;
+    }
+
     return {
       ok: false,
       error: "Чернетку створено, але буфер не вдалося позначити переданим.",

@@ -62,6 +62,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
   const [isCommandPending, setIsCommandPending] = useState(false);
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const commandInFlightRef = useRef(false);
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
   const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
 
@@ -104,6 +105,20 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
 
   const hasDiscardableBuffer =
     state.ok && (state.status === "parsed" || state.status === "confirmed");
+  const isCompleted = state.ok && state.status === "transferred";
+
+  function beginCommand() {
+    if (commandInFlightRef.current) return false;
+
+    commandInFlightRef.current = true;
+    setIsCommandPending(true);
+    return true;
+  }
+
+  function finishCommand() {
+    commandInFlightRef.current = false;
+    setIsCommandPending(false);
+  }
 
   function resetLocalImportState() {
     setState(INITIAL_DEBTORS_1C_IMPORT_STATE);
@@ -138,7 +153,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
       return;
     }
 
-    setIsCommandPending(true);
+    if (!beginCommand()) return;
 
     try {
       const data = new FormData();
@@ -154,7 +169,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
 
       closeCleanPanel();
     } finally {
-      setIsCommandPending(false);
+      finishCommand();
     }
   }
 
@@ -165,7 +180,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
       | typeof transferDebtors1cImportBuffer,
     formData: FormData,
   ) {
-    setIsCommandPending(true);
+    if (!beginCommand()) return;
 
     try {
       const result = await action(state, formData);
@@ -175,14 +190,12 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
         router.refresh();
       }
     } finally {
-      setIsCommandPending(false);
+      finishCommand();
     }
   }
 
   async function confirmAndTransfer() {
-    if (!state.ok) return;
-
-    setIsCommandPending(true);
+    if (!state.ok || !beginCommand()) return;
 
     try {
       let currentState: Debtors1cImportState = state;
@@ -200,6 +213,9 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
         setState(currentState);
 
         if (!currentState.ok || currentState.status !== "confirmed") {
+          if (currentState.ok && currentState.status === "transferred") {
+            router.refresh();
+          }
           return;
         }
       }
@@ -221,7 +237,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
         router.refresh();
       }
     } finally {
-      setIsCommandPending(false);
+      finishCommand();
     }
   }
 
@@ -236,9 +252,17 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
       title="Імпорт боржників з 1С"
       description="Завантажте XLS/XLSX, перевірте звірку, підтвердьте період і передайте дані в місячну чернетку."
       footer={
-        state.ok &&
-        state.status !== "discarded" &&
-        state.status !== "transferred" ? (
+        isCompleted ? (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={closeCleanPanel}
+              className={adminPrimaryButtonClass}
+            >
+              Закрити
+            </button>
+          </div>
+        ) : state.ok && state.status !== "discarded" ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
@@ -278,31 +302,33 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
           </div>
         ) : null}
 
-        {state.ok ? (
+        {state.ok && !isCompleted ? (
           <div className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] px-4 py-3 text-sm text-[var(--cms-success-text)]">
             {state.message}
           </div>
         ) : null}
 
-        <form action={parseAction} className="space-y-4">
-          <input type="hidden" name="houseId" value={houseId} />
-          <input
-            ref={fileInputRef}
-            type="file"
-            name="file"
-            accept=".xls,.xlsx"
-            className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]"
-          />
-          <button
-            type="submit"
-            disabled={isParsePending}
-            className={`${adminPrimaryButtonClass} disabled:opacity-50`}
-          >
-            {isParsePending ? "Обробляємо..." : "Обробити файл"}
-          </button>
-        </form>
+        {!isCompleted ? (
+          <form action={parseAction} className="space-y-4">
+            <input type="hidden" name="houseId" value={houseId} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              name="file"
+              accept=".xls,.xlsx"
+              className="block w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 text-sm text-[var(--cms-text)]"
+            />
+            <button
+              type="submit"
+              disabled={isParsePending}
+              className={`${adminPrimaryButtonClass} disabled:opacity-50`}
+            >
+              {isParsePending ? "Обробляємо..." : "Обробити файл"}
+            </button>
+          </form>
+        ) : null}
 
-        {state.ok ? (
+        {state.ok && !isCompleted ? (
           <>
             <div className="flex flex-wrap gap-2">
               <AdminStatusBadge tone="success">
@@ -480,13 +506,25 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
                 </table>
               </div>
             </div>
-
-            {state.status === "transferred" ? (
-              <div className="rounded-[var(--r-lg)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-4 text-sm text-[var(--cms-success-text)]">
-                Чернетку створено. Snapshot: {state.snapshotId}
-              </div>
-            ) : null}
           </>
+        ) : null}
+
+        {isCompleted && state.ok ? (
+          <div className="rounded-[var(--r-xl)] border border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] p-6 text-[var(--cms-success-text)]">
+            <div className="text-lg font-semibold">
+              Чернетку успішно створено
+            </div>
+            <p className="mt-2 text-sm leading-6">
+              Дані імпорту передано один раз. Список боржників і історію версій
+              оновлено.
+            </p>
+            {state.confirmedPeriod ? (
+              <p className="mt-3 text-sm font-medium">
+                Період: {MONTHS[state.confirmedPeriod.month - 1]}{" "}
+                {state.confirmedPeriod.year}
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

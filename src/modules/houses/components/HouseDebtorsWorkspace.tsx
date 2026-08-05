@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { HouseDebtors1cImportPanel } from "@/src/modules/import-buffer/components/HouseDebtors1cImportPanel";
+import { HouseDebtorMonthHistoryPanel } from "@/src/modules/houses/components/HouseDebtorMonthHistoryPanel";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import {
   exportDebtorsRegistry,
@@ -241,6 +242,7 @@ export function HouseDebtorsWorkspace({
   const [isCalculatorSettingsOpen, setIsCalculatorSettingsOpen] =
     useState(false);
   const [is1cImportOpen, setIs1cImportOpen] = useState(false);
+  const [isMonthHistoryOpen, setIsMonthHistoryOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "publish_draft" | "delete_draft" | null
   >(null);
@@ -284,6 +286,8 @@ export function HouseDebtorsWorkspace({
   const monthSnapshots = debtors?.monthSnapshots ?? [];
   const draftMonthSnapshot = debtors?.draftMonthSnapshots[0] ?? null;
   const latestPublishedMonth = debtors?.latestPublishedMonth ?? null;
+  const currentMonthSnapshot =
+    draftMonthSnapshot ?? latestPublishedMonth ?? monthSnapshots[0] ?? null;
 
   const overlayItems = draftItems.length > 0 ? draftItems : activeItems;
 
@@ -916,52 +920,47 @@ export function HouseDebtorsWorkspace({
         ) : null}
 
         <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5">
-          <div className="text-base font-semibold text-[var(--cms-text)]">
-            Історія по місяцях
-          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--cms-text-muted)]">
+                Актуальна місячна версія
+              </div>
 
-          {monthSnapshots.length === 0 ? (
-            <p className="mt-3 text-sm text-[var(--cms-text-muted)]">
-              Місячних знімків поки немає.
-            </p>
-          ) : (
-            <div className="mt-4 space-y-3">
-              {monthSnapshots.map((snapshot) => {
-                const statusLabel =
-                  snapshot.status === "published"
-                    ? "Опубліковано"
-                    : snapshot.status === "draft"
-                      ? "Чернетка"
-                      : snapshot.status === "superseded"
-                        ? "Замінено"
-                        : "Відхилено";
-
-                return (
-                  <div
-                    key={snapshot.id}
-                    className="flex flex-col gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <div className="text-sm font-medium text-[var(--cms-text)]">
-                        {formatPeriodLabel(
-                          snapshot.periodYear,
-                          snapshot.periodMonth,
-                        )}
-                      </div>
-                      <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
-                        Ревізія {snapshot.revision} · Рядків:{" "}
-                        {snapshot.rowsCount}
-                      </div>
-                    </div>
-
-                    <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                      {statusLabel}
-                    </span>
+              {currentMonthSnapshot ? (
+                <>
+                  <div className="mt-2 text-base font-semibold text-[var(--cms-text)]">
+                    {formatPeriodLabel(
+                      currentMonthSnapshot.periodYear,
+                      currentMonthSnapshot.periodMonth,
+                    )}{" "}
+                    · Ревізія {currentMonthSnapshot.revision}
                   </div>
-                );
-              })}
+                  <div className="mt-1 text-sm text-[var(--cms-text-muted)]">
+                    {currentMonthSnapshot.status === "draft"
+                      ? "Чернетка"
+                      : currentMonthSnapshot.status === "published"
+                        ? "Опубліковано"
+                        : currentMonthSnapshot.status === "superseded"
+                          ? "Замінено"
+                          : "Відхилено"}{" "}
+                    · Рядків: {currentMonthSnapshot.rowsCount}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-[var(--cms-text-muted)]">
+                  Місячних версій поки немає.
+                </p>
+              )}
             </div>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setIsMonthHistoryOpen(true)}
+              className={adminSecondaryButtonClass}
+            >
+              Історія версій · {monthSnapshots.length}
+            </button>
+          </div>
         </div>
         {activeTab === "all" ? (
           <div className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-5 transition hover:border-[var(--cms-border-strong)]">
@@ -1537,6 +1536,22 @@ export function HouseDebtorsWorkspace({
           houseId={houseId}
           isOpen={is1cImportOpen}
           onClose={() => setIs1cImportOpen(false)}
+        />
+
+        <HouseDebtorMonthHistoryPanel
+          isOpen={isMonthHistoryOpen}
+          onClose={() => setIsMonthHistoryOpen(false)}
+          snapshots={monthSnapshots}
+          currentDraftId={draftMonthSnapshot?.id ?? null}
+          currentPublishedId={latestPublishedMonth?.id ?? null}
+          onOpenDraft={() => {
+            setActiveTab("draft");
+            setIsMonthHistoryOpen(false);
+          }}
+          onOpenPublished={() => {
+            setActiveTab("published");
+            setIsMonthHistoryOpen(false);
+          }}
         />
 
         {isPreviewOpen ? (
