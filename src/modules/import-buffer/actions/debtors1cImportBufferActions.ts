@@ -381,6 +381,43 @@ export async function transferDebtors1cImportBuffer(
     };
   }
 
+  const matchedApartmentIds = [
+    ...new Set(matchedRows.map((row) => String(row.matched_apartment_id))),
+  ];
+
+  const canonicalRegistry = await supabase
+    .from("house_apartments")
+    .select("id, account_number")
+    .eq("house_id", access.house.id)
+    .is("archived_at", null)
+    .in("id", matchedApartmentIds);
+
+  if (canonicalRegistry.error) {
+    return {
+      ok: false,
+      error: "Не вдалося повторно перевірити зіставлені квартири.",
+    };
+  }
+
+  const canonicalAccountByApartmentId = new Map(
+    (canonicalRegistry.data ?? []).map((row) => [
+      String(row.id),
+      String(row.account_number ?? "").trim(),
+    ]),
+  );
+
+  const unresolvedMatchedApartmentIds = matchedApartmentIds.filter(
+    (apartmentId) => !canonicalAccountByApartmentId.get(apartmentId),
+  );
+
+  if (unresolvedMatchedApartmentIds.length > 0) {
+    return {
+      ok: false,
+      error:
+        "Зіставлений реєстр квартир змінився. Завантажте preview повторно.",
+    };
+  }
+
   const result = await dispatchAdminCommand({
     type: "debtors.importMonthDraft",
     houseId: access.house.id,
@@ -397,7 +434,9 @@ export async function transferDebtors1cImportBuffer(
         missingRegistryAccounts: state.missingRegistryAccounts,
       },
       rows: matchedRows.map((row) => ({
-        accountNumber: String(row.account_number_normalized),
+        accountNumber: canonicalAccountByApartmentId.get(
+          String(row.matched_apartment_id),
+        ) as string,
         accrued: row.accrued === null ? null : Number(row.accrued),
         paid: row.paid === null ? null : Number(row.paid),
         closingBalance: toOsbbBalance(Number(row.debt_value)) as number,
