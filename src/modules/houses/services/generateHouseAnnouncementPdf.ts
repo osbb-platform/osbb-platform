@@ -1,5 +1,7 @@
 "use server";
 
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 import { houseOrigin } from "@/src/shared/config/app/domains";
 import QRCode from "qrcode";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
@@ -15,19 +17,6 @@ export async function generateHouseAnnouncementPdf(params: {
   slug: string;
   accentColor?: string | null;
 }) {
-  // Puppeteer не работает на Vercel serverless. В production на Vercel PDF
-  // генерируем отдельным локальным/CLI-скриптом, но не блокируем обычный
-  // локальный Next.js node runtime: иначе файл объявления никогда не создается.
-  if (process.env.VERCEL === "1" && !process.env.ALLOW_LOCAL_PDF_GENERATION) {
-    console.warn(
-      "generateHouseAnnouncementPdf skipped: Puppeteer не работает в Vercel serverless. " +
-        "Запустите локально через scripts/regenerate-house-announcements.mjs"
-    );
-    return;
-  }
-
-  const { default: puppeteer } = await import("puppeteer");
-
   try {
     const supabase = createSupabaseAdminClient();
     const publicUrl = houseOrigin(params.slug);
@@ -43,8 +32,9 @@ export async function generateHouseAnnouncementPdf(params: {
     });
 
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -70,7 +60,6 @@ export async function generateHouseAnnouncementPdf(params: {
       console.error("PDF upload error:", error.message);
       return;
     }
-
   } catch (error) {
     console.error("generateHouseAnnouncementPdf error:", error);
   }
