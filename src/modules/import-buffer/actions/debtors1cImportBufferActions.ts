@@ -20,8 +20,6 @@ import type { ActiveApartmentRegistryRow } from "../workflowTypes";
 import type { Debtors1cImportState } from "../debtors1cImportState";
 import type { RawSheet } from "../types";
 
-const MAX_UPLOADS_PER_HOUR = 10;
-
 export async function parseDebtors1cImportBuffer(
   _previousState: Debtors1cImportState,
   formData: FormData,
@@ -44,24 +42,6 @@ export async function parseDebtors1cImportBuffer(
   if (!security.ok) return security;
 
   const supabase = await createSupabaseServerClient();
-  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-
-  const rate = await supabase
-    .from("import_buffer_uploads")
-    .select("id", { count: "exact", head: true })
-    .eq("created_by", access.user.id)
-    .gte("created_at", since);
-
-  if (rate.error) {
-    return { ok: false, error: "Не вдалося перевірити ліміт завантажень." };
-  }
-
-  if ((rate.count ?? 0) >= MAX_UPLOADS_PER_HOUR) {
-    return {
-      ok: false,
-      error: "Перевищено ліміт: не більше 10 файлів на годину.",
-    };
-  }
 
   let sheet: RawSheet;
   try {

@@ -51,10 +51,11 @@ describe("P04 server/security boundary", () => {
     expect(actions).not.toContain('.from("house_debtor_month_rows").insert');
   });
 
-  it("enforces file and hourly limits server-side", () => {
+  it("enforces file validation without a global hourly user cap", () => {
     expect(actions).toContain("validateImportFileDescriptor");
-    expect(actions).toContain("MAX_UPLOADS_PER_HOUR = 10");
-    expect(actions).toContain('.gte("created_at", since)');
+    expect(actions).not.toContain("MAX_UPLOADS_PER_HOUR");
+    expect(actions).not.toContain("не більше 10 файлів на годину");
+    expect(actions).not.toContain('.gte("created_at", since)');
   });
 
   it("keeps staging private from anon and residents", () => {

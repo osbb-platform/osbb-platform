@@ -68,9 +68,10 @@ describe("P04 T6 admin import flow", () => {
     expect(actions).toContain('status: "discarded"');
   });
 
-  it("enforces file and hourly upload limits", () => {
+  it("enforces file validation without a global hourly employee cap", () => {
     expect(actions).toContain("validateImportFileDescriptor");
-    expect(actions).toContain("MAX_UPLOADS_PER_HOUR = 10");
-    expect(actions).toContain("не більше 10 файлів на годину");
+    expect(actions).not.toContain("MAX_UPLOADS_PER_HOUR");
+    expect(actions).not.toContain("не більше 10 файлів на годину");
+    expect(actions).not.toContain('.gte("created_at", since)');
   });
 });
