@@ -75,6 +75,7 @@ export type AdminHouseDebtorsSnapshot = {
   activeItems: HouseDebtorsItemSnapshot[];
   draftItems: HouseDebtorsItemSnapshot[];
   archivedItems: HouseDebtorsItemSnapshot[];
+  latestPublishedItems?: HouseDebtorsItemSnapshot[];
   monthSnapshots: HouseDebtorMonthSnapshotSummary[];
   draftMonthSnapshots: HouseDebtorMonthSnapshotSummary[];
   latestPublishedMonth: HouseDebtorMonthSnapshotSummary | null;
@@ -276,7 +277,9 @@ export async function getAdminHouseDebtors(params: {
       .order("revision", { ascending: false }),
     supabase
       .from("house_debtor_month_rows")
-      .select("snapshot_id")
+      .select(
+        "id, snapshot_id, house_id, apartment_id, account_number, apartment_label, owner_name, area, accrued, paid, closing_balance, debt_source_value",
+      )
       .eq("house_id", params.houseId),
   ]);
 
@@ -309,13 +312,9 @@ export async function getAdminHouseDebtors(params: {
 
   const monthRowCounts = new Map<string, number>();
 
-  for (
-    const row of
-      (monthRowsResult.data ?? []) as Pick<
-        HouseDebtorMonthRow,
-        "snapshot_id"
-      >[]
-  ) {
+  const monthRows = (monthRowsResult.data ?? []) as HouseDebtorMonthRow[];
+
+  for (const row of monthRows) {
     monthRowCounts.set(
       row.snapshot_id,
       (monthRowCounts.get(row.snapshot_id) ?? 0) + 1,
@@ -340,6 +339,27 @@ export async function getAdminHouseDebtors(params: {
       (snapshot) => snapshot.status === "published",
     ) ?? null;
 
+  const latestPublishedItems = latestPublishedMonth
+    ? monthRows
+        .filter((row) => row.snapshot_id === latestPublishedMonth.id)
+        .map((row): HouseDebtorsItemSnapshot => ({
+          id: row.id,
+          apartmentId: row.apartment_id,
+          apartmentLabel: row.apartment_label,
+          accountNumber: row.account_number,
+          ownerName: row.owner_name,
+          area: row.area === null ? null : Number(row.area),
+          amount: String(Number(row.closing_balance)),
+          days: "",
+          lifecycleStatus: "published",
+          createdAt:
+            latestPublishedMonth.publishedAt ??
+            latestPublishedMonth.createdAt,
+          updatedAt: latestPublishedMonth.updatedAt,
+        }))
+        .sort(sortItems)
+    : [];
+
   const mappedSettings = mapSettings(settings);
 
   const latestItemsUpdatedAt =
@@ -362,6 +382,7 @@ export async function getAdminHouseDebtors(params: {
     archivedItems: mappedItems.filter(
       (item) => item.lifecycleStatus === "archived",
     ),
+    latestPublishedItems,
     monthSnapshots,
     draftMonthSnapshots,
     latestPublishedMonth,

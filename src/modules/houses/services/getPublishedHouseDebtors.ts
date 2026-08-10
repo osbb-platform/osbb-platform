@@ -140,6 +140,7 @@ async function loadPublishedHouseDebtors(
     activeItems,
     draftItems: [],
     archivedItems: [],
+    latestPublishedItems: activeItems,
     monthSnapshots: latestPublishedMonth ? [latestPublishedMonth] : [],
     draftMonthSnapshots: [],
     latestPublishedMonth,

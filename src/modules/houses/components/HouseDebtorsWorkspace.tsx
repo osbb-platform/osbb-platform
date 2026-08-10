@@ -207,6 +207,14 @@ function formatSummaryAmount(amount: number) {
   }).format(amount);
 }
 
+function formatSignedBalance(amount: number) {
+  return `${new Intl.NumberFormat("uk-UA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    signDisplay: "always",
+  }).format(amount)} ₴`;
+}
+
 function getPreviousCalendarPeriod(now = new Date()) {
   const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
@@ -276,6 +284,7 @@ export function HouseDebtorsWorkspace({
         calculator: debtors.calculator,
         activeItems: debtors.activeItems,
         draftItems: debtors.draftItems,
+        latestPublishedItems: debtors.latestPublishedItems,
         updatedAt: debtors.updatedAt,
         settingsLockVersion: debtors.settingsLockVersion,
         monthSnapshots: debtors.monthSnapshots,
@@ -292,6 +301,9 @@ export function HouseDebtorsWorkspace({
   );
   const activeItems = normalizeSnapshotItems(content.activeItems);
   const draftItems = normalizeSnapshotItems(content.draftItems);
+  const publishedSnapshotItems = normalizeSnapshotItems(
+    content.latestPublishedItems,
+  );
   const monthSnapshots = debtors?.monthSnapshots ?? [];
   const draftMonthSnapshot = debtors?.draftMonthSnapshots[0] ?? null;
   const latestPublishedMonth = debtors?.latestPublishedMonth ?? null;
@@ -663,6 +675,16 @@ export function HouseDebtorsWorkspace({
       })),
   });
 
+  const publishedReconciliationTotals = computeDebtorTotals({
+    rows: publishedSnapshotItems
+      .filter((item) => hasBalanceAmount(item.amount))
+      .map((item) => ({
+        accountNumber: item.accountNumber,
+        closingBalance: parseBalanceAmount(item.amount),
+      })),
+    unmatchedDebtTotal: publishedUnmatchedDebtTotal,
+  });
+
   const draftTotals = computeDebtorTotals({
     rows: draftItems
       .filter((item) => hasBalanceAmount(item.amount))
@@ -949,6 +971,61 @@ export function HouseDebtorsWorkspace({
             </div>
             <div className="mt-1 text-xs text-[var(--cms-success-text)]">
               Рядків: {latestPublishedMonth.rowsCount}
+            </div>
+
+            <div className="mt-4 max-w-xl rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--cms-text-muted)]">
+                Звірка з 1С
+              </div>
+
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 text-sm">
+                <div className="text-[var(--cms-text-muted)]">
+                  Сальдо по знімку
+                </div>
+                <div className="text-right font-medium text-[var(--cms-text)]">
+                  {formatSignedBalance(publishedReconciliationTotals.saldo)}
+                </div>
+
+                <div className="text-[var(--cms-text-muted)]">
+                  Не увійшло (техрахунок)
+                </div>
+                <div className="text-right font-medium text-[var(--cms-warning-text)]">
+                  {formatSignedBalance(publishedUnmatchedDebtTotal)}
+                </div>
+
+                <div className="col-span-2 my-1 border-t border-[var(--cms-border)]" />
+
+                <div
+                  className="font-semibold text-[var(--cms-text)]"
+                  title={'Це число має збігатися з колонкою "Борг" у підсумковому рядку 1С'}
+                >
+                  Разом (звірка з 1С)
+                </div>
+                <div className="text-right font-semibold text-[var(--cms-text)]">
+                  {formatSignedBalance(
+                    publishedReconciliationTotals.saldoWithUnmatched,
+                  )}
+                </div>
+
+                <div className="col-span-2 mt-1 border-t border-[var(--cms-border)] pt-2" />
+
+                <div className="text-[var(--cms-text-muted)]">
+                  Сума всіх боргів
+                </div>
+                <div className="text-right font-medium text-[var(--cms-text)]">
+                  {formatSummaryAmount(
+                    publishedReconciliationTotals.totalDebt,
+                  )}{" "}
+                  ₴
+                </div>
+
+                <div className="text-[var(--cms-text-muted)]">
+                  Боржників (≥500 ₴)
+                </div>
+                <div className="text-right font-medium text-[var(--cms-text)]">
+                  {publishedReconciliationTotals.debtorsCount}
+                </div>
+              </div>
             </div>
 
             {publishedUnmatchedDebtTotal !== 0 ? (
