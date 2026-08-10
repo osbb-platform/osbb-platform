@@ -1,45 +1,50 @@
 import type { CommandSpec } from "../../../types/handler";
-import { ok } from "../../../types/result";
-import {
-  debtorsHistoryMetadata,
-  getDebtorsItems,
-  HOUSE_DEBTORS_ITEMS_ENTITY_TYPE,
-  publicDebtorsPaths,
-} from "./shared";
-import { err } from "../../../types/result";
+import { err, ok } from "../../../types/result";
+import type { HouseDebtorMonthSnapshot } from "../types";
+import { discardMonthSnapshotCommand } from "./discardMonthSnapshot";
+
+async function getLatestDraft(ctx: Parameters<
+  NonNullable<typeof discardMonthSnapshotCommand.execute>
+>[1]) {
+  const { data, error } = await ctx.supabase
+    .from("house_debtor_month_snapshots")
+    .select("*")
+    .eq("house_id", ctx.house.id)
+    .eq("status", "draft")
+    .order("period_year", { ascending: false })
+    .order("period_month", { ascending: false })
+    .order("revision", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return err(
+      "Не вдалося завантажити чернетку боржників.",
+      "INTERNAL",
+    );
+  }
+
+  if (!data) {
+    return err("Чернетка боржників порожня.", "VALIDATION_FAILED");
+  }
+
+  return ok(data as HouseDebtorMonthSnapshot);
+}
 
 export const deleteDraftCommand: CommandSpec = {
   actionKey: "delete",
   requiresLockCheck: false,
 
   async execute(_rawPayload, ctx) {
-    const beforeResult = await getDebtorsItems(ctx, ["draft"]);
-    if (!beforeResult.ok) return beforeResult;
+    const draft = await getLatestDraft(ctx);
+    if (!draft.ok) return draft;
 
-    const { error } = await ctx.supabase
-      .from("house_debtors_items")
-      .delete()
-      .eq("house_id", ctx.house.id)
-      .eq("lifecycle_status", "draft");
-
-    if (error) {
-      return err(error.message, "INTERNAL");
-    }
-
-    return ok({
-      data: [],
-      history: {
-        entityType: HOUSE_DEBTORS_ITEMS_ENTITY_TYPE,
-        entityId: ctx.house.id,
-        action: "draft.deleted",
-        description: "Видалено чернетку списку боржників.",
-        beforeSnapshot: beforeResult.data,
-        afterSnapshot: [],
-        metadata: debtorsHistoryMetadata({
-          itemsCount: beforeResult.data.length,
-        }),
+    return discardMonthSnapshotCommand.execute(
+      {
+        id: draft.data.id,
+        lockVersion: draft.data.lock_version,
       },
-      extraRevalidatePaths: publicDebtorsPaths(ctx.house.slug),
-    });
+      ctx,
+    );
   },
 };

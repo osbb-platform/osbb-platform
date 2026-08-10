@@ -4,7 +4,6 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import type {
   HouseDebtorMonthRow,
   HouseDebtorMonthSnapshot,
-  HouseDebtorsItem,
   HouseDebtorsSettings,
 } from "@/src/modules/content-engine/v2/handlers/debtors";
 
@@ -141,25 +140,6 @@ function mapSettings(settings: HouseDebtorsSettings | null) {
   };
 }
 
-function mapItem(item: HouseDebtorsItem): HouseDebtorsItemSnapshot {
-  return {
-    id: item.id,
-    apartmentId: item.apartment_id,
-    apartmentLabel: item.apartment_label,
-    accountNumber: item.account_number,
-    ownerName: item.owner_name,
-    area:
-      item.area === null || item.area === undefined
-        ? null
-        : Number(item.area),
-    amount: item.amount,
-    days: item.days,
-    lifecycleStatus: item.lifecycle_status,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-  };
-}
-
 function sortItems(
   left: HouseDebtorsItemSnapshot,
   right: HouseDebtorsItemSnapshot,
@@ -167,6 +147,30 @@ function sortItems(
   return left.apartmentLabel.localeCompare(right.apartmentLabel, "uk", {
     numeric: true,
   });
+}
+
+function mapMonthRowItem(params: {
+  row: HouseDebtorMonthRow;
+  snapshot: HouseDebtorMonthSnapshotSummary;
+  lifecycleStatus: "draft" | "published";
+}): HouseDebtorsItemSnapshot {
+  const { row, snapshot, lifecycleStatus } = params;
+
+  return {
+    id: row.id,
+    apartmentId: row.apartment_id,
+    apartmentLabel: row.apartment_label,
+    accountNumber: row.account_number,
+    ownerName: row.owner_name,
+    area: row.area === null ? null : Number(row.area),
+    amount: String(Number(row.closing_balance)),
+    days: "",
+    lifecycleStatus,
+    createdAt:
+      snapshot.publishedAt ??
+      snapshot.createdAt,
+    updatedAt: snapshot.updatedAt,
+  };
 }
 
 function mapMonthSnapshot(
@@ -258,16 +262,9 @@ export async function getAdminHouseDebtors(params: {
   }
 
   const [
-    itemsResult,
     monthSnapshotsResult,
     monthRowsResult,
   ] = await Promise.all([
-    supabase
-      .from("house_debtors_items")
-      .select("*")
-      .eq("house_id", params.houseId)
-      .order("apartment_label", { ascending: true })
-      .order("updated_at", { ascending: false }),
     supabase
       .from("house_debtor_month_snapshots")
       .select("*")
@@ -283,13 +280,6 @@ export async function getAdminHouseDebtors(params: {
       .eq("house_id", params.houseId),
   ]);
 
-  if (itemsResult.error) {
-    console.error(
-      "Failed to load admin house debtors items:",
-      itemsResult.error.message,
-    );
-  }
-
   if (monthSnapshotsResult.error) {
     console.error(
       "Failed to load admin debtor month snapshots:",
@@ -303,12 +293,6 @@ export async function getAdminHouseDebtors(params: {
       monthRowsResult.error.message,
     );
   }
-
-  const itemsData = itemsResult.data;
-
-  const mappedItems = ((itemsData ?? []) as unknown as HouseDebtorsItem[])
-    .map(mapItem)
-    .sort(sortItems);
 
   const monthRowCounts = new Map<string, number>();
 
@@ -342,46 +326,47 @@ export async function getAdminHouseDebtors(params: {
   const latestPublishedItems = latestPublishedMonth
     ? monthRows
         .filter((row) => row.snapshot_id === latestPublishedMonth.id)
-        .map((row): HouseDebtorsItemSnapshot => ({
-          id: row.id,
-          apartmentId: row.apartment_id,
-          apartmentLabel: row.apartment_label,
-          accountNumber: row.account_number,
-          ownerName: row.owner_name,
-          area: row.area === null ? null : Number(row.area),
-          amount: String(Number(row.closing_balance)),
-          days: "",
-          lifecycleStatus: "published",
-          createdAt:
-            latestPublishedMonth.publishedAt ??
-            latestPublishedMonth.createdAt,
-          updatedAt: latestPublishedMonth.updatedAt,
-        }))
+        .map((row) =>
+          mapMonthRowItem({
+            row,
+            snapshot: latestPublishedMonth,
+            lifecycleStatus: "published",
+          }),
+        )
+        .sort(sortItems)
+    : [];
+
+  const latestDraftMonth = draftMonthSnapshots[0] ?? null;
+
+  const latestDraftItems = latestDraftMonth
+    ? monthRows
+        .filter((row) => row.snapshot_id === latestDraftMonth.id)
+        .map((row) =>
+          mapMonthRowItem({
+            row,
+            snapshot: latestDraftMonth,
+            lifecycleStatus: "draft",
+          }),
+        )
         .sort(sortItems)
     : [];
 
   const mappedSettings = mapSettings(settings);
 
-  const latestItemsUpdatedAt =
-    mappedItems.length > 0
-      ? mappedItems
-          .map((item) => item.updatedAt)
-          .sort()
-          .at(-1) ?? null
-      : null;
+  const snapshotUpdatedAt = [
+    latestPublishedMonth?.updatedAt ?? null,
+    latestDraftMonth?.updatedAt ?? null,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1) ?? null;
 
   return {
     ...mappedSettings,
-    updatedAt: latestItemsUpdatedAt ?? mappedSettings.updatedAt,
-    activeItems: mappedItems.filter(
-      (item) => item.lifecycleStatus === "published",
-    ),
-    draftItems: mappedItems.filter(
-      (item) => item.lifecycleStatus === "draft",
-    ),
-    archivedItems: mappedItems.filter(
-      (item) => item.lifecycleStatus === "archived",
-    ),
+    updatedAt: snapshotUpdatedAt ?? mappedSettings.updatedAt,
+    activeItems: latestPublishedItems,
+    draftItems: latestDraftItems,
+    archivedItems: [],
     latestPublishedItems,
     monthSnapshots,
     draftMonthSnapshots,

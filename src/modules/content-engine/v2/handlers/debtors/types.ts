@@ -125,6 +125,8 @@ export type SaveDebtorsDraftItemPayload = {
 
 export type SaveDebtorsDraftItemsPayload = {
   items: SaveDebtorsDraftItemPayload[];
+  periodYear?: number;
+  periodMonth?: number;
 };
 
 export type ImportMonthDraftRowPayload = {

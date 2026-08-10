@@ -75,10 +75,10 @@ export async function getHouseSectionCounters(
       .eq("house_id", houseId)
       .eq("lifecycle_status", "draft"),
     supabase
-      .from("house_debtors_items")
+      .from("house_debtor_month_snapshots")
       .select("id", { count: "exact", head: true })
       .eq("house_id", houseId)
-      .eq("lifecycle_status", "draft"),
+      .eq("status", "draft"),
     supabase
       .from("house_plan_tasks")
       .select("id", { count: "exact", head: true })

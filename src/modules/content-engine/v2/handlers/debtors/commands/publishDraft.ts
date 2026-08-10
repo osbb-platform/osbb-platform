@@ -1,56 +1,55 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
-import {
-  debtorsHistoryMetadata,
-  getDebtorsItems,
-  HOUSE_DEBTORS_ITEMS_ENTITY_TYPE,
-  publicDebtorsPaths,
-} from "./shared";
+import type { HouseDebtorMonthSnapshot } from "../types";
+import { publishMonthSnapshotCommand } from "./publishMonthSnapshot";
+
+async function getLatestDraft(ctx: Parameters<
+  NonNullable<typeof publishMonthSnapshotCommand.execute>
+>[1]) {
+  const { data, error } = await ctx.supabase
+    .from("house_debtor_month_snapshots")
+    .select("*")
+    .eq("house_id", ctx.house.id)
+    .eq("status", "draft")
+    .order("period_year", { ascending: false })
+    .order("period_month", { ascending: false })
+    .order("revision", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return err(
+      "Не вдалося завантажити чернетку боржників.",
+      "INTERNAL",
+    );
+  }
+
+  if (!data) {
+    return err("Чернетка боржників порожня.", "VALIDATION_FAILED");
+  }
+
+  return ok(data as HouseDebtorMonthSnapshot);
+}
 
 export const publishDraftCommand: CommandSpec = {
   actionKey: "publish",
   requiresLockCheck: false,
 
   async validate(_rawPayload, ctx) {
-    const draftResult = await getDebtorsItems(ctx, ["draft"]);
-    if (!draftResult.ok) return draftResult;
-
-    if (draftResult.data.length === 0) {
-      return err("Чернетка боржників порожня.", "VALIDATION_FAILED");
-    }
-
-    return ok(undefined);
+    const draft = await getLatestDraft(ctx);
+    return draft.ok ? ok(undefined) : draft;
   },
 
   async execute(_rawPayload, ctx) {
-    const beforeResult = await getDebtorsItems(ctx, ["draft", "published"]);
-    if (!beforeResult.ok) return beforeResult;
+    const draft = await getLatestDraft(ctx);
+    if (!draft.ok) return draft;
 
-    const { error } = await ctx.supabase.rpc("publish_house_debtors_draft", {
-      p_house_id: ctx.house.id,
-    });
-
-    if (error) {
-      return err(error.message, "INTERNAL");
-    }
-
-    const afterResult = await getDebtorsItems(ctx, ["published"]);
-    if (!afterResult.ok) return afterResult;
-
-    return ok({
-      data: afterResult.data,
-      history: {
-        entityType: HOUSE_DEBTORS_ITEMS_ENTITY_TYPE,
-        entityId: ctx.house.id,
-        action: "published",
-        description: "Опубліковано новий список боржників.",
-        beforeSnapshot: beforeResult.data,
-        afterSnapshot: afterResult.data,
-        metadata: debtorsHistoryMetadata({
-          itemsCount: afterResult.data.length,
-        }),
+    return publishMonthSnapshotCommand.execute(
+      {
+        id: draft.data.id,
+        lockVersion: draft.data.lock_version,
       },
-      extraRevalidatePaths: publicDebtorsPaths(ctx.house.slug),
-    });
+      ctx,
+    );
   },
 };

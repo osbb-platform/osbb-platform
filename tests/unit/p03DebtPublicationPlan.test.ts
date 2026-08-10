@@ -90,44 +90,14 @@ describe("buildDebtPublicationPlan", () => {
       [3, 3],
     ]);
 
-    expect(plan.publicItems).toEqual([
-      expect.objectContaining({
-        accountNumber: "A",
-        amount: "-800",
-        days: "3",
-      }),
-    ]);
-
     expect(plan.latestPeriod).toEqual({
       year: 2026,
       month: 3,
     });
   });
 
-  it("keeps the public threshold at exactly -500", () => {
-    const plan = buildDebtPublicationPlan({
-      publishedSnapshots: [],
-      targetSnapshot: snapshot({
-        id: "target",
-        year: 2026,
-        month: 1,
-        status: "draft",
-        rows: [
-          row("included", -500),
-          row("excluded", -499.99),
-        ],
-      }),
-    });
 
-    expect(plan.publicItems).toHaveLength(1);
-    expect(plan.publicItems[0]).toMatchObject({
-      accountNumber: "included",
-      amount: "-500",
-      days: "1",
-    });
-  });
-
-  it("uses the latest published month for the public showcase", () => {
+  it("uses the latest published month for series projection", () => {
     const plan = buildDebtPublicationPlan({
       publishedSnapshots: [
         snapshot({
@@ -147,10 +117,16 @@ describe("buildDebtPublicationPlan", () => {
       }),
     });
 
-    expect(plan.publicItems[0]).toMatchObject({
-      accountNumber: "A",
-      amount: "-900",
-      days: "2",
-    });
+    expect(plan.seriesRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          accountNumber: "A",
+          asOfYear: 2026,
+          asOfMonth: 4,
+          monthsInDebt: 2,
+          latestBalance: -900,
+        }),
+      ]),
+    );
   });
 });

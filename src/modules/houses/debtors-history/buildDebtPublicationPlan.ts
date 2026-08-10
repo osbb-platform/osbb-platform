@@ -1,5 +1,4 @@
 
-import { DEBTOR_MIN_BALANCE_UAH } from "../utils/debtorsThreshold";
 import {
   computeDebtSeries,
   type DebtSeriesSnapshotInput,
@@ -36,20 +35,9 @@ export type DebtSeriesPersistenceRow = {
   latestBalance: number;
 };
 
-export type PublicDebtorPersistenceRow = {
-  apartmentId: string | null;
-  accountNumber: string;
-  apartmentLabel: string;
-  ownerName: string;
-  area: number | null;
-  amount: string;
-  days: string;
-};
-
 export type DebtPublicationPlan = {
   expectedPublishedSnapshotIds: string[];
   seriesRows: DebtSeriesPersistenceRow[];
-  publicItems: PublicDebtorPersistenceRow[];
   latestPeriod: {
     year: number;
     month: number;
@@ -150,48 +138,12 @@ export function buildDebtPublicationPlan(params: {
     throw new Error("Unable to determine the latest debtor period.");
   }
 
-  const latestPointsByAccount = new Map(
-    seriesRows
-      .filter(
-        (point) =>
-          point.asOfYear === latestSnapshot.periodYear &&
-          point.asOfMonth === latestSnapshot.periodMonth,
-      )
-      .map((point) => [point.accountNumber, point]),
-  );
-
-  const publicItems = latestSnapshot.rows
-    .filter(
-      (row) => row.closingBalance <= DEBTOR_MIN_BALANCE_UAH,
-    )
-    .map((row) => {
-      const seriesPoint = latestPointsByAccount.get(
-        row.accountNumber,
-      );
-
-      if (!seriesPoint) {
-        throw new Error(
-          `Missing calculated series for account ${row.accountNumber}.`,
-        );
-      }
-
-      return {
-        apartmentId: row.apartmentId,
-        accountNumber: row.accountNumber,
-        apartmentLabel: row.apartmentLabel,
-        ownerName: row.ownerName,
-        area: row.area,
-        amount: formatDebtorBalance(row.closingBalance),
-        days: String(seriesPoint.monthsInDebt),
-      };
-    });
 
   return {
     expectedPublishedSnapshotIds: publishedSnapshots
       .map((snapshot) => snapshot.id)
       .sort(),
     seriesRows,
-    publicItems,
     latestPeriod: {
       year: latestSnapshot.periodYear,
       month: latestSnapshot.periodMonth,

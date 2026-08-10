@@ -57,7 +57,9 @@ export const publishMonthSnapshotCommand: CommandSpec = {
         p_expected_published_snapshot_ids:
           plan.expectedPublishedSnapshotIds,
         p_series: plan.seriesRows,
-        p_public_items: plan.publicItems,
+        // Kept only for the backwards-compatible six-argument RPC signature.
+        // P10 T8 ignores this payload in persistence.
+        p_public_items: [],
       },
     );
 
@@ -82,7 +84,7 @@ export const publishMonthSnapshotCommand: CommandSpec = {
         metadata: monthSnapshotHistoryMetadata(snapshot, {
           latestPeriodYear: plan.latestPeriod.year,
           latestPeriodMonth: plan.latestPeriod.month,
-          publicItemsCount: plan.publicItems.length,
+          snapshotRowsCount: snapshot.rows.length,
         }),
       },
       extraRevalidatePaths: publicDebtorsPaths(ctx.house.slug),

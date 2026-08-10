@@ -5,7 +5,6 @@ import {
   HOUSE_DEBTORS_SETTINGS_ENTITY_TYPE,
   type DebtorsCalculatorPayload,
   type DebtorsPaymentPayload,
-  type HouseDebtorsItem,
   type HouseDebtorsSettings,
   type SaveDebtorsDraftItemPayload,
 } from "../types";
@@ -197,25 +196,6 @@ export async function ensureDebtorsSettings(
   }
 
   return ok(data as HouseDebtorsSettings);
-}
-
-export async function getDebtorsItems(
-  ctx: HandlerContext,
-  statuses: Array<"draft" | "published" | "archived">,
-): Promise<Result<HouseDebtorsItem[]>> {
-  const { data, error } = await ctx.supabase
-    .from("house_debtors_items")
-    .select("*")
-    .eq("house_id", ctx.house.id)
-    .in("lifecycle_status", statuses)
-    .order("apartment_label", { ascending: true })
-    .order("updated_at", { ascending: false });
-
-  if (error) {
-    return err(error.message, "INTERNAL");
-  }
-
-  return ok((data ?? []) as HouseDebtorsItem[]);
 }
 
 export function publicDebtorsPaths(houseSlug: string) {
