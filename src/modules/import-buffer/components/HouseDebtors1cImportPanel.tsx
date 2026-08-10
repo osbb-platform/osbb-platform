@@ -21,6 +21,7 @@ import {
   type Debtors1cImportState,
 } from "@/src/modules/import-buffer/debtors1cImportState";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import {
@@ -100,25 +101,18 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
     [unmatchedRows],
   );
 
-  const amountTotals = useMemo(() => {
-    if (!state.ok) {
-      return {
-        sourceDebt: 0,
-        systemBalance: 0,
-      };
-    }
-
-    return state.rows.reduce(
-      (totals, row) => ({
-        sourceDebt: totals.sourceDebt + (row.debtValue ?? 0),
-        systemBalance: totals.systemBalance + (row.osbbBalance ?? 0),
+  const amountTotals = useMemo(
+    () =>
+      computeDebtorTotals({
+        rows: state.ok
+          ? state.rows.map((row) => ({
+              accountNumber: row.accountNumber,
+              closingBalance: row.osbbBalance ?? 0,
+            }))
+          : [],
       }),
-      {
-        sourceDebt: 0,
-        systemBalance: 0,
-      },
-    );
-  }, [state]);
+    [state],
+  );
 
   const hasDiscardableBuffer =
     state.ok && (state.status === "parsed" || state.status === "confirmed");
@@ -366,7 +360,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
 
               <AdminStatusBadge tone="neutral">
                 Борг з 1С:{" "}
-                {amountTotals.sourceDebt.toLocaleString("uk-UA", {
+                {(-amountTotals.saldo).toLocaleString("uk-UA", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -374,7 +368,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
 
               <AdminStatusBadge tone="neutral">
                 Баланс у системі:{" "}
-                {amountTotals.systemBalance.toLocaleString("uk-UA", {
+                {amountTotals.saldo.toLocaleString("uk-UA", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
