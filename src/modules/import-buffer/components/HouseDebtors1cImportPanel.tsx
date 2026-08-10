@@ -21,7 +21,7 @@ import {
   type Debtors1cImportState,
 } from "@/src/modules/import-buffer/debtors1cImportState";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
-import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
+import { computeDebtorTotals } from "@/src/modules/houses/debtors-history/computeDebtorTotals";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import {

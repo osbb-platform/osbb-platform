@@ -10,7 +10,7 @@ import {
   parseDebtorsImportFile,
   type DebtorsSpreadsheetRow,
 } from "@/src/modules/houses/utils/debtorsSpreadsheet";
-import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
+import { computeDebtorTotals } from "@/src/modules/houses/debtors-history/computeDebtorTotals";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";

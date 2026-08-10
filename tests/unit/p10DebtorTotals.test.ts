@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeDebtorTotals,
   type DebtorTotalsInput,
-} from "../../src/modules/houses/utils/computeDebtorTotals";
+} from "../../src/modules/houses/debtors-history/computeDebtorTotals";
 
 describe("P10 T5 debtor totals", () => {
   it("separates algebraic saldo, all debt, credit and threshold debtors", () => {

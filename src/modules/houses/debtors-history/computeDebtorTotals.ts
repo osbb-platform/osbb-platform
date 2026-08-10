@@ -1,4 +1,4 @@
-import { DEBTOR_MIN_BALANCE_UAH } from "./debtorsThreshold";
+import { DEBTOR_MIN_BALANCE_UAH } from "../utils/debtorsThreshold";
 
 export type DebtorTotalsInput = {
   rows: readonly {

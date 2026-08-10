@@ -2,7 +2,7 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
-import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
+import { computeDebtorTotals } from "@/src/modules/houses/debtors-history/computeDebtorTotals";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
