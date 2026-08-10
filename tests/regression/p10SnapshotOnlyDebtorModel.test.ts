@@ -114,6 +114,9 @@ describe("P10 T8 snapshot-only debtor model", () => {
     expect(migration).toContain(
       "function public.publish_house_debtor_month_snapshot",
     );
+    expect(migration).toContain(
+      "from public, anon, authenticated",
+    );
     expect(migration).toContain("p_public_items jsonb");
     expect(migration).toContain("insert into public.house_debtor_series");
 
@@ -127,7 +130,7 @@ describe("P10 T8 snapshot-only debtor model", () => {
       "delete from public.house_debtors_items",
     );
 
-    expect(migration).toContain("from public, authenticated");
+    expect(migration).toContain("from public, anon, authenticated");
     expect(migration).toContain("to service_role");
   });
 

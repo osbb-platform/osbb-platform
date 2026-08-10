@@ -139,7 +139,7 @@ revoke all on function public.publish_house_debtor_month_snapshot(
   uuid[],
   jsonb,
   jsonb
-) from public, authenticated;
+) from public, anon, authenticated;
 
 grant execute on function public.publish_house_debtor_month_snapshot(
   uuid,
