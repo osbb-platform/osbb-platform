@@ -355,8 +355,31 @@ function classifyGroupRow(
   const closingValue = getNumberCell(row, header.columns.closing);
   const debtValue = getNumberCell(row, header.columns.debt);
 
+  const normalizedAccount = accountCell
+    ? normalizeAccountNumber(accountCell, {
+        prefixes: DEBTORS_1C_ACCOUNT_PREFIXES,
+        removableSymbols: DEBTORS_1C_ACCOUNT_SYMBOLS,
+      })
+    : "";
+
+  const isPersonalAccountRow =
+    accountCell !== null &&
+    DEBTORS_1C_ACCOUNT_PREFIXES.some((prefix) =>
+      accountCell.startsWith(prefix),
+    ) &&
+    Boolean(normalizedAccount);
+
+  /*
+   * Structural residential detection is only for a building aggregate.
+   * A sparse personal-account row inside an explicit special section
+   * must never switch the parser back to residential.
+   *
+   * Proven production shape:
+   * docs/import-buffer/1c-format-notes.md
+   */
   if (
     accountCell &&
+    !isPersonalAccountRow &&
     !apartmentCell &&
     !ownerCell &&
     (closingValue !== null || debtValue !== null)
