@@ -91,7 +91,7 @@ describe("P04 debtors_1c adapter", () => {
 
     const dataRows = rows.filter((row) => row.classification === "data");
 
-    expect(dataRows).toHaveLength(132);
+    expect(dataRows).toHaveLength(131);
 
     expect(
       rows.filter((row) => row.classification === "skip_provider"),
@@ -130,11 +130,11 @@ describe("P04 debtors_1c adapter", () => {
     );
 
     expect(sums.area).toBeCloseTo(8210.25, 2);
-    expect(sums.opening).toBeCloseTo(446699.57, 2);
+    expect(sums.opening).toBeCloseTo(448987.80, 2);
     expect(sums.accrued).toBeCloseTo(57393.38, 2);
     expect(sums.paid).toBeCloseTo(41947.59, 2);
-    expect(sums.closing).toBeCloseTo(462145.36, 2);
-    expect(sums.debt).toBeCloseTo(404751.98, 2);
+    expect(sums.closing).toBeCloseTo(464433.59, 2);
+    expect(sums.debt).toBeCloseTo(407040.21, 2);
   });
 
   it("normalizes account numbers without inventing leading zeros", () => {
@@ -194,9 +194,10 @@ describe("P04 debtors_1c adapter", () => {
       month: 5,
       sourceText: "за Травень 2026 р.",
     });
-    expect(result.value.stats.dataRows).toBe(132);
+    expect(result.value.stats.dataRows).toBe(131);
     expect(result.value.stats.byClassification).toMatchObject({
-      data: 132,
+      data: 131,
+      skip_service: 1,
       skip_provider: 8,
       skip_group: 22,
       skip_total: 1,

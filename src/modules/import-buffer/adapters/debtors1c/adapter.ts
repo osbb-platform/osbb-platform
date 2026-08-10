@@ -19,6 +19,9 @@ import {
   DEBTORS_1C_PROVEN_MONTHS,
   DEBTORS_1C_PROVIDER_MARKER,
   DEBTORS_1C_SERVICE_LABEL_PREFIXES,
+  DEBTORS_1C_TECHNICAL_APARTMENT_LABEL,
+  DEBTORS_1C_TECHNICAL_AREA,
+  DEBTORS_1C_TECHNICAL_OWNER_MARKERS,
   DEBTORS_1C_TITLE_MARKER,
   DEBTORS_1C_TOTAL_MARKER,
 } from "./constants";
@@ -234,6 +237,8 @@ export function parseDebtors1cRows(
     }
 
     const apartmentLabel = getTextCell(row, header.columns.apartment);
+    const ownerName = getTextCell(row, header.columns.owner);
+    const area = getNumberCell(row, header.columns.area);
 
     if (group === "non_residential") {
       parsed.push({
@@ -245,7 +250,11 @@ export function parseDebtors1cRows(
       continue;
     }
 
-    if (group === "providers" || isServiceLabel(apartmentLabel)) {
+    if (
+      group === "providers" ||
+      isServiceLabel(apartmentLabel) ||
+      isTechnicalAccount(apartmentLabel, ownerName, area)
+    ) {
       parsed.push({
         rowIndex,
         classification:
@@ -269,8 +278,8 @@ export function parseDebtors1cRows(
         accountNumberRaw: accountRaw,
         accountNumberNormalized,
         apartmentLabel,
-        ownerName: getTextCell(row, header.columns.owner),
-        area: getNumberCell(row, header.columns.area),
+        ownerName,
+        area,
         openingBalance: getNumberCell(row, header.columns.opening),
         accrued: getNumberCell(row, header.columns.accrued),
         paid: getNumberCell(row, header.columns.paid),
@@ -356,6 +365,31 @@ function classifyGroupRow(
   }
 
   return null;
+}
+
+function isTechnicalAccount(
+  apartmentLabel: string | null,
+  ownerName: string | null,
+  area: number | null,
+): boolean {
+  if (
+    apartmentLabel !== DEBTORS_1C_TECHNICAL_APARTMENT_LABEL ||
+    area !== DEBTORS_1C_TECHNICAL_AREA ||
+    !ownerName
+  ) {
+    return false;
+  }
+
+  const normalizedOwner = ownerName
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLocaleLowerCase("uk-UA");
+
+  return DEBTORS_1C_TECHNICAL_OWNER_MARKERS.some(
+    (marker) =>
+      normalizedOwner ===
+      marker.toLocaleLowerCase("uk-UA"),
+  );
 }
 
 function isServiceLabel(apartmentLabel: string | null): boolean {

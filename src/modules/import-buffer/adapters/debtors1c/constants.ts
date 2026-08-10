@@ -47,3 +47,20 @@ export const DEBTORS_1C_SERVICE_LABEL_PREFIXES = [
 ] as const;
 
 export const DEBTORS_1C_TOTAL_MARKER = "Всього:";
+
+/**
+ * P10 T1 evidence:
+ * docs/import-buffer/unmatched-accounts-audit.md
+ *
+ * A technical account is identified by row semantics, never by
+ * account-number suffix.
+ */
+export const DEBTORS_1C_TECHNICAL_APARTMENT_LABEL =
+  "Кв. 999";
+
+export const DEBTORS_1C_TECHNICAL_AREA = 0;
+
+export const DEBTORS_1C_TECHNICAL_OWNER_MARKERS = [
+  "Квартира",
+  "незясовані 999",
+] as const;
