@@ -315,6 +315,9 @@ export default async function DebtorsPage({
           <div className="mt-3 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-text)]">
             {formatCurrency(totals.totalDebt)} ₴
           </div>
+          <div className="mt-2 text-xs leading-5 text-[var(--pub-text-muted)]">
+            Сума заборгованості всіх квартир будинку
+          </div>
         </article>
 
         <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
@@ -412,7 +415,11 @@ export default async function DebtorsPage({
                           {formatSignedBalance(amount)}
                         </td>
                         <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
-                          {isDebtBalance(item.amount) ? item.monthsInDebt : "—"}
+                          {isDebtBalance(item.amount) &&
+                          item.monthsInDebt >= 2 &&
+                          !item.seriesBroken
+                            ? item.monthsInDebt
+                            : "—"}
                         </td>
                         <td className="px-5 py-4 text-sm text-[var(--pub-text-muted)]">
                           {getBalanceStatus(amount)}
@@ -422,6 +429,9 @@ export default async function DebtorsPage({
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="border-t border-[var(--pub-border)] px-5 py-3 text-xs text-[var(--pub-text-muted)]">
+              Історія ведеться з червня 2026
             </div>
           </div>
         )}
