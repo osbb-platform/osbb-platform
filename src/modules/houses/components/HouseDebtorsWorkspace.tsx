@@ -10,6 +10,7 @@ import {
   parseDebtorsImportFile,
   type DebtorsSpreadsheetRow,
 } from "@/src/modules/houses/utils/debtorsSpreadsheet";
+import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
@@ -199,16 +200,11 @@ function isDebtBalance(value: string) {
   return isAmountEligibleForDebtors(value);
 }
 
-function formatSummaryAmount(items: DebtSnapshotItem[]) {
-  const total = items.reduce((sum, item) => {
-    const amount = parseBalanceAmount(item.amount);
-    return amount < 0 ? sum + Math.abs(amount) : sum;
-  }, 0);
-
+function formatSummaryAmount(amount: number) {
   return new Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(total);
+  }).format(amount);
 }
 
 function getPreviousCalendarPeriod(now = new Date()) {
@@ -331,10 +327,18 @@ export function HouseDebtorsWorkspace({
     [workingRows],
   );
 
-  const previewDebtorsCount = useMemo(
-    () => previewItems.filter((item) => isDebtBalance(item.amount)).length,
+  const previewTotals = useMemo(
+    () =>
+      computeDebtorTotals({
+        rows: previewItems.map((item) => ({
+          accountNumber: item.accountNumber,
+          closingBalance: parseBalanceAmount(item.amount),
+        })),
+      }),
     [previewItems],
   );
+
+  const previewDebtorsCount = previewTotals.debtorsCount;
 
   const monthlyImportRows = useMemo(
     () =>
@@ -650,13 +654,26 @@ export function HouseDebtorsWorkspace({
   const draftBalanceRowsCount = draftItems.filter((item) =>
     hasBalanceAmount(item.amount),
   ).length;
-  const publishedDebtorsCount = activeItems.filter((item) =>
-    isDebtBalance(item.amount),
-  ).length;
-  const draftDebtorsCount = draftItems.filter((item) =>
-    isDebtBalance(item.amount),
-  ).length;
-  void draftDebtorsCount;
+  const publishedTotals = computeDebtorTotals({
+    rows: activeItems
+      .filter((item) => hasBalanceAmount(item.amount))
+      .map((item) => ({
+        accountNumber: item.accountNumber,
+        closingBalance: parseBalanceAmount(item.amount),
+      })),
+  });
+
+  const draftTotals = computeDebtorTotals({
+    rows: draftItems
+      .filter((item) => hasBalanceAmount(item.amount))
+      .map((item) => ({
+        accountNumber: item.accountNumber,
+        closingBalance: parseBalanceAmount(item.amount),
+      })),
+  });
+
+  const publishedDebtorsCount = publishedTotals.debtorsCount;
+  void draftTotals;
   const isDraftEmpty = draftMonthSnapshot === null;
   const isPublishedEmpty = latestPublishedMonth === null;
   const isPreviewEmpty = previewItems.length === 0;
@@ -1649,7 +1666,7 @@ export function HouseDebtorsWorkspace({
                     Боржників: {previewDebtorsCount}
                   </span>
                   <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                    Загальна сума: {formatSummaryAmount(previewItems)}
+                    Загальна сума: {formatSummaryAmount(previewTotals.totalDebt)}
                   </span>
                   <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
                     Період: {formatPeriodLabel(periodYear, periodMonth)}

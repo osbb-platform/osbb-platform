@@ -2,6 +2,7 @@ import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseDebtors } from "@/src/modules/houses/services/getPublishedHouseDebtors";
 import { PublicDebtorsPaymentBlock } from "@/src/modules/houses/components/PublicDebtorsPaymentBlock";
 import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/PublicDebtorsCalculatorBlock";
+import { computeDebtorTotals } from "@/src/modules/houses/utils/computeDebtorTotals";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
 
@@ -268,14 +269,16 @@ export default async function DebtorsPage({
   const balanceItems = normalizeItems(content?.activeItems);
   const debtItems = balanceItems.filter((item) => isDebtBalance(item.amount));
 
+  const totals = computeDebtorTotals({
+    rows: balanceItems.map((item) => ({
+      accountNumber: item.accountNumber,
+      closingBalance: normalizeAmount(item.amount),
+    })),
+  });
+
   const visibleItems = searchQuery
     ? balanceItems.filter((item) => itemMatchesQuery(item, searchQuery))
     : debtItems;
-
-  const totalDebtAmount = debtItems.reduce(
-    (sum, item) => sum + Math.abs(normalizeAmount(item.amount)),
-    0,
-  );
 
   const hasPublishedSnapshot = Boolean(content && balanceItems.length > 0);
   const noPublishedState = !hasPublishedSnapshot;
@@ -303,14 +306,14 @@ export default async function DebtorsPage({
         <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
           <div className="text-sm font-medium text-[var(--pub-text-muted)]">Кількість боржників</div>
           <div className="mt-3 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-text)]">
-            {debtItems.length}
+            {totals.debtorsCount}
           </div>
         </article>
 
         <article className="rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
           <div className="text-sm font-medium text-[var(--pub-text-muted)]">Загальна сума заборгованості</div>
           <div className="mt-3 font-[var(--font-serif)] text-3xl font-semibold text-[var(--pub-text)]">
-            {formatCurrency(totalDebtAmount)} ₴
+            {formatCurrency(totals.totalDebt)} ₴
           </div>
         </article>
 
