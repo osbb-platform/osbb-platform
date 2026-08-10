@@ -45,10 +45,10 @@ describe("P04 T6 admin import flow", () => {
     expect(panel).toContain("fileInputRef.current.value");
   });
 
-  it("shows blockers, warnings and period confirmation", () => {
-    expect(panel).toContain("Непорівняні рядки буде пропущено");
-    expect(panel).toContain("Не знайдено");
-    expect(panel).toContain("реєстрі квартир:");
+  it("shows unmatched visibility, warnings and period confirmation", () => {
+    expect(panel).toContain("Не увійде до вітрини:");
+    expect(panel).toContain("<details");
+    expect(panel).toContain("unmatchedRows");
     expect(panel).toContain("Попереджень:");
     expect(panel).toContain("Підтвердити");
   });

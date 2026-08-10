@@ -83,6 +83,23 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
     [state],
   );
 
+  const unmatchedRows = useMemo(
+    () =>
+      state.ok
+        ? state.rows.filter((row) => row.matchStatus === "unmatched")
+        : [],
+    [state],
+  );
+
+  const unmatchedSourceDebtTotal = useMemo(
+    () =>
+      unmatchedRows.reduce(
+        (total, row) => total + (row.debtValue ?? 0),
+        0,
+      ),
+    [unmatchedRows],
+  );
+
   const amountTotals = useMemo(() => {
     if (!state.ok) {
       return {
@@ -371,11 +388,40 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
               </div>
             ) : null}
 
-            {state.unknownSourceAccounts.length > 0 ? (
-              <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
-                <strong>Непорівняні рядки буде пропущено.</strong> Не знайдено в
-                реєстрі квартир: {state.unknownSourceAccounts.join(", ")}
-              </div>
+            {unmatchedRows.length > 0 ? (
+              <details className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
+                <summary className="cursor-pointer font-semibold">
+                  Не увійде до вітрини: {unmatchedRows.length} рахунків на суму{" "}
+                  {unmatchedSourceDebtTotal.toLocaleString("uk-UA", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  ₴
+                </summary>
+
+                <div className="mt-3 space-y-2">
+                  {unmatchedRows.map((row) => (
+                    <div
+                      key={`unmatched-${row.rowIndex}-${row.accountNumber}`}
+                      className="flex flex-wrap justify-between gap-2"
+                    >
+                      <span>
+                        {row.accountNumber}
+                        {row.sourceApartmentLabel
+                          ? ` · ${row.sourceApartmentLabel}`
+                          : ""}
+                      </span>
+                      <span>
+                        {(row.debtValue ?? 0).toLocaleString("uk-UA", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        ₴
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
             ) : null}
 
             {state.missingRegistryAccounts.length > 0 ? (

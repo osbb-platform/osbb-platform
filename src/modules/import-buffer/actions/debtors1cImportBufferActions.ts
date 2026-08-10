@@ -400,7 +400,7 @@ export async function transferDebtors1cImportBuffer(
   const staged = await supabase
     .from("import_buffer_rows")
     .select(
-      "account_number_normalized, accrued, paid, debt_value, match_status, matched_apartment_id",
+      "account_number_normalized, apartment_label, accrued, paid, debt_value, match_status, matched_apartment_id",
     )
     .eq("upload_id", state.uploadId)
     .eq("classification", "data")
@@ -410,20 +410,72 @@ export async function transferDebtors1cImportBuffer(
     return { ok: false, error: "Не вдалося завантажити staged rows." };
   }
 
-  const matchedRows = staged.data.filter(
+  const matchedRegistryRows = staged.data.filter(
     (row) =>
       row.match_status === "matched" &&
       Boolean(row.matched_apartment_id) &&
-      Boolean(row.account_number_normalized) &&
-      row.debt_value !== null,
+      Boolean(row.account_number_normalized),
+  );
+
+  if (matchedRegistryRows.length === 0) {
+    const error =
+      "Жоден рахунок не зіставлено з реєстром квартир. Перевірте реєстр будинку.";
+
+    const failed = await supabase
+      .from("import_buffer_uploads")
+      .update({
+        status: "failed",
+        error,
+      })
+      .eq("id", state.uploadId)
+      .eq("house_id", access.house.id)
+      .eq("status", "confirmed")
+      .eq("lock_version", state.lockVersion)
+      .select("id")
+      .maybeSingle();
+
+    if (failed.error || !failed.data) {
+      console.error("[P10 debtors 1C] Failed to mark zero-match upload", {
+        houseId: access.house.id,
+        uploadId: state.uploadId,
+        error: failed.error?.message,
+      });
+    }
+
+    return {
+      ok: false,
+      error,
+    };
+  }
+
+  const matchedRows = matchedRegistryRows.filter(
+    (row) => row.debt_value !== null,
   );
 
   if (matchedRows.length === 0) {
     return {
       ok: false,
-      error: "Не знайдено зіставлених рядків для передачі.",
+      error: "У зіставлених рядках відсутні значення боргу.",
     };
   }
+
+  const unmatchedRows = staged.data.filter(
+    (row) => row.match_status === "unmatched",
+  );
+
+  const unmatchedAccounts = unmatchedRows.map((row) => ({
+    account: String(row.account_number_normalized ?? "").trim(),
+    label: String(row.apartment_label ?? "").trim(),
+    debtValue:
+      row.debt_value === null
+        ? null
+        : (toOsbbBalance(Number(row.debt_value)) as number),
+  }));
+
+  const unmatchedDebtTotal = unmatchedAccounts.reduce(
+    (total, row) => total + (row.debtValue ?? 0),
+    0,
+  );
 
   const matchedApartmentIds = [
     ...new Set(matchedRows.map((row) => String(row.matched_apartment_id))),
@@ -477,6 +529,8 @@ export async function transferDebtors1cImportBuffer(
         confirmedPeriod: state.confirmedPeriod,
         warningCount: state.warningCount,
         missingRegistryAccounts: state.missingRegistryAccounts,
+        unmatchedAccounts,
+        unmatchedDebtTotal,
       },
       rows: matchedRows.map((row) => ({
         accountNumber: canonicalAccountByApartmentId.get(

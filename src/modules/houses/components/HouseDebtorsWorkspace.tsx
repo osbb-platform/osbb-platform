@@ -13,6 +13,7 @@ import {
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
+import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
 import {
   adminInputClass,
   adminPrimaryButtonClass,
@@ -156,6 +157,18 @@ function normalizeCalculator(value: unknown): DebtorsCalculator {
   };
 }
 
+function readUnmatchedDebtTotal(
+  importMeta: Record<string, unknown> | null | undefined,
+) {
+  const value = importMeta?.unmatchedDebtTotal;
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  return 0;
+}
+
 function formatArea(value: number | null) {
   if (value === null) return "—";
 
@@ -288,6 +301,10 @@ export function HouseDebtorsWorkspace({
   const latestPublishedMonth = debtors?.latestPublishedMonth ?? null;
   const currentMonthSnapshot =
     draftMonthSnapshot ?? latestPublishedMonth ?? monthSnapshots[0] ?? null;
+
+  const publishedUnmatchedDebtTotal = readUnmatchedDebtTotal(
+    latestPublishedMonth?.importMeta,
+  );
 
   const overlayItems = draftItems.length > 0 ? draftItems : activeItems;
 
@@ -916,6 +933,19 @@ export function HouseDebtorsWorkspace({
             <div className="mt-1 text-xs text-[var(--cms-success-text)]">
               Рядків: {latestPublishedMonth.rowsCount}
             </div>
+
+            {publishedUnmatchedDebtTotal !== 0 ? (
+              <div className="mt-3">
+                <AdminStatusBadge tone="warning">
+                  Не увійшло до вітрини:{" "}
+                  {publishedUnmatchedDebtTotal.toLocaleString("uk-UA", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  ₴
+                </AdminStatusBadge>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
