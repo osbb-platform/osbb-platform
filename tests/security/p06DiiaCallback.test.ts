@@ -20,6 +20,10 @@ describe("P06 T6 Diia callback security", () => {
     "supabase/migrations/202608191800_p06_diia_callback_security.sql",
   );
 
+  const atomicMigration = read(
+    "supabase/migrations/202608191830_p06_atomic_callback_finalize.sql",
+  );
+
   const route = read(
     "app/api/diia/callback/route.ts",
   );
@@ -157,30 +161,44 @@ describe("P06 T6 Diia callback security", () => {
     );
   });
 
-  it("calls atomic T2 confirmation only after callback preparation", () => {
-    const prepare =
-      route.indexOf(
-        "prepareOnlineBallotCallback",
+  it("uses one atomic callback finalization RPC from the route", () => {
+    const handler =
+      route.slice(
         route.indexOf(
           "async function handleCallback",
         ),
       );
 
-    const confirm =
-      route.indexOf(
-        "confirmPreparedOnlineBallot",
-        route.indexOf(
-          "async function handleCallback",
-        ),
-      );
+    expect(handler).toContain(
+      "finalizeOnlineBallotCallback",
+    );
 
-    expect(prepare).toBeGreaterThan(-1);
-    expect(confirm).toBeGreaterThan(
-      prepare,
+    expect(handler).not.toContain(
+      "prepareOnlineBallotCallback",
+    );
+
+    expect(handler).not.toContain(
+      "confirmPreparedOnlineBallot",
     );
 
     expect(repository).toContain(
-      '"confirm_online_ballot"',
+      '"finalize_online_ballot_callback"',
+    );
+
+    expect(atomicMigration).toContain(
+      "create or replace function public.finalize_online_ballot_callback",
+    );
+
+    expect(atomicMigration).toContain(
+      "public.prepare_online_ballot_callback(",
+    );
+
+    expect(atomicMigration).toContain(
+      "public.confirm_online_ballot(",
+    );
+
+    expect(atomicMigration).toMatch(
+      /finalize_online_ballot_callback[\s\S]*to service_role;/,
     );
   });
 

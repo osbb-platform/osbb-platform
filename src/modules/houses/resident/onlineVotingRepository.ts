@@ -259,6 +259,73 @@ export async function confirmPreparedOnlineBallot(
   };
 }
 
+export type FinalizeOnlineBallotCallbackResult =
+  | {
+      ok: true;
+      code:
+        | "CONFIRMED"
+        | "ALREADY_CONFIRMED";
+    }
+  | {
+      ok: false;
+      code: string;
+    };
+
+export async function finalizeOnlineBallotCallback(
+  params: {
+    ballotId: string;
+    meetingId: string;
+    slug: string;
+    challenge: string;
+    provider: string;
+    identityHmac: string;
+    txnId: string;
+    verifiedAt: string;
+  },
+): Promise<FinalizeOnlineBallotCallbackResult> {
+  const supabase = createSupabaseAdminClient();
+
+  const { data, error } = await supabase.rpc(
+    "finalize_online_ballot_callback",
+    {
+      p_ballot_id: params.ballotId,
+      p_meeting_id: params.meetingId,
+      p_house_slug: params.slug,
+      p_challenge: params.challenge,
+      p_provider: params.provider,
+      p_identity_hmac: params.identityHmac,
+      p_txn_id: params.txnId,
+      p_verified_at: params.verifiedAt,
+    },
+  );
+
+  if (error) {
+    throw new Error(
+      `ONLINE_BALLOT_CALLBACK_FINALIZE_FAILED:${error.message}`,
+    );
+  }
+
+  const row = normalizeRpcResult(data);
+
+  if (!row || row.ok !== true) {
+    return {
+      ok: false,
+      code:
+        typeof row?.code === "string"
+          ? row.code
+          : "CALLBACK_FINALIZE_REJECTED",
+    };
+  }
+
+  return {
+    ok: true,
+    code:
+      row.code === "ALREADY_CONFIRMED"
+        ? "ALREADY_CONFIRMED"
+        : "CONFIRMED",
+  };
+}
+
 export async function recordDiiaCallbackRejection(
   provider: string,
   code: string,

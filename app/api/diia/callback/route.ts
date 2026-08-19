@@ -9,8 +9,7 @@ import {
   resolveDiiaProvider,
 } from "@/src/modules/diia/provider";
 import {
-  confirmPreparedOnlineBallot,
-  prepareOnlineBallotCallback,
+  finalizeOnlineBallotCallback,
   recordDiiaCallbackRejection,
 } from "@/src/modules/houses/resident/onlineVotingRepository";
 import {
@@ -330,11 +329,11 @@ async function handleCallback(
       config.identityHmacSecret,
     );
 
-  let prepared;
+  let finalized;
 
   try {
-    prepared =
-      await prepareOnlineBallotCallback({
+    finalized =
+      await finalizeOnlineBallotCallback({
         ballotId,
         meetingId,
         slug,
@@ -342,44 +341,6 @@ async function handleCallback(
         provider:
           provider.name,
         identityHmac: hmac,
-        txnId,
-      });
-  } catch {
-    return resultRedirect(
-      request,
-      slug,
-      "failed",
-      "CALLBACK_PREPARE_FAILED",
-    );
-  }
-
-  if (!prepared.ok) {
-    return resultRedirect(
-      request,
-      slug,
-      "failed",
-      prepared.code,
-    );
-  }
-
-  if (
-    prepared.code ===
-    "ALREADY_CONFIRMED"
-  ) {
-    return resultRedirect(
-      request,
-      slug,
-      "confirmed",
-      "ALREADY_CONFIRMED",
-    );
-  }
-
-  let confirmed;
-
-  try {
-    confirmed =
-      await confirmPreparedOnlineBallot({
-        ballotId,
         txnId,
         verifiedAt:
           new Date().toISOString(),
@@ -389,16 +350,16 @@ async function handleCallback(
       request,
       slug,
       "failed",
-      "CONFIRM_FAILED",
+      "CALLBACK_FINALIZE_FAILED",
     );
   }
 
-  if (!confirmed.ok) {
+  if (!finalized.ok) {
     return resultRedirect(
       request,
       slug,
       "failed",
-      confirmed.code,
+      finalized.code,
     );
   }
 
@@ -406,7 +367,7 @@ async function handleCallback(
     request,
     slug,
     "confirmed",
-    confirmed.code,
+    finalized.code,
   );
 }
 

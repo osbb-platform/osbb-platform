@@ -123,7 +123,7 @@ begin
               else 0
             end
         )
-        order by q.sort_order, q.created_at, q.id
+        order by q.sort_order, q.id
       ),
       '[]'::jsonb
     )
