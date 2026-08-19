@@ -1,6 +1,7 @@
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { HousePlanTask, UpdatePlanTaskPayload } from "../types";
+import { resolveAutomationScheduleOnUpdate } from "../automationLifecycle";
 import {
   getPlanTask,
   HOUSE_PLAN_TASK_ENTITY_TYPE,
@@ -64,6 +65,20 @@ return ok(undefined);
     if (!automationResult.ok) return automationResult;
     const automation = automationResult.data;
 
+    const automationSchedule = resolveAutomationScheduleOnUpdate({
+      enabled: automation.enabled,
+      intervalDays: automation.intervalDays,
+      lifecycleStatus: before.lifecycle_status,
+      previous: {
+        enabled: before.automation_enabled,
+        intervalDays: before.automation_interval_days,
+        anchorAt: before.automation_anchor_at,
+        nextDueAt: before.automation_next_due_at,
+        pausedAt: before.automation_paused_at,
+      },
+      now,
+    });
+
     const { data, error } = await ctx.supabase
       .from("house_plan_tasks")
       .update({
@@ -82,9 +97,9 @@ return ok(undefined);
             : null,
         automation_enabled: automation.enabled,
         automation_interval_days: automation.intervalDays,
-        automation_paused_at: null,
-        automation_anchor_at: null,
-        automation_next_due_at: null,
+        automation_paused_at: automationSchedule.automationPausedAt,
+        automation_anchor_at: automationSchedule.automationAnchorAt,
+        automation_next_due_at: automationSchedule.automationNextDueAt,
         archive_year: normalizeArchiveYear(payload.archiveYear),
         sort_order: normalizeSortOrder(payload.sortOrder),
         updated_at: now,
