@@ -24,6 +24,55 @@ export type PlanAutomationTransition = {
   kind: "automatic" | "manual";
 };
 
+export function resolveAutomationScheduleOnUpdate(input: {
+  enabled: boolean;
+  intervalDays: number | null;
+  lifecycleStatus: string;
+  previous: {
+    enabled: boolean;
+    intervalDays: number | null;
+    anchorAt: string | null;
+    nextDueAt: string | null;
+    pausedAt: string | null;
+  };
+  now: string;
+}): PlanAutomationSchedule {
+  if (!input.enabled || input.lifecycleStatus !== "published") {
+    return {
+      automationAnchorAt: null,
+      automationNextDueAt: null,
+      automationPausedAt: null,
+    };
+  }
+
+  if (input.previous.pausedAt !== null) {
+    return {
+      automationAnchorAt: null,
+      automationNextDueAt: null,
+      automationPausedAt: input.previous.pausedAt,
+    };
+  }
+
+  const needsNewInterval =
+    input.previous.enabled === false ||
+    input.previous.intervalDays !== input.intervalDays ||
+    input.previous.nextDueAt === null;
+
+  if (needsNewInterval) {
+    return resetPlanAutomationInterval({
+      enabled: input.enabled,
+      intervalDays: input.intervalDays,
+      occurredAt: input.now,
+    });
+  }
+
+  return {
+    automationAnchorAt: input.previous.anchorAt,
+    automationNextDueAt: input.previous.nextDueAt,
+    automationPausedAt: null,
+  };
+}
+
 export function isPlanAutomationStatus(
   value: unknown,
 ): value is PlanAutomationStatus {
