@@ -45,6 +45,7 @@ export type HouseMeetingsItemSnapshot = {
   meetingDateTime: string;
   location: string;
   status: HouseMeetingDisplayStatus;
+  votingMode: "manual" | "online";
   lifecycleStatus: "draft" | "published" | "archived";
   lockVersion: number;
   updatedAt: string;
@@ -99,6 +100,7 @@ function mapMeeting(params: {
     meetingDateTime: meeting.meeting_date ?? "",
     location: meeting.location,
     status: meeting.display_status,
+    votingMode: meeting.voting_mode,
     lifecycleStatus: meeting.lifecycle_status,
     lockVersion: meeting.lock_version,
     updatedAt: meeting.updated_at,

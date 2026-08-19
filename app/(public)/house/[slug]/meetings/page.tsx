@@ -6,6 +6,11 @@ import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/service
 import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
+import { PublicOnlineMeetingVoting } from "@/src/modules/houses/components/PublicOnlineMeetingVoting";
+import {
+  getOnlineMeetingAggregation,
+  type OnlineMeetingAggregation,
+} from "@/src/modules/houses/services/getOnlineMeetingAggregation";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,6 +18,8 @@ type Props = {
     mode?: string;
     year?: string;
     month?: string;
+    onlineVote?: string;
+    onlineVoteCode?: string;
   }>;
 };
 
@@ -57,6 +64,8 @@ type MeetingItem = {
   meetingDateTime: string;
   location: string;
   status: MeetingLifecycleStatus;
+  votingMode: "manual" | "online";
+  onlineAggregation: OnlineMeetingAggregation | null;
   protocolPdf?: string;
   protocolDocumentId?: string;
   manualVotes?: ManualVoteEntry[];
@@ -173,30 +182,47 @@ export default async function PublicMeetingsPage({
 
   const meetingsSnapshot = await getPublishedHouseMeetings(house.id);
 
-  const publicMeetings: MeetingItem[] = meetingsSnapshot.items
-    .filter((item) => item.status !== "draft")
-    .map((item) => ({
-      id: item.id,
-      title: item.title,
-      shortDescription: item.shortDescription,
-      meetingDateTime: item.meetingDateTime,
-      location: item.location,
-      status: item.status,
-      protocolPdf: item.protocolPdf,
-      protocolDocumentId: item.protocolDocumentId,
-      manualVotes: item.manualVotes,
-      questions: item.questions.map((question) => ({
-        id: question.id,
-        title: question.title,
-        description: question.description,
-        decisionDraft: question.decisionDraft,
-        votesFor: question.votesFor,
-        votesAgainst: question.votesAgainst,
-        votesAbstained: question.votesAbstained,
-        totalApartmentsVoted: question.totalApartmentsVoted,
-        approvalOutcome: question.approvalOutcome,
-      })),
-    }));
+  const publicMeetings: MeetingItem[] = await Promise.all(
+    meetingsSnapshot.items
+      .filter((item) => item.status !== "draft")
+      .map(async (item) => {
+        const onlineAggregation =
+          item.votingMode === "online"
+            ? await getOnlineMeetingAggregation({
+                houseId: house.id,
+                meetingId: item.id,
+              })
+            : null;
+
+        return {
+          id: item.id,
+          title: item.title,
+          shortDescription: item.shortDescription,
+          meetingDateTime: item.meetingDateTime,
+          location: item.location,
+          status: item.status,
+          votingMode: item.votingMode,
+          onlineAggregation,
+          protocolPdf: item.protocolPdf,
+          protocolDocumentId: item.protocolDocumentId,
+          manualVotes:
+            item.votingMode === "manual"
+              ? item.manualVotes
+              : [],
+          questions: item.questions.map((question) => ({
+            id: question.id,
+            title: question.title,
+            description: question.description,
+            decisionDraft: question.decisionDraft,
+            votesFor: question.votesFor,
+            votesAgainst: question.votesAgainst,
+            votesAbstained: question.votesAbstained,
+            totalApartmentsVoted: question.totalApartmentsVoted,
+            approvalOutcome: question.approvalOutcome,
+          })),
+        };
+      }),
+  );
 
   const scheduled = publicMeetings.filter((item) => item.status === "scheduled");
   const active = publicMeetings.filter((item) => item.status === "active");
@@ -324,6 +350,26 @@ export default async function PublicMeetingsPage({
         </div>
       </PubSectionHeader>
 
+      {resolvedSearchParams.onlineVote === "confirmed" ? (
+        <div
+          role="status"
+          className="rounded-[var(--r-xl)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] p-4 text-sm font-medium text-[var(--pub-success-text)]"
+        >
+          Ваш голос підтверджено. Результати онлайн-голосування оновлено.
+        </div>
+      ) : resolvedSearchParams.onlineVote === "failed" ? (
+        <div
+          role="alert"
+          className="rounded-[var(--r-xl)] border border-[var(--pub-danger-border)] bg-[var(--pub-danger-bg)] p-4 text-sm text-[var(--pub-danger-text)]"
+        >
+          Голос не вдалося підтвердити
+          {resolvedSearchParams.onlineVoteCode
+            ? ` (${resolvedSearchParams.onlineVoteCode})`
+            : ""}.
+          Перевірте доступний залишок площі та спробуйте ще раз, якщо голосування ще відкрите.
+        </div>
+      ) : null}
+
       {selectedMode === "scheduled" && nearestMeeting ? (
         <section className="relative w-full min-w-0 overflow-hidden rounded-[var(--r-2xl)] border border-[var(--pub-success-border)] bg-[var(--pub-success-bg)] p-5 pl-6 sm:p-6 sm:pl-7">
           <span
@@ -387,6 +433,24 @@ export default async function PublicMeetingsPage({
                 {formatDate(meeting.meetingDateTime)}
               </div>
 
+              {meeting.votingMode === "online" ? (
+                <PublicOnlineMeetingVoting
+                  slug={slug}
+                  meetingId={meeting.id}
+                  isActive={meeting.status === "active"}
+                  questions={meeting.questions.map((question) => ({
+                    id: question.id,
+                    title: question.title,
+                    description: question.description,
+                  }))}
+                  apartments={apartments.map((apartment) => ({
+                    id: apartment.id,
+                    label: formatPublicApartmentLabel(apartment.label),
+                  }))}
+                  aggregation={meeting.onlineAggregation}
+                />
+              ) : null}
+
               {meeting.questions.map((question) => (
                 <div
                   key={question.id}
@@ -402,7 +466,8 @@ export default async function PublicMeetingsPage({
                     </div>
                   ) : null}
 
-                  {(meeting.status === "review" ||
+                  {meeting.votingMode === "manual" &&
+                  (meeting.status === "review" ||
                     meeting.status === "completed" ||
                     meeting.status === "archived") ? (
                     <div className="mt-3 space-y-2 sm:grid sm:grid-cols-3 sm:gap-2 sm:space-y-0">
