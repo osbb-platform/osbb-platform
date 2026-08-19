@@ -1333,6 +1333,9 @@ export function HousePlanWorkspace({
                     }}
                     className={adminInputClass}
                   />
+                <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
+                  Перехід виконується під час найближчого щоденного запуску після настання строку.
+                </p>
                   <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
                     Допустиме ціле значення від 1 до 365. Відлік почнеться
                     після публікації завдання.

@@ -36,6 +36,12 @@ describe("P05 T5.2a plan automation UI", () => {
     expect(workspace).toContain("Автоматизацію призупинено");
   });
 
+  it("explains the supported daily scheduler delay", () => {
+    expect(workspace).toContain(
+      "Перехід виконується під час найближчого щоденного запуску після настання строку",
+    );
+  });
+
   it("keeps full schedule state", () => {
     expect(workspace).toContain("automationPausedAt: string | null");
     expect(workspace).toContain("automationAnchorAt: string | null");
