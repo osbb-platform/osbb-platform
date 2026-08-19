@@ -30,9 +30,11 @@ export class OfficialDiiaProvider implements DiiaProvider {
   }
 
   async initAuthRequest(
-    _challenge: string,
-    _returnCtx: DiiaReturnContext,
+    challenge: string,
+    returnCtx: DiiaReturnContext,
   ): Promise<DiiaInitAuthResult> {
+    void challenge;
+    void returnCtx;
     /**
      * TODO(DIIA-OFFICIAL-DOCS):
      * Implement only from the official partner documentation:
@@ -49,8 +51,9 @@ export class OfficialDiiaProvider implements DiiaProvider {
   }
 
   async verifyCallback(
-    _raw: unknown,
+    raw: unknown,
   ): Promise<DiiaVerifyCallbackResult> {
+    void raw;
     /**
      * TODO(DIIA-OFFICIAL-DOCS):
      * Implement only from the official partner documentation:
