@@ -136,3 +136,150 @@ export async function cancelPendingOnlineBallot(
     );
   }
 }
+
+export type PrepareOnlineBallotCallbackResult =
+  | {
+      ok: true;
+      code:
+        | "CALLBACK_PREPARED"
+        | "ALREADY_CONFIRMED";
+    }
+  | {
+      ok: false;
+      code: string;
+    };
+
+export type ConfirmOnlineBallotResult =
+  | {
+      ok: true;
+      code:
+        | "CONFIRMED"
+        | "ALREADY_CONFIRMED";
+    }
+  | {
+      ok: false;
+      code: string;
+    };
+
+export async function prepareOnlineBallotCallback(
+  params: {
+    ballotId: string;
+    meetingId: string;
+    slug: string;
+    challenge: string;
+    provider: string;
+    identityHmac: string;
+    txnId: string;
+  },
+): Promise<PrepareOnlineBallotCallbackResult> {
+  const supabase = createSupabaseAdminClient();
+
+  const { data, error } = await supabase.rpc(
+    "prepare_online_ballot_callback",
+    {
+      p_ballot_id: params.ballotId,
+      p_meeting_id: params.meetingId,
+      p_house_slug: params.slug,
+      p_challenge: params.challenge,
+      p_provider: params.provider,
+      p_identity_hmac: params.identityHmac,
+      p_txn_id: params.txnId,
+    },
+  );
+
+  if (error) {
+    throw new Error(
+      `ONLINE_BALLOT_CALLBACK_PREPARE_FAILED:${error.message}`,
+    );
+  }
+
+  const row = normalizeRpcResult(data);
+
+  if (!row || row.ok !== true) {
+    return {
+      ok: false,
+      code:
+        typeof row?.code === "string"
+          ? row.code
+          : "CALLBACK_PREPARE_REJECTED",
+    };
+  }
+
+  return {
+    ok: true,
+    code:
+      row.code === "ALREADY_CONFIRMED"
+        ? "ALREADY_CONFIRMED"
+        : "CALLBACK_PREPARED",
+  };
+}
+
+export async function confirmPreparedOnlineBallot(
+  params: {
+    ballotId: string;
+    txnId: string;
+    verifiedAt: string;
+  },
+): Promise<ConfirmOnlineBallotResult> {
+  const supabase = createSupabaseAdminClient();
+
+  const { data, error } = await supabase.rpc(
+    "confirm_online_ballot",
+    {
+      p_ballot_id: params.ballotId,
+      p_txn_id: params.txnId,
+      p_verified_at: params.verifiedAt,
+    },
+  );
+
+  if (error) {
+    throw new Error(
+      `ONLINE_BALLOT_CONFIRM_FAILED:${error.message}`,
+    );
+  }
+
+  const row = normalizeRpcResult(data);
+
+  if (!row || row.ok !== true) {
+    return {
+      ok: false,
+      code:
+        typeof row?.code === "string"
+          ? row.code
+          : "ONLINE_BALLOT_CONFIRM_REJECTED",
+    };
+  }
+
+  return {
+    ok: true,
+    code:
+      row.code === "ALREADY_CONFIRMED"
+        ? "ALREADY_CONFIRMED"
+        : "CONFIRMED",
+  };
+}
+
+export async function recordDiiaCallbackRejection(
+  provider: string,
+  code: string,
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+
+  const { error } = await supabase.rpc(
+    "record_diia_callback_rejection",
+    {
+      p_provider: provider,
+      p_code: code,
+    },
+  );
+
+  if (error) {
+    console.error(
+      "Unable to persist Diia callback rejection",
+      {
+        code: "DIIA_REJECTION_AUDIT_FAILED",
+        message: error.message,
+      },
+    );
+  }
+}
