@@ -43,7 +43,7 @@ describe("P11 T7 plan automation runtime effects", () => {
 
   it("writes automatic lifecycle transitions to visible house history", () => {
     expect(route).toContain('.from("house_content_history")');
-    expect(route).toContain('actor_name: "Automation"');
+    expect(route).toContain('actor_name: "Автоматика плану"');
     expect(route).toContain('actor_admin_id: null');
     expect(route).toContain('entity_type: "house_plan_task"');
     expect(route).toContain('source: "plan_automation"');

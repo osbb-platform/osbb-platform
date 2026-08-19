@@ -96,7 +96,7 @@ async function writeAutomaticHistory(
   const rows = transitions.map((transition) => ({
     occurred_at: transition.executedAt,
     actor_admin_id: null,
-    actor_name: "Automation",
+    actor_name: "Автоматика плану",
     actor_email: null,
     actor_role: "system",
     house_id: transition.houseId,
