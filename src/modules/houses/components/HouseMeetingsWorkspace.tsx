@@ -32,6 +32,7 @@ import {
   normalizeMeetingApartmentLabel,
 } from "@/src/modules/houses/utils/meetingApartmentIdentity";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
+import { AdminOnlineMeetingVotingPanel } from "@/src/modules/houses/components/AdminOnlineMeetingVotingPanel";
 
 type MeetingLifecycleStatus =
   | "draft"
@@ -78,6 +79,7 @@ type MeetingItem = {
   meetingDateTime: string;
   location: string;
   status: MeetingLifecycleStatus;
+  votingMode: "manual" | "online";
   lifecycleStatus?: "draft" | "published" | "archived";
   lockVersion: number;
   updatedAt: string;
@@ -85,6 +87,8 @@ type MeetingItem = {
   protocolDocumentId?: string;
   questions: MeetingQuestion[];
   manualVotes?: ManualVoteEntry[];
+  onlineAggregation: AdminHouseMeetingsSnapshot["items"][number]["onlineAggregation"];
+  onlineBallots: AdminHouseMeetingsSnapshot["items"][number]["onlineBallots"];
 };
 
 type Props = {
@@ -147,12 +151,15 @@ function createEmptyMeeting(): MeetingItem {
     meetingDateTime: "",
     location: "",
     status: "draft",
+    votingMode: "manual",
     updatedAt: now,
     lifecycleStatus: "draft",
     lockVersion: 1,
     protocolPdf: "",
     protocolDocumentId: "",
     questions: [createQuestion(0)],
+    onlineAggregation: null,
+    onlineBallots: [],
   };
 }
 
@@ -214,6 +221,7 @@ function normalizeMeetings(content: Record<string, unknown> | AdminHouseMeetings
           ? legacyStatus
           : "draft"
       ) as MeetingLifecycleStatus,
+      votingMode: raw.votingMode === "online" ? "online" : "manual",
       lifecycleStatus:
         raw.lifecycleStatus === "draft" ||
         raw.lifecycleStatus === "published" ||
@@ -226,6 +234,13 @@ function normalizeMeetings(content: Record<string, unknown> | AdminHouseMeetings
       protocolPdf: String(raw.protocolPdf ?? ""),
       protocolDocumentId: String(raw.protocolDocumentId ?? ""),
       manualVotes,
+      onlineAggregation:
+        raw.onlineAggregation && typeof raw.onlineAggregation === "object"
+          ? (raw.onlineAggregation as MeetingItem["onlineAggregation"])
+          : null,
+      onlineBallots: Array.isArray(raw.onlineBallots)
+        ? (raw.onlineBallots as MeetingItem["onlineBallots"])
+        : [],
       questions: Array.isArray(raw.questions)
         ? (raw.questions as MeetingQuestion[]).map((question, questionIndex) => ({
             id: String(question?.id ?? `legacy-question-${questionIndex}`),
@@ -381,6 +396,13 @@ function recalculateMeetingQuestionResults(
   meeting: MeetingItem,
   totalApartments: number,
 ): MeetingItem {
+  if (meeting.votingMode === "online") {
+    return {
+      ...meeting,
+      manualVotes: [],
+    };
+  }
+
   const manualVotes = meeting.manualVotes ?? [];
   const totalApartmentsVoted = Math.max(0, totalApartments);
 
@@ -673,7 +695,9 @@ export function HouseMeetingsWorkspace({
       protocolPdf: next.protocolPdf,
       protocolDocumentId: next.protocolDocumentId,
       questions: next.questions,
-      manualVotes: next.manualVotes ?? [],
+      votingMode: next.votingMode,
+      manualVotes:
+        next.votingMode === "manual" ? next.manualVotes ?? [] : [],
     };
 
     const saved = await dispatch<MeetingItem>(
@@ -702,6 +726,12 @@ export function HouseMeetingsWorkspace({
     const savedMeeting: MeetingItem = {
       ...next,
       id: String(savedRecord.id ?? next.id),
+      votingMode:
+        savedRecord.voting_mode === "online"
+          ? "online"
+          : savedRecord.voting_mode === "manual"
+            ? "manual"
+            : next.votingMode,
       status:
         savedStatus === "draft" ||
         savedStatus === "scheduled" ||
@@ -1223,14 +1253,123 @@ export function HouseMeetingsWorkspace({
           </details>
 
           <details
-            open={draft.status === "review"}
+            open={
+              mode === "create" ||
+              draft.votingMode === "online" ||
+              draft.status === "review"
+            }
             className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
           >
             <summary className="cursor-pointer text-base font-semibold text-[var(--cms-text)]">
               Голоси
             </summary>
             <div className="mt-4">
-            {mode === "edit" && draft.status === "review" ? (
+              {(() => {
+                const hasAnyVotes =
+                  (draft.manualVotes ?? []).length > 0 ||
+                  draft.onlineBallots.length > 0;
+
+                return (
+                  <div className="mb-4 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4">
+                    <div className="text-sm font-semibold text-[var(--cms-text)]">
+                      Тип голосування
+                    </div>
+
+                    <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
+                      Ручний та онлайн-режими не змішуються. Після появи
+                      першого голосу тип голосування змінити неможливо.
+                    </p>
+
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        disabled={isPending || hasAnyVotes}
+                        onClick={() => {
+                          setDraft((prev) => ({
+                            ...prev,
+                            votingMode: "manual",
+                          }));
+                          markDirty();
+                        }}
+                        className={[
+                          "rounded-[var(--r-lg)] border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60",
+                          draft.votingMode === "manual"
+                            ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] font-semibold text-[var(--cms-text)]"
+                            : "border-[var(--cms-border)] text-[var(--cms-text-muted)]",
+                        ].join(" ")}
+                      >
+                        Ручне голосування
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isPending || hasAnyVotes}
+                        onClick={() => {
+                          setDraft((prev) => ({
+                            ...prev,
+                            votingMode: "online",
+                            manualVotes: [],
+                          }));
+                          setSelectedApartmentVote("");
+                          setManualVoteAnswers({});
+                          markDirty();
+                        }}
+                        className={[
+                          "rounded-[var(--r-lg)] border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60",
+                          draft.votingMode === "online"
+                            ? "border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] font-semibold text-[var(--cms-text)]"
+                            : "border-[var(--cms-border)] text-[var(--cms-text-muted)]",
+                        ].join(" ")}
+                      >
+                        Онлайн через Дію
+                      </button>
+                    </div>
+
+                    {hasAnyVotes ? (
+                      <div className="mt-3 text-xs text-[var(--cms-text-muted)]">
+                        Тип голосування зафіксовано, оскільки для цих зборів
+                        уже існують голоси або бюлетені.
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })()}
+
+              {draft.votingMode === "online" && mode === "edit" ? (
+                <AdminOnlineMeetingVotingPanel
+                  houseId={houseId}
+                  meetingId={draft.id}
+                  status={draft.status}
+                  lifecycleStatus={draft.lifecycleStatus}
+                  lockVersion={draft.lockVersion}
+                  aggregation={draft.onlineAggregation}
+                  ballots={draft.onlineBallots}
+                  canChangeWorkflowStatus={workflowAccessGranted}
+                  onMeetingChanged={(nextMeeting) => {
+                    setDraft((prev) => ({
+                      ...prev,
+                      ...nextMeeting,
+                    }));
+
+                    setMeetings((prev) =>
+                      prev.map((meeting) =>
+                        meeting.id === draft.id
+                          ? {
+                              ...meeting,
+                              ...nextMeeting,
+                            }
+                          : meeting,
+                      ),
+                    );
+
+                    setPanelDirty(false);
+                  }}
+                />
+              ) : null}
+
+            {draft.votingMode === "manual" &&
+            mode === "edit" &&
+            draft.status === "review" ? (
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-muted)] p-4">
                 <div className="text-sm font-semibold text-[var(--cms-text)]">
                   Ручне внесення голосів
@@ -1524,7 +1663,12 @@ export function HouseMeetingsWorkspace({
                 {formatDate(meeting.meetingDateTime)}
               </div>
               <div className="mt-3 text-sm text-[var(--cms-text-soft)]">
-                {meeting.questions.length} питань · Не брали участь: {formatNotParticipatingApartments(meeting, apartments)}
+                {meeting.questions.length} питань
+                {meeting.votingMode === "online"
+                  ? meeting.onlineAggregation
+                    ? ` · Онлайн · Участь: ${meeting.onlineAggregation.participationPercent.toFixed(1)}% · Підтверджено: ${meeting.onlineAggregation.confirmedAreaM2.toFixed(2)} м²`
+                    : " · Онлайн"
+                  : ` · Не брали участь: ${formatNotParticipatingApartments(meeting, apartments)}`}
               </div>
 
               <div>

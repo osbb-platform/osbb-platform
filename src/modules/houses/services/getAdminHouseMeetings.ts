@@ -12,6 +12,11 @@ import type {
 import {
   collapseMeetingManualVoteRows,
 } from "@/src/modules/houses/utils/meetingApartmentIdentity";
+import {
+  getAdminOnlineMeetingVoting,
+  type AdminOnlineMeetingBallot,
+} from "@/src/modules/houses/services/getAdminOnlineMeetingVoting";
+import type { OnlineMeetingAggregation } from "@/src/modules/houses/services/getOnlineMeetingAggregation";
 
 export type HouseMeetingsQuestionSnapshot = {
   id: string;
@@ -53,6 +58,8 @@ export type HouseMeetingsItemSnapshot = {
   protocolDocumentId: string;
   questions: HouseMeetingsQuestionSnapshot[];
   manualVotes: HouseMeetingsManualVoteSnapshot[];
+  onlineAggregation: OnlineMeetingAggregation | null;
+  onlineBallots: AdminOnlineMeetingBallot[];
 };
 
 export type AdminHouseMeetingsSnapshot = {
@@ -113,6 +120,8 @@ function mapMeeting(params: {
     manualVotes: mapManualVotes(
       manualVotes.filter((vote) => vote.meeting_id === meeting.id),
     ),
+    onlineAggregation: null,
+    onlineBallots: [],
   };
 }
 
@@ -190,11 +199,30 @@ export async function getAdminHouseMeetings(params: {
       publishedOnly: false,
     });
 
-    const items = rows.meetings.map((meeting) =>
+    const baseItems = rows.meetings.map((meeting) =>
       mapMeeting({
         meeting,
         questions: rows.questions,
         manualVotes: rows.manualVotes,
+      }),
+    );
+
+    const items = await Promise.all(
+      baseItems.map(async (item) => {
+        if (item.votingMode !== "online") {
+          return item;
+        }
+
+        const online = await getAdminOnlineMeetingVoting({
+          houseId: params.houseId,
+          meetingId: item.id,
+        });
+
+        return {
+          ...item,
+          onlineAggregation: online.aggregation,
+          onlineBallots: online.ballots,
+        };
       }),
     );
 
