@@ -7,13 +7,12 @@ import {
   normalizeAutomationIntervalDays,
   validateAutomationConfiguration,
 } from "../../src/modules/content-engine/v2/handlers/plan/automation";
+import {
+  resolveAutomationScheduleOnUpdate,
+} from "../../src/modules/content-engine/v2/handlers/plan/automationLifecycle";
 
 const createCommand = readFileSync(
   "src/modules/content-engine/v2/handlers/plan/commands/create.ts",
-  "utf8",
-);
-const updateCommand = readFileSync(
-  "src/modules/content-engine/v2/handlers/plan/commands/update.ts",
   "utf8",
 );
 const publishCommand = readFileSync(
@@ -73,17 +72,37 @@ describe("P05 T5.1 plan automation configuration", () => {
     });
   });
 
-  it("persists configuration in create and update", () => {
-    for (const command of [createCommand, updateCommand]) {
-      expect(command).toContain("readAutomationConfiguration(payload)");
-      expect(command).toContain("automation_enabled: automation.enabled");
-      expect(command).toContain(
-        "automation_interval_days: automation.intervalDays",
-      );
-      expect(command).toContain("automation_paused_at: null");
-      expect(command).toContain("automation_anchor_at: null");
-      expect(command).toContain("automation_next_due_at: null");
-    }
+  it("persists draft configuration without scheduling in create", () => {
+    expect(createCommand).toContain("readAutomationConfiguration(payload)");
+    expect(createCommand).toContain("automation_enabled: automation.enabled");
+    expect(createCommand).toContain(
+      "automation_interval_days: automation.intervalDays",
+    );
+    expect(createCommand).toContain("automation_paused_at: null");
+    expect(createCommand).toContain("automation_anchor_at: null");
+    expect(createCommand).toContain("automation_next_due_at: null");
+  });
+
+  it("creates a schedule when automation is enabled on an existing published task", () => {
+    expect(
+      resolveAutomationScheduleOnUpdate({
+        enabled: true,
+        intervalDays: 1,
+        lifecycleStatus: "published",
+        previous: {
+          enabled: false,
+          intervalDays: null,
+          anchorAt: null,
+          nextDueAt: null,
+          pausedAt: null,
+        },
+        now: "2026-08-19T03:20:00.000Z",
+      }),
+    ).toEqual({
+      automationAnchorAt: "2026-08-19T03:20:00.000Z",
+      automationNextDueAt: "2026-08-20T03:20:00.000Z",
+      automationPausedAt: null,
+    });
   });
 
   it("anchors the first full interval on publish", () => {
