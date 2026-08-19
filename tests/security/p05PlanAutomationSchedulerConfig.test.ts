@@ -27,14 +27,15 @@ describe("P05 T6.4 scheduler configuration", () => {
     expect(config.crons).toEqual([
       {
         path: "/api/internal/plan-automation/run",
-        schedule: "10 0 * * *",
+        schedule: "10 * * * *",
       },
     ]);
   });
 
-  it("uses a once-per-day schedule compatible with daily intervals", () => {
+  it("runs plan automation once per hour", () => {
     const schedule = config.crons?.[0]?.schedule;
-    expect(schedule).toBe("10 0 * * *");
+
+    expect(schedule).toBe("10 * * * *");
     expect(schedule?.split(/\s+/u)).toHaveLength(5);
   });
 
