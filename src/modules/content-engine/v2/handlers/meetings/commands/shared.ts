@@ -10,6 +10,7 @@ import {
   type HouseMeetingQuestionOutcome,
   type HouseMeetingStatus,
   type HouseMeetingVoteChoice,
+  type HouseMeetingVotingMode,
   type MeetingIdAndLock,
   type MeetingManualVotePayload,
   type MeetingQuestionPayload,
@@ -41,6 +42,8 @@ const validChoices: HouseMeetingVoteChoice[] = [
   "abstained",
 ];
 
+const validVotingModes: HouseMeetingVotingMode[] = ["manual", "online"];
+
 export function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -52,6 +55,16 @@ export function normalizeOptionalDate(value: unknown) {
 export function normalizeUuid(value: unknown) {
   const text = normalizeText(value);
   return uuidPattern.test(text) ? text : null;
+}
+
+export function normalizeVotingMode(
+  value: unknown,
+  fallback: HouseMeetingVotingMode = "manual",
+): HouseMeetingVotingMode {
+  return typeof value === "string" &&
+    validVotingModes.includes(value as HouseMeetingVotingMode)
+    ? (value as HouseMeetingVotingMode)
+    : fallback;
 }
 
 export function normalizeDisplayStatus(value: unknown): HouseMeetingDisplayStatus {
@@ -123,6 +136,37 @@ export async function getMeeting(
   }
 
   return ok(data as HouseMeeting);
+}
+
+export async function meetingHasAnyVotes(
+  ctx: HandlerContext,
+  meetingId: string,
+): Promise<Result<boolean>> {
+  const manualResult = await ctx.supabase
+    .from("house_meeting_manual_votes")
+    .select("id")
+    .eq("meeting_id", meetingId)
+    .limit(1);
+
+  if (manualResult.error) {
+    return err(manualResult.error.message, "INTERNAL");
+  }
+
+  if ((manualResult.data ?? []).length > 0) {
+    return ok(true);
+  }
+
+  const onlineResult = await ctx.supabase
+    .from("house_meeting_online_ballots")
+    .select("id")
+    .eq("meeting_id", meetingId)
+    .limit(1);
+
+  if (onlineResult.error) {
+    return err(onlineResult.error.message, "INTERNAL");
+  }
+
+  return ok((onlineResult.data ?? []).length > 0);
 }
 
 export async function getMeetingQuestions(

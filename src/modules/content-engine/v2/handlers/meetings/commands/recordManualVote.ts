@@ -38,6 +38,13 @@ export const recordManualVoteCommand: CommandSpec = {
 
     const before = beforeResult.data;
 
+    if (before.meeting.voting_mode !== "manual") {
+      return err(
+        "Ручне голосування недоступне для онлайн-зборів.",
+        "VALIDATION_FAILED",
+      );
+    }
+
     const meetingUpdateResult = await ctx.supabase
       .from("house_meetings")
       .update({

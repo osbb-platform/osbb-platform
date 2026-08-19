@@ -17,6 +17,7 @@ export type HouseMeetingDisplayStatus =
 
 export type HouseMeetingQuestionOutcome = "approved" | "rejected" | "pending";
 export type HouseMeetingVoteChoice = "for" | "against" | "abstained";
+export type HouseMeetingVotingMode = "manual" | "online";
 
 export type HouseMeeting = {
   id: string;
@@ -28,6 +29,7 @@ export type HouseMeeting = {
   location: string;
   meeting_status: HouseMeetingStatus;
   display_status: HouseMeetingDisplayStatus;
+  voting_mode: HouseMeetingVotingMode;
   protocol_pdf: string;
   protocol_document_id: string;
   lifecycle_status: HouseMeetingLifecycle;
@@ -105,6 +107,7 @@ export type CreateMeetingPayload = {
   meetingDateTime?: string | null;
   location?: string;
   status?: HouseMeetingDisplayStatus;
+  votingMode?: HouseMeetingVotingMode;
   protocolPdf?: string;
   protocolDocumentId?: string;
   questions?: MeetingQuestionPayload[];
@@ -132,3 +135,7 @@ export type RecordManualVotePayload = MeetingIdAndLock & {
   apartmentId: string;
   answers: MeetingManualVoteAnswerPayload[];
 };
+
+
+export type OpenMeetingVotingPayload = MeetingIdAndLock;
+export type CloseMeetingVotingPayload = MeetingIdAndLock;

@@ -8,6 +8,7 @@ import {
   normalizeDisplayStatus,
   normalizeOptionalDate,
   normalizeText,
+  normalizeVotingMode,
   publicMeetingsPaths,
   replaceMeetingQuestionsAndVotes,
   toLifecycleStatus,
@@ -29,6 +30,19 @@ export const createCommand: CommandSpec = {
       return err("Додайте хоча б одне питання.", "VALIDATION_FAILED");
     }
 
+    const votingMode = normalizeVotingMode(payload.votingMode);
+
+    if (
+      votingMode === "online" &&
+      Array.isArray(payload.manualVotes) &&
+      payload.manualVotes.length > 0
+    ) {
+      return err(
+        "Ручні голоси не можна додавати до онлайн-зборів.",
+        "VALIDATION_FAILED",
+      );
+    }
+
     return ok(undefined);
   },
 
@@ -37,6 +51,7 @@ export const createCommand: CommandSpec = {
     const now = new Date().toISOString();
     const displayStatus = normalizeDisplayStatus(payload.status);
     const lifecycleStatus = toLifecycleStatus(displayStatus);
+    const votingMode = normalizeVotingMode(payload.votingMode);
 
     const { data, error } = await ctx.supabase
       .from("house_meetings")
@@ -49,6 +64,7 @@ export const createCommand: CommandSpec = {
         location: normalizeText(payload.location),
         meeting_status: toMeetingStatus(displayStatus),
         display_status: displayStatus,
+        voting_mode: votingMode,
         protocol_pdf: normalizeText(payload.protocolPdf),
         protocol_document_id: normalizeText(payload.protocolDocumentId),
         lifecycle_status: lifecycleStatus,
@@ -71,7 +87,7 @@ export const createCommand: CommandSpec = {
     const replaceResult = await replaceMeetingQuestionsAndVotes(ctx, {
       meetingId: meeting.id,
       questions: payload.questions ?? [],
-      manualVotes: payload.manualVotes,
+      manualVotes: votingMode === "manual" ? payload.manualVotes : undefined,
     });
 
     if (!replaceResult.ok) {

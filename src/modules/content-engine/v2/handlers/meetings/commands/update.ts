@@ -6,9 +6,11 @@ import {
   HOUSE_MEETING_ENTITY_TYPE,
   meetingTitle,
   meetingsHistoryMetadata,
+  meetingHasAnyVotes,
   normalizeDisplayStatus,
   normalizeOptionalDate,
   normalizeText,
+  normalizeVotingMode,
   publicMeetingsPaths,
   readIdAndLock,
   replaceMeetingQuestionsAndVotes,
@@ -48,6 +50,33 @@ export const updateCommand: CommandSpec = {
       payload.status ?? before.meeting.display_status,
     );
     const lifecycleStatus = toLifecycleStatus(displayStatus);
+    const votingMode = normalizeVotingMode(
+      payload.votingMode,
+      before.meeting.voting_mode,
+    );
+
+    if (votingMode !== before.meeting.voting_mode) {
+      const hasVotesResult = await meetingHasAnyVotes(ctx, payload.id);
+      if (!hasVotesResult.ok) return hasVotesResult;
+
+      if (hasVotesResult.data) {
+        return err(
+          "Тип голосування не можна змінити після появи голосів.",
+          "VALIDATION_FAILED",
+        );
+      }
+    }
+
+    if (
+      votingMode === "online" &&
+      Array.isArray(payload.manualVotes) &&
+      payload.manualVotes.length > 0
+    ) {
+      return err(
+        "Ручні голоси не можна додавати до онлайн-зборів.",
+        "VALIDATION_FAILED",
+      );
+    }
 
     const { data, error } = await ctx.supabase
       .from("house_meetings")
@@ -59,6 +88,7 @@ export const updateCommand: CommandSpec = {
         location: normalizeText(payload.location),
         meeting_status: toMeetingStatus(displayStatus),
         display_status: displayStatus,
+        voting_mode: votingMode,
         protocol_pdf: normalizeText(payload.protocolPdf),
         protocol_document_id: normalizeText(payload.protocolDocumentId),
         lifecycle_status: lifecycleStatus,
@@ -92,7 +122,7 @@ export const updateCommand: CommandSpec = {
     const replaceResult = await replaceMeetingQuestionsAndVotes(ctx, {
       meetingId: meeting.id,
       questions: payload.questions ?? [],
-      manualVotes: payload.manualVotes,
+      manualVotes: votingMode === "manual" ? payload.manualVotes : undefined,
     });
 
     if (!replaceResult.ok) {
