@@ -27,15 +27,15 @@ describe("P05 T6.4 scheduler configuration", () => {
     expect(config.crons).toEqual([
       {
         path: "/api/internal/plan-automation/run",
-        schedule: "10 * * * *",
+        schedule: "10 0 * * *",
       },
     ]);
   });
 
-  it("runs plan automation once per hour", () => {
+  it("uses the supported daily fallback on Vercel Hobby", () => {
     const schedule = config.crons?.[0]?.schedule;
 
-    expect(schedule).toBe("10 * * * *");
+    expect(schedule).toBe("10 0 * * *");
     expect(schedule?.split(/\s+/u)).toHaveLength(5);
   });
 
