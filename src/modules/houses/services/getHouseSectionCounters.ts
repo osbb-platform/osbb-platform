@@ -14,7 +14,7 @@ export type HouseSectionCounters = Partial<
     | "reports"
     | "debtors"
     | "plan"
-    | "meetings"
+    | "meetings" | "polls"
     | "specialists"
     | "board"
     | "requisites"

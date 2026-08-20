@@ -30,6 +30,7 @@ export const houseNavigationBlocks = [
   { value: "reports", label: "Звіти" },
   { value: "plan", label: "План робіт" },
   { value: "meetings", label: "Збори" },
+  { value: "polls", label: "Опитування" },
   { value: "debtors", label: "Боржники" },
   { value: "specialists", label: "Спеціалісти" },
   { value: "information", label: "Інформація" },

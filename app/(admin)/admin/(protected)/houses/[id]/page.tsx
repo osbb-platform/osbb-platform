@@ -8,6 +8,7 @@ import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTa
 import { HouseSwitcher } from "@/src/modules/houses/components/HouseSwitcher";
 import { HouseStatusLine } from "@/src/modules/houses/components/HouseStatusLine";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
+import { HousePollsWorkspace } from "@/src/modules/houses/components/HousePollsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
 import { HouseReportsWorkspace } from "@/src/modules/houses/components/HouseReportsWorkspace";
@@ -23,6 +24,7 @@ import type { HouseAnnouncementFileInput } from "@/src/modules/content-engine/v2
 import { getHouseSpecialistContactRequests } from "@/src/modules/houses/services/getHouseSpecialistContactRequests";
 import { getAdminHouseDebtors } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { getAdminHouseMeetings } from "@/src/modules/houses/services/getAdminHouseMeetings";
+import { getAdminHousePolls } from "@/src/modules/houses/services/getAdminHousePolls";
 import { getAdminHouseRequisites } from "@/src/modules/houses/services/getAdminHouseRequisites";
 import { getAdminHouseFaq } from "@/src/modules/houses/services/getAdminHouseFaq";
 import { getAdminHouseInformationPosts } from "@/src/modules/houses/services/getAdminHouseInformationPosts";
@@ -77,6 +79,7 @@ const allowedBlocks = new Set([
   "debtors",
   "plan",
   "meetings",
+  "polls",
   "requisites",
   "specialists",
   "founding-documents",
@@ -253,6 +256,11 @@ export default async function AdminHouseDetailPage({
   const meetingsData =
     activeBlock === "meetings"
       ? await getAdminHouseMeetings({ houseId: house.id })
+      : null;
+
+  const pollsData =
+    activeBlock === "polls"
+      ? await getAdminHousePolls({ houseId: house.id })
       : null;
 
   const requisites =
@@ -536,6 +544,25 @@ export default async function AdminHouseDetailPage({
           <HouseTechnicalPlaceholder
             title="Збори"
             description="Не вдалося відкрити дані зборів цього будинку."
+          />
+        )
+      ) : null}
+
+      {activeBlock === "polls" ? (
+        pollsData ? (
+          <HousePollsWorkspace
+            houseId={house.id}
+            houseSlug={house.slug}
+            polls={pollsData}
+            canPublish={access.houseWorkspaces.polls.publish}
+            canArchive={access.houseWorkspaces.polls.archive}
+            canRestore={access.houseWorkspaces.polls.restore}
+            canDelete={access.houseWorkspaces.polls.delete}
+          />
+        ) : (
+          <HouseTechnicalPlaceholder
+            title="Опитування"
+            description="Не вдалося відкрити дані опитувань цього будинку."
           />
         )
       ) : null}
