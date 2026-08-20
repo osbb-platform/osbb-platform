@@ -29,6 +29,7 @@ const WORKSPACE_KEYS: HouseWorkspaceKey[] = [
   "reports",
   "plan",
   "meetings",
+  "polls",
   "requisites",
   "specialists",
   "debtors",

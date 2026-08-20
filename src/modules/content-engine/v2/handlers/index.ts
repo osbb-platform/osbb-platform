@@ -11,6 +11,7 @@ import { documentsHandler } from "./documents";
 import { specialistsHandler } from "./specialists";
 import { planHandler } from "./plan";
 import { meetingsHandler } from "./meetings";
+import { pollsHandler } from "./polls";
 import { debtorsHandler } from "./debtors";
 import { reportsHandler } from "./reports";
 import { templatesHandler } from "./templates";
@@ -42,6 +43,7 @@ export function registerAllHandlers() {
   registerHandler(homeWidgetsHandler);
   registerHandler(informationPostsHandler);
   registerHandler(meetingsHandler);
+  registerHandler(pollsHandler);
   registerHandler(planHandler);
   registerHandler(requisitesHandler);
   registerHandler(reportsHandler);

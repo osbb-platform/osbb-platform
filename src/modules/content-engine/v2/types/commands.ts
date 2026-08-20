@@ -12,6 +12,7 @@ export type HandlerKey =
   | "reports"
   | "plan"
   | "meetings"
+  | "polls"
   | "debtors"
   | "templates";
 

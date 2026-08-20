@@ -19,6 +19,7 @@ export type HouseWorkspaceKey =
   | "reports"
   | "plan"
   | "meetings"
+  | "polls"
   | "requisites"
   | "specialists"
   | "debtors"

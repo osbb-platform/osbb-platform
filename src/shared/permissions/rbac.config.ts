@@ -25,6 +25,7 @@ const ALL_WORKSPACE_KEYS: HouseWorkspaceKey[] = [
   "reports",
   "plan",
   "meetings",
+  "polls",
   "requisites",
   "specialists",
   "debtors",
@@ -134,6 +135,19 @@ managerWorkspaces.meetings = {
   edit: true,
   saveDraft: true,
   changeWorkflowStatus: true,
+  publish: false,
+  confirm: false,
+  archive: false,
+  restore: false,
+  delete: true,
+};
+
+managerWorkspaces.polls = {
+  view: true,
+  create: true,
+  edit: true,
+  saveDraft: true,
+  changeWorkflowStatus: false,
   publish: false,
   confirm: false,
   archive: false,
@@ -385,6 +399,13 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
         delete: true,
       },
       meetings: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      polls: {
         publish: true,
         confirm: true,
         archive: true,
