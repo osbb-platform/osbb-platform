@@ -27,6 +27,7 @@ const primaryItems = [
   { label: houseCopy.navigation.reports, href: () => "/reports" },
   { label: houseCopy.navigation.plan, href: () => "/plan" },
   { label: houseCopy.navigation.meetings, href: () => "/meetings" },
+  { label: "Опитування", href: () => "/polls" },
 ];
 
 const secondaryItems = [
