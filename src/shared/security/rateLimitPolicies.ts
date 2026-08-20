@@ -10,6 +10,11 @@ export const rateLimitPolicies = {
     windowSeconds: 60,
     maxAttempts: 5,
   },
+  pollSubmit: {
+    scope: "poll_submit",
+    windowSeconds: 60,
+    maxAttempts: 5,
+  },
   diiaCallback: {
     scope: "diia_callback",
     windowSeconds: 60,
