@@ -45,4 +45,9 @@ describe("P07 polls migration contract", () => {
       ).toBe(false);
     }
   });
+  it("grants explicit base privileges required before RLS", () => {
+    expect(sql).toMatch(/grant\s+select[\s\S]*?public\.house_polls[\s\S]*?public\.house_poll_questions[\s\S]*?public\.house_poll_options[\s\S]*?to\s+anon/i);
+    expect(sql).toMatch(/grant\s+select\s*,\s*insert\s*,\s*update\s*,\s*delete[\s\S]*?public\.house_poll_participation[\s\S]*?public\.house_poll_answers[\s\S]*?to\s+authenticated/i);
+    expect(sql).toMatch(/grant\s+select\s*,\s*insert\s*,\s*update\s*,\s*delete[\s\S]*?public\.house_poll_participation[\s\S]*?public\.house_poll_answers[\s\S]*?to\s+service_role/i);
+  });
 });

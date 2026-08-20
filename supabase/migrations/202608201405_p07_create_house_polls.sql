@@ -270,3 +270,19 @@ using (
 
 -- Deliberately NO anon/resident policies on answers or participation.
 -- Their data is only exposed later through validated server-side read models.
+
+-- P07 explicit base table privileges.
+-- Policies do not replace PostgreSQL table privileges.
+grant select
+on table public.house_polls, public.house_poll_questions, public.house_poll_options
+to anon;
+
+grant select, insert, update, delete
+on table public.house_polls, public.house_poll_questions, public.house_poll_options,
+  public.house_poll_participation, public.house_poll_answers
+to authenticated;
+
+grant select, insert, update, delete
+on table public.house_polls, public.house_poll_questions, public.house_poll_options,
+  public.house_poll_participation, public.house_poll_answers
+to service_role;
