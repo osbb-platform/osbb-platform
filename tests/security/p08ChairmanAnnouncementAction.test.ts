@@ -54,9 +54,12 @@ function makeSupabase() {
   }));
 
   const announcementInsert = vi.fn(
-    (_payload: Record<string, unknown>) => ({
-      select: announcementSelect,
-    }),
+    (payload: Record<string, unknown>) => {
+      void payload;
+      return {
+        select: announcementSelect,
+      };
+    },
   );
 
   const historyInsert = vi.fn().mockResolvedValue({ error: null });
