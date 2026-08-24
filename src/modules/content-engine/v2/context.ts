@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
+import { getAdminCityContext } from "@/src/modules/auth/services/getAdminCityContext";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 
 import type { AdminCommand } from "./types/commands";
@@ -17,6 +18,15 @@ export async function buildHandlerContext(
     return err("Потрібна авторизація адміністратора.", "UNAUTHENTICATED");
   }
 
+  const cityContext = await getAdminCityContext();
+
+  if (!cityContext) {
+    return err(
+      "Оберіть активне місто для роботи в адмін-панелі.",
+      "FORBIDDEN",
+    );
+  }
+
   let house;
   try {
     house = await getAdminHouseById(command.houseId);
@@ -27,6 +37,13 @@ export async function buildHandlerContext(
 
   if (!house) {
     return err("Будинок не знайдено.", "NOT_FOUND");
+  }
+
+  if (!house.district?.city_id || house.district.city_id !== cityContext.cityId) {
+    return err(
+      "Будинок недоступний у поточному міському контексті.",
+      "FORBIDDEN",
+    );
   }
 
   return ok({
@@ -42,6 +59,11 @@ export async function buildHandlerContext(
       id: house.id,
       slug: house.slug,
       name: house.name,
+    },
+    city: {
+      id: cityContext.cityId,
+      name: cityContext.cityName,
+      slug: cityContext.citySlug,
     },
   });
 }

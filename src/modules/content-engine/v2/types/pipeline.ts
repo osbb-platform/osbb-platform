@@ -16,6 +16,11 @@ export type HandlerContext = {
     slug: string;
     name: string;
   };
+  city: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 };
 
 export type BootstrapContext = {

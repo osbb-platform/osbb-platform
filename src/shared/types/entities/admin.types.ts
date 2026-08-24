@@ -13,5 +13,6 @@ export type CurrentAdminUser = {
   role: AdminRole | null;
   status: MembershipStatus | null;
   jobTitle: string | null;
+  membershipCityId: string | null;
   canManageEmployees: boolean;
 };

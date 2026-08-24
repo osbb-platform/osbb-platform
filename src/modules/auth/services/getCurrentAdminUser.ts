@@ -14,6 +14,7 @@ type AdminMembershipRow = {
   job_title: string | null;
   is_active: boolean | null;
   house_id: string | null;
+  city_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -117,7 +118,7 @@ export const getCurrentAdminUser = cache(
 
       const { data: memberships, error: membershipError } = await supabase
         .from("admin_memberships")
-        .select("id, role, status, job_title, is_active, house_id, created_at, updated_at")
+        .select("id, role, status, job_title, is_active, house_id, city_id, created_at, updated_at")
         .eq("user_id", authUser.id)
         .is("house_id", null)
         .eq("is_active", true);
@@ -142,6 +143,7 @@ export const getCurrentAdminUser = cache(
         role,
         status,
         jobTitle: bestMembership?.job_title ?? null,
+        membershipCityId: bestMembership?.city_id ?? null,
         canManageEmployees:
           access.employees.createManager ||
           access.employees.createAdmin ||

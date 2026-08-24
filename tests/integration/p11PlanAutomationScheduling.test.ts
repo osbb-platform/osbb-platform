@@ -83,6 +83,11 @@ function context(): HandlerContext {
       slug: houseSlug,
       name: "P11 T5 Integration House",
     },
+    city: {
+      id: "00000000-0000-0000-0000-000000000901",
+      name: "Запоріжжя",
+      slug: "zaporizhzhia",
+    },
   };
 }
 

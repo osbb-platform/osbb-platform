@@ -29,6 +29,7 @@ export type AdminHouseDetail = {
     name: string;
     slug: string;
     theme_color: string;
+    city_id: string;
   } | null;
 };
 
@@ -68,7 +69,8 @@ export async function getAdminHouseById(
           id,
           name,
           slug,
-          theme_color
+          theme_color,
+          city_id
         )
       `,
     )
