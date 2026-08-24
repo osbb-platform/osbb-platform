@@ -16,6 +16,7 @@ function getRoleLabel(role: string | null) {
   if (role === "superadmin") return "Superadmin";
   if (role === "admin") return "Admin";
   if (role === "manager") return "Manager";
+  if (role === "content_manager") return "Контент-менеджер";
   return "Без ролі";
 }
 

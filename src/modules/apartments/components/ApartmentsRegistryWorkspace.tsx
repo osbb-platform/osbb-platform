@@ -51,7 +51,7 @@ type HouseOption = {
 };
 
 type ApartmentsRegistryWorkspaceProps = {
-  currentUserRole?: "superadmin" | "admin" | "manager" | null;
+  currentUserRole?: "superadmin" | "admin" | "manager" | "content_manager" | null;
   districts: DistrictOption[];
   houses: HouseOption[];
   selectedDistrictId: string;

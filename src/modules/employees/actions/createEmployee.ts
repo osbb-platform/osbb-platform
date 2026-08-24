@@ -39,7 +39,7 @@ export async function createEmployee(
   }
 
   const normalizedRole =
-    role === ROLES.ADMIN || role === ROLES.MANAGER ? role : null;
+    role === ROLES.ADMIN || role === ROLES.CONTENT_MANAGER ? role : null;
 
   if (!normalizedRole) {
     return {

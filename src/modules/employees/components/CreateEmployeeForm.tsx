@@ -164,13 +164,13 @@ function CreateEmployeeActionForm({
               </label>
               <select
                 name="role"
-                defaultValue={ROLES.MANAGER}
+                defaultValue={ROLES.CONTENT_MANAGER}
                 className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
               >
                 {canCreateAdmins ? (
                   <option value={ROLES.ADMIN}>Admin</option>
                 ) : null}
-                <option value={ROLES.MANAGER}>Manager</option>
+                <option value={ROLES.CONTENT_MANAGER}>Контент-менеджер</option>
               </select>
             </div>
           </div>

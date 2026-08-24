@@ -297,6 +297,20 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
     },
   },
 
+  [ROLES.CONTENT_MANAGER]: {
+    inherits: [ROLES.MANAGER],
+    topLevel: {},
+    housesRegistry: {},
+    apartmentsRegistry: {},
+    history: {},
+    employees: {},
+    companyPages: {},
+    profile: {},
+    houseShell: {},
+    houseWorkspaces: {},
+    security: {},
+  },
+
   [ROLES.ADMIN]: {
     inherits: [ROLES.MANAGER],
     topLevel: Object.fromEntries(

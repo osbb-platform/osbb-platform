@@ -34,6 +34,7 @@ function normalizeRole(value: string | null | undefined) {
   if (value === ROLES.SUPERADMIN) return ROLES.SUPERADMIN;
   if (value === ROLES.ADMIN) return ROLES.ADMIN;
   if (value === ROLES.MANAGER) return ROLES.MANAGER;
+  if (value === ROLES.CONTENT_MANAGER) return ROLES.CONTENT_MANAGER;
   return null;
 }
 
@@ -42,7 +43,12 @@ function getRolePriority(role: string | null | undefined) {
 
   if (normalizedRole === ROLES.SUPERADMIN) return 3;
   if (normalizedRole === ROLES.ADMIN) return 2;
-  if (normalizedRole === ROLES.MANAGER) return 1;
+  if (
+    normalizedRole === ROLES.MANAGER ||
+    normalizedRole === ROLES.CONTENT_MANAGER
+  ) {
+    return 1;
+  }
   return 0;
 }
 

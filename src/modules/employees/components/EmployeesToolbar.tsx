@@ -105,7 +105,8 @@ export function EmployeesToolbar({
           >
             <option value="">Усі ролі</option>
             <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
+            <option value="manager">Manager (legacy)</option>
+            <option value="content_manager">Контент-менеджер</option>
           </select>
         </div>
 
