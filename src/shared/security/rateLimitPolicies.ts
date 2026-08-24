@@ -15,6 +15,11 @@ export const rateLimitPolicies = {
     windowSeconds: 60,
     maxAttempts: 5,
   },
+  chairmanPublish: {
+    scope: "chairman_publish",
+    windowSeconds: 60 * 60,
+    maxAttempts: 5,
+  },
   diiaCallback: {
     scope: "diia_callback",
     windowSeconds: 60,

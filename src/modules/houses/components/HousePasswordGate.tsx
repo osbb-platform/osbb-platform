@@ -2,6 +2,7 @@
 import { houseCopy } from "@/src/shared/publicCopy/house";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { loginToHouse } from "@/src/modules/houses/actions/loginToHouse";
 import { PubButton } from "@/src/shared/ui/public";
 
@@ -49,6 +50,7 @@ export function HousePasswordGate({
     loginToHouse,
     initialState,
   );
+  const pathname = usePathname();
   const [code, setCode] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [uiMessage, setUiMessage] = useState<string | null>(null);
@@ -187,6 +189,13 @@ export function HousePasswordGate({
   }
 
   async function handleSubmit(formData: FormData) {
+    if (pathname === `/house/${slug}/chairman`) {
+      window.sessionStorage.setItem(
+        "house-chairman-return",
+        `/house/${slug}/chairman`,
+      );
+    }
+
     await formAction(formData);
   }
 
