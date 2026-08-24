@@ -16,11 +16,16 @@ export function canManageEmployees(role: string | null | undefined) {
 }
 
 export function canApproveHouseContent(role: string | null | undefined) {
-  return role === ROLES.SUPERADMIN || role === ROLES.ADMIN;
+  return role === ROLES.SUPERADMIN || role === ROLES.ADMIN ||
+    role === ROLES.MANAGER;
 }
 
 export function isManagerRole(role: string | null | undefined) {
-  return role === ROLES.MANAGER || role === ROLES.CONTENT_MANAGER;
+  return role === ROLES.MANAGER;
+}
+
+export function isContentManagerRole(role: string | null | undefined) {
+  return role === ROLES.CONTENT_MANAGER;
 }
 
 export function getRoleLabel(role: string | null | undefined) {

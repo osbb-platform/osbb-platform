@@ -62,9 +62,9 @@ function denyAllWorkspaces() {
   ) as Record<HouseWorkspaceKey, Record<WorkspaceActionKey, boolean>>;
 }
 
-const managerWorkspaces = denyAllWorkspaces();
+const contentManagerWorkspaces = denyAllWorkspaces();
 
-managerWorkspaces.announcements = {
+contentManagerWorkspaces.announcements = {
   view: true,
   create: true,
   edit: true,
@@ -77,7 +77,7 @@ managerWorkspaces.announcements = {
   delete: true,
 };
 
-managerWorkspaces.board = {
+contentManagerWorkspaces.board = {
   view: true,
   create: false,
   edit: false,
@@ -90,7 +90,7 @@ managerWorkspaces.board = {
   delete: false,
 };
 
-managerWorkspaces.information = {
+contentManagerWorkspaces.information = {
   view: true,
   create: true,
   edit: true,
@@ -103,7 +103,7 @@ managerWorkspaces.information = {
   delete: true,
 };
 
-managerWorkspaces.reports = {
+contentManagerWorkspaces.reports = {
   view: true,
   create: true,
   edit: true,
@@ -116,7 +116,7 @@ managerWorkspaces.reports = {
   delete: true,
 };
 
-managerWorkspaces.plan = {
+contentManagerWorkspaces.plan = {
   view: true,
   create: true,
   edit: true,
@@ -129,7 +129,7 @@ managerWorkspaces.plan = {
   delete: true,
 };
 
-managerWorkspaces.meetings = {
+contentManagerWorkspaces.meetings = {
   view: true,
   create: true,
   edit: true,
@@ -142,7 +142,7 @@ managerWorkspaces.meetings = {
   delete: true,
 };
 
-managerWorkspaces.polls = {
+contentManagerWorkspaces.polls = {
   view: true,
   create: true,
   edit: true,
@@ -155,7 +155,7 @@ managerWorkspaces.polls = {
   delete: true,
 };
 
-managerWorkspaces.requisites = {
+contentManagerWorkspaces.requisites = {
   view: true,
   create: false,
   edit: false,
@@ -168,7 +168,7 @@ managerWorkspaces.requisites = {
   delete: false,
 };
 
-managerWorkspaces.specialists = {
+contentManagerWorkspaces.specialists = {
   view: true,
   create: true,
   edit: true,
@@ -181,7 +181,7 @@ managerWorkspaces.specialists = {
   delete: true,
 };
 
-managerWorkspaces.debtors = {
+contentManagerWorkspaces.debtors = {
   view: true,
   create: true,
   edit: true,
@@ -194,7 +194,7 @@ managerWorkspaces.debtors = {
   delete: true,
 };
 
-managerWorkspaces.foundingDocuments = {
+contentManagerWorkspaces.foundingDocuments = {
   view: true,
   create: true,
   edit: true,
@@ -208,21 +208,21 @@ managerWorkspaces.foundingDocuments = {
 };
 
 export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
-  [ROLES.MANAGER]: {
+  [ROLES.CONTENT_MANAGER]: {
     topLevel: {
       dashboard: true,
-      districts: true,
-      houses: true,
-      apartments: true,
+      districts: false,
+      houses: false,
+      apartments: false,
       tasks: true,
       analytics: true,
       history: true,
-      employees: true,
+      employees: false,
       companyPages: false,
       profile: true,
     },
     housesRegistry: {
-      view: true,
+      view: false,
       create: false,
       edit: false,
       archive: false,
@@ -287,7 +287,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
       archiveFromDetail: false,
       restoreFromDetail: false,
     },
-    houseWorkspaces: managerWorkspaces,
+    houseWorkspaces: contentManagerWorkspaces,
     security: {
       viewPasswordsInProfile: false,
       viewHouseAccessCodes: false,
@@ -297,18 +297,160 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
     },
   },
 
-  [ROLES.CONTENT_MANAGER]: {
-    inherits: [ROLES.MANAGER],
-    topLevel: {},
-    housesRegistry: {},
-    apartmentsRegistry: {},
+  [ROLES.MANAGER]: {
+    inherits: [ROLES.CONTENT_MANAGER],
+    topLevel: {
+      districts: true,
+      houses: true,
+      apartments: true,
+      employees: false,
+      companyPages: false,
+    },
+    housesRegistry: {
+      view: true,
+      create: true,
+      edit: true,
+      archive: true,
+      restore: true,
+      delete: true,
+      openCms: true,
+      openPublicSite: true,
+      changeAccessCode: false,
+      manageCredentials: false,
+    },
+    apartmentsRegistry: {
+      view: true,
+      createManual: false,
+      importReplace: true,
+      archiveOne: false,
+      archiveAll: false,
+      restore: false,
+      edit: false,
+      export: false,
+    },
     history: {},
-    employees: {},
-    companyPages: {},
+    employees: {
+      view: false,
+      createManager: false,
+      createAdmin: false,
+      updateRole: false,
+      resendInvite: false,
+      deactivate: false,
+      delete: false,
+      editSuperadmin: false,
+      deleteSuperadmin: false,
+      inviteAdmin: false,
+    },
+    companyPages: {
+      view: false,
+      create: false,
+      edit: false,
+      publish: false,
+      archive: false,
+    },
     profile: {},
-    houseShell: {},
-    houseWorkspaces: {},
-    security: {},
+    houseShell: {
+      editMeta: true,
+      changeDistrict: false,
+      editDescriptions: true,
+      editRequisites: true,
+      changeAccessCode: false,
+      archiveFromDetail: true,
+      restoreFromDetail: true,
+    },
+    houseWorkspaces: {
+      announcements: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      board: {
+        edit: true,
+        saveDraft: true,
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      information: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      reports: {
+        create: true,
+        edit: true,
+        saveDraft: true,
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      plan: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      meetings: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      polls: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      requisites: {
+        edit: true,
+        saveDraft: true,
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      specialists: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      debtors: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+      foundingDocuments: {
+        publish: true,
+        confirm: true,
+        archive: true,
+        restore: true,
+        delete: true,
+      },
+    },
+    security: {
+      viewPasswordsInProfile: false,
+      viewHouseAccessCodes: false,
+      changeHouseAccessCodes: false,
+      inviteAdmins: false,
+      mutateSuperadmin: false,
+    },
   },
 
   [ROLES.ADMIN]: {

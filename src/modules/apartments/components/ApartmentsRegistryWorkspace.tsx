@@ -156,8 +156,16 @@ export function ApartmentsRegistryWorkspace({
   summary,
 }: ApartmentsRegistryWorkspaceProps) {
   const access = getResolvedAccess(currentUserRole);
-  const canMutateRegistry = access.apartmentsRegistry.createManual || access.apartmentsRegistry.importReplace;
+  const canCreateManual = access.apartmentsRegistry.createManual;
+  const canImportRegistry = access.apartmentsRegistry.importReplace;
+  const canArchiveOne = access.apartmentsRegistry.archiveOne;
+  const canArchiveAll = access.apartmentsRegistry.archiveAll;
   const canExport = access.apartmentsRegistry.export;
+  const canShowRegistryActions =
+    canCreateManual ||
+    canImportRegistry ||
+    canArchiveAll ||
+    canExport;
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -409,9 +417,9 @@ export function ApartmentsRegistryWorkspace({
               </p>
             </div>
 
-            {canMutateRegistry || canExport ? (
+            {canShowRegistryActions ? (
               <div className="flex flex-wrap items-center justify-end gap-2">
-                {canMutateRegistry ? (
+                {canImportRegistry ? (
                   <button
                     type="button"
                     onClick={() => setIsImportOpen(true)}
@@ -435,7 +443,7 @@ export function ApartmentsRegistryWorkspace({
                   </button>
                 ) : null}
 
-                {canMutateRegistry ? (
+                {canImportRegistry ? (
                   <button
                     type="button"
                     onClick={handleDownloadTemplate}
@@ -447,7 +455,7 @@ export function ApartmentsRegistryWorkspace({
                   </button>
                 ) : null}
 
-                {canMutateRegistry ? (
+                {canCreateManual ? (
                   <button
                     type="button"
                     onClick={() => setIsMiniBulkOpen(true)}
@@ -459,7 +467,7 @@ export function ApartmentsRegistryWorkspace({
                   </button>
                 ) : null}
 
-                {canMutateRegistry && !archived ? (
+                {canArchiveAll && !archived ? (
                   <button
                     type="button"
                     onClick={handleArchiveAll}
@@ -749,6 +757,7 @@ export function ApartmentsRegistryWorkspace({
 
                         {!archived ? (
                           <td className="px-4 py-3">
+                            {canArchiveOne ? (
                             <button
                               type="button"
                               onClick={() => {
@@ -759,6 +768,7 @@ export function ApartmentsRegistryWorkspace({
                             >
                               Архів
                             </button>
+                            ) : null}
                           </td>
                         ) : null}
                       </tr>

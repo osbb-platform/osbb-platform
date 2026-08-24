@@ -170,6 +170,7 @@ function CreateEmployeeActionForm({
                 {canCreateAdmins ? (
                   <option value={ROLES.ADMIN}>Admin</option>
                 ) : null}
+                <option value={ROLES.MANAGER}>Manager</option>
                 <option value={ROLES.CONTENT_MANAGER}>Контент-менеджер</option>
               </select>
             </div>

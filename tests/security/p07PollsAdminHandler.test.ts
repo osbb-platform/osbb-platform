@@ -30,9 +30,9 @@ describe("P07 polls admin handler", () => {
     expect(config).toContain('"polls",');
     expect(resolve).toContain('"polls",');
 
-    expect(config).toContain("managerWorkspaces.polls = {");
+    expect(config).toContain("contentManagerWorkspaces.polls = {");
     expect(config).toMatch(
-      /managerWorkspaces\.polls\s*=\s*\{[\s\S]*?view:\s*true,[\s\S]*?create:\s*true,[\s\S]*?edit:\s*true,[\s\S]*?publish:\s*false,[\s\S]*?archive:\s*false,[\s\S]*?restore:\s*false,[\s\S]*?\};/,
+      /contentManagerWorkspaces\.polls\s*=\s*\{[\s\S]*?view:\s*true,[\s\S]*?create:\s*true,[\s\S]*?edit:\s*true,[\s\S]*?publish:\s*false,[\s\S]*?archive:\s*false,[\s\S]*?restore:\s*false,[\s\S]*?\};/,
     );
 
     expect(config).toMatch(
