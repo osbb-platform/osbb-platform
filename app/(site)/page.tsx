@@ -1,3 +1,4 @@
+import { ChairmanReturnRedirect } from "@/src/modules/houses/chairman/ChairmanReturnRedirect";
 import Link from "next/link";
 
 import { Accordion } from "@/src/modules/site/components/ui/Accordion";
@@ -83,6 +84,7 @@ export default async function SiteHomePage() {
 
   return (
     <main id="main">
+      <ChairmanReturnRedirect />
       <section className="osbb-home-hero">
         <div className="osbb-container osbb-home-hero__grid">
           <div>
