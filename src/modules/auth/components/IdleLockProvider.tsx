@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
+import { logoutAdmin } from "@/src/modules/auth/actions/logoutAdmin";
 import {
   adminBodyClass,
   adminButtonDisabledClass,
@@ -286,9 +287,7 @@ export function IdleLockProvider({
   }
 
   async function handleLogout() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    window.location.assign(ROUTES.admin.login);
+    await logoutAdmin();
   }
 
   useEffect(() => {
