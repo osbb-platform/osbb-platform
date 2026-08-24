@@ -1,0 +1,35 @@
+-- P09 T3a — add content_manager enum literal.
+--
+-- This migration is intentionally additive and isolated.
+-- It MUST NOT:
+--   - update admin_memberships;
+--   - redefine manager semantics;
+--   - activate the new manager RBAC matrix.
+--
+-- Transition sequence:
+--   T3a enum add
+--   -> transitional code knows both roles while manager keeps OLD semantics
+--   -> T3b data migration manager -> content_manager
+--   -> verify count(role='manager') = 0
+--   -> second mini-deploy activates NEW manager semantics.
+--
+-- Preflight:
+--   select e.enumlabel
+--   from pg_type t join pg_enum e on e.enumtypid=t.oid
+--   where t.typname='admin_role';
+--   select count(*) from public.admin_memberships where role::text='manager';
+--
+-- Verification:
+--   select count(*)
+--   from pg_type t
+--   join pg_enum e on e.enumtypid=t.oid
+--   join pg_namespace n on n.oid=t.typnamespace
+--   where n.nspname='public'
+--     and t.typname='admin_role'
+--     and e.enumlabel='content_manager'; -- exactly 1
+--
+-- Rollback:
+--   enum literals are additive / forward-only; do not remove the value.
+
+alter type public.admin_role
+  add value if not exists 'content_manager';
