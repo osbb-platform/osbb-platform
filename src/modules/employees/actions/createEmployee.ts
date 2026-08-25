@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
+import { resolveEmployeeMutationScope } from "@/src/modules/employees/services/resolveEmployeeMutationScope";
+import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 
@@ -30,6 +32,7 @@ export async function createEmployee(
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const jobTitle = String(formData.get("jobTitle") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
+  const requestedCityId = String(formData.get("cityId") ?? "").trim();
 
   if (!fullName || !email) {
     return {
@@ -38,19 +41,21 @@ export async function createEmployee(
     };
   }
 
-  const normalizedRole =
-    role === ROLES.ADMIN ||
-    role === ROLES.MANAGER ||
-    role === ROLES.CONTENT_MANAGER
-      ? role
-      : null;
+  const scope = await resolveEmployeeMutationScope({
+    currentUser,
+    requestedCityId,
+    requestedRole: role,
+  });
 
-  if (!normalizedRole) {
+  if (scope.error || !scope.cityId || !scope.role) {
     return {
-      error: "Выбрана некорректная роль.",
+      error: scope.error ?? "Не вдалося визначити роль або місто.",
       success: null,
     };
   }
+
+  const normalizedRole = scope.role;
+  const cityId = scope.cityId;
 
   const canCreateTargetRole =
     normalizedRole === ROLES.ADMIN
@@ -99,30 +104,57 @@ export async function createEmployee(
 
   const now = new Date().toISOString();
 
-  const { error } = await supabase.from("admin_memberships").insert({
-    user_id: null,
-    invite_email: email,
-    full_name_snapshot: fullName,
-    role: normalizedRole,
-    status: "invited",
-    job_title: jobTitle || null,
-    is_active: true,
-    invited_by: currentUser.id,
-    invited_at: now,
-    activated_at: null,
-    archived_at: null,
-    last_invite_sent_at: null,
-    house_id: null,
-  });
+  const { data: createdMembership, error } = await supabase
+    .from("admin_memberships")
+    .insert({
+      user_id: null,
+      invite_email: email,
+      full_name_snapshot: fullName,
+      role: normalizedRole,
+      city_id: cityId,
+      status: "invited",
+      job_title: jobTitle || null,
+      is_active: true,
+      invited_by: currentUser.id,
+      invited_at: now,
+      activated_at: null,
+      archived_at: null,
+      last_invite_sent_at: null,
+      house_id: null,
+    })
+    .select("id, city_id, role, invite_email, full_name_snapshot")
+    .single();
 
-  if (error) {
+  if (error || !createdMembership) {
     return {
-      error: `Не удалось создать сотрудника: ${error.message}`,
+      error: `Не удалось создать сотрудника: ${error?.message ?? "Unknown error"}`,
       success: null,
     };
   }
 
+  await logPlatformChange({
+    actorAdminId: currentUser.id,
+    actorName: currentUser.fullName,
+    actorEmail: currentUser.email,
+    actorRole: currentUser.role,
+    entityType: "employee",
+    entityId: createdMembership.id,
+    entityLabel: fullName,
+    actionType: "create_employee",
+    description: `Створено співробітника «${fullName}».`,
+    metadata: {
+      sourceType: "cms",
+      sourceModule: "employees",
+      mainSectionKey: "system",
+      subSectionKey: "employees",
+      cityId: createdMembership.city_id,
+      role: createdMembership.role,
+      inviteEmail: createdMembership.invite_email ?? email,
+    },
+  });
+
   revalidatePath("/admin/employees");
+  revalidatePath("/admin/history");
 
   return {
     error: null,

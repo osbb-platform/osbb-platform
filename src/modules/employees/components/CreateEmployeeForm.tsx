@@ -12,17 +12,29 @@ const initialState = {
   success: null,
 };
 
+type CityOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 type CreateEmployeeFormProps = {
   currentRole: string | null;
+  cities: CityOption[];
+  activeCityId: string | null;
 };
 
 type CreateEmployeeActionFormProps = {
   currentRole: string | null;
+  cities: CityOption[];
+  activeCityId: string | null;
   onHandled: () => void;
 };
 
 function CreateEmployeeActionForm({
   currentRole,
+  cities,
+  activeCityId,
   onHandled,
 }: CreateEmployeeActionFormProps) {
   const [state, formAction, isPending] = useActionState(
@@ -160,6 +172,27 @@ function CreateEmployeeActionForm({
 
             <div>
               <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
+                Місто
+              </label>
+              <select
+                name="cityId"
+                defaultValue={activeCityId ?? cities[0]?.id ?? ""}
+                disabled={currentRole !== ROLES.SUPERADMIN}
+                className="w-full rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] px-4 py-3 text-[var(--cms-text)] outline-none transition focus:border-[var(--cms-border-strong)]"
+              >
+                {cities.map((city) => (
+                  <option key={city.id} value={city.id}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+              {currentRole !== ROLES.SUPERADMIN ? (
+                <input type="hidden" name="cityId" value={activeCityId ?? ""} />
+              ) : null}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[var(--cms-text)]">
                 Роль
               </label>
               <select
@@ -201,6 +234,8 @@ function CreateEmployeeActionForm({
 
 export function CreateEmployeeForm({
   currentRole,
+  cities,
+  activeCityId,
 }: CreateEmployeeFormProps) {
   const [actionKey, setActionKey] = useState(0);
 
@@ -208,6 +243,8 @@ export function CreateEmployeeForm({
     <CreateEmployeeActionForm
       key={actionKey}
       currentRole={currentRole}
+      cities={cities}
+      activeCityId={activeCityId}
       onHandled={() => setActionKey((value) => value + 1)}
     />
   );

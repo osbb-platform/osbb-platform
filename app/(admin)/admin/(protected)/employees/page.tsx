@@ -1,6 +1,9 @@
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { redirect } from "next/navigation";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
+import { getAdminCityContext } from "@/src/modules/auth/services/getAdminCityContext";
+import { getAdminCityOptions } from "@/src/modules/auth/services/getAdminCityOptions";
+import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 import { CreateEmployeeForm } from "@/src/modules/employees/components/CreateEmployeeForm";
 import { EmployeeCard } from "@/src/modules/employees/components/EmployeeCard";
 import { EmployeesToolbar } from "@/src/modules/employees/components/EmployeesToolbar";
@@ -36,16 +39,38 @@ export default async function AdminEmployeesPage({
   const selectedStatus = resolvedSearchParams.status?.trim() ?? "";
   const search = resolvedSearchParams.search?.trim() ?? "";
 
-  const employees = await getAdminEmployees({
-    role: selectedRole || null,
-    status: selectedStatus || null,
-    search: search || null,
-  });
+  const isSuperadmin = currentUser.role === ROLES.SUPERADMIN;
+
+  const [employees, cityContext, allCityOptions] = await Promise.all([
+    getAdminEmployees({
+      role: selectedRole || null,
+      status: selectedStatus || null,
+      search: search || null,
+    }),
+    getAdminCityContext(),
+    isSuperadmin ? getAdminCityOptions() : Promise.resolve([]),
+  ]);
+
+  const cities = isSuperadmin
+    ? allCityOptions
+    : cityContext
+      ? [
+          {
+            id: cityContext.cityId,
+            name: cityContext.cityName,
+            slug: cityContext.citySlug,
+          },
+        ]
+      : [];
 
   return (
     <div className="space-y-6">
       <section className="rounded-[var(--r-xl)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-6 shadow-[var(--cms-shadow-sm)]">
-        <CreateEmployeeForm currentRole={currentUser.role} />
+        <CreateEmployeeForm
+          currentRole={currentUser.role}
+          cities={cities}
+          activeCityId={cityContext?.cityId ?? null}
+        />
 
         <div className="mt-6 border-t border-[var(--cms-border)] pt-5">
           <EmployeesToolbar
@@ -67,6 +92,8 @@ export default async function AdminEmployeesPage({
               key={employee.membershipId}
               employee={employee}
               currentUserId={currentUser.id}
+              currentRole={currentUser.role}
+              cities={cities}
               access={access.employees}
             />
           ))}

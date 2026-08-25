@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
+import { canMutateEmployeeInCity } from "@/src/modules/employees/services/resolveEmployeeMutationScope";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
@@ -132,6 +133,7 @@ export async function deleteEmployee(
       invite_email,
       full_name_snapshot,
       house_id,
+      city_id,
       invited_by
     `)
     .eq("id", membershipId)
@@ -166,13 +168,14 @@ export async function deleteEmployee(
     };
   }
 
-  if (
-    currentUser?.role !== ROLES.SUPERADMIN &&
-    membership.invited_by &&
-    membership.invited_by !== currentUser?.id
-  ) {
+  const canMutateCity = await canMutateEmployeeInCity({
+    currentUser,
+    employeeCityId: membership.city_id ?? null,
+  });
+
+  if (!canMutateCity) {
     return {
-      error: "Вы можете удалять только сотрудников, которых пригласили сами.",
+      error: "Співробітник належить до іншого міста.",
       success: null,
     };
   }
@@ -250,6 +253,7 @@ export async function deleteEmployee(
       sourceModule: "employees",
       mainSectionKey: "system",
       subSectionKey: "employees",
+      cityId: membership.city_id ?? null,
       inviteEmail: inviteEmail || null,
       role: membership.role ?? null,
       status: membership.status ?? null,

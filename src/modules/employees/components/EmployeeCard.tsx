@@ -5,9 +5,18 @@ import type { ResolvedRoleAccess } from "@/src/shared/permissions/rbac.types";
 import type { AdminEmployeeRecord } from "@/src/modules/employees/services/getAdminEmployees";
 import { SendInviteButton } from "@/src/modules/employees/components/SendInviteButton";
 import { DeleteEmployeeButton } from "@/src/modules/employees/components/DeleteEmployeeButton";
+import { UpdateEmployeeForm } from "@/src/modules/employees/components/UpdateEmployeeForm";
+
+type CityOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 type EmployeeCardProps = {
   currentUserId: string | null;
+  currentRole: string | null;
+  cities: CityOption[];
   employee: AdminEmployeeRecord;
   access: ResolvedRoleAccess["employees"];
 };
@@ -100,25 +109,27 @@ function DetailCard({
 
 export function EmployeeCard({
   currentUserId,
+  currentRole,
+  cities,
   employee,
   access,
 }: EmployeeCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const isSuperadminTarget = employee.role === "superadmin";
-  const isMyEmployee =
-    employee.invitedBy && employee.invitedBy === currentUserId;
+  void currentUserId;
 
   const canSendInvite =
     employee.status === "invited" &&
-    (isSuperadminTarget ? access.editSuperadmin : access.resendInvite) &&
-    (access.editSuperadmin || isMyEmployee);
+    (isSuperadminTarget ? access.editSuperadmin : access.resendInvite);
 
-  const canDeleteEmployee =
-    (isSuperadminTarget
-      ? access.deleteSuperadmin
-      : access.delete) &&
-    (access.deleteSuperadmin || isMyEmployee);
+  const canDeleteEmployee = isSuperadminTarget
+    ? access.deleteSuperadmin
+    : access.delete;
+
+  const canUpdateEmployee =
+    !isSuperadminTarget &&
+    access.updateRole;
 
   const employeeLabel = employee.fullName ?? employee.email ?? "Співробітник";
 
@@ -222,6 +233,7 @@ export function EmployeeCard({
               </div>
 
               <div className="grid gap-3">
+                <DetailCard label="Місто" value={employee.cityName ?? "—"} />
                 <DetailCard label="Посада" value={employee.jobTitle ?? "Посада поки не вказана"} />
                 <DetailCard label="Створено" value={formatDate(employee.createdAt)} />
                 <DetailCard
@@ -236,6 +248,17 @@ export function EmployeeCard({
               </div>
 
               <div className="mt-auto space-y-3 border-t border-[var(--cms-border)] pt-5">
+                {canUpdateEmployee ? (
+                  <UpdateEmployeeForm
+                    membershipId={employee.membershipId}
+                    currentRole={currentRole}
+                    role={employee.role}
+                    cityId={employee.cityId}
+                    cities={cities}
+                    onSuccess={() => setIsDetailsOpen(false)}
+                  />
+                ) : null}
+
                 {canSendInvite ? (
                   <SendInviteButton membershipId={employee.membershipId} />
                 ) : null}

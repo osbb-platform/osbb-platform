@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
+import { canMutateEmployeeInCity } from "@/src/modules/employees/services/resolveEmployeeMutationScope";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { INTERNAL_ROUTES, ROUTES } from "@/src/shared/config/routes/routes.config";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
@@ -60,7 +61,7 @@ export async function sendEmployeeInvite(
   const { data: membership, error: membershipError } = await supabase
     .from("admin_memberships")
     .select(
-      "id, invite_email, full_name_snapshot, role, status, invited_at, user_id, last_invite_sent_at, invited_by",
+      "id, invite_email, full_name_snapshot, role, status, invited_at, user_id, last_invite_sent_at, city_id, invited_by",
     )
     .eq("id", membershipId)
     .is("house_id", null)
@@ -87,13 +88,14 @@ export async function sendEmployeeInvite(
     };
   }
 
-  if (
-    currentUser?.role !== ROLES.SUPERADMIN &&
-    membership.invited_by &&
-    membership.invited_by !== currentUser?.id
-  ) {
+  const canMutateCity = await canMutateEmployeeInCity({
+    currentUser,
+    employeeCityId: membership.city_id ?? null,
+  });
+
+  if (!canMutateCity) {
     return {
-      error: "Вы можете отправлять приглашения только своим сотрудникам.",
+      error: "Співробітник належить до іншого міста.",
       success: null,
     };
   }
@@ -166,6 +168,7 @@ export async function sendEmployeeInvite(
       sourceModule: "employees",
       mainSectionKey: "system",
       subSectionKey: "employees",
+      cityId: membership.city_id ?? null,
       inviteEmail,
       role: membership.role ?? null,
     },

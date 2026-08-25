@@ -125,7 +125,11 @@ describe("P09 T4 final role activation", () => {
     expect(createForm).toContain(
       '<option value={ROLES.CONTENT_MANAGER}>Контент-менеджер</option>',
     );
-    expect(createAction).toContain("role === ROLES.MANAGER");
-    expect(createAction).toContain("role === ROLES.CONTENT_MANAGER");
+    expect(createAction).toContain("resolveEmployeeMutationScope");
+    const employeeScope = read(
+      "src/modules/employees/services/resolveEmployeeMutationScope.ts",
+    );
+    expect(employeeScope).toContain("value === ROLES.MANAGER");
+    expect(employeeScope).toContain("value === ROLES.CONTENT_MANAGER");
   });
 });

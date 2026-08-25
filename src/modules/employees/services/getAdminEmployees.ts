@@ -8,6 +8,8 @@ export type AdminEmployeeRecord = {
   fullName: string | null;
   email: string | null;
   role: string | null;
+  cityId: string | null;
+  cityName: string | null;
   status: string | null;
   jobTitle: string | null;
   isActive: boolean;
@@ -53,6 +55,7 @@ export async function getAdminEmployees(
         id,
         user_id,
         role,
+        city_id,
         status,
         job_title,
         invite_email,
@@ -130,6 +133,11 @@ export async function getAdminEmployees(
         fullName: profile?.full_name ?? membership.full_name_snapshot ?? null,
         email: profile?.email ?? membership.invite_email ?? null,
         role: membership.role ?? null,
+        cityId: membership.city_id ?? null,
+        cityName:
+          membership.city_id === cityContext.cityId
+            ? cityContext.cityName
+            : null,
         status: membership.status ?? null,
         jobTitle: membership.job_title ?? null,
         isActive: Boolean(membership.is_active),
