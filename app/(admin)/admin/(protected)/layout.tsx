@@ -32,6 +32,11 @@ export default async function ProtectedAdminLayout({
     return <AdminCitySelectionGate cities={cities} />;
   }
 
+  const shellCurrentUser = {
+    ...currentUser,
+    activeCityName: cityContext?.cityName ?? null,
+  };
+
   const access = getResolvedAccess(currentUser.role);
   const activeTasksCount = access.topLevel.tasks
     ? await getActiveTasksCount()
@@ -41,7 +46,7 @@ export default async function ProtectedAdminLayout({
     <ToastProvider>
       <IdleLockProvider userEmail={currentUser.email}>
         <AdminShell
-          currentUser={currentUser}
+          currentUser={shellCurrentUser}
           access={access}
           activeTasksCount={activeTasksCount}
         >

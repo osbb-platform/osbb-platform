@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import {
@@ -10,7 +9,14 @@ import {
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
 
-function normalizeReturnTo(value: FormDataEntryValue | null) {
+export type SetAdminActiveCityState = {
+  error: string | null;
+  destination: "/admin" | "/admin/profile" | null;
+};
+
+function normalizeReturnTo(
+  value: FormDataEntryValue | null,
+): "/admin" | "/admin/profile" {
   const raw = String(value ?? "").trim();
 
   if (raw === "/admin/profile") {
@@ -20,7 +26,10 @@ function normalizeReturnTo(value: FormDataEntryValue | null) {
   return "/admin";
 }
 
-export async function setAdminActiveCity(formData: FormData) {
+export async function setAdminActiveCity(
+  _previousState: SetAdminActiveCityState,
+  formData: FormData,
+): Promise<SetAdminActiveCityState> {
   const currentUser = await getCurrentAdminUser();
 
   if (!currentUser || currentUser.role !== ROLES.SUPERADMIN) {
@@ -30,7 +39,10 @@ export async function setAdminActiveCity(formData: FormData) {
   const cityId = String(formData.get("cityId") ?? "").trim();
 
   if (!cityId) {
-    throw new Error("CITY_REQUIRED");
+    return {
+      error: "Оберіть місто.",
+      destination: null,
+    };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -43,7 +55,10 @@ export async function setAdminActiveCity(formData: FormData) {
     .maybeSingle();
 
   if (error || !city) {
-    throw new Error("CITY_NOT_AVAILABLE");
+    return {
+      error: "Обране місто недоступне.",
+      destination: null,
+    };
   }
 
   const cookieStore = await cookies();
@@ -56,5 +71,8 @@ export async function setAdminActiveCity(formData: FormData) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  redirect(normalizeReturnTo(formData.get("returnTo")));
+  return {
+    error: null,
+    destination: normalizeReturnTo(formData.get("returnTo")),
+  };
 }

@@ -23,6 +23,7 @@ import {
 } from "@/src/modules/cities/actions/deleteCity";
 import type { AdminCityListItem } from "@/src/modules/cities/services/getAdminCities";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { AdminActionIconButton } from "@/src/shared/ui/admin/AdminActionIconButton";
 import { slugify } from "@/src/shared/utils/slug/slugify";
 import {
   adminDangerButtonClass,
@@ -306,32 +307,60 @@ export function CitiesRegistryWorkspace({ cities }: { cities: AdminCityListItem[
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="truncate text-xl font-semibold text-[var(--cms-text)]">
-                    {city.name}
-                  </h2>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h2 className="truncate text-xl font-semibold text-[var(--cms-text)]">
+                      {city.name}
+                    </h2>
+                    <span
+                      className={`shrink-0 rounded-[var(--r-pill)] border px-2.5 py-1 text-xs font-semibold ${
+                        city.is_active
+                          ? "border-[var(--cms-success-border)] bg-[var(--cms-success-bg)] text-[var(--cms-success-text)]"
+                          : "border-[var(--cms-border)] bg-[var(--cms-pill-bg)] text-[var(--cms-text-muted)]"
+                      }`}
+                    >
+                      {city.is_active ? "Активне" : "Неактивне"}
+                    </span>
+                  </div>
+
                   <div className="mt-2 truncate text-sm text-[var(--cms-text-muted)]">
                     slug: {city.slug}
                   </div>
                 </div>
-                <button
-                  type="button"
+
+                <AdminActionIconButton
+                  icon="settings"
+                  label={`Налаштування міста ${city.name}`}
+                  tooltip="Налаштування"
+                  size="md"
                   onClick={() => setEditorMode({ type: "edit", city })}
-                  className="inline-flex h-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-3 text-sm text-[var(--cms-text)]"
-                >
-                  Налаштувати
-                </button>
+                />
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  {city.is_active ? "Активне" : "Неактивне"}
-                </span>
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Районів: {city.districts_count}
-                </span>
-                <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-                  Співробітників: {city.employees_count}
-                </span>
+              <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[var(--cms-border)] pt-4">
+                <div className="min-w-0">
+                  <div className="text-lg font-semibold text-[var(--cms-text)]">
+                    {city.houses_count}
+                  </div>
+                  <div className="truncate text-xs text-[var(--cms-text-muted)]">
+                    Будинків
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-lg font-semibold text-[var(--cms-text)]">
+                    {city.districts_count}
+                  </div>
+                  <div className="truncate text-xs text-[var(--cms-text-muted)]">
+                    Районів
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-lg font-semibold text-[var(--cms-text)]">
+                    {city.employees_count}
+                  </div>
+                  <div className="truncate text-xs text-[var(--cms-text-muted)]">
+                    Співробітників
+                  </div>
+                </div>
               </div>
             </article>
           ))}

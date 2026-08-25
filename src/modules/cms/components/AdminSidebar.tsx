@@ -11,6 +11,7 @@ import type { ComponentType, SVGProps } from "react";
 import {
   AnalyticsIcon,
   BuildingIcon,
+  CityIcon,
   CompanySiteIcon,
   DashboardIcon,
   DoorIcon,
@@ -30,8 +31,12 @@ type NavigationItem = {
   badgeLabel?: string;
 };
 
+type AdminSidebarUser = CurrentAdminUser & {
+  activeCityName?: string | null;
+};
+
 type AdminSidebarProps = {
-  currentUser: CurrentAdminUser;
+  currentUser: AdminSidebarUser;
   access: ResolvedRoleAccess;
   activeTasksCount?: number;
 };
@@ -116,7 +121,7 @@ export function AdminSidebar({
     {
       href: ROUTES.admin.cities,
       label: "Міста",
-      icon: MapPinIcon,
+      icon: CityIcon,
       visible: access.topLevel.cities,
     },
     {
@@ -208,13 +213,25 @@ export function AdminSidebar({
             isCollapsed ? "px-3" : "px-6"
           }`}
         >
-          <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
+          <div
+            className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}
+            title={isCollapsed ? currentUser.activeCityName ?? undefined : undefined}
+          >
             <AdminLogo
               variant={isCollapsed ? "mark" : "full"}
               size="sm"
               className={isCollapsed ? "" : "min-w-0"}
             />
           </div>
+
+          {!isCollapsed && currentUser.activeCityName ? (
+            <div
+              className="mt-1 truncate pl-11 text-xs font-medium text-[var(--cms-text-muted)]"
+              title={currentUser.activeCityName}
+            >
+              {currentUser.activeCityName}
+            </div>
+          ) : null}
         </div>
 
         <nav className={`min-h-0 flex-1 overflow-y-auto py-4 ${isCollapsed ? "px-3" : "px-4"}`}>

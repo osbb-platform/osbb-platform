@@ -228,6 +228,16 @@ export function DashboardIcon(props: IconProps) {
   );
 }
 
+export function CityIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" {...props}>
+      <path d="M3 21h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M5 21V9h5v12M10 21V4h6v17M16 21v-8h3v8" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M7.5 12h.01M7.5 15.5h.01M13 7.5h.01M13 11h.01M13 14.5h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function MapPinIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" {...props}>

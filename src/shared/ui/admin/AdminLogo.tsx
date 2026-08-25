@@ -86,7 +86,7 @@ export function AdminLogo({
       aria-label="OSBB Platform"
     >
       <Mark px={px} />
-      <span className="flex flex-col leading-[1.05]">
+      <span className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap leading-none">
         <span
           className={cx(
             "font-[family-name:var(--font-serif)] font-semibold tracking-[-0.01em]",
@@ -97,8 +97,8 @@ export function AdminLogo({
           OSBB
         </span>
         <span
-          className={cx("font-semibold uppercase", text.sub)}
-          style={{ fontSize: px * 0.25, letterSpacing: "0.08em" }}
+          className={cx("font-semibold", text.sub)}
+          style={{ fontSize: px * 0.3 }}
         >
           Platform
         </span>
