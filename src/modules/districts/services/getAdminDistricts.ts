@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
 
 const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 
@@ -15,7 +16,14 @@ export type AdminDistrictListItem = {
 export async function getAdminDistricts(): Promise<AdminDistrictListItem[]> {
   noStore();
 
-  const supabase = await createSupabaseServerClient();
+  const [supabase, scope] = await Promise.all([
+    createSupabaseServerClient(),
+    getAdminCityScope(),
+  ]);
+
+  if (!scope) {
+    return [];
+  }
 
   const [
     { data: districts, error: districtsError },
@@ -24,8 +32,14 @@ export async function getAdminDistricts(): Promise<AdminDistrictListItem[]> {
     supabase
       .from("districts")
       .select("id, name, slug, theme_color")
+      .eq("city_id", scope.cityId)
       .order("name", { ascending: true }),
-    supabase.from("houses").select("id, district_id"),
+    scope.districtIds.length > 0
+      ? supabase
+          .from("houses")
+          .select("id, district_id")
+          .in("district_id", scope.districtIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (districtsError) {

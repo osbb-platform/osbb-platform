@@ -7,6 +7,7 @@ import {
   inferMainSectionKey,
   inferSubSectionKey,
 } from "@/src/modules/history/services/historyLabels";
+import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
 
 export type PlatformHistoryTab = "all" | "cms" | "incoming";
 export type PlatformHistorySort = "date_desc" | "date_asc";
@@ -350,10 +351,22 @@ function applyFilters(
       | "dateFrom"
       | "dateTo"
     >
-  >,
+  > & {
+    cityId: string;
+    cityHouseIds: string[];
+    cityDistrictIds: string[];
+  },
 ) {
   const retentionStart = getRetentionStart(params.tab);
   query = query.gte("created_at", retentionStart);
+
+  const cityScopeExpressions = [
+    `metadata->>cityId.eq.${params.cityId}`,
+    ...params.cityDistrictIds.map((id) => `metadata->>districtId.eq.${id}`),
+    ...params.cityHouseIds.map((id) => `metadata->>houseId.eq.${id}`),
+  ];
+
+  query = query.or(cityScopeExpressions.join(","));
 
   if (params.tab === "cms") {
     query = query.filter("metadata->>sourceType", "eq", "cms");
@@ -578,7 +591,14 @@ export async function getPlatformChangeHistory({
       ? Math.min(Math.floor(pageSize), 50)
       : 25;
 
-  const supabase = await createSupabaseServerClient();
+  const [supabase, cityScope] = await Promise.all([
+    createSupabaseServerClient(),
+    getAdminCityScope(),
+  ]);
+
+  if (!cityScope) {
+    return { items: [], totalCount: 0, totalPages: 1, page: 1, pageSize: safePageSize };
+  }
 
   const normalizedParams = {
     tab,
@@ -590,6 +610,9 @@ export async function getPlatformChangeHistory({
     houseId: houseId.trim(),
     dateFrom: dateFrom.trim(),
     dateTo: dateTo.trim(),
+    cityId: cityScope.cityId,
+    cityHouseIds: cityScope.houseIds,
+    cityDistrictIds: cityScope.districtIds,
   };
 
   let countQuery = supabase

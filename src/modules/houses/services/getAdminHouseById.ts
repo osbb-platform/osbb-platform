@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { getAdminCityContext } from "@/src/modules/auth/services/getAdminCityContext";
 
 export type AdminHouseDetail = {
   id: string;
@@ -38,7 +39,14 @@ export async function getAdminHouseById(
 ): Promise<AdminHouseDetail | null> {
   noStore();
 
-  const supabase = await createSupabaseServerClient();
+  const [supabase, cityContext] = await Promise.all([
+    createSupabaseServerClient(),
+    getAdminCityContext(),
+  ]);
+
+  if (!cityContext) {
+    return null;
+  }
 
   const { data, error } = await supabase
     .from("houses")
@@ -84,6 +92,10 @@ export async function getAdminHouseById(
   const typedData = (data ?? null) as AdminHouseDetail | null;
 
   if (!typedData) {
+    return null;
+  }
+
+  if (!typedData.district?.city_id || typedData.district.city_id !== cityContext.cityId) {
     return null;
   }
 

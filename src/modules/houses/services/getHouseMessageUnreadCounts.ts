@@ -1,15 +1,29 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
-export async function getHouseMessageUnreadCounts() {
+export async function getHouseMessageUnreadCounts(houseIds?: string[]) {
   noStore();
 
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const safeHouseIds = houseIds
+    ? Array.from(new Set(houseIds.filter(Boolean)))
+    : null;
+
+  if (safeHouseIds && safeHouseIds.length === 0) {
+    return {} as Record<string, number>;
+  }
+
+  let query = supabase
     .from("specialist_contact_requests")
     .select("house_id")
     .eq("status", "new");
+
+  if (safeHouseIds) {
+    query = query.in("house_id", safeHouseIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     const message = error.message?.toLowerCase() ?? "";

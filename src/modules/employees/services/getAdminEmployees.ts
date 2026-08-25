@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { ROLES } from "@/src/shared/constants/roles/roles.constants";
+import { getAdminCityContext } from "@/src/modules/auth/services/getAdminCityContext";
 
 export type AdminEmployeeRecord = {
   membershipId: string;
@@ -33,7 +34,14 @@ export async function getAdminEmployees(
   params: GetAdminEmployeesParams = {},
 ): Promise<AdminEmployeeRecord[]> {
   try {
-    const supabase = await createSupabaseServerClient();
+    const [supabase, cityContext] = await Promise.all([
+      createSupabaseServerClient(),
+      getAdminCityContext(),
+    ]);
+
+    if (!cityContext) {
+      return [];
+    }
 
     const role = normalizeValue(params.role);
     const status = normalizeValue(params.status);
@@ -58,6 +66,7 @@ export async function getAdminEmployees(
         invited_by
       `)
       .is("house_id", null)
+      .eq("city_id", cityContext.cityId)
       .neq("role", ROLES.SUPERADMIN)
       .order("created_at", { ascending: false });
 

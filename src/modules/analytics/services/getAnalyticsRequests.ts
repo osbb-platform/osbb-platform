@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
 import { getSafeAnalyticsFilter } from "@/src/modules/analytics/services/date";
 import {
   EMPTY_REQUESTS,
@@ -26,7 +27,14 @@ export async function getAnalyticsRequests(
 
   try {
     const safeFilter = getSafeAnalyticsFilter(filter);
-    const supabase = await createSupabaseServerClient();
+    const [supabase, cityScope] = await Promise.all([
+      createSupabaseServerClient(),
+      getAdminCityScope(),
+    ]);
+
+    if (!cityScope || cityScope.houseIds.length === 0) {
+      return EMPTY_REQUESTS;
+    }
 
     let countQuery = supabase
       .from("house_visitor_events")
@@ -56,8 +64,12 @@ export async function getAnalyticsRequests(
       .limit(10);
 
     if (safeFilter.houseId) {
+      if (!cityScope.houseIds.includes(safeFilter.houseId)) return EMPTY_REQUESTS;
       countQuery = countQuery.eq("house_id", safeFilter.houseId);
       requestsQuery = requestsQuery.eq("house_id", safeFilter.houseId);
+    } else {
+      countQuery = countQuery.in("house_id", cityScope.houseIds);
+      requestsQuery = requestsQuery.in("house_id", cityScope.houseIds);
     }
 
     const [{ count, error: countError }, { data, error: requestsError }] =

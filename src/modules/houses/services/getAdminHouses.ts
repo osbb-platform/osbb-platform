@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getHouseMessageUnreadCounts } from "@/src/modules/houses/services/getHouseMessageUnreadCounts";
+import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
 
 export type AdminHouseMessageListItem = {
   id: string;
@@ -56,10 +57,17 @@ export type AdminHouseListItem = {
 export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
   noStore();
 
-  const supabase = await createSupabaseServerClient();
+  const [supabase, scope] = await Promise.all([
+    createSupabaseServerClient(),
+    getAdminCityScope(),
+  ]);
+
+  if (!scope || scope.houseIds.length === 0) {
+    return [];
+  }
 
   const [unreadCounts, { data, error }, { data: messageData, error: messageError }] = await Promise.all([
-    getHouseMessageUnreadCounts(),
+    getHouseMessageUnreadCounts(scope.houseIds),
     supabase
       .from("houses")
       .select(
@@ -97,6 +105,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
           )
         `,
       )
+      .in("id", scope.houseIds)
       .order("created_at", { ascending: false }),
     supabase
       .from("specialist_contact_requests")
@@ -116,6 +125,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
           "status",
         ].join(", "),
       )
+      .in("house_id", scope.houseIds)
       .order("created_at", { ascending: false })
       .limit(500),
   ]);

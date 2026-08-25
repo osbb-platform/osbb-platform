@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
 
 export type PlatformHistoryFilterOptions = {
   cmsActors: string[];
@@ -65,11 +66,25 @@ const INCOMING_SECTION_LABELS: Record<string, string> = {
 export async function getPlatformHistoryFilterOptions(): Promise<PlatformHistoryFilterOptions> {
   noStore();
 
-  const supabase = await createSupabaseServerClient();
+  const [supabase, cityScope] = await Promise.all([
+    createSupabaseServerClient(),
+    getAdminCityScope(),
+  ]);
+
+  if (!cityScope) {
+    return { cmsActors: [], cmsSections: [...CMS_SECTIONS], incomingSections: [...DEFAULT_INCOMING_SECTIONS] };
+  }
+
+  const cityScopeExpressions = [
+    `metadata->>cityId.eq.${cityScope.cityId}`,
+    ...cityScope.districtIds.map((id) => `metadata->>districtId.eq.${id}`),
+    ...cityScope.houseIds.map((id) => `metadata->>houseId.eq.${id}`),
+  ];
 
   const { data, error } = await supabase
     .from("platform_change_history")
     .select("actor_name, actor_email, actor_role, metadata")
+    .or(cityScopeExpressions.join(","))
     .order("created_at", { ascending: false })
     .limit(500);
 

@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { getAdminScopedTaskIds } from "@/src/modules/tasks/services/getAdminScopedTaskIds";
 import type { AdminTaskBoardItem } from "@/src/modules/tasks/types/tasks.types";
 
 export async function getAdminTasksBoard(): Promise<AdminTaskBoardItem[]> {
@@ -31,7 +32,15 @@ export async function getAdminTasksBoard(): Promise<AdminTaskBoardItem[]> {
       return [];
     }
 
-    const rows = tasks ?? [];
+    const candidateRows = tasks ?? [];
+    const allowedTaskIds = await getAdminScopedTaskIds(
+      candidateRows.map((item) => ({
+        id: item.id,
+        created_by: item.created_by ?? null,
+      })),
+    );
+
+    const rows = candidateRows.filter((item) => allowedTaskIds.has(item.id));
     const taskIds = rows.map((item) => item.id);
 
     const [{ data: comments }, { data: events }, { data: taskHouses }] =
