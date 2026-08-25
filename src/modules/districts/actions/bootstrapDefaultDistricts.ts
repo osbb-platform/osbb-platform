@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { resolveDistrictMutationCity } from "@/src/modules/districts/services/resolveDistrictMutationCity";
 
 type BootstrapDefaultDistrictsState = {
   error: string | null;
@@ -60,6 +61,30 @@ export async function bootstrapDefaultDistricts(
 ): Promise<BootstrapDefaultDistrictsState> {
   void _prevState;
 
+  const currentAdmin = await getCurrentAdminUser();
+
+  if (
+    !currentAdmin ||
+    (currentAdmin.role !== "admin" && currentAdmin.role !== "superadmin")
+  ) {
+    return {
+      error: "Недостатньо прав для створення базових районів.",
+      success: null,
+    };
+  }
+
+  const cityResolution = await resolveDistrictMutationCity({
+    currentAdmin,
+  });
+
+  if (cityResolution.error || !cityResolution.cityId) {
+    return {
+      error: cityResolution.error ?? "Не вдалося визначити місто.",
+      success: null,
+    };
+  }
+
+  const cityId = cityResolution.cityId;
   const supabase = await createSupabaseServerClient();
 
   const defaultSlugs = DEFAULT_DISTRICTS.map((district) => district.slug);
@@ -67,6 +92,7 @@ export async function bootstrapDefaultDistricts(
   const { data: existingDistricts, error: existingDistrictsError } = await supabase
     .from("districts")
     .select("slug")
+    .eq("city_id", cityId)
     .in("slug", defaultSlugs);
 
   if (existingDistrictsError) {
@@ -93,8 +119,13 @@ export async function bootstrapDefaultDistricts(
 
   const { data: createdDistricts, error: createError } = await supabase
     .from("districts")
-    .insert(districtsToCreate)
-    .select("id, name, slug, theme_color");
+    .insert(
+      districtsToCreate.map((district) => ({
+        ...district,
+        city_id: cityId,
+      })),
+    )
+    .select("id, city_id, name, slug, theme_color");
 
   if (createError) {
     return {
@@ -103,7 +134,6 @@ export async function bootstrapDefaultDistricts(
     };
   }
 
-  const currentAdmin = await getCurrentAdminUser();
   const actorName = getActorDisplayName({
     fullName: currentAdmin?.fullName ?? null,
     email: currentAdmin?.email ?? null,
@@ -128,6 +158,7 @@ export async function bootstrapDefaultDistricts(
         entityType: "district",
         entityId: district.id,
         entityTitle: district.name,
+        cityId: district.city_id,
         districtId: district.id,
         districtName: district.name,
         districtSlug: district.slug,

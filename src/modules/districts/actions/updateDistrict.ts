@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { slugify } from "@/src/shared/utils/slug/slugify";
+import { resolveDistrictMutationCity } from "@/src/modules/districts/services/resolveDistrictMutationCity";
 
 export type UpdateDistrictState = {
   error: string | null;
@@ -28,13 +29,15 @@ function getActorDisplayName(params: {
 async function resolveUniqueDistrictSlug(params: {
   baseSlug: string;
   districtId: string;
+  cityId: string;
 }) {
   const supabase = await createSupabaseServerClient();
-  const { baseSlug, districtId } = params;
+  const { baseSlug, districtId, cityId } = params;
 
   const { data, error } = await supabase
     .from("districts")
     .select("id, slug")
+    .eq("city_id", cityId)
     .ilike("slug", `${baseSlug}%`);
 
   if (error) {
@@ -76,6 +79,21 @@ export async function updateDistrict(
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const themeColor = normalizeHexColor(String(formData.get("themeColor") ?? ""));
+  const requestedCityId = String(formData.get("cityId") ?? "").trim();
+
+  const cityResolution = await resolveDistrictMutationCity({
+    currentAdmin,
+    requestedCityId,
+  });
+
+  if (cityResolution.error || !cityResolution.cityId) {
+    return {
+      error: cityResolution.error ?? "Не вдалося визначити місто району.",
+      success: null,
+    };
+  }
+
+  const cityId = cityResolution.cityId;
 
   if (!id || !name || !themeColor) {
     return {
@@ -88,7 +106,7 @@ export async function updateDistrict(
 
   const { data: existingDistrict, error: existingDistrictError } = await supabase
     .from("districts")
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
     .eq("id", id)
     .maybeSingle();
 
@@ -128,6 +146,7 @@ export async function updateDistrict(
     slug = await resolveUniqueDistrictSlug({
       baseSlug,
       districtId: id,
+      cityId,
     });
   } catch (error) {
     return {
@@ -142,12 +161,13 @@ export async function updateDistrict(
   const { data: updatedDistrict, error: updateError } = await supabase
     .from("districts")
     .update({
+      city_id: cityId,
       name,
       slug,
       theme_color: themeColor,
     })
     .eq("id", id)
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
     .maybeSingle();
 
   if (updateError) {
@@ -188,10 +208,12 @@ export async function updateDistrict(
       entityType: "district",
       entityId: updatedDistrict.id,
       entityTitle: updatedDistrict.name,
+      cityId: updatedDistrict.city_id,
       districtId: updatedDistrict.id,
       districtName: updatedDistrict.name,
       districtSlug: updatedDistrict.slug,
       themeColor: updatedDistrict.theme_color,
+      previousCityId: existingDistrict.city_id,
       previousName: existingDistrict.name,
       previousSlug: existingDistrict.slug,
       previousThemeColor: existingDistrict.theme_color,

@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { slugify } from "@/src/shared/utils/slug/slugify";
+import { resolveDistrictMutationCity } from "@/src/modules/districts/services/resolveDistrictMutationCity";
 
 export type CreateDistrictState = {
   error: string | null;
@@ -25,13 +26,15 @@ function getActorDisplayName(params: {
 
 async function resolveUniqueDistrictSlug(params: {
   baseSlug: string;
+  cityId: string;
 }) {
   const supabase = await createSupabaseServerClient();
-  const { baseSlug } = params;
+  const { baseSlug, cityId } = params;
 
   const { data, error } = await supabase
     .from("districts")
     .select("id, slug")
+    .eq("city_id", cityId)
     .ilike("slug", `${baseSlug}%`);
 
   if (error) {
@@ -68,6 +71,21 @@ export async function createDistrict(
 
   const name = String(formData.get("name") ?? "").trim();
   const themeColor = normalizeHexColor(String(formData.get("themeColor") ?? ""));
+  const requestedCityId = String(formData.get("cityId") ?? "").trim();
+
+  const cityResolution = await resolveDistrictMutationCity({
+    currentAdmin,
+    requestedCityId,
+  });
+
+  if (cityResolution.error || !cityResolution.cityId) {
+    return {
+      error: cityResolution.error ?? "Не вдалося визначити місто району.",
+      success: null,
+    };
+  }
+
+  const cityId = cityResolution.cityId;
 
   if (!name || !themeColor) {
     return { error: "Заповніть назву та виберіть колір району.", success: null };
@@ -84,7 +102,7 @@ export async function createDistrict(
   let slug = baseSlug;
 
   try {
-    slug = await resolveUniqueDistrictSlug({ baseSlug });
+    slug = await resolveUniqueDistrictSlug({ baseSlug, cityId });
   } catch (error) {
     return {
       error:
@@ -98,11 +116,12 @@ export async function createDistrict(
   const { data: createdDistrict, error } = await supabase
     .from("districts")
     .insert({
+      city_id: cityId,
       name,
       slug,
       theme_color: themeColor,
     })
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
     .single();
 
   if (error) {
@@ -132,6 +151,7 @@ export async function createDistrict(
       entityType: "district",
       entityId: createdDistrict.id,
       entityTitle: createdDistrict.name,
+      cityId: createdDistrict.city_id,
       districtId: createdDistrict.id,
       districtName: createdDistrict.name,
       districtSlug: createdDistrict.slug,

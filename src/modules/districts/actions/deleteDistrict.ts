@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { resolveDistrictMutationCity } from "@/src/modules/districts/services/resolveDistrictMutationCity";
 
 export type DeleteDistrictState = {
   error: string | null;
@@ -21,12 +22,13 @@ function getActorDisplayName(params: {
   return params.fullName ?? params.email ?? "Адміністратор";
 }
 
-async function ensureDefaultDistrict() {
+async function ensureDefaultDistrict(cityId: string) {
   const supabase = await createSupabaseServerClient();
 
   const { data: existingDistrict, error: existingDistrictError } = await supabase
     .from("districts")
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
+    .eq("city_id", cityId)
     .eq("slug", DEFAULT_DISTRICT_SLUG)
     .maybeSingle();
 
@@ -43,11 +45,12 @@ async function ensureDefaultDistrict() {
   const { data: createdDistrict, error: createError } = await supabase
     .from("districts")
     .insert({
+      city_id: cityId,
       name: DEFAULT_DISTRICT_NAME,
       slug: DEFAULT_DISTRICT_SLUG,
       theme_color: DEFAULT_DISTRICT_COLOR,
     })
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
     .single();
 
   if (createError || !createdDistrict) {
@@ -73,6 +76,7 @@ export async function deleteDistrict(
   }
 
   const districtId = String(formData.get("id") ?? "").trim();
+  const requestedCityId = String(formData.get("cityId") ?? "").trim();
 
   if (!districtId) {
     return {
@@ -85,7 +89,7 @@ export async function deleteDistrict(
 
   const { data: district, error: districtError } = await supabase
     .from("districts")
-    .select("id, name, slug, theme_color")
+    .select("id, city_id, name, slug, theme_color")
     .eq("id", districtId)
     .maybeSingle();
 
@@ -103,6 +107,24 @@ export async function deleteDistrict(
     };
   }
 
+  const cityResolution = await resolveDistrictMutationCity({
+    currentAdmin,
+    requestedCityId: requestedCityId || district.city_id,
+  });
+
+  if (
+    cityResolution.error ||
+    !cityResolution.cityId ||
+    cityResolution.cityId !== district.city_id
+  ) {
+    return {
+      error:
+        cityResolution.error ??
+        "Недостатньо прав для видалення району іншого міста.",
+      success: null,
+    };
+  }
+
   if (district.slug === DEFAULT_DISTRICT_SLUG) {
     return {
       error: 'Системний район "Без району" не можна видалити.',
@@ -113,7 +135,7 @@ export async function deleteDistrict(
   let defaultDistrict;
 
   try {
-    defaultDistrict = await ensureDefaultDistrict();
+    defaultDistrict = await ensureDefaultDistrict(district.city_id);
   } catch (error) {
     return {
       error:
@@ -199,6 +221,7 @@ export async function deleteDistrict(
       entityType: "district",
       entityId: district.id,
       entityTitle: district.name,
+      cityId: district.city_id,
       districtId: district.id,
       districtName: district.name,
       districtSlug: district.slug,
