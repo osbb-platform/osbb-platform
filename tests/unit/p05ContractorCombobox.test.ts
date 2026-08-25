@@ -9,10 +9,6 @@ const workspace = readFileSync(
   "src/modules/houses/components/HousePlanWorkspace.tsx",
   "utf8",
 );
-const migration = readFileSync(
-  "supabase/migrations/202607231410_create_contractors_directory.sql",
-  "utf8",
-);
 
 describe("P05 T3.2 contractor combobox", () => {
   it("supports searchable frequent contractors and arbitrary text", () => {
@@ -24,18 +20,16 @@ describe("P05 T3.2 contractor combobox", () => {
     );
   });
 
-  it("creates a new frequent contractor through RLS-protected Supabase", () => {
-    expect(combobox).toContain('.from("contractors")');
-    expect(combobox).toContain(".insert({");
-    expect(combobox).toContain("normalized_name: normalizeName(name)");
-    expect(combobox).toContain('insertError?.code === "23505"');
+  it("creates a new frequent contractor through the trusted server action", () => {
+    expect(combobox).toContain("createAdminContractor");
+    expect(combobox).not.toContain("createSupabaseBrowserClient");
+    expect(combobox).not.toContain('.from("contractors")');
   });
 
-  it("deactivates instead of deleting", () => {
-    expect(combobox).toContain(".update({ is_active: false })");
+  it("deactivates through the trusted server action instead of deleting", () => {
+    expect(combobox).toContain("deactivateAdminContractor");
     expect(combobox).not.toContain(".delete()");
     expect(combobox).toContain("Історичні завдання та їх текст не");
-    expect(migration).toContain("-- No DELETE policy by design:");
   });
 
   it("uses the final component instead of native datalist", () => {

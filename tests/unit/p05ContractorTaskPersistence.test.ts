@@ -9,10 +9,12 @@ const contractorsService = readFileSync("src/modules/houses/services/getAdminCon
 const workspace = readFileSync("src/modules/houses/components/HousePlanWorkspace.tsx", "utf8");
 
 describe("P05 T3.1 contractor task persistence", () => {
-  it("loads only active global frequent contractors", () => {
+  it("loads active global plus current-city frequent contractors", () => {
     expect(contractorsService).toContain('.from("contractors")');
     expect(contractorsService).toContain('.eq("is_active", true)');
-    expect(contractorsService).toContain('.is("city_id", null)');
+    expect(contractorsService).toContain(
+      ".or(`city_id.is.null,city_id.eq.${cityContext.cityId}`)",
+    );
   });
   it("adds nullable contractorId to plan payloads", () => {
     expect(types).toContain("contractor_id: string | null");

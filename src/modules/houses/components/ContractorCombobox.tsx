@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 
-import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import type { AdminContractorOption } from "@/src/modules/houses/services/getAdminContractors";
+import { createAdminContractor } from "@/src/modules/houses/actions/createAdminContractor";
+import { deactivateAdminContractor } from "@/src/modules/houses/actions/deactivateAdminContractor";
 import {
   adminButtonClasses,
   adminInputClass,
@@ -84,31 +85,20 @@ export function ContractorCombobox({
     setBusy(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-    const { data, error: insertError } = await supabase
-      .from("contractors")
-      .insert({
-        name,
-        normalized_name: normalizeName(name),
-        city_id: null,
-        is_active: true,
-      })
-      .select("id, name")
-      .single();
+    const result = await createAdminContractor(name);
 
-    if (insertError || !data) {
-      if (insertError?.code === "23505") {
-        setError("Такий підрядник уже є у списку частих.");
-      } else {
-        setError(insertError?.message ?? "Не вдалося додати підрядника.");
-      }
+    if (result.error || !result.data) {
+      setError(result.error ?? "Не вдалося додати підрядника.");
       setBusy(false);
       return;
     }
 
-    const created = {
-      id: data.id as string,
-      name: data.name as string,
+    const created: AdminContractorOption = {
+      id: result.data.id,
+      name: result.data.name,
+      cityId: result.data.cityId,
+      isGlobal: false,
+      canDeactivate: false,
     };
 
     setItems((current) =>
@@ -126,14 +116,10 @@ export function ContractorCombobox({
     setBusy(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: updateError } = await supabase
-      .from("contractors")
-      .update({ is_active: false })
-      .eq("id", pendingDeactivate.id);
+    const result = await deactivateAdminContractor(pendingDeactivate.id);
 
-    if (updateError) {
-      setError(updateError.message);
+    if (result.error) {
+      setError(result.error);
       setBusy(false);
       return;
     }
@@ -197,15 +183,17 @@ export function ContractorCombobox({
                   >
                     <span className="block truncate">{item.name}</span>
                   </button>
-                  <button
-                    type="button"
-                    className="shrink-0 px-3 py-2 text-xs text-[var(--cms-danger-text)]"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => setPendingDeactivate(item)}
-                    aria-label={`Деактивувати ${item.name}`}
-                  >
-                    Деактивувати
-                  </button>
+                  {item.canDeactivate ? (
+                    <button
+                      type="button"
+                      className="shrink-0 px-3 py-2 text-xs text-[var(--cms-danger-text)]"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setPendingDeactivate(item)}
+                      aria-label={`Деактивувати ${item.name}`}
+                    >
+                      Деактивувати
+                    </button>
+                  ) : null}
                 </div>
               ))}
             </div>
