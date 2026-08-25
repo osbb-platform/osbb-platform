@@ -114,6 +114,12 @@ export function AdminSidebar({
       visible: access.topLevel.dashboard,
     },
     {
+      href: ROUTES.admin.cities,
+      label: "Міста",
+      icon: MapPinIcon,
+      visible: access.topLevel.cities,
+    },
+    {
       href: ROUTES.admin.districts,
       label: "Райони",
       icon: MapPinIcon,

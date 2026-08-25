@@ -2,6 +2,7 @@ import type { AdminRole } from "@/src/shared/constants/roles/roles.constants";
 
 export type CmsTopLevelSectionKey =
   | "dashboard"
+  | "cities"
   | "districts"
   | "houses"
   | "apartments"

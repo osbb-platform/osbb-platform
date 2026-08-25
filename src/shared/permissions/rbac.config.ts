@@ -8,6 +8,7 @@ import type {
 
 const ALL_TOP_LEVEL_KEYS: CmsTopLevelSectionKey[] = [
   "dashboard",
+  "cities",
   "districts",
   "houses",
   "apartments",
@@ -211,6 +212,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
   [ROLES.CONTENT_MANAGER]: {
     topLevel: {
       dashboard: true,
+      cities: false,
       districts: false,
       houses: false,
       apartments: false,
@@ -300,6 +302,7 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
   [ROLES.MANAGER]: {
     inherits: [ROLES.CONTENT_MANAGER],
     topLevel: {
+      cities: false,
       districts: true,
       houses: true,
       apartments: true,
@@ -455,9 +458,12 @@ export const RBAC_ROLE_CONFIG: Record<AdminRole, RbacRoleDefinition> = {
 
   [ROLES.ADMIN]: {
     inherits: [ROLES.MANAGER],
-    topLevel: Object.fromEntries(
-      ALL_TOP_LEVEL_KEYS.map((key) => [key, true]),
-    ),
+    topLevel: {
+      ...Object.fromEntries(
+        ALL_TOP_LEVEL_KEYS.map((key) => [key, true]),
+      ),
+      cities: false,
+    },
     housesRegistry: {
       create: true,
       edit: true,

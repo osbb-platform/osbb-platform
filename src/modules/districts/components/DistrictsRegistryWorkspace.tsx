@@ -35,6 +35,7 @@ import {
 
 type DistrictListItem = {
   id: string;
+  city_id: string;
   name: string;
   slug: string;
   theme_color: string;
@@ -42,8 +43,16 @@ type DistrictListItem = {
   is_system_default: boolean;
 };
 
+type CityOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 type Props = {
   districts: DistrictListItem[];
+  cities: CityOption[];
+  activeCityId: string | null;
   currentUserRole: string | null;
 };
 
@@ -97,15 +106,24 @@ function DistrictFormCard({
   district,
   onCancel,
   canManageDistricts,
+  cities,
+  activeCityId,
+  canSelectCity,
 }: {
   mode: "create" | "edit";
   district?: DistrictListItem;
   onCancel: () => void;
   canManageDistricts: boolean;
+  cities: CityOption[];
+  activeCityId: string | null;
+  canSelectCity: boolean;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLDivElement | null>(null);
   const [name, setName] = useState(district?.name ?? "");
+  const [cityId, setCityId] = useState(
+    district?.city_id ?? activeCityId ?? cities[0]?.id ?? "",
+  );
   const [themeColor, setThemeColor] = useState(
     district?.theme_color ?? "#7C3AED",
   );
@@ -212,6 +230,28 @@ function DistrictFormCard({
         {mode === "edit" && district ? (
           <input type="hidden" name="id" value={district.id} />
         ) : null}
+
+        <div>
+          <label className={`mb-2 block ${adminTextLabelClass}`}>
+            Місто
+          </label>
+          <select
+            name="cityId"
+            value={cityId}
+            onChange={(event) => setCityId(event.target.value)}
+            disabled={!canSelectCity}
+            className={adminInputClass}
+          >
+            {cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}
+              </option>
+            ))}
+          </select>
+          {!canSelectCity ? (
+            <input type="hidden" name="cityId" value={cityId} />
+          ) : null}
+        </div>
 
         <div>
           <label className={`mb-2 block ${adminTextLabelClass}`}>
@@ -323,6 +363,7 @@ function DistrictFormCard({
         <div className="mt-8 flex justify-end">
           <form ref={deleteFormRef} action={deleteAction} onSubmit={handleDeleteSubmit}>
             <input type="hidden" name="id" value={district.id} />
+            <input type="hidden" name="cityId" value={district.city_id} />
             <button
               type="submit"
               disabled={isDeletePending}
@@ -356,11 +397,14 @@ function DistrictFormCard({
 
 export function DistrictsRegistryWorkspace({
   districts,
+  cities,
+  activeCityId,
   currentUserRole,
 }: Props) {
   const canManageDistricts =
     currentUserRole === ROLES.ADMIN ||
     currentUserRole === ROLES.SUPERADMIN;
+  const canSelectCity = currentUserRole === ROLES.SUPERADMIN;
   const [editorMode, setEditorMode] = useState<DistrictEditorMode>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useState("name_asc");
@@ -483,6 +527,9 @@ export function DistrictsRegistryWorkspace({
           mode="create"
           onCancel={closeEditor}
           canManageDistricts={canManageDistricts}
+          cities={cities}
+          activeCityId={activeCityId}
+          canSelectCity={canSelectCity}
         />
       ) : null}
 
@@ -492,6 +539,9 @@ export function DistrictsRegistryWorkspace({
           district={editorMode.district}
           onCancel={closeEditor}
           canManageDistricts={canManageDistricts}
+          cities={cities}
+          activeCityId={activeCityId}
+          canSelectCity={canSelectCity}
         />
       ) : null}
 

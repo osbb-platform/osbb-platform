@@ -6,6 +6,7 @@ const DEFAULT_DISTRICT_SLUG = "bez-rayona";
 
 export type AdminDistrictListItem = {
   id: string;
+  city_id: string;
   name: string;
   slug: string;
   theme_color: string;
@@ -31,7 +32,7 @@ export async function getAdminDistricts(): Promise<AdminDistrictListItem[]> {
   ] = await Promise.all([
     supabase
       .from("districts")
-      .select("id, name, slug, theme_color")
+      .select("id, city_id, name, slug, theme_color")
       .eq("city_id", scope.cityId)
       .order("name", { ascending: true }),
     scope.districtIds.length > 0
