@@ -159,11 +159,11 @@ function normalizeArchiveYear(value: unknown) {
   return PLAN_ARCHIVE_YEAR_END;
 }
 
-function createEmptyTask(): PlanTask {
-  const now = new Date().toISOString();
+function createEmptyTask(seed?: { id: string; now: string }): PlanTask {
+  const now = seed?.now ?? new Date().toISOString();
 
   return {
-    id: createTaskId(),
+    id: seed?.id ?? createTaskId(),
     title: "",
     description: "",
     status: "draft",
@@ -374,7 +374,12 @@ export function HousePlanWorkspace({
   const [visibleCount, setVisibleCount] = useState(20);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<PlanTask>(createEmptyTask());
+  const [draft, setDraft] = useState<PlanTask>(() =>
+    createEmptyTask({
+      id: "00000000-0000-4000-8000-000000000000",
+      now: "1970-01-01T00:00:00.000Z",
+    }),
+  );
   const [submitIntent, setSubmitIntent] = useState<SubmitIntent>("save");
   const [confirmAction, setConfirmAction] = useState<"publish" | "delete" | "archive" | null>(null);
   const [draftPublishStatus, setDraftPublishStatus] = useState<PublishablePlanTaskStatus>("planned");

@@ -53,6 +53,23 @@ async function ensureDraftTask(
   entityId: string,
   title: string,
 ): Promise<void> {
+  if (entityType === "house_plan_task") {
+    const { error } = await ctx.supabase.rpc(
+      "ensure_house_plan_draft_approval_task",
+      {
+        p_house_id: ctx.house.id,
+        p_plan_task_id: entityId,
+        p_title: title,
+      },
+    );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return;
+  }
+
   const existingTasks = await findActiveDraftTasks(ctx, entityType, entityId);
 
   if (existingTasks.length > 0) {
