@@ -1,6 +1,5 @@
 "use client";
 
-import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import {
   useCallback,
   useEffect,
