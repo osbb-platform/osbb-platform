@@ -43,6 +43,18 @@ export function useAdminContentCommand() {
         if (!result.ok) {
           setLastError(result.error);
           options.onError?.(result.error);
+
+          // STALE_CONTENT and INTERNAL can arrive after the server has already
+          // mutated authoritative data. Refresh immediately so server props,
+          // including lock_version, replace any stale client snapshot.
+          // Never blind-retry the same command payload here.
+          if (
+            result.code === "STALE_CONTENT" ||
+            result.code === "INTERNAL"
+          ) {
+            router.refresh();
+          }
+
           toast({
             tone: "error",
             title:
@@ -52,13 +64,7 @@ export function useAdminContentCommand() {
             description: result.code
               ? (errorMessages[result.code] ?? result.error)
               : result.error,
-            action:
-              result.code === "STALE_CONTENT"
-                ? {
-                    label: "Оновити дані",
-                    onClick: () => router.refresh(),
-                  }
-                : undefined,
+            action: undefined,
           });
           resolve(null);
           return;

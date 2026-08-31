@@ -1,7 +1,7 @@
 import type { AdminCommand } from "./types/commands";
 import type { ContentHandler } from "./types/handler";
 import type { ExecResult, HandlerContext } from "./types/pipeline";
-import { err, ok } from "./types/result";
+import { ok } from "./types/result";
 import type { Result } from "./types/result";
 import { cleanupFiles, removeUntrackedFiles, trackFiles } from "./services/fileService";
 import { writeHistory } from "./services/historyService";
@@ -36,7 +36,15 @@ export async function runPipeline(args: {
 
   if (execResult.tasks) {
     const taskResult = await applyTaskOps(ctx, execResult.tasks);
-    if (!taskResult.ok) return taskResult;
+
+    if (!taskResult.ok) {
+      console.error("Command pipeline task side effect failed after domain mutation", {
+        houseId: ctx.house.id,
+        commandType: args.command.type,
+        code: taskResult.code ?? null,
+        error: taskResult.error,
+      });
+    }
   }
 
   try {
@@ -47,8 +55,11 @@ export async function runPipeline(args: {
       extraPaths: execResult.extraRevalidatePaths,
     });
   } catch (error) {
-    console.error("revalidateForCommand failed:", error);
-    return err("Не вдалося оновити кеш сторінок.", "INTERNAL");
+    console.error("Command pipeline cache revalidate failed after domain mutation", {
+      houseId: ctx.house.id,
+      commandType: args.command.type,
+      error,
+    });
   }
 
   await writeHistory(ctx.supabase, {
