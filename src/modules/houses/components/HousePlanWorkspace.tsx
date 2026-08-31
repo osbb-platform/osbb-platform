@@ -417,6 +417,23 @@ export function HousePlanWorkspace({
     return authoritativeTasks;
   }
 
+  async function recoverFromInternalContent(taskId: string) {
+    const authoritativeTasks = await refreshAuthoritativeTasks();
+    const authoritativeTask = authoritativeTasks.find((item) => item.id === taskId);
+
+    if (authoritativeTask) {
+      setDraft(authoritativeTask);
+    }
+
+    setSelectedImageFiles([]);
+    setSelectedPdfFiles([]);
+    setRemovedImageIds([]);
+    setRemovedDocumentIds([]);
+    setPdfError(null);
+    setStaleDraftBackup(null);
+    setPanelDirty(false);
+  }
+
   async function recoverFromStaleContent(taskId: string) {
     const localDraft = draft;
     const authoritativePlan = await refreshAdminHousePlanSnapshot({ houseId });
@@ -930,10 +947,15 @@ export function HousePlanWorkspace({
 
     const activeTaskId = selectedTaskId ?? draft.id;
     const fieldKeysToRemove = [...removedImageIds, ...removedDocumentIds];
-    const staleRecoveryOptions = {
+    const contentRecoveryOptions = {
       onError: (_error: string, code?: string) => {
         if (code === "STALE_CONTENT") {
           void recoverFromStaleContent(activeTaskId);
+          return;
+        }
+
+        if (code === "INTERNAL") {
+          void recoverFromInternalContent(activeTaskId);
         }
       },
     };
@@ -1097,7 +1119,7 @@ export function HousePlanWorkspace({
           ...taskPayload(draft),
         },
       },
-      staleRecoveryOptions,
+      contentRecoveryOptions,
     );
 
     if (!updated) return;
@@ -1115,7 +1137,7 @@ export function HousePlanWorkspace({
             fieldKeys: fieldKeysToRemove,
           },
         },
-        staleRecoveryOptions,
+        contentRecoveryOptions,
       );
 
       if (!removed) return;
@@ -1140,7 +1162,7 @@ export function HousePlanWorkspace({
             files: updateUploadedFiles,
           },
         },
-        staleRecoveryOptions,
+        contentRecoveryOptions,
       );
 
       if (!added) return;

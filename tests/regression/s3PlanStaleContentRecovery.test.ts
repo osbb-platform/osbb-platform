@@ -71,7 +71,7 @@ describe("S3-T3 STALE_CONTENT recovery", () => {
 
     const block = workspace.slice(submitStart, submitEnd);
 
-    expect(block).toContain("const staleRecoveryOptions = {");
+    expect(block).toContain("const contentRecoveryOptions = {");
     expect(block).toContain('if (code === "STALE_CONTENT")');
     expect(block).toContain(
       "void recoverFromStaleContent(activeTaskId)",
@@ -82,7 +82,7 @@ describe("S3-T3 STALE_CONTENT recovery", () => {
     expect(block).toContain('type: "plan.addFiles"');
 
     const optionUses =
-      block.match(/staleRecoveryOptions/g)?.length ?? 0;
+      block.match(/contentRecoveryOptions/g)?.length ?? 0;
 
     expect(optionUses).toBeGreaterThanOrEqual(4);
   });
