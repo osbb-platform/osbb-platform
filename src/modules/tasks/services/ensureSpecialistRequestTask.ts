@@ -1,4 +1,6 @@
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import "server-only";
+
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 
 type EnsureSpecialistRequestTaskParams = {
   requestId: string;
@@ -11,65 +13,26 @@ type EnsureSpecialistRequestTaskParams = {
 export async function ensureSpecialistRequestTask(
   params: EnsureSpecialistRequestTaskParams,
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
-  const { data: existingLink } = await supabase
-    .from("platform_task_links")
-    .select("task_id")
-    .eq("link_type", "request")
-    .eq("entity_type", "specialist_contact_request")
-    .eq("entity_id", params.requestId)
-    .maybeSingle();
+  const { error } = await supabase.rpc("create_house_scoped_platform_task", {
+    p_house_id: params.houseId,
+    p_task_type: "specialist_request",
+    p_title: `Заявка до спеціаліста: ${params.specialistLabel}`,
+    p_description: `${params.requesterName}, квартира ${params.apartment}. Потрібен зворотний зв’язок зі спеціалістом.`,
+    p_priority: "medium",
+    p_assigned_to: null,
+    p_deadline_at: null,
+    p_link_type: "specialist_request",
+    p_entity_type: "specialist_contact_request",
+    p_entity_id: params.requestId,
+    p_created_by: null,
+    p_is_manual: false,
+  });
 
-  if (existingLink?.task_id) {
-    return;
-  }
-
-  const title = `Заявка до спеціаліста: ${params.specialistLabel}`;
-
-  const { data: task, error } = await supabase
-    .from("platform_tasks")
-    .insert({
-      title,
-      description:
-        `${params.requesterName}, квартира ${params.apartment}. Потрібен зворотний зв’язок зі спеціалістом.`,
-      created_by: null,
-      assigned_to: null,
-      task_type: "specialist_request",
-      status: "todo",
-      priority: "medium",
-      is_manual: false,
-      metadata: {
-        sourceType: "specialist_contact_request",
-        sourceId: params.requestId,
-      },
-    })
-    .select("id")
-    .single();
-
-  if (error || !task) {
+  if (error) {
     throw new Error(
-      error?.message ?? "Не вдалося створити задачу заявки до спеціаліста.",
+      error.message ?? "Не вдалося створити задачу заявки до спеціаліста.",
     );
   }
-
-  await supabase.from("platform_task_links").insert({
-    task_id: task.id,
-    link_type: "request",
-    entity_type: "specialist_contact_request",
-    entity_id: params.requestId,
-  });
-
-  await supabase.from("platform_task_houses").insert({
-    task_id: task.id,
-    house_id: params.houseId,
-  });
-
-  await supabase.from("platform_task_events").insert({
-    task_id: task.id,
-    actor_id: null,
-    event_type: "create",
-    action_label: "Автоматичне створення задачі",
-    after_value: "specialist_request",
-  });
 }

@@ -1,4 +1,6 @@
-import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import "server-only";
+
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 
 type EnsureResidentRequestTaskParams = {
   requestId: string;
@@ -11,62 +13,26 @@ type EnsureResidentRequestTaskParams = {
 export async function ensureResidentRequestTask(
   params: EnsureResidentRequestTaskParams,
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
-  const { data: existingLink } = await supabase
-    .from("platform_task_links")
-    .select("task_id")
-    .eq("link_type", "resident_request")
-    .eq("entity_type", "footer_house_message")
-    .eq("entity_id", params.requestId)
-    .maybeSingle();
+  const { error } = await supabase.rpc("create_house_scoped_platform_task", {
+    p_house_id: params.houseId,
+    p_task_type: "resident_request",
+    p_title: `Звернення мешканця: ${params.category}`,
+    p_description: `${params.requesterName}, квартира ${params.apartment}. Потрібно опрацювати звернення мешканця.`,
+    p_priority: "medium",
+    p_assigned_to: null,
+    p_deadline_at: null,
+    p_link_type: "resident_request",
+    p_entity_type: "footer_house_message",
+    p_entity_id: params.requestId,
+    p_created_by: null,
+    p_is_manual: false,
+  });
 
-  if (existingLink?.task_id) {
-    return;
-  }
-
-  const { data: task, error } = await supabase
-    .from("platform_tasks")
-    .insert({
-      title: `Звернення мешканця: ${params.category}`,
-      description: `${params.requesterName}, квартира ${params.apartment}. Потрібно опрацювати звернення мешканця.`,
-      created_by: null,
-      assigned_to: null,
-      task_type: "resident_request",
-      status: "todo",
-      priority: "medium",
-      is_manual: false,
-      metadata: {
-        sourceType: "footer_house_message",
-        sourceId: params.requestId,
-      },
-    })
-    .select("id")
-    .single();
-
-  if (error || !task) {
+  if (error) {
     throw new Error(
-      error?.message ?? "Не вдалося створити задачу звернення мешканця.",
+      error.message ?? "Не вдалося створити задачу звернення мешканця.",
     );
   }
-
-  await supabase.from("platform_task_links").insert({
-    task_id: task.id,
-    link_type: "resident_request",
-    entity_type: "footer_house_message",
-    entity_id: params.requestId,
-  });
-
-  await supabase.from("platform_task_houses").insert({
-    task_id: task.id,
-    house_id: params.houseId,
-  });
-
-  await supabase.from("platform_task_events").insert({
-    task_id: task.id,
-    actor_id: null,
-    event_type: "create",
-    action_label: "Автоматичне створення задачі",
-    after_value: "resident_request",
-  });
 }

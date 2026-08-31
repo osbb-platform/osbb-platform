@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { createSupabaseAdminClient } from "../../../integrations/supabase/server/admin";
 import {
   assertChairmanContext,
   CHAIRMAN_ACTOR_NAME,
@@ -164,19 +165,42 @@ export async function createChairmanAnnouncement(
           });
         }
 
-        const { error: taskError } = await supabase.from("platform_tasks").insert({
-          title: "Перевірити оголошення голови",
-          description: `Голова ОСББ опублікував оголошення «${announcement.title}».`,
-          status: "open",
-          priority: "normal",
-          created_by: null,
-        });
+        try {
+          const taskSupabase = createSupabaseAdminClient();
+          const { error: taskError } = await taskSupabase.rpc(
+            "create_house_scoped_platform_task",
+            {
+              p_house_id: context.houseId,
+              p_task_type: "system",
+              p_title: "Перевірити оголошення голови",
+              p_description: `Голова ОСББ опублікував оголошення «${announcement.title}».`,
+              p_priority: "medium",
+              p_assigned_to: null,
+              p_deadline_at: null,
+              p_link_type: "system_event",
+              p_entity_type: "house_announcement",
+              p_entity_id: announcement.id,
+              p_created_by: null,
+              p_is_manual: false,
+            },
+          );
 
-        if (taskError) {
-          console.error("Chairman announcement manager task insert failed", {
+          if (taskError) {
+            console.error("Chairman announcement manager task insert failed", {
+              houseId: context.houseId,
+              announcementId: announcement.id,
+              code: taskError.code ?? null,
+            });
+          }
+
+        } catch (taskError) {
+          console.error("Chairman announcement manager task side effect failed", {
             houseId: context.houseId,
             announcementId: announcement.id,
-            code: taskError.code ?? null,
+            error:
+              taskError instanceof Error
+                ? taskError.message
+                : "Unknown manager task error",
           });
         }
 

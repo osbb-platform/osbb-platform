@@ -72,42 +72,71 @@ export async function createPlatformTask(
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: createdTask, error } = await supabase
-    .from("platform_tasks")
-    .insert({
-      title,
-      description: description || null,
-      created_by: currentUser.id,
-      assigned_to: assignedTo,
-      task_type: "manual",
-      status: "todo",
-      priority,
-      deadline_at: deadlineAt,
-      is_manual: true,
-    })
-    .select("id, title")
-    .single();
-
-  if (error || !createdTask) {
-    return {
-      error: `Не вдалося створити задачу: ${error?.message ?? "Unknown error"}`,
-      success: null,
-    };
-  }
-
-  await supabase.from("platform_task_events").insert({
-    task_id: createdTask.id,
-    actor_id: currentUser.id,
-    event_type: "create",
-    action_label: "Створення задачі",
-    after_value: "todo",
-  });
-
+  let createdTask: { id: string; title: string };
 
   if (houseId) {
-    await supabase.from("platform_task_houses").insert({
+    const { data: createdTaskId, error } = await supabase.rpc(
+      "create_house_scoped_platform_task",
+      {
+        p_house_id: houseId,
+        p_task_type: "manual",
+        p_title: title,
+        p_description: description || null,
+        p_priority: priority,
+        p_assigned_to: assignedTo,
+        p_deadline_at: deadlineAt,
+        p_link_type: null,
+        p_entity_type: null,
+        p_entity_id: null,
+        p_created_by: currentUser.id,
+        p_is_manual: true,
+      },
+    );
+
+    if (error || !createdTaskId) {
+      return {
+        error: `Не вдалося створити задачу: ${error?.message ?? "Unknown error"}`,
+        success: null,
+      };
+    }
+
+    createdTask = {
+      id: String(createdTaskId),
+      title,
+    };
+  } else {
+    // No-house task semantics are intentionally deferred to S2-T5.
+    const { data, error } = await supabase
+      .from("platform_tasks")
+      .insert({
+        title,
+        description: description || null,
+        created_by: currentUser.id,
+        assigned_to: assignedTo,
+        task_type: "manual",
+        status: "todo",
+        priority,
+        deadline_at: deadlineAt,
+        is_manual: true,
+      })
+      .select("id, title")
+      .single();
+
+    if (error || !data) {
+      return {
+        error: `Не вдалося створити задачу: ${error?.message ?? "Unknown error"}`,
+        success: null,
+      };
+    }
+
+    createdTask = data;
+
+    await supabase.from("platform_task_events").insert({
       task_id: createdTask.id,
-      house_id: houseId,
+      actor_id: currentUser.id,
+      event_type: "create",
+      action_label: "Створення задачі",
+      after_value: "todo",
     });
   }
 

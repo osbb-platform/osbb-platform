@@ -5,10 +5,14 @@ vi.mock("server-only", () => ({}));
 const {
   assertChairmanContextMock,
   createSupabaseServerClientMock,
+  createSupabaseAdminClientMock,
+  adminRpcMock,
   revalidatePathMock,
 } = vi.hoisted(() => ({
   assertChairmanContextMock: vi.fn(),
   createSupabaseServerClientMock: vi.fn(),
+  createSupabaseAdminClientMock: vi.fn(),
+  adminRpcMock: vi.fn(),
   revalidatePathMock: vi.fn(),
 }));
 
@@ -30,6 +34,13 @@ vi.mock(
   "@/src/integrations/supabase/server/server",
   () => ({
     createSupabaseServerClient: createSupabaseServerClientMock,
+  }),
+);
+
+vi.mock(
+  "../../src/integrations/supabase/server/admin",
+  () => ({
+    createSupabaseAdminClient: createSupabaseAdminClientMock,
   }),
 );
 
@@ -63,17 +74,12 @@ function makeSupabase() {
   );
 
   const historyInsert = vi.fn().mockResolvedValue({ error: null });
-  const taskInsert = vi.fn().mockResolvedValue({ error: null });
-
   const from = vi.fn((table: string) => {
     if (table === "house_announcements") {
       return { insert: announcementInsert };
     }
     if (table === "house_content_history") {
       return { insert: historyInsert };
-    }
-    if (table === "platform_tasks") {
-      return { insert: taskInsert };
     }
     throw new Error(`Unexpected table ${table}`);
   });
@@ -82,13 +88,14 @@ function makeSupabase() {
     client: { from },
     announcementInsert,
     historyInsert,
-    taskInsert,
   };
 }
 
 describe("P08 createChairmanAnnouncement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    adminRpcMock.mockResolvedValue({ data: "task-id", error: null });
+    createSupabaseAdminClientMock.mockReturnValue({ rpc: adminRpcMock });
   });
 
   it("publishes immediately for the guarded house and logs honest actor", async () => {
@@ -151,9 +158,19 @@ describe("P08 createChairmanAnnouncement", () => {
       }),
     );
 
-    expect(db.taskInsert).toHaveBeenCalledWith(
+    expect(createSupabaseAdminClientMock).toHaveBeenCalledTimes(1);
+    expect(adminRpcMock).toHaveBeenCalledWith(
+      "create_house_scoped_platform_task",
       expect.objectContaining({
-        title: "Перевірити оголошення голови",
+        p_house_id: "house-id",
+        p_task_type: "system",
+        p_title: "Перевірити оголошення голови",
+        p_priority: "medium",
+        p_link_type: "system_event",
+        p_entity_type: "house_announcement",
+        p_entity_id: "announcement-id",
+        p_created_by: null,
+        p_is_manual: false,
       }),
     );
 
@@ -227,6 +244,7 @@ describe("P08 createChairmanAnnouncement", () => {
     });
     expect(assertChairmanContextMock).not.toHaveBeenCalled();
     expect(createSupabaseServerClientMock).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
   });
 
   it("returns a safe Ukrainian error when chairman guard rejects the request", async () => {
@@ -244,5 +262,6 @@ describe("P08 createChairmanAnnouncement", () => {
       expect(result.error).toContain("Перевірте доступ");
     }
     expect(createSupabaseServerClientMock).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
   });
 });
