@@ -57,10 +57,12 @@ describe("S2-T3 get_my_admin_role hardening", () => {
     );
   });
 
-  it("does not fold S2-T4 membership semantic changes into T3", () => {
+  it("keeps S2-T3 scoped to function security hardening", () => {
     const { source } = latestGetMyAdminRoleDefinition();
 
-    expect(source).toMatch(/am\.status\s+is\s+null/i);
-    expect(source).toMatch(/am\.status\s*=\s*'active'/i);
+    expect(source).toMatch(/security\s+definer/i);
+    expect(source).toMatch(/set\s+search_path\s*=\s*''/i);
+    expect(source).toContain("public.admin_memberships");
+    expect(source).toContain("auth.uid()");
   });
 });
