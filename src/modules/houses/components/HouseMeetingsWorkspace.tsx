@@ -128,9 +128,14 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createQuestion(order = 0): MeetingQuestion {
+function createQuestion(
+  order = 0,
+  options?: { deterministic?: boolean },
+): MeetingQuestion {
   return {
-    id: createId("question"),
+    id: options?.deterministic
+      ? "question-00000000-0000-4000-8000-000000000000"
+      : createId("question"),
     order,
     title: "",
     description: "",
@@ -162,7 +167,7 @@ function createEmptyMeeting(seed?: { id: string; now: string }): MeetingItem {
     lockVersion: 1,
     protocolPdf: "",
     protocolDocumentId: "",
-    questions: [createQuestion(0)],
+    questions: [createQuestion(0, { deterministic: Boolean(seed) })],
     onlineAggregation: null,
     onlineBallots: [],
   };
