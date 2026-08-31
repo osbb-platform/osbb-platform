@@ -935,8 +935,6 @@ export function HousePlanWorkspace({
       if (!created) return;
 
       let nextLockVersion = getResultLockVersion(created, 1);
-      let nextStatus: PlanTaskStatus = "draft";
-      let nextArchivedAt: string | null = null;
 
       if (createPlacement === "active") {
         const published = await dispatch({
@@ -952,7 +950,6 @@ export function HousePlanWorkspace({
         if (!published) return;
 
         nextLockVersion = getResultLockVersion(published, nextLockVersion + 1);
-        nextStatus = "planned";
       }
 
       if (createPlacement === "archive") {
@@ -982,8 +979,6 @@ export function HousePlanWorkspace({
         if (!archived) return;
 
         nextLockVersion = getResultLockVersion(archived, nextLockVersion + 1);
-        nextStatus = "archived";
-        nextArchivedAt = new Date().toISOString();
       }
 
       await refreshAuthoritativeTasks();
