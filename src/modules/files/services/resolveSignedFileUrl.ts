@@ -48,6 +48,27 @@ async function getAdminAuth(): Promise<AdminAuthResult> {
   }
 }
 
+async function adminHasHouseAccess(houseId: string): Promise<boolean> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.rpc("admin_has_house_access", {
+      target_house_id: houseId,
+    });
+
+    if (error) {
+      console.error("SIGNED_FILE_ADMIN_HOUSE_ACCESS_FAILED", {
+        houseId,
+        code: error.code,
+      });
+      return false;
+    }
+
+    return data === true;
+  } catch {
+    return false;
+  }
+}
+
 async function loadFileByEntityRequest(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   request: SignedFileRequest,
@@ -212,6 +233,15 @@ export async function resolveSignedFileUrl(
       return fileAccessFailure(401, "AUTHENTICATION_REQUIRED", "Authentication required");
     }
 
+    const generatedAnnouncementHouseId = requestedPath.split("/", 1)[0] || "";
+
+    if (
+      !generatedAnnouncementHouseId ||
+      !(await adminHasHouseAccess(generatedAnnouncementHouseId))
+    ) {
+      return fileAccessFailure(403, "FORBIDDEN", "File is not available");
+    }
+
     const signedUrl = await createSignedUrl({
       supabase,
       bucket: requestedBucket,
@@ -267,6 +297,14 @@ export async function resolveSignedFileUrl(
 
   if (!lifecycleRow) {
     return fileAccessFailure(404, "NOT_FOUND", "File entity not found");
+  }
+
+  if (
+    adminAuth.isAdmin &&
+    lifecycleRow.house_id &&
+    !(await adminHasHouseAccess(lifecycleRow.house_id))
+  ) {
+    return fileAccessFailure(403, "FORBIDDEN", "File is not available");
   }
 
   if (
