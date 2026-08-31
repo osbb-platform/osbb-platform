@@ -22,7 +22,7 @@ export async function writeHistory(
   },
 ) {
   try {
-    await supabase.from("house_content_history").insert({
+    const { error } = await supabase.from("house_content_history").insert({
       actor_admin_id: params.actor.id,
       actor_name: params.actor.fullName ?? params.actor.email ?? "Адміністратор",
       actor_email: params.actor.email,
@@ -36,6 +36,10 @@ export async function writeHistory(
       after_snapshot: params.entry.afterSnapshot ?? null,
       metadata: params.entry.metadata ?? {},
     });
+
+    if (error) {
+      console.error("writeHistory failed (non-blocking):", error);
+    }
   } catch (error) {
     console.error("writeHistory failed (non-blocking):", error);
   }
