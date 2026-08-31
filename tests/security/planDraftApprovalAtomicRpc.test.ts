@@ -40,10 +40,12 @@ describe("Plan draft approval atomic repair", () => {
     expect(migration).toContain("to authenticated, service_role");
   });
 
-  it("routes only house_plan_task ensure through the new RPC", () => {
-    expect(service).toContain('if (entityType === "house_plan_task")');
-    expect(service).toContain('"ensure_house_plan_draft_approval_task"');
+  it("keeps historical plan RPC but runtime uses the generic atomic RPC", () => {
+    expect(service).not.toContain('if (entityType === "house_plan_task")');
+    expect(service).not.toContain('"ensure_house_plan_draft_approval_task"');
+    expect(service).toContain('"ensure_draft_approval_task"');
     expect(service).toContain("p_house_id: ctx.house.id");
-    expect(service).toContain("p_plan_task_id: entityId");
+    expect(service).toContain("p_entity_type: entityType");
+    expect(service).toContain("p_entity_id: entityId");
   });
 });

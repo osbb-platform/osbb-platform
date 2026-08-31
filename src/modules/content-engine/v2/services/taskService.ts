@@ -53,90 +53,15 @@ async function ensureDraftTask(
   entityId: string,
   title: string,
 ): Promise<void> {
-  if (entityType === "house_plan_task") {
-    const { error } = await ctx.supabase.rpc(
-      "ensure_house_plan_draft_approval_task",
-      {
-        p_house_id: ctx.house.id,
-        p_plan_task_id: entityId,
-        p_title: title,
-      },
-    );
+  const { error } = await ctx.supabase.rpc("ensure_draft_approval_task", {
+    p_house_id: ctx.house.id,
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_title: title,
+  });
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return;
-  }
-
-  const existingTasks = await findActiveDraftTasks(ctx, entityType, entityId);
-
-  if (existingTasks.length > 0) {
-    return;
-  }
-
-  const { data: task, error } = await ctx.supabase
-    .from("platform_tasks")
-    .insert({
-      title: `Підтвердити чернетку: ${title}`,
-      description: "Чернетка очікує підтвердження адміністратора.",
-      created_by: ctx.user.id,
-      assigned_to: null,
-      task_type: "draft_approval",
-      status: "todo",
-      priority: "high",
-      is_manual: false,
-      metadata: {
-        sourceType: entityType,
-        sourceId: entityId,
-      },
-    })
-    .select("id")
-    .single();
-
-  if (error || !task) {
-    throw new Error(
-      error?.message ?? "Не вдалося створити задачу погодження чернетки.",
-    );
-  }
-
-  const { error: linkError } = await ctx.supabase
-    .from("platform_task_links")
-    .insert({
-      task_id: task.id,
-      link_type: DRAFT_LINK_TYPE,
-      entity_type: entityType,
-      entity_id: entityId,
-    });
-
-  if (linkError) {
-    throw new Error(linkError.message);
-  }
-
-  const { error: houseError } = await ctx.supabase
-    .from("platform_task_houses")
-    .insert({
-      task_id: task.id,
-      house_id: ctx.house.id,
-    });
-
-  if (houseError) {
-    throw new Error(houseError.message);
-  }
-
-  const { error: eventError } = await ctx.supabase
-    .from("platform_task_events")
-    .insert({
-      task_id: task.id,
-      actor_id: ctx.user.id,
-      event_type: "create",
-      action_label: "Автоматичне створення задачі",
-      after_value: "draft_approval",
-    });
-
-  if (eventError) {
-    throw new Error(eventError.message);
+  if (error) {
+    throw new Error(error.message);
   }
 }
 
