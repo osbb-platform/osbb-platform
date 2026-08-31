@@ -26,6 +26,7 @@ import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfi
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
 import { FileDropzone } from "@/src/shared/ui/admin/FileDropzone";
 import type { AdminHousePlanSnapshot } from "@/src/modules/houses/services/getAdminHousePlan";
+import { refreshAdminHousePlanSnapshot } from "@/src/modules/houses/actions/refreshAdminHousePlanSnapshot";
 import type { AdminContractorOption } from "@/src/modules/houses/services/getAdminContractors";
 import { ContractorCombobox } from "@/src/modules/houses/components/ContractorCombobox";
 import { validateMultiplePdfFiles } from "@/src/shared/utils/validators/pdfUpload";
@@ -399,6 +400,15 @@ export function HousePlanWorkspace({
     );
   const [panelDirty, setPanelDirty] = useState(false);
   const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
+
+  async function refreshAuthoritativeTasks() {
+    const authoritativePlan = await refreshAdminHousePlanSnapshot({ houseId });
+    const authoritativeTasks = normalizePlanTasks(authoritativePlan);
+
+    setTasks(authoritativeTasks);
+
+    return authoritativeTasks;
+  }
 
   const counters = useMemo(
     () => ({
@@ -976,17 +986,7 @@ export function HousePlanWorkspace({
         nextArchivedAt = new Date().toISOString();
       }
 
-      setTasks((prev) => [
-        {
-          ...draft,
-          id: activeTaskId,
-          status: nextStatus,
-          archivedAt: nextArchivedAt,
-          lockVersion: nextLockVersion,
-          updatedAt: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
+      await refreshAuthoritativeTasks();
 
       setActiveTab(createPlacement === "archive" ? "archive" : "active");
       resetWorkspace();
@@ -1045,18 +1045,7 @@ export function HousePlanWorkspace({
       nextLockVersion = getResultLockVersion(added, nextLockVersion + 1);
     }
 
-    setTasks((prev) =>
-      prev.map((item) =>
-        item.id === activeTaskId
-          ? {
-              ...draft,
-              id: activeTaskId,
-              lockVersion: nextLockVersion,
-              updatedAt: new Date().toISOString(),
-            }
-          : item,
-      ),
-    );
+    await refreshAuthoritativeTasks();
 
     if (
       draft.status === "planned" ||
