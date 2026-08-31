@@ -405,6 +405,7 @@ export function HousePlanWorkspace({
       ["all", "planned", "in_progress", "completed"],
     );
   const [panelDirty, setPanelDirty] = useState(false);
+  const [staleDraftBackup, setStaleDraftBackup] = useState<PlanTask | null>(null);
   const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
 
   async function refreshAuthoritativeTasks() {
@@ -417,6 +418,7 @@ export function HousePlanWorkspace({
   }
 
   async function recoverFromStaleContent(taskId: string) {
+    const localDraft = draft;
     const authoritativePlan = await refreshAdminHousePlanSnapshot({ houseId });
     const authoritativeTasks = normalizePlanTasks(authoritativePlan);
     const authoritativeTask = authoritativeTasks.find((item) => item.id === taskId);
@@ -424,6 +426,9 @@ export function HousePlanWorkspace({
     setTasks(authoritativeTasks);
 
     if (authoritativeTask) {
+      if (localDraft.id === taskId) {
+        setStaleDraftBackup(localDraft);
+      }
       setDraft(authoritativeTask);
     }
 
@@ -433,6 +438,37 @@ export function HousePlanWorkspace({
     setRemovedDocumentIds([]);
     setPdfError(null);
     setPanelDirty(false);
+  }
+
+  function reapplyStaleDraft() {
+    if (!staleDraftBackup) return;
+
+    setDraft((authoritativeDraft) => ({
+      ...authoritativeDraft,
+      title: staleDraftBackup.title,
+      description: staleDraftBackup.description,
+      status: staleDraftBackup.status,
+      priority: staleDraftBackup.priority,
+      dateMode: staleDraftBackup.dateMode,
+      deadlineAt: staleDraftBackup.deadlineAt,
+      startDate: staleDraftBackup.startDate,
+      endDate: staleDraftBackup.endDate,
+      contractor: staleDraftBackup.contractor,
+      contractorId: staleDraftBackup.contractorId,
+      automationEnabled: staleDraftBackup.automationEnabled,
+      automationIntervalDays: staleDraftBackup.automationIntervalDays,
+      archiveYear: staleDraftBackup.archiveYear,
+    }));
+
+    setDraftPublishStatus(
+      staleDraftBackup.status === "in_progress"
+        ? "in_progress"
+        : staleDraftBackup.status === "completed"
+          ? "completed"
+          : "planned",
+    );
+    setStaleDraftBackup(null);
+    setPanelDirty(true);
   }
 
   const counters = useMemo(
@@ -526,6 +562,7 @@ export function HousePlanWorkspace({
     setPdfError(null);
     setSubmitIntent("save");
     setConfirmAction(null);
+    setStaleDraftBackup(null);
     setPanelDirty(false);
   }
 
@@ -547,6 +584,7 @@ export function HousePlanWorkspace({
       setRemovedDocumentIds([]);
       setPdfError(null);
       setSubmitIntent("save");
+      setStaleDraftBackup(null);
       setPanelDirty(false);
     });
   }
@@ -569,6 +607,7 @@ export function HousePlanWorkspace({
       setRemovedDocumentIds([]);
       setPdfError(null);
       setSubmitIntent("save");
+      setStaleDraftBackup(null);
       setPanelDirty(false);
     });
   }
@@ -593,6 +632,7 @@ export function HousePlanWorkspace({
     setRemovedDocumentIds([]);
     setPdfError(null);
     setSubmitIntent("save");
+    setStaleDraftBackup(null);
     setPanelDirty(false);
     setConfirmAction(action);
   }
@@ -1240,6 +1280,38 @@ export function HousePlanWorkspace({
       >
         {workspaceMode !== "idle" ? (
           <div className="grid gap-4" onChange={markDirty}>
+            {staleDraftBackup ? (
+              <div
+                role="alert"
+                className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 text-sm text-[var(--cms-warning-text)]"
+              >
+                <div className="font-medium">
+                  Серверна версія завдання була оновлена
+                </div>
+                <p className="mt-1 text-xs leading-5">
+                  Ми завантажили актуальну версію. Ваші зміни не застосовані автоматично.
+                  За потреби поверніть їх вручну та перевірте завдання перед збереженням.
+                  Вкладення потрібно вибрати повторно.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={reapplyStaleDraft}
+                    className={adminButtonClasses({ variant: "secondary" })}
+                  >
+                    Повторно застосувати мої зміни
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStaleDraftBackup(null)}
+                    className={adminButtonClasses({ variant: "ghost" })}
+                  >
+                    Залишити серверну версію
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <input
               value={draft.title}
               onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
