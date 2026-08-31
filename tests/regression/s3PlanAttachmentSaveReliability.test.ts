@@ -21,7 +21,7 @@ function submitTaskBlock() {
 
 function editSaveBlock() {
   const block = submitTaskBlock();
-  const start = block.indexOf('const updated = await dispatch({');
+  const start = block.indexOf('const updated = await dispatch(');
   const end = block.indexOf("resetWorkspace();", start);
 
   expect(start).toBeGreaterThan(-1);

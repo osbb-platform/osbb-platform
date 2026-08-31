@@ -410,6 +410,25 @@ export function HousePlanWorkspace({
     return authoritativeTasks;
   }
 
+  async function recoverFromStaleContent(taskId: string) {
+    const authoritativePlan = await refreshAdminHousePlanSnapshot({ houseId });
+    const authoritativeTasks = normalizePlanTasks(authoritativePlan);
+    const authoritativeTask = authoritativeTasks.find((item) => item.id === taskId);
+
+    setTasks(authoritativeTasks);
+
+    if (authoritativeTask) {
+      setDraft(authoritativeTask);
+    }
+
+    setSelectedImageFiles([]);
+    setSelectedPdfFiles([]);
+    setRemovedImageIds([]);
+    setRemovedDocumentIds([]);
+    setPdfError(null);
+    setPanelDirty(false);
+  }
+
   const counters = useMemo(
     () => ({
       active: tasks.filter(
@@ -838,6 +857,13 @@ export function HousePlanWorkspace({
 
     const activeTaskId = selectedTaskId ?? draft.id;
     const fieldKeysToRemove = [...removedImageIds, ...removedDocumentIds];
+    const staleRecoveryOptions = {
+      onError: (_error: string, code?: string) => {
+        if (code === "STALE_CONTENT") {
+          void recoverFromStaleContent(activeTaskId);
+        }
+      },
+    };
 
     if (intent === "delete") {
       const deleted = await dispatch({
@@ -988,30 +1014,36 @@ export function HousePlanWorkspace({
       return;
     }
 
-    const updated = await dispatch({
-      type: "plan.update",
-      houseId,
-      payload: {
-        id: activeTaskId,
-        lockVersion: draft.lockVersion,
-        ...taskPayload(draft),
+    const updated = await dispatch(
+      {
+        type: "plan.update",
+        houseId,
+        payload: {
+          id: activeTaskId,
+          lockVersion: draft.lockVersion,
+          ...taskPayload(draft),
+        },
       },
-    });
+      staleRecoveryOptions,
+    );
 
     if (!updated) return;
 
     let nextLockVersion = getResultLockVersion(updated, draft.lockVersion + 1);
 
     if (fieldKeysToRemove.length > 0) {
-      const removed = await dispatch({
-        type: "plan.removeFiles",
-        houseId,
-        payload: {
-          id: activeTaskId,
-          lockVersion: nextLockVersion,
-          fieldKeys: fieldKeysToRemove,
+      const removed = await dispatch(
+        {
+          type: "plan.removeFiles",
+          houseId,
+          payload: {
+            id: activeTaskId,
+            lockVersion: nextLockVersion,
+            fieldKeys: fieldKeysToRemove,
+          },
         },
-      });
+        staleRecoveryOptions,
+      );
 
       if (!removed) return;
 
@@ -1025,15 +1057,18 @@ export function HousePlanWorkspace({
     }
 
     if (updateUploadedFiles.length > 0) {
-      const added = await dispatch({
-        type: "plan.addFiles",
-        houseId,
-        payload: {
-          id: activeTaskId,
-          lockVersion: nextLockVersion,
-          files: updateUploadedFiles,
+      const added = await dispatch(
+        {
+          type: "plan.addFiles",
+          houseId,
+          payload: {
+            id: activeTaskId,
+            lockVersion: nextLockVersion,
+            files: updateUploadedFiles,
+          },
         },
-      });
+        staleRecoveryOptions,
+      );
 
       if (!added) return;
 

@@ -30,7 +30,7 @@ describe("S3-T1 authoritative plan attachments", () => {
     expect(refreshCalls).toBeGreaterThanOrEqual(2);
 
     const createStart = workspace.indexOf('if (workspaceMode === "create")');
-    const updateStart = workspace.indexOf('const updated = await dispatch({');
+    const updateStart = workspace.indexOf('const updated = await dispatch(');
     const finalReset = workspace.lastIndexOf("resetWorkspace();");
 
     expect(createStart).toBeGreaterThan(-1);

@@ -19,7 +19,7 @@ type DispatchOptions = {
   /** Callback after success. */
   onSuccess?: (data: unknown) => void;
   /** Callback after error. */
-  onError?: (error: string) => void;
+  onError?: (error: string, code?: string) => void;
   /** Disable lifecycle Undo for inverse commands and exceptional flows. */
   enableUndo?: boolean;
 };
@@ -42,7 +42,7 @@ export function useAdminContentCommand() {
 
         if (!result.ok) {
           setLastError(result.error);
-          options.onError?.(result.error);
+          options.onError?.(result.error, result.code);
 
           // STALE_CONTENT and INTERNAL can arrive after the server has already
           // mutated authoritative data. Refresh immediately so server props,
