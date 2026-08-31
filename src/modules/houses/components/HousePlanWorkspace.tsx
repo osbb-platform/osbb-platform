@@ -7,6 +7,7 @@ import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceL
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
+import { compareHousePlanTasks } from "@/src/modules/houses/utils/sortHousePlanTasks";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -103,6 +104,7 @@ type PlanTask = {
   documents: PlanAttachment[];
   createdAt: string;
   updatedAt: string;
+  completedAt: string | null;
   archivedAt: string | null;
   archiveYear: number;
   lockVersion: number;
@@ -188,6 +190,7 @@ function createEmptyTask(seed?: { id: string; now: string }): PlanTask {
     documents: [],
     createdAt: now,
     updatedAt: now,
+    completedAt: null,
     archivedAt: null,
     archiveYear: PLAN_ARCHIVE_YEAR_END,
     lockVersion: 1,
@@ -232,6 +235,7 @@ function normalizePlanTasks(plan: AdminHousePlanSnapshot): PlanTask[] {
     })),
     createdAt: task.content.createdAt,
     updatedAt: task.content.updatedAt,
+    completedAt: task.content.completedAt,
     archivedAt: task.content.archivedAt,
     archiveYear: normalizeArchiveYear(task.content.archiveYear),
     lockVersion: task.lockVersion,
@@ -466,15 +470,42 @@ export function HousePlanWorkspace({
     return tasks.filter((item) => item.status === "draft");
   }, [tasks, activeTab, activeStageFilter]);
 
-  const visibleTasks = useMemo(
-    () =>
-      filterAndSortWorkspaceItems(
-        baseVisibleTasks,
-        searchQuery,
-        sortMode,
-      ),
-    [baseVisibleTasks, searchQuery, sortMode],
-  );
+  const visibleTasks = useMemo(() => {
+    const filteredTasks = filterAndSortWorkspaceItems(
+      baseVisibleTasks,
+      searchQuery,
+      sortMode,
+    );
+
+    if (activeTab === "active" && activeStageFilter === "completed") {
+      return [...filteredTasks].sort((left, right) =>
+        compareHousePlanTasks(
+          {
+            id: left.id,
+            taskStatus: "completed",
+            sortOrder: 0,
+            updatedAt: left.updatedAt,
+            completedAt: left.completedAt,
+          },
+          {
+            id: right.id,
+            taskStatus: "completed",
+            sortOrder: 0,
+            updatedAt: right.updatedAt,
+            completedAt: right.completedAt,
+          },
+        ),
+      );
+    }
+
+    return filteredTasks;
+  }, [
+    baseVisibleTasks,
+    searchQuery,
+    sortMode,
+    activeTab,
+    activeStageFilter,
+  ]);
 
   function markDirty() {
     if (!panelDirty) {

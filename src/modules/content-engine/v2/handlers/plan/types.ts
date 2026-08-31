@@ -32,6 +32,7 @@ export type HousePlanTask = {
   lock_version: number;
   created_at: string;
   updated_at: string;
+  completed_at: string | null;
   published_at: string | null;
   archived_at: string | null;
   created_by: string | null;

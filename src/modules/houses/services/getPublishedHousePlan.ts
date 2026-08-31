@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { compareHousePlanTasks } from "@/src/modules/houses/utils/sortHousePlanTasks";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
@@ -103,7 +104,12 @@ async function loadPublishedHousePlan(houseId: string): Promise<AdminHousePlanSn
   });
 
   return {
-    tasks: tasks.map((task) => mapHousePlanTask(task, filesByEntityId)),
+    tasks: tasks.map((task) => mapHousePlanTask(task, filesByEntityId)).sort((left, right) =>
+      compareHousePlanTasks(
+        { id: left.id, taskStatus: left.content.taskStatus, sortOrder: left.content.sortOrder, updatedAt: left.content.updatedAt, completedAt: left.content.completedAt },
+        { id: right.id, taskStatus: right.content.taskStatus, sortOrder: right.content.sortOrder, updatedAt: right.content.updatedAt, completedAt: right.content.completedAt },
+      ),
+    ),
   };
 }
 

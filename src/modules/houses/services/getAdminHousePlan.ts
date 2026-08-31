@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import { compareHousePlanTasks } from "@/src/modules/houses/utils/sortHousePlanTasks";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type {
@@ -66,6 +67,7 @@ export type HousePlanTaskSnapshot = {
     documents: HousePlanAttachmentSnapshot[];
     createdAt: string;
     updatedAt: string;
+    completedAt: string | null;
     publishedAt: string | null;
     archivedAt: string | null;
     lockVersion: number;
@@ -159,6 +161,7 @@ export function mapHousePlanTask(
       documents,
       createdAt: task.created_at,
       updatedAt: task.updated_at,
+      completedAt: task.completed_at,
       publishedAt: task.published_at,
       archivedAt: task.archived_at,
       lockVersion: task.lock_version,
@@ -233,6 +236,11 @@ export async function getAdminHousePlan(params: {
   });
 
   return {
-    tasks: tasks.map((task) => mapHousePlanTask(task, filesByEntityId)),
+    tasks: tasks.map((task) => mapHousePlanTask(task, filesByEntityId)).sort((left, right) =>
+      compareHousePlanTasks(
+        { id: left.id, taskStatus: left.content.taskStatus, sortOrder: left.content.sortOrder, updatedAt: left.content.updatedAt, completedAt: left.content.completedAt },
+        { id: right.id, taskStatus: right.content.taskStatus, sortOrder: right.content.sortOrder, updatedAt: right.content.updatedAt, completedAt: right.content.completedAt },
+      ),
+    ),
   };
 }
