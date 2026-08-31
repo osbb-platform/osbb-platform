@@ -1,5 +1,7 @@
 "use client";
 
+import { formatKyivDateTime } from "@/src/shared/utils/dates/formatKyivDateTime";
+
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
@@ -1184,7 +1186,7 @@ export function HousePlanWorkspace({
               <AdminStatusBadge tone={statusToneFor(draft.status)}>
                 {statusLabelFor(draft.status, { completed: "Виконано" })}
               </AdminStatusBadge>
-              <span>Оновлено: {new Date(draft.updatedAt).toLocaleString("uk-UA")}</span>
+              <span>Оновлено: {formatKyivDateTime(draft.updatedAt)}</span>
               {draft.status !== "draft" && selectedTaskId ? (
                 <ContentWorkspaceActionButtons
                   houseId={houseId}
@@ -1372,12 +1374,12 @@ export function HousePlanWorkspace({
                   {draft.automationPausedAt ? (
                     <span>
                       Автоматизацію призупинено{" "}
-                      {new Date(draft.automationPausedAt).toLocaleString("uk-UA")}.
+                      {formatKyivDateTime(draft.automationPausedAt)}.
                     </span>
                   ) : draft.automationNextDueAt ? (
                     <span>
                       Наступний автоматичний перехід:{" "}
-                      {new Date(draft.automationNextDueAt).toLocaleString("uk-UA")}.
+                      {formatKyivDateTime(draft.automationNextDueAt)}.
                     </span>
                   ) : draft.status === "draft" ? (
                     <span>

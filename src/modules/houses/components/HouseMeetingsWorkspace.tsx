@@ -1,5 +1,7 @@
 "use client";
 
+import { formatKyivDateTime } from "@/src/shared/utils/dates/formatKyivDateTime";
+
 import { useWorkspaceMemory } from "@/src/shared/hooks/useWorkspaceMemory";
 import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceListToolbar";
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
@@ -141,11 +143,14 @@ function createQuestion(order = 0): MeetingQuestion {
   };
 }
 
-function createEmptyMeeting(): MeetingItem {
-  const now = new Date().toISOString();
+const INITIAL_MEETING_ID = "meeting-00000000-0000-4000-8000-000000000000";
+const INITIAL_MEETING_NOW = "1970-01-01T00:00:00.000Z";
+
+function createEmptyMeeting(seed?: { id: string; now: string }): MeetingItem {
+  const now = seed?.now ?? new Date().toISOString();
 
   return {
-    id: createId("meeting"),
+    id: seed?.id ?? createId("meeting"),
     title: "",
     shortDescription: "",
     meetingDateTime: "",
@@ -278,10 +283,7 @@ function normalizeMeetings(content: Record<string, unknown> | AdminHouseMeetings
 }
 
 function formatDate(value: string) {
-  if (!value) return "Дату не вказано";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Дату не вказано";
-  return date.toLocaleString("uk-UA");
+  return formatKyivDateTime(value, "Дату не вказано");
 }
 
 function splitMeetingDateTime(value: string) {
@@ -484,7 +486,12 @@ export function HouseMeetingsWorkspace({
 
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<MeetingItem>(createEmptyMeeting());
+  const [draft, setDraft] = useState<MeetingItem>(() =>
+    createEmptyMeeting({
+      id: INITIAL_MEETING_ID,
+      now: INITIAL_MEETING_NOW,
+    }),
+  );
   const [meetingDateInput, setMeetingDateInput] = useState("");
   const [meetingTimeInput, setMeetingTimeInput] = useState("");
   const [selectedApartmentVote, setSelectedApartmentVote] = useState("");

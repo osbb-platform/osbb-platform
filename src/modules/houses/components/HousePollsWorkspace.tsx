@@ -1,5 +1,7 @@
 "use client";
 
+import { formatKyivDateTime } from "@/src/shared/utils/dates/formatKyivDateTime";
+
 import { useMemo, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
@@ -84,22 +86,45 @@ const questionTypeOptions: Array<{
   { value: "free_text", label: "Вільна відповідь" },
 ];
 
-function createClientId(prefix: string) {
+const INITIAL_POLL_ID = "poll-00000000-0000-4000-8000-000000000000";
+
+function createClientId(
+  prefix: string,
+  options?: { deterministic?: boolean; index?: number },
+) {
+  if (options?.deterministic) {
+    const suffix = String(options.index ?? 0).padStart(12, "0");
+    return `${prefix}-00000000-0000-4000-8000-${suffix}`;
+  }
+
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return `${prefix}-${crypto.randomUUID()}`;
   }
+
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function createOption(label = ""): PollDraftOption {
-  return { id: createClientId("option"), label };
+function createOption(
+  label = "",
+  options?: { deterministic?: boolean; index?: number },
+): PollDraftOption {
+  return {
+    id: createClientId("option", options),
+    label,
+  };
 }
 
 function createQuestion(
   questionType: HousePollQuestionType = "single_choice",
+  options?: { deterministic?: boolean; index?: number },
 ): PollDraftQuestion {
+  const deterministic = options?.deterministic ?? false;
+
   return {
-    id: createClientId("question"),
+    id: createClientId("question", {
+      deterministic,
+      index: options?.index,
+    }),
     question: "",
     description: "",
     questionType,
@@ -109,14 +134,19 @@ function createQuestion(
     isRequired: true,
     options:
       questionType === "single_choice" || questionType === "multiple_choice"
-        ? [createOption(), createOption()]
+        ? [
+            createOption("", { deterministic, index: 1 }),
+            createOption("", { deterministic, index: 2 }),
+          ]
         : [],
   };
 }
 
-function createEmptyPoll(): PollDraft {
+function createEmptyPoll(options?: { deterministic?: boolean }): PollDraft {
+  const deterministic = options?.deterministic ?? false;
+
   return {
-    id: createClientId("poll"),
+    id: deterministic ? INITIAL_POLL_ID : createClientId("poll"),
     title: "",
     description: "",
     identityMode: "open",
@@ -124,7 +154,12 @@ function createEmptyPoll(): PollDraft {
     pollStatus: "idle",
     lifecycleStatus: "draft",
     lockVersion: 1,
-    questions: [createQuestion()],
+    questions: [
+      createQuestion("single_choice", {
+        deterministic,
+        index: 1,
+      }),
+    ],
     participationCount: 0,
   };
 }
@@ -243,12 +278,7 @@ function statusLabel(poll: {
 }
 
 function formatDateTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("uk-UA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  return formatKyivDateTime(value);
 }
 
 function questionPayload(question: PollDraftQuestion, index: number) {
@@ -455,7 +485,7 @@ export function HousePollsWorkspace({
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<PollDraft>(createEmptyPoll());
+  const [draft, setDraft] = useState<PollDraft>(() => createEmptyPoll({ deterministic: true }));
   const [actionError, setActionError] = useState<string | null>(null);
 
   const selectedSnapshot =

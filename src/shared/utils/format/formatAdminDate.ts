@@ -21,6 +21,7 @@ export function formatAdminDate(
   }
 
   return new Intl.DateTimeFormat(ADMIN_DATE_LOCALE, {
+    timeZone: "Europe/Kyiv",
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -38,6 +39,7 @@ export function formatAdminDateTime(
   }
 
   return new Intl.DateTimeFormat(ADMIN_DATE_LOCALE, {
+    timeZone: "Europe/Kyiv",
     day: "numeric",
     month: "long",
     year: "numeric",
