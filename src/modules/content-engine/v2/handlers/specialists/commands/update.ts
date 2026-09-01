@@ -7,6 +7,7 @@ import {
   normalizeOptionalText,
   normalizePhones,
   normalizePhoneTypes,
+  validatePhones,
   normalizeSortOrder,
   normalizeText,
   publicSpecialistsPaths,
@@ -27,6 +28,11 @@ export const updateCommand: CommandSpec = {
 
     if (!payload.title?.trim()) {
       return err("Заповніть назву спеціаліста.", "VALIDATION_FAILED");
+    }
+
+    const phones = validatePhones(payload.phones);
+    if (!phones.ok) {
+      return err("Введіть коректний номер телефону.", "VALIDATION_FAILED");
     }
 
     return ok(undefined);

@@ -14,6 +14,7 @@ import {
   normalizeOptionalText,
   normalizePhones,
   normalizePhoneTypes,
+  validatePhones,
   normalizeSortOrder,
   publicSpecialistsPaths,
   specialistHistoryMetadata,
@@ -40,11 +41,20 @@ function normalizeTemplateSpecialists(value: unknown) {
         return null;
       }
 
+      const phoneValidation = validatePhones(record.phones);
+
+      if (!phoneValidation.ok) {
+        return null;
+      }
+
       return {
         title,
         category: normalizeOptionalText(record.category),
-        phones: normalizePhones(record.phones),
-        phone_types: normalizePhoneTypes(record.phoneTypes ?? record.phone_types, normalizePhones(record.phones)),
+        phones: phoneValidation.phones,
+        phone_types: normalizePhoneTypes(
+          record.phoneTypes ?? record.phone_types,
+          phoneValidation.phones,
+        ),
         email: normalizeOptionalText(record.email),
         description: normalizeOptionalText(record.description),
         sortOrder:

@@ -42,6 +42,11 @@ import {
 } from "@/src/shared/ui/admin/adminStyles";
 import { TemplateIcon } from "@/src/shared/ui/icons/AdminInlineIcons";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
+import {
+  isValidSpecialistPhone,
+  normalizeSpecialistPhone,
+  normalizeSpecialistPhones,
+} from "@/src/modules/houses/utils/specialistPhone";
 
 const SPECIALISTS_TEMPLATE_SLOT_LIMIT = 10;
 
@@ -101,28 +106,15 @@ function createEmptyDraft(sortOrder: number): SpecialistDraft {
 }
 
 function formatPhoneMask(value: string) {
-  const input = value.trim();
-
-  if (!input) return "";
-
-  const hasPlus = input.startsWith("+");
-  const digits = input.replace(/\D/g, "");
-
-  if (!digits) return "";
-
-  return hasPlus ? `+${digits.slice(0, 15)}` : digits.slice(0, 15);
+  return normalizeSpecialistPhone(value).slice(0, 16);
 }
 
 function isValidPhone(value: string) {
-  const digits = value.replace(/\D/g, "");
-  return digits.length >= 5 && digits.length <= 15;
+  return isValidSpecialistPhone(value);
 }
 
 function normalizePhones(value: string[]) {
-  return value
-    .map((phone) => formatPhoneMask(phone))
-    .filter(Boolean)
-    .filter((phone, index, array) => array.indexOf(phone) === index);
+  return normalizeSpecialistPhones(value);
 }
 
 function normalizePhoneType(value: unknown): SpecialistPhoneType {
@@ -834,7 +826,7 @@ export function HouseSpecialistsWorkspace({
                     <Input
                       value={phone}
                       onChange={(event) => handleDraftPhoneChange(index, event.target.value)}
-                      placeholder="+380 67 123 45 67 або 0800 00 00 00"
+                      placeholder="+380 67 123 45 67, 0800 00 00 00 або 104"
                       aria-label={`Телефон ${index + 1}`}
                     />
 

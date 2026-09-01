@@ -5,6 +5,7 @@ import { getPublicHouseApartmentOptions } from "@/src/modules/apartments/service
 import { getHouseBySlug } from "@/src/modules/houses/services/getHouseBySlug";
 import { getPublishedHouseSpecialists } from "@/src/modules/houses/services/getPublishedHouseSpecialists";
 import { CopyPhoneButton } from "@/src/modules/houses/components/CopyPhoneButton";
+import { toSpecialistTelephoneHref } from "@/src/modules/houses/utils/specialistPhone";
 import { houseSpecialistsCopy } from "@/src/shared/publicCopy/house";
 import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
@@ -39,8 +40,7 @@ function getPhoneTypeLabel(value: "mobile" | "landline" | "free") {
 }
 
 function getTelHref(phone: string) {
-  const normalized = phone.replace(/[^+\d]/g, "");
-  return normalized ? `tel:${normalized}` : "#";
+  return toSpecialistTelephoneHref(phone) ?? "#";
 }
 
 function sortSpecialists(items: SpecialistCard[]) {

@@ -1,6 +1,10 @@
 import type { HandlerContext } from "../../../types/pipeline";
 import { err, ok, type Result } from "../../../types/result";
 import {
+  normalizeSpecialistPhones,
+  validateSpecialistPhones,
+} from "@/src/modules/houses/utils/specialistPhone";
+import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
   type HouseSpecialist,
   type HouseSpecialistPhoneType,
@@ -18,14 +22,11 @@ export function normalizeOptionalText(value: unknown) {
 }
 
 export function normalizePhones(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [] as string[];
-  }
+  return normalizeSpecialistPhones(value);
+}
 
-  return value
-    .map((phone) => normalizeText(phone))
-    .filter(Boolean)
-    .filter((phone, index, array) => array.indexOf(phone) === index);
+export function validatePhones(value: unknown) {
+  return validateSpecialistPhones(value);
 }
 
 export function normalizePhoneType(value: unknown): HouseSpecialistPhoneType {
