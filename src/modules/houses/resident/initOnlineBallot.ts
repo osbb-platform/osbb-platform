@@ -1,10 +1,13 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 
 import {
   resolveDiiaProvider,
 } from "@/src/modules/diia/provider";
+import {
+  readOnlineVotingProviderConfig,
+} from "@/src/modules/houses/resident/onlineVotingProviderConfig";
 import {
   withResidentSession,
   ResidentSessionError,
@@ -12,6 +15,7 @@ import {
 import {
   cancelPendingOnlineBallot,
   createPendingOnlineBallot,
+  finalizeOnlineBallotCallback,
   type OnlineVoteAnswer,
   type OnlineVoteChoice,
 } from "@/src/modules/houses/resident/onlineVotingRepository";
@@ -39,6 +43,10 @@ export type InitOnlineBallotResult =
       ok: true;
       ballotId: string;
       challengeExpiresAt: string;
+      confirmation:
+        | "internal"
+        | "external";
+      code?: string;
       redirectUrl?: string;
       deepLink?: string;
     }
@@ -51,6 +59,25 @@ export type InitOnlineBallotResult =
 
 function normalizeId(value: string) {
   return value.trim();
+}
+
+function internalResidentIdentityHmac(
+  params: {
+    houseId: string;
+    sessionToken: string;
+    secret: string;
+  },
+) {
+  return createHmac(
+    "sha256",
+    params.secret,
+  )
+    .update("osbb:p06:internal-resident:v1")
+    .update("\0")
+    .update(params.houseId)
+    .update("\0")
+    .update(params.sessionToken)
+    .digest("hex");
 }
 
 function validateInput(
@@ -158,13 +185,23 @@ export async function initOnlineBallot(
     };
   }
 
-  const providerResolution =
-    resolveDiiaProvider();
+  let votingConfig;
 
-  if (
-    !providerResolution.provider ||
-    !providerResolution.config.enabled
-  ) {
+  try {
+    votingConfig =
+      readOnlineVotingProviderConfig();
+  } catch {
+    return {
+      ok: false,
+      code: "ONLINE_VOTING_CONFIG_INVALID",
+      message:
+        "Онлайн-голосування тимчасово недоступне.",
+    };
+  }
+
+  const providerMode = votingConfig.mode;
+
+  if (providerMode === "disabled") {
     return {
       ok: false,
       code: "ONLINE_VOTING_UNAVAILABLE",
@@ -173,8 +210,6 @@ export async function initOnlineBallot(
     };
   }
 
-  const provider = providerResolution.provider;
-
   try {
     return await withResidentSession(
       {
@@ -182,89 +217,205 @@ export async function initOnlineBallot(
         rateLimitPolicy:
           rateLimitPolicies.residentVoteInit,
       },
-      async ({ houseId, slug }) => {
+      async ({
+        houseId,
+        slug,
+        sessionToken,
+      }) => {
         const challenge =
           randomBytes(32).toString("base64url");
 
-        const dbResult =
-          await createPendingOnlineBallot({
-            houseId,
-            meetingId:
-              normalizeId(input.meetingId),
-            apartmentId:
-              normalizeId(input.apartmentId),
-            ownedAreaM2:
-              input.ownedAreaM2,
-            answers: input.answers.map(
-              (answer) => ({
-                questionId:
-                  normalizeId(
-                    answer.questionId,
-                  ),
-                choice: answer.choice,
-              }),
-            ),
-            challenge,
-            provider:
-              provider.name,
-          });
-
-        if (!dbResult.ok) {
-          return {
-            ok: false,
-            code: dbResult.code,
-            message:
-              dbErrorMessage(dbResult.code),
-          };
-        }
-
-        try {
-          const auth =
-            await provider.initAuthRequest(
+        if (
+          providerMode === "internal_resident"
+        ) {
+          const dbResult =
+            await createPendingOnlineBallot({
+              houseId,
+              meetingId:
+                normalizeId(input.meetingId),
+              apartmentId:
+                normalizeId(input.apartmentId),
+              ownedAreaM2:
+                input.ownedAreaM2,
+              answers: input.answers.map(
+                (answer) => ({
+                  questionId:
+                    normalizeId(
+                      answer.questionId,
+                    ),
+                  choice: answer.choice,
+                }),
+              ),
               challenge,
-              {
-                ballotId: dbResult.ballotId,
-                meetingId:
-                  normalizeId(
-                    input.meetingId,
-                  ),
-                slug,
-              },
-            );
+              provider: "internal_resident",
+            });
+
+          if (!dbResult.ok) {
+            return {
+              ok: false,
+              code: dbResult.code,
+              message:
+                dbErrorMessage(dbResult.code),
+            };
+          }
+
+          const identityHmac =
+            internalResidentIdentityHmac({
+              houseId,
+              sessionToken,
+              secret:
+                votingConfig.identityHmacSecret,
+            });
+
+          const txnId =
+            `internal:${randomUUID()}`;
+
+          const finalized =
+            await finalizeOnlineBallotCallback({
+              ballotId: dbResult.ballotId,
+              meetingId:
+                normalizeId(input.meetingId),
+              slug,
+              challenge,
+              provider: "internal_resident",
+              identityHmac,
+              txnId,
+              verifiedAt:
+                new Date().toISOString(),
+            });
+
+          if (!finalized.ok) {
+            return {
+              ok: false,
+              code: finalized.code,
+              message:
+                dbErrorMessage(finalized.code),
+            };
+          }
 
           return {
             ok: true,
             ballotId: dbResult.ballotId,
             challengeExpiresAt:
               dbResult.challengeExpiresAt,
-            ...("redirectUrl" in auth &&
-            typeof auth.redirectUrl ===
-              "string"
-              ? {
-                  redirectUrl:
-                    auth.redirectUrl,
-                }
-              : {}),
-            ...("deepLink" in auth &&
-            typeof auth.deepLink === "string"
-              ? {
-                  deepLink: auth.deepLink,
-                }
-              : {}),
-          };
-        } catch {
-          await cancelPendingOnlineBallot(
-            dbResult.ballotId,
-            "AUTH_INIT_FAILED",
-          );
-
-          return {
-            ok: false,
-            code: "DIIA_AUTH_INIT_FAILED",
-            message:
-              "Не вдалося розпочати підтвердження через Дію. Спробуйте ще раз.",
+            confirmation: "internal",
+            code: finalized.code,
           };
         }
+
+        if (
+          providerMode === "official_diia"
+        ) {
+          const providerResolution =
+            resolveDiiaProvider();
+
+          if (
+            !providerResolution.provider ||
+            !providerResolution.config.enabled ||
+            providerResolution.provider.name !==
+              "diia"
+          ) {
+            return {
+              ok: false,
+              code:
+                "ONLINE_VOTING_UNAVAILABLE",
+              message:
+                "Онлайн-голосування тимчасово недоступне.",
+            };
+          }
+
+          const provider =
+            providerResolution.provider;
+
+          const dbResult =
+            await createPendingOnlineBallot({
+              houseId,
+              meetingId:
+                normalizeId(input.meetingId),
+              apartmentId:
+                normalizeId(input.apartmentId),
+              ownedAreaM2:
+                input.ownedAreaM2,
+              answers: input.answers.map(
+                (answer) => ({
+                  questionId:
+                    normalizeId(
+                      answer.questionId,
+                    ),
+                  choice: answer.choice,
+                }),
+              ),
+              challenge,
+              provider: provider.name,
+            });
+
+          if (!dbResult.ok) {
+            return {
+              ok: false,
+              code: dbResult.code,
+              message:
+                dbErrorMessage(dbResult.code),
+            };
+          }
+
+          try {
+            const auth =
+              await provider.initAuthRequest(
+                challenge,
+                {
+                  ballotId: dbResult.ballotId,
+                  meetingId:
+                    normalizeId(
+                      input.meetingId,
+                    ),
+                  slug,
+                },
+              );
+
+            return {
+              ok: true,
+              ballotId: dbResult.ballotId,
+              challengeExpiresAt:
+                dbResult.challengeExpiresAt,
+              confirmation: "external",
+              ...("redirectUrl" in auth &&
+              typeof auth.redirectUrl ===
+                "string"
+                ? {
+                    redirectUrl:
+                      auth.redirectUrl,
+                  }
+                : {}),
+              ...("deepLink" in auth &&
+              typeof auth.deepLink ===
+                "string"
+                ? {
+                    deepLink:
+                      auth.deepLink,
+                  }
+                : {}),
+            };
+          } catch {
+            await cancelPendingOnlineBallot(
+              dbResult.ballotId,
+              "AUTH_INIT_FAILED",
+            );
+
+            return {
+              ok: false,
+              code: "DIIA_AUTH_INIT_FAILED",
+              message:
+                "Не вдалося розпочати підтвердження через Дію. Спробуйте ще раз.",
+            };
+          }
+        }
+
+        return {
+          ok: false,
+          code: "ONLINE_VOTING_UNAVAILABLE",
+          message:
+            "Онлайн-голосування тимчасово недоступне.",
+        };
       },
     );
   } catch (error) {

@@ -40,7 +40,7 @@ describe("P06 T5 resident ballot initiation", () => {
   it("does not create a ballot while the provider feature is disabled", () => {
     const providerCheck =
       action.indexOf(
-        "!providerResolution.provider",
+        'providerMode === "disabled"',
       );
 
     const createCall =
@@ -198,10 +198,18 @@ describe("P06 T5 resident ballot initiation", () => {
     );
   });
 
-  it("passes no resident session token to the provider", () => {
-    expect(action).not.toContain(
-      "sessionToken",
+  it("uses resident session only for internal HMAC and never passes it to external provider", () => {
+    expect(action).toContain("sessionToken");
+    expect(action).toContain("internalResidentIdentityHmac");
+    expect(action).toContain("identityHmac");
+    expect(action).not.toContain("identityHmac: sessionToken");
+
+    const officialBranch = action.slice(
+      action.indexOf('providerMode === "official_diia"'),
     );
+
+    expect(officialBranch).toContain("provider.initAuthRequest(");
+    expect(officialBranch).not.toContain("sessionToken");
   });
 
   it("does not import legacy runtime code", () => {

@@ -265,6 +265,13 @@ export function PublicOnlineMeetingVoting({
           return;
         }
 
+        if (
+          result.confirmation === "internal"
+        ) {
+          window.location.reload();
+          return;
+        }
+
         const target =
           result.redirectUrl ??
           result.deepLink;
