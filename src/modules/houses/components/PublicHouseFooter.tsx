@@ -199,16 +199,24 @@ export function PublicHouseFooter({
   const [subject, setSubject] = useState<FooterSubject>("contact");
   const [dialogKey, setDialogKey] = useState(0);
 
-  const companyName = managementCompany?.name?.trim() || "{companyName}";
-  const companySlogan =
-    managementCompany?.slogan?.trim() || "{companySlogan}";
-  const companyPhone =
-    managementCompany?.phone?.trim() || "{companyPhone}";
-  const companyEmail =
-    managementCompany?.email?.trim() || "{companyEmail}";
-  const companyAddress =
-    managementCompany?.address?.trim() ||
-    "{companyAddress}";
+  function cleanCompanyField(value: string | null | undefined) {
+    const normalized = value?.trim() ?? "";
+
+    if (
+      !normalized ||
+      /^\{company(?:Slogan|Name|Phone|Email|Address)\}$/.test(normalized)
+    ) {
+      return null;
+    }
+
+    return normalized;
+  }
+
+  const companyName = cleanCompanyField(managementCompany?.name);
+  const companySlogan = cleanCompanyField(managementCompany?.slogan);
+  const companyPhone = cleanCompanyField(managementCompany?.phone);
+  const companyEmail = cleanCompanyField(managementCompany?.email);
+  const companyAddress = cleanCompanyField(managementCompany?.address);
   const companyWorkSchedule =
     managementCompany?.work_schedule?.trim() || houseCopy.footer.scheduleValue;
 
@@ -250,45 +258,52 @@ export function PublicHouseFooter({
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
-                    {houseCopy.footer.companyLogoAlt}
-                  </div>
-                  <div className="mt-1 font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)]">
-                    {companyName}
-                  </div>
-                  <div className="mt-1 text-base text-[var(--pub-text-muted)]">
-                    {companySlogan}
-                  </div>
+                  {companyName ? (
+                    <div className="font-[var(--font-serif)] text-2xl font-semibold tracking-tight text-[var(--pub-text)]">
+                      {companyName}
+                    </div>
+                  ) : null}
+                  {companySlogan ? (
+                    <div className="mt-1 text-base text-[var(--pub-text-muted)]">
+                      {companySlogan}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
-                    Телефон
+                {companyPhone ? (
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                      Телефон
+                    </div>
+                    <div className="mt-1.5 text-[15px] font-medium text-[var(--pub-text)]">
+                      {companyPhone}
+                    </div>
                   </div>
-                  <div className="mt-1.5 text-[15px] font-medium text-[var(--pub-text)]">
-                    {companyPhone}
-                  </div>
-                </div>
+                ) : null}
 
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
-                    E-mail
+                {companyEmail ? (
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                      E-mail
+                    </div>
+                    <div className="mt-1.5 break-all text-[15px] font-medium text-[var(--pub-text)]">
+                      {companyEmail}
+                    </div>
                   </div>
-                  <div className="mt-1.5 break-all text-[15px] font-medium text-[var(--pub-text)]">
-                    {companyEmail}
-                  </div>
-                </div>
+                ) : null}
 
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
-                    Адреса
+                {companyAddress ? (
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
+                      Адреса
+                    </div>
+                    <div className="mt-1.5 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
+                      {companyAddress}
+                    </div>
                   </div>
-                  <div className="mt-1.5 text-[15px] font-medium leading-7 text-[var(--pub-text)]">
-                    {companyAddress}
-                  </div>
-                </div>
+                ) : null}
 
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pub-text-soft)]">
