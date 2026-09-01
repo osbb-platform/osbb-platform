@@ -1,3 +1,4 @@
+import { normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 
 export type PublicHouseSearchResult = {
@@ -71,12 +72,12 @@ function normalizeDistrict(district: RawDistrict): PublicHouseSearchResult["dist
 }
 
 function scoreHouse(query: string, house: Omit<PublicHouseSearchResult, "cover_image_url">) {
-  const q = query.trim().toLowerCase();
+  const q = normalizeHouseSearchText(query);
 
-  const name = house.name.toLowerCase();
-  const address = house.address.toLowerCase();
-  const slug = house.slug.toLowerCase();
-  const osbb = (house.osbb_name ?? "").toLowerCase();
+  const name = normalizeHouseSearchText(house.name);
+  const address = normalizeHouseSearchText(house.address);
+  const slug = normalizeHouseSearchText(house.slug);
+  const osbb = normalizeHouseSearchText(house.osbb_name ?? "");
 
   let score = 0;
 

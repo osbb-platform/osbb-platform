@@ -1,6 +1,7 @@
 "use client";
 
 import { houseOrigin } from "@/src/shared/config/app/domains";
+import { houseSearchTextMatches, normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -583,7 +584,7 @@ export function HousesRegistryWorkspace({
     isCreateOpen &&
     (createOpenBaseline === null || activeHouses.length <= createOpenBaseline);
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalizedQuery = normalizeHouseSearchText(searchQuery);
 
   const filteredHouses = activeHouses.filter((house) => {
     const matchesDistrict = districtFilter
@@ -591,17 +592,17 @@ export function HousesRegistryWorkspace({
       : true;
 
     const matchesSearch = normalizedQuery
-      ? [
-          house.name,
-          house.address,
-          house.slug,
-          house.osbb_name ?? "",
-          house.short_description ?? "",
-          house.public_description ?? "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery)
+      ? houseSearchTextMatches(
+          [
+            house.name,
+            house.address,
+            house.slug,
+            house.osbb_name ?? "",
+            house.short_description ?? "",
+            house.public_description ?? "",
+          ],
+          normalizedQuery,
+        )
       : true;
 
     return matchesDistrict && matchesSearch;

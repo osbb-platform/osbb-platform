@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { houseSearchTextMatches, normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
 import { useRouter } from "next/navigation";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
@@ -89,22 +90,22 @@ export function CrossHouseDuplicatePanel({
   }, [houseId, targets]);
 
   const visibleTargets = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const normalizedQuery = normalizeHouseSearchText(searchQuery);
 
     if (!normalizedQuery) {
       return availableTargets;
     }
 
     return availableTargets.filter((target) =>
-      [
-        target.name,
-        target.slug,
-        target.address,
-        target.districtName ?? "",
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalizedQuery),
+      houseSearchTextMatches(
+        [
+          target.name,
+          target.slug,
+          target.address,
+          target.districtName ?? "",
+        ],
+        normalizedQuery,
+      ),
     );
   }, [availableTargets, searchQuery]);
 

@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
+import { houseSearchTextMatches, normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
 
 const RECENT_HOUSES_STORAGE_KEY = "osbb.recentHouses.v1";
 const RECENT_HOUSES_LIMIT = 5;
@@ -55,10 +56,6 @@ function writeRecentHouseIds(ids: string[]) {
   } catch {
     // localStorage may be unavailable in private or restricted contexts.
   }
-}
-
-function normalizeSearchValue(value: string) {
-  return value.trim().toLocaleLowerCase("uk-UA");
 }
 
 export function HouseSwitcher({
@@ -117,13 +114,14 @@ export function HouseSwitcher({
   }, [isOpen]);
 
   const filteredHouses = useMemo(() => {
-    const normalizedQuery = normalizeSearchValue(query);
+    const normalizedQuery = normalizeHouseSearchText(query);
 
     if (!normalizedQuery) return houses;
 
     return houses.filter((house) =>
-      [house.name, house.address ?? "", house.slug].some((value) =>
-        normalizeSearchValue(value).includes(normalizedQuery),
+      houseSearchTextMatches(
+        [house.name, house.address ?? "", house.slug],
+        normalizedQuery,
       ),
     );
   }, [houses, query]);
