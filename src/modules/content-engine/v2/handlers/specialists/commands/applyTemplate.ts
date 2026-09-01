@@ -12,7 +12,6 @@ import type { HouseSpecialist, HouseSpecialistCategory } from "../types";
 import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
   normalizeOptionalText,
-  normalizePhones,
   normalizePhoneTypes,
   validatePhones,
   normalizeSortOrder,

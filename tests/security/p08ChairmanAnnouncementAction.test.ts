@@ -248,6 +248,10 @@ describe("P08 createChairmanAnnouncement", () => {
   });
 
   it("returns a safe Ukrainian error when chairman guard rejects the request", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
     assertChairmanContextMock.mockRejectedValue(new Error("FORBIDDEN"));
 
     const result = await createChairmanAnnouncement({
@@ -256,6 +260,15 @@ describe("P08 createChairmanAnnouncement", () => {
       body: "Текст",
       level: "info",
     });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Chairman announcement action rejected",
+      expect.objectContaining({
+        slug: "house-a",
+        error: expect.any(Error),
+      }),
+    );
+    consoleErrorSpy.mockRestore();
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

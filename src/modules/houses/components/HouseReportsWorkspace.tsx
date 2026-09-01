@@ -70,7 +70,6 @@ type Props = {
 };
 
 type TabKey = "published" | "draft" | "archive";
-type PublishedPeriodScope = "latest" | "none" | `year:${number}`;
 type DraftPeriodContext = "current" | "past";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "restore" | "delete" | "delete_archive" | null;
