@@ -7,6 +7,7 @@ import { PubSectionHeader } from "@/src/shared/ui/public/PubSectionHeader";
 import { PubFilterTabs, type PubFilterTabItem } from "@/src/shared/ui/public/PubFilterTabs";
 import { PubBadge } from "@/src/shared/ui/public/PubBadge";
 import { PublicOnlineMeetingVoting } from "@/src/modules/houses/components/PublicOnlineMeetingVoting";
+import { readOnlineVotingProviderModeForUi } from "@/src/modules/houses/resident/onlineVotingProviderConfig";
 import {
   getOnlineMeetingAggregation,
   type OnlineMeetingAggregation,
@@ -448,6 +449,7 @@ export default async function PublicMeetingsPage({
                     label: formatPublicApartmentLabel(apartment.label),
                   }))}
                   aggregation={meeting.onlineAggregation}
+                  onlineVotingProviderMode={readOnlineVotingProviderModeForUi()}
                 />
               ) : null}
 

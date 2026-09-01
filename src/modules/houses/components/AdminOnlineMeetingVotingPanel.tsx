@@ -25,6 +25,10 @@ type Props = {
   lockVersion: number;
   aggregation: OnlineMeetingAggregation | null;
   ballots: AdminOnlineMeetingBallot[];
+  providerMode:
+    | "internal_resident"
+    | "official_diia"
+    | "disabled";
   canChangeWorkflowStatus: boolean;
   onMeetingChanged: (next: {
     status: MeetingStatus;
@@ -87,6 +91,7 @@ export function AdminOnlineMeetingVotingPanel({
   lockVersion,
   aggregation,
   ballots,
+  providerMode,
   canChangeWorkflowStatus,
   onMeetingChanged,
 }: Props) {
@@ -184,8 +189,9 @@ export function AdminOnlineMeetingVotingPanel({
               Керування онлайн-голосуванням
             </div>
             <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
-              Голоси мешканців підтверджуються через провайдера Дії та
-              рахуються за площею частки співвласника.
+              {providerMode === "internal_resident"
+                ? "Внутрішнє онлайн-голосування. Особа не підтверджується через Дія.Підпис. Голоси рахуються за площею частки співвласника."
+                : "Голоси мешканців підтверджуються через провайдера Дії та рахуються за площею частки співвласника."}
             </p>
           </div>
 

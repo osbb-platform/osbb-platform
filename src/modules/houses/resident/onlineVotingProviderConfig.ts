@@ -70,3 +70,13 @@ export function readOnlineVotingProviderConfig(
     "ONLINE_VOTING_CONFIG_INVALID_PROVIDER",
   );
 }
+
+export function readOnlineVotingProviderModeForUi(
+  env: Env = process.env,
+): OnlineVotingProviderMode {
+  try {
+    return readOnlineVotingProviderConfig(env).mode;
+  } catch {
+    return "disabled";
+  }
+}

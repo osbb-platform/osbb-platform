@@ -63,6 +63,10 @@ type Props = {
   questions: Question[];
   apartments: Apartment[];
   aggregation: Aggregation | null;
+  onlineVotingProviderMode:
+    | "internal_resident"
+    | "official_diia"
+    | "disabled";
 };
 
 function formatArea(value: number) {
@@ -128,6 +132,7 @@ export function PublicOnlineMeetingVoting({
   questions,
   apartments,
   aggregation,
+  onlineVotingProviderMode,
 }: Props) {
   const [selectedApartmentId, setSelectedApartmentId] =
     useState("");
@@ -293,8 +298,15 @@ export function PublicOnlineMeetingVoting({
       <section className="rounded-[var(--r-xl)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--pub-text-soft)]">
-              Онлайн-голосування
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--pub-text-soft)]">
+                Онлайн-голосування
+              </div>
+              {onlineVotingProviderMode === "internal_resident" ? (
+                <span className="rounded-[var(--r-pill)] border border-[var(--pub-border)] bg-[var(--pub-surface)] px-2.5 py-1 text-[11px] font-semibold text-[var(--pub-text-muted)]">
+                  Без Дія.Підпис
+                </span>
+              ) : null}
             </div>
 
             <div className="mt-1 text-sm leading-6 text-[var(--pub-text-muted)]">
@@ -498,7 +510,9 @@ export function PublicOnlineMeetingVoting({
           </div>
 
           <p className="mt-2 text-sm leading-6 text-[var(--pub-text-muted)]">
-            Оберіть квартиру, вкажіть площу вашої частки та дайте одну відповідь на кожне питання. Після цього підтвердьте особу через Дію.
+            {onlineVotingProviderMode === "official_diia"
+              ? "Оберіть квартиру, вкажіть площу вашої частки та дайте одну відповідь на кожне питання. Після цього підтвердьте особу через Дію."
+              : "Оберіть квартиру, вкажіть площу вашої частки та дайте одну відповідь на кожне питання."}
           </p>
 
           <div className="mt-5 grid gap-4">
@@ -695,7 +709,9 @@ export function PublicOnlineMeetingVoting({
             ) : null}
 
             <div className="rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4 text-xs leading-6 text-[var(--pub-text-muted)]">
-              Після натискання ви перейдете до підтвердження через Дію. Платформа не зберігає паспортні дані або сирі персональні дані з Дії.
+              {onlineVotingProviderMode === "official_diia"
+                ? "Після натискання ви перейдете до підтвердження через Дію. Платформа не зберігає паспортні дані або сирі персональні дані з Дії."
+                : "Це внутрішнє онлайн-голосування ОСББ. Особа не підтверджується через Дія.Підпис."}
             </div>
 
             <button
@@ -708,8 +724,12 @@ export function PublicOnlineMeetingVoting({
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--r-pill)] bg-[var(--pub-accent)] px-6 text-sm font-semibold text-[var(--pub-accent-contrast)] shadow-[var(--pub-shadow-sm)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending
-                ? "Готуємо підтвердження…"
-                : "Підтвердити через Дію"}
+                ? onlineVotingProviderMode === "official_diia"
+                  ? "Готуємо підтвердження…"
+                  : "Підтверджуємо голос…"
+                : onlineVotingProviderMode === "official_diia"
+                  ? "Підтвердити через Дію"
+                  : "Підтвердити голос"}
             </button>
           </div>
         </section>

@@ -100,7 +100,7 @@ describe("P06 T9 admin online voting UI", () => {
       "draft.onlineBallots.length > 0",
     );
     expect(source).toContain(
-      "disabled={isPending || hasAnyVotes}",
+      'onlineVotingProviderMode === "disabled"',
     );
   });
 

@@ -8,6 +8,7 @@ import { HouseSectionTabs } from "@/src/modules/houses/components/HouseSectionTa
 import { HouseSwitcher } from "@/src/modules/houses/components/HouseSwitcher";
 import { HouseStatusLine } from "@/src/modules/houses/components/HouseStatusLine";
 import { HouseMeetingsWorkspace } from "@/src/modules/houses/components/HouseMeetingsWorkspace";
+import { readOnlineVotingProviderModeForUi } from "@/src/modules/houses/resident/onlineVotingProviderConfig";
 import { HousePollsWorkspace } from "@/src/modules/houses/components/HousePollsWorkspace";
 import { HouseInformationWorkspace } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { HouseDocumentsWorkspace } from "@/src/modules/houses/components/HouseDocumentsWorkspace";
@@ -539,6 +540,7 @@ export default async function AdminHouseDetailPage({
               ownerName: apartment.owner_name,
             }))}
             meetings={meetingsData}
+            onlineVotingProviderMode={readOnlineVotingProviderModeForUi()}
           />
         ) : (
           <HouseTechnicalPlaceholder

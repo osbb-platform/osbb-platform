@@ -104,6 +104,10 @@ type Props = {
     ownerName?: string;
   }>;
   meetings: AdminHouseMeetingsSnapshot;
+  onlineVotingProviderMode:
+    | "internal_resident"
+    | "official_diia"
+    | "disabled";
 };
 
 type WorkspaceTab = "active" | "draft" | "archived";
@@ -458,6 +462,7 @@ export function HouseMeetingsWorkspace({
   apartments,
   meetings: meetingsSnapshot,
   canChangeWorkflowStatus,
+  onlineVotingProviderMode,
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
   const { dispatch, isPending } = useAdminContentCommand();
@@ -1315,7 +1320,11 @@ export function HouseMeetingsWorkspace({
 
                       <button
                         type="button"
-                        disabled={isPending || hasAnyVotes}
+                        disabled={
+                          isPending ||
+                          hasAnyVotes ||
+                          onlineVotingProviderMode === "disabled"
+                        }
                         onClick={() => {
                           setDraft((prev) => ({
                             ...prev,
@@ -1333,7 +1342,18 @@ export function HouseMeetingsWorkspace({
                             : "border-[var(--cms-border)] text-[var(--cms-text-muted)]",
                         ].join(" ")}
                       >
-                        Онлайн через Дію
+                        <span>
+                          {onlineVotingProviderMode === "internal_resident"
+                            ? "Онлайн-голосування"
+                            : onlineVotingProviderMode === "official_diia"
+                              ? "Онлайн через Дію"
+                              : "Онлайн-голосування недоступне"}
+                        </span>
+                        {onlineVotingProviderMode === "internal_resident" ? (
+                          <span className="mt-1 block text-xs font-normal opacity-75">
+                            Без Дія.Підпис
+                          </span>
+                        ) : null}
                       </button>
                     </div>
 
@@ -1356,6 +1376,7 @@ export function HouseMeetingsWorkspace({
                   lockVersion={draft.lockVersion}
                   aggregation={draft.onlineAggregation}
                   ballots={draft.onlineBallots}
+                  providerMode={onlineVotingProviderMode}
                   canChangeWorkflowStatus={workflowAccessGranted}
                   onMeetingChanged={(nextMeeting) => {
                     setDraft((prev) => ({
