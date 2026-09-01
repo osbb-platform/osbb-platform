@@ -2,6 +2,7 @@
 
 import { houseOrigin } from "@/src/shared/config/app/domains";
 import { houseSearchTextMatches, normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
+import { sortHousesByDisplayOrder } from "@/src/modules/houses/utils/houseNaturalOrder";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -574,7 +575,9 @@ export function HousesRegistryWorkspace({
   const [districtFilter, setDistrictFilter] = useState("");
   const [editingHouse, setEditingHouse] = useState<HouseItem | null>(null);
 
-  const safeHouses = Array.isArray(houses) ? houses : [];
+  const safeHouses = sortHousesByDisplayOrder(
+    Array.isArray(houses) ? houses : [],
+  );
   const activeHouses = safeHouses.filter((house) => !house.archived_at);
   const archivedHouses = safeHouses.filter((house) => Boolean(house.archived_at));
 

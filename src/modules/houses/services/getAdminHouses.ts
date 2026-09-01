@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getHouseMessageUnreadCounts } from "@/src/modules/houses/services/getHouseMessageUnreadCounts";
 import { getAdminCityScope } from "@/src/modules/auth/services/getAdminCityScope";
+import { sortHousesByDisplayOrder } from "@/src/modules/houses/utils/houseNaturalOrder";
 
 export type AdminHouseMessageListItem = {
   id: string;
@@ -194,5 +195,5 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
     }
   }
 
-  return typedData;
+  return sortHousesByDisplayOrder(typedData);
 }

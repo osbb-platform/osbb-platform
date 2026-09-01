@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 import { houseSearchTextMatches, normalizeHouseSearchText } from "@/src/modules/houses/utils/houseSearch";
+import { sortHousesByDisplayOrder } from "@/src/modules/houses/utils/houseNaturalOrder";
 
 const RECENT_HOUSES_STORAGE_KEY = "osbb.recentHouses.v1";
 const RECENT_HOUSES_LIMIT = 5;
@@ -115,10 +116,12 @@ export function HouseSwitcher({
 
   const filteredHouses = useMemo(() => {
     const normalizedQuery = normalizeHouseSearchText(query);
+    const naturallyOrderedHouses =
+      sortHousesByDisplayOrder(houses);
 
-    if (!normalizedQuery) return houses;
+    if (!normalizedQuery) return naturallyOrderedHouses;
 
-    return houses.filter((house) =>
+    return naturallyOrderedHouses.filter((house) =>
       houseSearchTextMatches(
         [house.name, house.address ?? "", house.slug],
         normalizedQuery,
