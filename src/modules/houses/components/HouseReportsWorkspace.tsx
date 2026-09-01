@@ -36,6 +36,13 @@ import {
   getSinglePdfHintMessage,
   validateSinglePdfFile,
 } from "@/src/shared/utils/validators/pdfUpload";
+import {
+  countAdminReportsByKind,
+  filterAdminReportsByNavigation,
+  getAdminReportPeriodYear,
+  getAdminReportYears,
+  type AdminReportPeriodKind,
+} from "@/src/modules/houses/utils/adminReportNavigation";
 import type {
   HouseReportCategorySnapshot,
   HouseReportSnapshot,
@@ -63,7 +70,7 @@ type Props = {
 };
 
 type TabKey = "published" | "draft" | "archive";
-type PublishedPeriodFilter = "current" | "past" | "none";
+type PublishedPeriodScope = "latest" | "none" | `year:${number}`;
 type DraftPeriodContext = "current" | "past";
 type WorkspaceMode = "idle" | "create" | "edit";
 type ConfirmAction = "publish" | "archive" | "restore" | "delete" | "delete_archive" | null;
@@ -421,13 +428,23 @@ export function HouseReportsWorkspace({
     "published",
     ["published", "draft", "archive"],
   );
-  const [publishedPeriodFilter, setPublishedPeriodFilter] =
-    useWorkspaceMemory<PublishedPeriodFilter>(
+  const [publishedPeriodScope, setPublishedPeriodScope] =
+    useWorkspaceMemory<string>(
       "reports",
-      "periodFilter",
-      "current",
-      ["current", "past", "none"],
+      "periodScope",
+      "latest",
     );
+  const [publishedPeriodKind, setPublishedPeriodKind] =
+    useWorkspaceMemory<AdminReportPeriodKind>(
+      "reports",
+      "periodKind",
+      "month",
+      ["month", "quarter", "year"],
+    );
+  const [publishedMonthFilter, setPublishedMonthFilter] =
+    useWorkspaceMemory("reports", "periodMonth", "all");
+  const [publishedQuarterFilter, setPublishedQuarterFilter] =
+    useWorkspaceMemory("reports", "periodQuarter", "all");
   const [publishedCategoryFilter, setPublishedCategoryFilter] =
     useWorkspaceMemory("reports", "categoryFilter", "all");
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("idle");
@@ -499,22 +516,42 @@ export function HouseReportsWorkspace({
     [reports],
   );
 
-  const currentReports = useMemo(
-    () => publishedReports.filter((item) => item.periodType === "current"),
+  const publishedReportYears = useMemo(
+    () => getAdminReportYears(publishedReports),
     [publishedReports],
   );
 
-  const pastReports = useMemo(
-    () => publishedReports.filter((item) => item.periodType === "past"),
-    [publishedReports],
-  );
+  const selectedPublishedYear = useMemo(() => {
+    if (publishedPeriodScope.startsWith("year:")) {
+      const storedYear = Number(
+        publishedPeriodScope.slice("year:".length),
+      );
+
+      if (publishedReportYears.includes(storedYear)) {
+        return storedYear;
+      }
+    }
+
+    return publishedReportYears[0] ?? null;
+  }, [publishedPeriodScope, publishedReportYears]);
 
   const noPeriodReports = useMemo(
     () =>
-      publishedReports.filter(
-        (item) => getReportPeriodDraft(item).periodKind === "none",
-      ),
+      filterAdminReportsByNavigation(publishedReports, {
+        mode: "none",
+      }),
     [publishedReports],
+  );
+
+  const publishedKindCounts = useMemo(
+    () =>
+      selectedPublishedYear === null
+        ? { month: 0, quarter: 0, year: 0 }
+        : countAdminReportsByKind(
+            publishedReports,
+            selectedPublishedYear,
+          ),
+    [publishedReports, selectedPublishedYear],
   );
 
   const draftReports = useMemo(
@@ -532,13 +569,35 @@ export function HouseReportsWorkspace({
     if (activeTab === "archive") return archivedReports;
 
     const periodFiltered =
-      publishedPeriodFilter === "past"
-        ? pastReports
-        : publishedPeriodFilter === "none"
-          ? noPeriodReports
-          : currentReports;
+      publishedPeriodScope === "none"
+        ? filterAdminReportsByNavigation(
+            publishedReports,
+            { mode: "none" },
+          )
+        : selectedPublishedYear === null
+          ? []
+          : filterAdminReportsByNavigation(
+              publishedReports,
+              {
+                mode: "period",
+                year: selectedPublishedYear,
+                kind: publishedPeriodKind,
+                month:
+                  publishedPeriodKind === "month" &&
+                  publishedMonthFilter !== "all"
+                    ? Number(publishedMonthFilter)
+                    : null,
+                quarter:
+                  publishedPeriodKind === "quarter" &&
+                  publishedQuarterFilter !== "all"
+                    ? Number(publishedQuarterFilter)
+                    : null,
+              },
+            );
 
-    if (publishedCategoryFilter === "all") return periodFiltered;
+    if (publishedCategoryFilter === "all") {
+      return periodFiltered;
+    }
 
     return periodFiltered.filter(
       (report) =>
@@ -548,12 +607,14 @@ export function HouseReportsWorkspace({
   }, [
     activeTab,
     archivedReports,
-    currentReports,
     draftReports,
-    noPeriodReports,
-    pastReports,
     publishedCategoryFilter,
-    publishedPeriodFilter,
+    publishedMonthFilter,
+    publishedPeriodKind,
+    publishedPeriodScope,
+    publishedQuarterFilter,
+    publishedReports,
+    selectedPublishedYear,
   ]);
 
   const visibleReports = useMemo(() => {
@@ -567,8 +628,14 @@ export function HouseReportsWorkspace({
         report.description,
         report.categoryTitle,
         report.pdf?.originalName,
-        report.year ? String(report.year) : "",
-        report.month ? getMonthLabel(report.month) : "",
+        getAdminReportPeriodYear(report)
+          ? String(getAdminReportPeriodYear(report))
+          : "",
+        report.periodMonth
+          ? getMonthLabel(
+              String(report.periodMonth).padStart(2, "0"),
+            )
+          : "",
         report.reportDate ?? "",
       ]
         .join(" ")
@@ -592,11 +659,17 @@ export function HouseReportsWorkspace({
       }
 
       if (reportSortMode === "year_desc") {
-        return Number(right.year ?? 0) - Number(left.year ?? 0);
+        return (
+          Number(getAdminReportPeriodYear(right) ?? 0) -
+          Number(getAdminReportPeriodYear(left) ?? 0)
+        );
       }
 
       if (reportSortMode === "year_asc") {
-        return Number(left.year ?? 0) - Number(right.year ?? 0);
+        return (
+          Number(getAdminReportPeriodYear(left) ?? 0) -
+          Number(getAdminReportPeriodYear(right) ?? 0)
+        );
       }
 
       if (reportSortMode === "updated_asc") {
@@ -666,7 +739,7 @@ export function HouseReportsWorkspace({
       resetPdfInput();
       setDraft(
         getEmptyDraft(
-          publishedPeriodFilter === "past" ? "past" : "current",
+          "current",
           firstCategory,
         ),
       );
@@ -1682,26 +1755,186 @@ export function HouseReportsWorkspace({
         {activeTab === "published" ? (
           <div className="mt-5 space-y-3">
             <div className="flex flex-wrap gap-2">
-              {[
-                ["current", "Поточний рік", currentReports.length],
-                ["past", "Минулі роки", pastReports.length],
-                ["none", "Без періоду", noPeriodReports.length],
-              ].map(([key, label, count]) => (
-                <button
-                  key={String(key)}
-                  type="button"
-                  onClick={() =>
-                    setPublishedPeriodFilter(key as PublishedPeriodFilter)
-                  }
-                  className={adminButtonClasses({
-                    variant:
-                      publishedPeriodFilter === key ? "primary" : "secondary",
-                  })}
-                >
-                  {label} · {count}
-                </button>
-              ))}
+              {publishedReportYears.map((year) => {
+                const key = `year:${year}`;
+                const yearCount = publishedReports.filter(
+                  (report) =>
+                    report.periodKind !== "none" &&
+                    getAdminReportPeriodYear(report) === year,
+                ).length;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setPublishedPeriodScope(key);
+                      setVisibleReportCount(20);
+                    }}
+                    className={adminButtonClasses({
+                      variant:
+                        publishedPeriodScope !== "none" &&
+                        selectedPublishedYear === year
+                          ? "primary"
+                          : "secondary",
+                    })}
+                  >
+                    {year} · {yearCount}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPublishedPeriodScope("none");
+                  setVisibleReportCount(20);
+                }}
+                className={adminButtonClasses({
+                  variant:
+                    publishedPeriodScope === "none"
+                      ? "primary"
+                      : "secondary",
+                })}
+              >
+                Без періоду · {noPeriodReports.length}
+              </button>
             </div>
+
+            {publishedPeriodScope !== "none" &&
+            selectedPublishedYear !== null ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    ["month", "Місяці", publishedKindCounts.month],
+                    ["quarter", "Квартали", publishedKindCounts.quarter],
+                    ["year", "Річний", publishedKindCounts.year],
+                  ].map(([key, label, count]) => (
+                    <button
+                      key={String(key)}
+                      type="button"
+                      onClick={() => {
+                        setPublishedPeriodKind(
+                          key as AdminReportPeriodKind,
+                        );
+                        setVisibleReportCount(20);
+                      }}
+                      className={adminButtonClasses({
+                        variant:
+                          publishedPeriodKind === key
+                            ? "primary"
+                            : "secondary",
+                      })}
+                    >
+                      {label} · {count}
+                    </button>
+                  ))}
+                </div>
+
+                {publishedPeriodKind === "month" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPublishedMonthFilter("all");
+                        setVisibleReportCount(20);
+                      }}
+                      className={adminButtonClasses({
+                        variant:
+                          publishedMonthFilter === "all"
+                            ? "primary"
+                            : "secondary",
+                      })}
+                    >
+                      Усі місяці
+                    </button>
+
+                    {CURRENT_MONTH_OPTIONS.map((month) => {
+                      const monthNumber = Number(month.value);
+                      const count = publishedReports.filter(
+                        (report) =>
+                          report.periodKind === "month" &&
+                          getAdminReportPeriodYear(report) ===
+                            selectedPublishedYear &&
+                          report.periodMonth === monthNumber,
+                      ).length;
+
+                      return (
+                        <button
+                          key={month.value}
+                          type="button"
+                          onClick={() => {
+                            setPublishedMonthFilter(month.value);
+                            setVisibleReportCount(20);
+                          }}
+                          className={adminButtonClasses({
+                            variant:
+                              publishedMonthFilter === month.value
+                                ? "primary"
+                                : "secondary",
+                          })}
+                        >
+                          {month.label} · {count}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {publishedPeriodKind === "quarter" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPublishedQuarterFilter("all");
+                        setVisibleReportCount(20);
+                      }}
+                      className={adminButtonClasses({
+                        variant:
+                          publishedQuarterFilter === "all"
+                            ? "primary"
+                            : "secondary",
+                      })}
+                    >
+                      Усі квартали
+                    </button>
+
+                    {QUARTER_OPTIONS.map((quarter) => {
+                      const quarterNumber = Number(quarter.value);
+                      const count = publishedReports.filter(
+                        (report) =>
+                          report.periodKind === "quarter" &&
+                          getAdminReportPeriodYear(report) ===
+                            selectedPublishedYear &&
+                          report.periodQuarter === quarterNumber,
+                      ).length;
+
+                      return (
+                        <button
+                          key={quarter.value}
+                          type="button"
+                          onClick={() => {
+                            setPublishedQuarterFilter(
+                              quarter.value,
+                            );
+                            setVisibleReportCount(20);
+                          }}
+                          className={adminButtonClasses({
+                            variant:
+                              publishedQuarterFilter ===
+                              quarter.value
+                                ? "primary"
+                                : "secondary",
+                          })}
+                        >
+                          {quarter.label} · {count}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
 
             <div className="flex flex-wrap gap-2">
               <button
