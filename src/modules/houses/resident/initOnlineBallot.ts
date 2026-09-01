@@ -1,6 +1,6 @@
 "use server";
 
-import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 import {
   resolveDiiaProvider,
@@ -8,6 +8,9 @@ import {
 import {
   readOnlineVotingProviderConfig,
 } from "@/src/modules/houses/resident/onlineVotingProviderConfig";
+import {
+  internalResidentIdentityHmac,
+} from "@/src/modules/houses/resident/internalResidentIdentity";
 import {
   withResidentSession,
   ResidentSessionError,
@@ -59,25 +62,6 @@ export type InitOnlineBallotResult =
 
 function normalizeId(value: string) {
   return value.trim();
-}
-
-function internalResidentIdentityHmac(
-  params: {
-    houseId: string;
-    sessionToken: string;
-    secret: string;
-  },
-) {
-  return createHmac(
-    "sha256",
-    params.secret,
-  )
-    .update("osbb:p06:internal-resident:v1")
-    .update("\0")
-    .update(params.houseId)
-    .update("\0")
-    .update(params.sessionToken)
-    .digest("hex");
 }
 
 function validateInput(
@@ -262,6 +246,8 @@ export async function initOnlineBallot(
           const identityHmac =
             internalResidentIdentityHmac({
               houseId,
+              meetingId:
+                normalizeId(input.meetingId),
               sessionToken,
               secret:
                 votingConfig.identityHmacSecret,

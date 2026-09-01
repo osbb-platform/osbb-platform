@@ -25,18 +25,27 @@ describe("P06-T2 internal resident online voting provider", () => {
     expect(config).not.toContain("MockDiiaProvider");
   });
 
-  it("derives internal identity only from a validated resident session and never stores raw token", () => {
+  it("derives meeting-scoped internal identity from a validated resident session and never stores raw token", () => {
     const init = read(
       "src/modules/houses/resident/initOnlineBallot.ts",
     );
+    const identity = read(
+      "src/modules/houses/resident/internalResidentIdentity.ts",
+    );
 
-    expect(init).toContain("createHmac");
     expect(init).toContain("sessionToken");
     expect(init).toContain("houseId");
-    expect(init).toContain(
-      '"osbb:p06:internal-resident:v1"',
-    );
+    expect(init).toContain("meetingId:");
+    expect(init).toContain("internalResidentIdentityHmac");
     expect(init).toContain("identityHmac");
+
+    expect(identity).toContain("createHmac");
+    expect(identity).toContain("params.houseId");
+    expect(identity).toContain("params.meetingId");
+    expect(identity).toContain("params.sessionToken");
+    expect(identity).toContain(
+      '"osbb:p06:internal-resident:v2"',
+    );
     expect(init).not.toContain(
       "identityHmac: sessionToken",
     );
