@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type HistoryActor = {
@@ -87,12 +88,17 @@ function buildFailure(
   params: HistoryWriteParams,
   payload: ReturnType<typeof buildHistoryPayload>,
 ): HistoryWriteFailure {
+  const payloadHash = createHash("sha256")
+    .update(JSON.stringify(payload))
+    .digest("hex");
+
   const reconciliationKey = [
     "history",
     params.houseId,
     params.entry.entityType,
     params.entry.entityId,
     params.entry.action,
+    payloadHash,
   ].join(":");
 
   return {

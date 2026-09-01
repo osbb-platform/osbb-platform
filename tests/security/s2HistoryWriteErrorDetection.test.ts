@@ -180,3 +180,88 @@ describe("S2-T2 strict history write handling", () => {
     expect(docs).toContain("reconciliation");
   });
 });
+
+describe("S2 reconciliation key collision resistance", () => {
+  it("keeps the same failed event deterministic", async () => {
+    const insert = vi.fn(async () => ({
+      data: null,
+      error: {
+        code: "42501",
+        message: "forced history failure",
+      },
+    }));
+
+    const supabase = {
+      from: vi.fn(() => ({ insert })),
+    } as unknown as SupabaseClient;
+
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const first = await writeHistory(supabase, params);
+    const second = await writeHistory(supabase, params);
+
+    expect(first.ok).toBe(false);
+    expect(second.ok).toBe(false);
+
+    if (!first.ok && !second.ok) {
+      expect(first.warning.reconciliationKey)
+        .toBe(second.warning.reconciliationKey);
+    }
+
+    consoleError.mockRestore();
+  });
+
+  it("does not collide for distinct updates of the same entity", async () => {
+    const insert = vi.fn(async () => ({
+      data: null,
+      error: {
+        code: "42501",
+        message: "forced history failure",
+      },
+    }));
+
+    const supabase = {
+      from: vi.fn(() => ({ insert })),
+    } as unknown as SupabaseClient;
+
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const first = await writeHistory(supabase, {
+      ...params,
+      entry: {
+        ...params.entry,
+        description: "First failed update",
+        afterSnapshot: { title: "Version A" },
+      },
+    });
+
+    const second = await writeHistory(supabase, {
+      ...params,
+      entry: {
+        ...params.entry,
+        description: "Second failed update",
+        afterSnapshot: { title: "Version B" },
+      },
+    });
+
+    expect(first.ok).toBe(false);
+    expect(second.ok).toBe(false);
+
+    if (!first.ok && !second.ok) {
+      expect(first.warning.reconciliationKey)
+        .not.toBe(second.warning.reconciliationKey);
+
+      expect(first.warning.reconciliationKey)
+        .toMatch(/^history:.*:[a-f0-9]{64}$/);
+
+      expect(second.warning.reconciliationKey)
+        .toMatch(/^history:.*:[a-f0-9]{64}$/);
+    }
+
+    consoleError.mockRestore();
+  });
+});
