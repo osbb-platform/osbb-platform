@@ -57,11 +57,17 @@ suite("P07 T8 real database acceptance", () => {
   let foreignApartmentId = "";
   const createdHouseIds: string[] = [];
   const createdApartmentIds: string[] = [];
+  const createdPollIds: string[] = [];
 
   async function createPoll(params: {
     houseId: string;
     identityMode: "open" | "anonymous";
     suffix: string;
+    scaleMax?: 5 | 10;
+    resultsVisibility?:
+      | "immediate"
+      | "after_completion"
+      | "hidden";
   }) {
     const pollInsert = await admin
       .from("house_polls")
@@ -70,7 +76,8 @@ suite("P07 T8 real database acceptance", () => {
         title: `P07 T8 ${params.suffix}`,
         description: "Temporary T8 real DB acceptance fixture",
         identity_mode: params.identityMode,
-        results_visibility: "immediate",
+        results_visibility:
+          params.resultsVisibility ?? "immediate",
         poll_status: "active",
         lifecycle_status: "published",
         published_at: new Date().toISOString(),
@@ -85,6 +92,7 @@ suite("P07 T8 real database acceptance", () => {
     }
 
     const pollId = pollInsert.data.id as string;
+    createdPollIds.push(pollId);
 
     const questionRows = [
       {
@@ -119,7 +127,7 @@ suite("P07 T8 real database acceptance", () => {
         question: "Scale",
         description: "",
         question_type: "scale",
-        scale_max: 5,
+        scale_max: params.scaleMax ?? 5,
         scale_min_label: "Min",
         scale_max_label: "Max",
         is_required: true,
@@ -410,14 +418,11 @@ suite("P07 T8 real database acceptance", () => {
   }, 30_000);
 
   afterAll(async () => {
-    if (fixture) {
+    if (createdPollIds.length > 0) {
       await admin
         .from("house_polls")
         .delete()
-        .in("id", [
-          fixture.openPollId,
-          fixture.anonymousPollId,
-        ]);
+        .in("id", createdPollIds);
     }
 
     if (createdApartmentIds.length > 0) {
@@ -568,6 +573,187 @@ suite("P07 T8 real database acceptance", () => {
       expect(response.apartmentLabel).toBeNull();
       expect(response.ownerName).toBeNull();
     }
+  }, 30_000);
+
+  it("accepts scale 1-10 through the real database submit path", async () => {
+    const poll = await createPoll({
+      houseId: fixture.houseId,
+      identityMode: "open",
+      suffix: "scale ten",
+      scaleMax: 10,
+    });
+
+    const submit = await submitPollAnswersDb({
+      houseId: fixture.houseId,
+      pollId: poll.pollId,
+      apartmentId: fixture.apartmentId,
+      answers: [
+        {
+          questionId: poll.questions.single,
+          optionId: poll.options.single,
+        },
+        {
+          questionId: poll.questions.multiple,
+          optionIds: [
+            poll.options.multipleA,
+            poll.options.multipleB,
+          ],
+        },
+        {
+          questionId: poll.questions.yesNo,
+          value: true,
+        },
+        {
+          questionId: poll.questions.scale,
+          value: 10,
+        },
+        {
+          questionId: poll.questions.text,
+          value: "Scale 10 real DB",
+        },
+      ],
+    });
+
+    expect(submit).toMatchObject({
+      ok: true,
+      code: "SUBMITTED",
+    });
+
+    const scaleAnswer = await admin
+      .from("house_poll_answers")
+      .select("scale_value")
+      .eq("poll_id", poll.pollId)
+      .eq("question_id", poll.questions.scale)
+      .single();
+
+    expect(scaleAnswer.error).toBeNull();
+    expect(scaleAnswer.data?.scale_value).toBe(10);
+
+    const results = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: poll.pollId,
+      viewer: { kind: "admin" },
+    });
+
+    const scale = results?.questions.find(
+      (question) =>
+        question.questionType === "scale",
+    );
+
+    expect(scale?.scale?.max).toBe(10);
+    expect(
+      scale?.scale?.distribution.find(
+        (item) => item.value === 10,
+      )?.count,
+    ).toBe(1);
+  }, 30_000);
+
+  it("enforces all resident results visibility modes against real DB rows", async () => {
+    const immediate = await createPoll({
+      houseId: fixture.houseId,
+      identityMode: "open",
+      suffix: "visibility immediate",
+      resultsVisibility: "immediate",
+    });
+
+    const immediateBefore = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: immediate.pollId,
+      viewer: {
+        kind: "resident",
+        apartmentId: fixture.apartmentId,
+      },
+    });
+
+    expect(immediateBefore).toMatchObject({
+      canViewResults: false,
+      visibilityReason: "RESPOND_FIRST",
+    });
+
+    const immediateSubmit = await submitPollAnswersDb({
+      houseId: fixture.houseId,
+      pollId: immediate.pollId,
+      apartmentId: fixture.apartmentId,
+      answers: answersFor(
+        immediate.questions,
+        immediate.options,
+      ),
+    });
+
+    expect(immediateSubmit.ok).toBe(true);
+
+    const immediateAfter = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: immediate.pollId,
+      viewer: {
+        kind: "resident",
+        apartmentId: fixture.apartmentId,
+      },
+    });
+
+    expect(immediateAfter?.canViewResults).toBe(true);
+    expect(immediateAfter?.visibilityReason).toBeNull();
+
+    const afterCompletion = await createPoll({
+      houseId: fixture.houseId,
+      identityMode: "open",
+      suffix: "visibility after completion",
+      resultsVisibility: "after_completion",
+    });
+
+    const delayedActive = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: afterCompletion.pollId,
+      viewer: {
+        kind: "resident",
+        apartmentId: fixture.apartmentId,
+      },
+    });
+
+    expect(delayedActive).toMatchObject({
+      canViewResults: false,
+      visibilityReason: "UNTIL_COMPLETION",
+    });
+
+    const complete = await admin
+      .from("house_polls")
+      .update({ poll_status: "completed" })
+      .eq("id", afterCompletion.pollId);
+
+    expect(complete.error).toBeNull();
+
+    const delayedCompleted = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: afterCompletion.pollId,
+      viewer: {
+        kind: "resident",
+        apartmentId: fixture.apartmentId,
+      },
+    });
+
+    expect(delayedCompleted?.canViewResults).toBe(true);
+    expect(delayedCompleted?.visibilityReason).toBeNull();
+
+    const hidden = await createPoll({
+      houseId: fixture.houseId,
+      identityMode: "open",
+      suffix: "visibility hidden",
+      resultsVisibility: "hidden",
+    });
+
+    const hiddenResult = await getPollResults({
+      houseId: fixture.houseId,
+      pollId: hidden.pollId,
+      viewer: {
+        kind: "resident",
+        apartmentId: fixture.apartmentId,
+      },
+    });
+
+    expect(hiddenResult).toMatchObject({
+      canViewResults: false,
+      visibilityReason: "HIDDEN",
+    });
   }, 30_000);
 
   it("denies anon direct reads of answers and participation", async () => {
