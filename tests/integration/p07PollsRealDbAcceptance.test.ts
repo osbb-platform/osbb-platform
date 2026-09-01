@@ -54,7 +54,9 @@ suite("P07 T8 real database acceptance", () => {
   });
 
   let fixture: Fixture;
-  let createdTemporaryApartment = false;
+  let foreignApartmentId = "";
+  const createdHouseIds: string[] = [];
+  const createdApartmentIds: string[] = [];
 
   async function createPoll(params: {
     houseId: string;
@@ -265,60 +267,115 @@ suite("P07 T8 real database acceptance", () => {
   }
 
   beforeAll(async () => {
-    const houseLookup = await admin
+    const managementCompanyLookup = await admin
+      .from("management_companies")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (
+      managementCompanyLookup.error ||
+      !managementCompanyLookup.data?.id
+    ) {
+      throw new Error(
+        "T8 requires one local management_companies row for temporary house fixtures.",
+      );
+    }
+
+    const managementCompanyId =
+      managementCompanyLookup.data.id as string;
+    const fixtureToken =
+      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const housesInsert = await admin
       .from("houses")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
+      .insert([
+        {
+          management_company_id: managementCompanyId,
+          name: `P07 T2 Primary ${fixtureToken}`,
+          slug: `p07-t2-primary-${fixtureToken}`,
+          address: `P07 T2 Primary ${fixtureToken}`,
+          is_active: true,
+        },
+        {
+          management_company_id: managementCompanyId,
+          name: `P07 T2 Foreign ${fixtureToken}`,
+          slug: `p07-t2-foreign-${fixtureToken}`,
+          address: `P07 T2 Foreign ${fixtureToken}`,
+          is_active: true,
+        },
+      ])
+      .select("id,slug");
 
-    if (houseLookup.error || !houseLookup.data?.id) {
+    if (
+      housesInsert.error ||
+      (housesInsert.data ?? []).length !== 2
+    ) {
       throw new Error(
-        "T8 requires one existing local houses row. No house fixture is created.",
+        `Unable to create T8 temporary houses: ${housesInsert.error?.message ?? "unexpected row count"}`,
       );
     }
 
-    const houseId = houseLookup.data.id as string;
-    let apartmentId: string;
+    const primaryHouse = housesInsert.data?.find(
+      (row) => row.slug === `p07-t2-primary-${fixtureToken}`,
+    );
+    const foreignHouse = housesInsert.data?.find(
+      (row) => row.slug === `p07-t2-foreign-${fixtureToken}`,
+    );
 
-    const apartmentLookup = await admin
+    if (!primaryHouse?.id || !foreignHouse?.id) {
+      throw new Error("T8 temporary house ids incomplete");
+    }
+
+    const houseId = primaryHouse.id as string;
+    const foreignHouseId = foreignHouse.id as string;
+
+    createdHouseIds.push(houseId, foreignHouseId);
+
+    const apartmentsInsert = await admin
       .from("house_apartments")
-      .select("id")
-      .eq("house_id", houseId)
-      .is("archived_at", null)
-      .limit(1)
-      .maybeSingle();
+      .insert([
+        {
+          house_id: houseId,
+          account_number: `P07-T2-PRIMARY-${fixtureToken}`,
+          apartment_label: `T2-P-${fixtureToken}`,
+          owner_name: "P07 T2 Primary Resident",
+          source_type: "manual",
+        },
+        {
+          house_id: foreignHouseId,
+          account_number: `P07-T2-FOREIGN-${fixtureToken}`,
+          apartment_label: `T2-F-${fixtureToken}`,
+          owner_name: "P07 T2 Foreign Resident",
+          source_type: "manual",
+        },
+      ])
+      .select("id,house_id");
 
-    if (apartmentLookup.error) {
+    if (
+      apartmentsInsert.error ||
+      (apartmentsInsert.data ?? []).length !== 2
+    ) {
       throw new Error(
-        `Unable to inspect T8 apartment fixture: ${apartmentLookup.error.message}`,
+        `Unable to create T8 temporary apartments: ${apartmentsInsert.error?.message ?? "unexpected row count"}`,
       );
     }
 
-    if (apartmentLookup.data?.id) {
-      apartmentId = apartmentLookup.data.id as string;
-    } else {
-      const fixtureToken = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      const apartmentInsert = await admin
-        .from("house_apartments")
-        .insert({
-          house_id: houseId,
-          account_number: `P07-T8-${fixtureToken}`,
-          apartment_label: `T8-${fixtureToken}`,
-          owner_name: "P07 T8 Temporary Fixture",
-          source_type: "manual",
-        })
-        .select("id")
-        .single();
+    const primaryApartment = apartmentsInsert.data?.find(
+      (row) => row.house_id === houseId,
+    );
+    const foreignApartment = apartmentsInsert.data?.find(
+      (row) => row.house_id === foreignHouseId,
+    );
 
-      if (apartmentInsert.error || !apartmentInsert.data?.id) {
-        throw new Error(
-          `Unable to create temporary T8 apartment: ${apartmentInsert.error?.message ?? "missing id"}`,
-        );
-      }
-
-      apartmentId = apartmentInsert.data.id as string;
-      createdTemporaryApartment = true;
+    if (!primaryApartment?.id || !foreignApartment?.id) {
+      throw new Error("T8 temporary apartment ids incomplete");
     }
+
+    const apartmentId = primaryApartment.id as string;
+    foreignApartmentId = foreignApartment.id as string;
+
+    createdApartmentIds.push(apartmentId, foreignApartmentId);
 
     const open = await createPoll({
       houseId,
@@ -353,21 +410,28 @@ suite("P07 T8 real database acceptance", () => {
   }, 30_000);
 
   afterAll(async () => {
-    if (!fixture) return;
+    if (fixture) {
+      await admin
+        .from("house_polls")
+        .delete()
+        .in("id", [
+          fixture.openPollId,
+          fixture.anonymousPollId,
+        ]);
+    }
 
-    await admin
-      .from("house_polls")
-      .delete()
-      .in("id", [
-        fixture.openPollId,
-        fixture.anonymousPollId,
-      ]);
-
-    if (createdTemporaryApartment) {
+    if (createdApartmentIds.length > 0) {
       await admin
         .from("house_apartments")
         .delete()
-        .eq("id", fixture.apartmentId);
+        .in("id", createdApartmentIds);
+    }
+
+    if (createdHouseIds.length > 0) {
+      await admin
+        .from("houses")
+        .delete()
+        .in("id", createdHouseIds);
     }
   }, 30_000);
 
@@ -568,29 +632,21 @@ suite("P07 T8 real database acceptance", () => {
       code: "POLL_NOT_ACTIVE",
     });
 
-    const otherApartment = await admin
-      .from("house_apartments")
-      .select("id,house_id")
-      .neq("house_id", fixture.houseId)
-      .is("archived_at", null)
-      .limit(1)
-      .maybeSingle();
+    expect(foreignApartmentId).not.toBe("");
 
-    if (otherApartment.data?.id) {
-      const foreign = await submitPollAnswersDb({
-        houseId: fixture.houseId,
-        pollId: fixture.openPollId,
-        apartmentId: otherApartment.data.id,
-        answers: answersFor(
-          fixture.questions,
-          fixture.options,
-        ),
-      });
+    const foreign = await submitPollAnswersDb({
+      houseId: fixture.houseId,
+      pollId: fixture.openPollId,
+      apartmentId: foreignApartmentId,
+      answers: answersFor(
+        fixture.questions,
+        fixture.options,
+      ),
+    });
 
-      expect(foreign).toEqual({
-        ok: false,
-        code: "APARTMENT_INVALID",
-      });
-    }
+    expect(foreign).toEqual({
+      ok: false,
+      code: "APARTMENT_INVALID",
+    });
   }, 30_000);
 });
