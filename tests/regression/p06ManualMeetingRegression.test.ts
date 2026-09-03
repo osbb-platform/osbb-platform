@@ -116,7 +116,13 @@ describe("P06-T1 manual meeting regression", () => {
       'before.meeting.voting_mode !== "manual"',
     );
     expect(recordManualVote).toContain(
+      '"record_house_meeting_manual_ballot"',
+    );
+    expect(recordManualVote).not.toContain(
       "const recordResult = await recordManualVotes",
+    );
+    expect(recordManualVote).not.toContain(
+      "lock_version: payload.lockVersion + 1",
     );
     expect(recordManualVote).toContain(
       'action: "manual_vote.recorded"',

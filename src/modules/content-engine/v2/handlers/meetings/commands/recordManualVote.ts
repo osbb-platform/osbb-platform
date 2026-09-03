@@ -1,3 +1,4 @@
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { RecordManualVotePayload } from "../types";
@@ -7,7 +8,6 @@ import {
   meetingsHistoryMetadata,
   publicMeetingsPaths,
   readIdAndLock,
-  recordManualVotes,
 } from "./shared";
 
 export const recordManualVoteCommand: CommandSpec = {
@@ -45,34 +45,29 @@ export const recordManualVoteCommand: CommandSpec = {
       );
     }
 
-    const meetingUpdateResult = await ctx.supabase
-      .from("house_meetings")
-      .update({
-        updated_at: new Date().toISOString(),
-        lock_version: payload.lockVersion + 1,
-      })
-      .eq("id", payload.id)
-      .eq("house_id", ctx.house.id)
-      .eq("lock_version", payload.lockVersion)
-      .select("*")
-      .maybeSingle();
+    const admin = createSupabaseAdminClient();
+    const { error: ballotError } = await admin.rpc(
+      "record_house_meeting_manual_ballot",
+      {
+        p_meeting_id: payload.id,
+        p_apartment_id: payload.apartmentId,
+        p_expected_lock_version: payload.lockVersion,
+        p_answers: payload.answers,
+      },
+    );
 
-    if (meetingUpdateResult.error) {
-      return err(meetingUpdateResult.error.message, "INTERNAL");
-    }
+    if (ballotError) {
+      if ((ballotError.message ?? "").includes("STALE_CONTENT")) {
+        return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
+      }
 
-    if (!meetingUpdateResult.data) {
-      return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
-    }
+      console.error("P06 atomic manual ballot failed", {
+        meetingId: payload.id,
+        code: ballotError.code ?? null,
+        message: ballotError.message,
+      });
 
-    const recordResult = await recordManualVotes(ctx, {
-      meetingId: payload.id,
-      apartmentId: payload.apartmentId,
-      answers: payload.answers,
-    });
-
-    if (!recordResult.ok) {
-      return recordResult;
+      return err("Не вдалося зберегти ручний голос.", "INTERNAL");
     }
 
     const afterResult = await getMeetingSnapshot(ctx, payload.id);

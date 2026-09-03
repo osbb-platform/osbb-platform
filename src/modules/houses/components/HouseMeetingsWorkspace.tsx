@@ -13,8 +13,7 @@ import {
   statusLabelFor,
   statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
-import { useMemo,
-  useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { AdminHouseMeetingsSnapshot } from "@/src/modules/houses/services/getAdminHouseMeetings";
@@ -470,6 +469,10 @@ export function HouseMeetingsWorkspace({
   const [meetings, setMeetings] = useState<MeetingItem[]>(
     normalizeMeetings(meetingsSnapshot),
   );
+
+  useEffect(() => {
+    setMeetings(normalizeMeetings(meetingsSnapshot));
+  }, [meetingsSnapshot]);
 
   const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
     "meetings",
