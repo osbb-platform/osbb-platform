@@ -25,7 +25,7 @@ import {
 } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import { PlatformSectionLoader } from "@/src/modules/cms/components/PlatformSectionLoader";
@@ -215,6 +215,7 @@ export function HouseSpecialistsWorkspace({
   const [draft, setDraft] = useState<SpecialistDraft | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const lifecycleCommandPendingRef = useRef(false);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
@@ -535,6 +536,9 @@ export function HouseSpecialistsWorkspace({
 
   async function runLifecycleCommand(action: Exclude<ConfirmAction, null>) {
     if (!draft?.id || typeof draft.lockVersion !== "number") return;
+    if (lifecycleCommandPendingRef.current) return;
+
+    lifecycleCommandPendingRef.current = true;
 
     const commandType =
       action === "publish"
@@ -545,21 +549,25 @@ export function HouseSpecialistsWorkspace({
             ? "specialists.restore"
             : "specialists.delete";
 
-    const result = await dispatch({
-      type: commandType,
-      houseId,
-      payload: {
-        id: draft.id,
-        lockVersion: draft.lockVersion,
-      },
-    });
+    try {
+      const result = await dispatch({
+        type: commandType,
+        houseId,
+        payload: {
+          id: draft.id,
+          lockVersion: draft.lockVersion,
+        },
+      });
 
-    if (result) {
-      closeWorkspace();
+      if (result) {
+        closeWorkspace();
 
-      if (action === "publish") setActiveTab("published");
-      if (action === "archive") setActiveTab("archived");
-      if (action === "restore") setActiveTab("draft");
+        if (action === "publish") setActiveTab("published");
+        if (action === "archive") setActiveTab("archived");
+        if (action === "restore") setActiveTab("draft");
+      }
+    } finally {
+      lifecycleCommandPendingRef.current = false;
     }
   }
 
@@ -1042,6 +1050,7 @@ export function HouseSpecialistsWorkspace({
 
       <PlatformConfirmModal
         open={confirmAction === "delete"}
+        isPending={isPending}
         title="Видалити картку спеціаліста?"
         description="Картку буде видалено без можливості відновлення."
         confirmLabel="Видалити"
@@ -1053,6 +1062,7 @@ export function HouseSpecialistsWorkspace({
 
       <PlatformConfirmModal
         open={confirmAction === "publish"}
+        isPending={isPending}
         title="Опублікувати картку спеціаліста?"
         description="Після публікації картка з’явиться на сайті будинку."
         confirmLabel="Опублікувати"
@@ -1064,6 +1074,7 @@ export function HouseSpecialistsWorkspace({
 
       <PlatformConfirmModal
         open={confirmAction === "archive"}
+        isPending={isPending}
         title="Архівувати картку?"
         description="Картку буде знято з публікації та переміщено в архів."
         confirmLabel="Архівувати"
@@ -1075,6 +1086,7 @@ export function HouseSpecialistsWorkspace({
 
       <PlatformConfirmModal
         open={confirmAction === "restore"}
+        isPending={isPending}
         title="Відновити картку?"
         description="Картку буде повернуто в чернетки для подальшого редагування."
         confirmLabel="Відновити"
