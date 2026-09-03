@@ -30,12 +30,10 @@ describe("S3-T6 completed plan sorting", () => {
     expect(workspace).toContain("completedAt: task.content.completedAt");
   });
 
-  it("admin completed-stage list overrides generic sortMode with completion recency", () => {
-    expect(workspace).toContain(
-      'activeTab === "active" && activeStageFilter === "completed"',
-    );
-    expect(workspace).toContain("compareHousePlanTasks");
-    expect(workspace).toContain("completedAt: left.completedAt");
-    expect(workspace).toContain("completedAt: right.completedAt");
+  it("admin active list enforces completed chronology after generic workspace sorting", () => {
+    expect(workspace).toContain('if (activeTab === "active")');
+    expect(workspace).toContain("enforceCompletedChronology");
+    expect(workspace).toContain("taskStatus: task.status ===");
+    expect(workspace).toContain('activeStageFilter === "all"');
   });
 });

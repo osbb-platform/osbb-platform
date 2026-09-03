@@ -7,7 +7,7 @@ import { WorkspaceListToolbar } from "@/src/modules/houses/components/WorkspaceL
 import { WorkspaceViewToggle, type WorkspaceViewMode } from "@/src/modules/houses/components/WorkspaceViewToggle";
 import { WorkspaceQuickActions } from "@/src/modules/houses/components/WorkspaceQuickActions";
 import { filterAndSortWorkspaceItems, type WorkspaceListSortMode } from "@/src/modules/houses/utils/workspaceList";
-import { compareHousePlanTasks } from "@/src/modules/houses/utils/sortHousePlanTasks";
+import { enforceCompletedChronology } from "@/src/modules/houses/utils/sortHousePlanTasks";
 
 import { AdminSegmentedTabs } from "@/src/shared/ui/admin/AdminSegmentedTabs";
 import { AdminSidePanel } from "@/src/shared/ui/admin/AdminSidePanel";
@@ -530,24 +530,13 @@ export function HousePlanWorkspace({
       sortMode,
     );
 
-    if (activeTab === "active" && activeStageFilter === "completed") {
-      return [...filteredTasks].sort((left, right) =>
-        compareHousePlanTasks(
-          {
-            id: left.id,
-            taskStatus: "completed",
-            sortOrder: 0,
-            updatedAt: left.updatedAt,
-            completedAt: left.completedAt,
-          },
-          {
-            id: right.id,
-            taskStatus: "completed",
-            sortOrder: 0,
-            updatedAt: right.updatedAt,
-            completedAt: right.completedAt,
-          },
-        ),
+    if (activeTab === "active") {
+      return enforceCompletedChronology(
+        filteredTasks.map((task) => ({
+          ...task,
+          taskStatus: task.status === "draft" ? "planned" : task.status,
+          sortOrder: 0,
+        })),
       );
     }
 
@@ -557,7 +546,6 @@ export function HousePlanWorkspace({
     searchQuery,
     sortMode,
     activeTab,
-    activeStageFilter,
   ]);
 
   function markDirty() {

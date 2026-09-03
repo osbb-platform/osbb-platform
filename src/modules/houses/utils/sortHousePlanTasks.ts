@@ -32,3 +32,19 @@ export function compareHousePlanTasks(left: HousePlanSortableTask, right: HouseP
   if (updatedDifference !== 0) return updatedDifference;
   return left.id.localeCompare(right.id);
 }
+
+export function enforceCompletedChronology<T extends HousePlanSortableTask>(tasks: T[]): T[] {
+  const completed = tasks
+    .filter((task) => task.taskStatus === "completed")
+    .sort(compareHousePlanTasks);
+
+  let completedIndex = 0;
+
+  return tasks.map((task) => {
+    if (task.taskStatus !== "completed") return task;
+
+    const replacement = completed[completedIndex];
+    completedIndex += 1;
+    return replacement;
+  });
+}
