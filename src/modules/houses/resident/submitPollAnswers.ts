@@ -39,7 +39,14 @@ export async function submitPollAnswers(input: SubmitPollAnswersInput): Promise<
     if (error instanceof ResidentSessionError) {
       return { ok: false, code: error.code, message: error.message, ...(error.retryAfterSeconds !== null ? { retryAfterSeconds: error.retryAfterSeconds } : {}) };
     }
-    console.error("P07 resident poll submit failed", { pollId: norm(input.pollId) });
+    console.error("P07 resident poll submit failed", {
+      pollId: norm(input.pollId),
+      code: error instanceof Error ? error.name : "UNKNOWN_ERROR",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown resident poll submit failure",
+    });
     return { ok: false, code: "POLL_SUBMIT_FAILED", message: "Не вдалося зберегти відповіді. Спробуйте ще раз." };
   }
 }
