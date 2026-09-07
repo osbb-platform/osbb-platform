@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
@@ -59,6 +60,38 @@ export async function createHouse(
     return { error };
   }
 
+  async function cleanupCreatedHouse(houseId: string) {
+    const { error: archiveError } = await supabase
+      .from("houses")
+      .update({
+        archived_at: new Date().toISOString(),
+        is_active: false,
+      })
+      .eq("id", houseId);
+
+    if (archiveError) {
+      console.error("createHouse compensation archive error:", {
+        houseId,
+        code: archiveError.code,
+        message: archiveError.message,
+      });
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from("houses")
+      .delete()
+      .eq("id", houseId);
+
+    if (deleteError) {
+      console.error("createHouse compensation delete error:", {
+        houseId,
+        code: deleteError.code,
+        message: deleteError.message,
+      });
+    }
+  }
+
   async function finalizePendingCoverImage(params: {
     houseId: string;
     uploadedPath: string;
@@ -94,9 +127,14 @@ export async function createHouse(
       .eq("id", houseId);
 
     if (updateCoverError) {
+      console.error("createHouse cover path update error:", {
+        houseId,
+        code: updateCoverError.code,
+        message: updateCoverError.message,
+      });
       await supabase.storage.from(HOUSE_COVER_BUCKET).remove([finalPath]);
       coverImagePathForCleanup = null;
-      throw new Error(`Не вдалося прив’язати фото будинку: ${updateCoverError.message}`);
+      throw new Error("Не вдалося прив’язати фото будинку.");
     }
 
     return finalPath;
@@ -140,18 +178,24 @@ export async function createHouse(
   try {
     slug = await resolveUniqueHouseSlug({ baseSlug });
   } catch (error) {
+    console.error("createHouse slug resolution error:", error);
     return failWithCleanup(
-      error instanceof Error
-        ? error.message
-        : "Не вдалося сформувати унікальний slug будинку.",
+      "Не вдалося сформувати унікальне посилання будинку. Оновіть сторінку та повторіть дію.",
     );
   }
 
   const defaultAccessCode = "123456";
+  const houseId = randomUUID();
 
-  const { data: createdHouse, error: insertError } = await supabase
+  // P09 RLS note:
+  // houses_admin_select_scoped calls the STABLE admin_has_house_access(id)
+  // helper, which re-reads public.houses. During the INSERT statement that
+  // helper cannot see the row being inserted. Do not combine this INSERT with
+  // RETURNING/.select(); read the row in a separate statement after INSERT.
+  const { error: insertError } = await supabase
     .from("houses")
     .insert({
+      id: houseId,
       district_id: districtId,
       management_company_id: managementCompanyId,
       name,
@@ -163,12 +207,37 @@ export async function createHouse(
       cover_image_path: uploadedImagePath || null,
       is_active: true,
       current_access_code: defaultAccessCode,
-    })
-    .select("id, name, slug, public_description, district:districts(theme_color)")
-    .single();
+    });
 
   if (insertError) {
-    return failWithCleanup(`Помилка створення будинку: ${insertError.message}`);
+    console.error("createHouse insert error:", {
+      houseId,
+      districtId,
+      managementCompanyId,
+      code: insertError.code,
+      message: insertError.message,
+    });
+    return failWithCleanup(
+      "Не вдалося створити будинок у вибраному районі. Оновіть сторінку та повторіть дію.",
+    );
+  }
+
+  const { data: createdHouse, error: createdHouseReadError } = await supabase
+    .from("houses")
+    .select("id, name, slug, public_description, district:districts(theme_color)")
+    .eq("id", houseId)
+    .single();
+
+  if (createdHouseReadError || !createdHouse) {
+    console.error("createHouse post-insert read error:", {
+      houseId,
+      code: createdHouseReadError?.code,
+      message: createdHouseReadError?.message,
+    });
+    await cleanupCreatedHouse(houseId);
+    return failWithCleanup(
+      "Будинок не вдалося підтвердити після створення. Оновіть сторінку та повторіть дію.",
+    );
   }
 
   if (uploadedImagePath) {
@@ -178,13 +247,10 @@ export async function createHouse(
         uploadedPath: uploadedImagePath,
       });
     } catch (error) {
-      await supabase.from("houses").delete().eq("id", createdHouse.id);
+      await cleanupCreatedHouse(createdHouse.id);
 
-      return failWithCleanup(
-        error instanceof Error
-          ? error.message
-          : "Не вдалося прив’язати фото будинку.",
-      );
+      console.error("createHouse cover finalize error:", error);
+      return failWithCleanup("Не вдалося прив’язати фото будинку.");
     }
   }
 
@@ -198,12 +264,10 @@ export async function createHouse(
   } catch (error) {
     console.error("house bootstrap error:", error);
 
-    await supabase.from("houses").delete().eq("id", createdHouse.id);
+    await cleanupCreatedHouse(createdHouse.id);
 
     return failWithCleanup(
-      error instanceof Error
-        ? `Будинок не створено: не вдалося ініціалізувати розділи будинку. ${error.message}`
-        : "Будинок не створено: не вдалося ініціалізувати розділи будинку.",
+      "Будинок не створено: не вдалося ініціалізувати розділи будинку.",
     );
   }
 
@@ -213,10 +277,15 @@ export async function createHouse(
   });
 
   if (accessUpsertError) {
-    await supabase.from("houses").delete().eq("id", createdHouse.id);
+    console.error("createHouse access bootstrap error:", {
+      houseId: createdHouse.id,
+      code: accessUpsertError.code,
+      message: accessUpsertError.message,
+    });
+    await cleanupCreatedHouse(createdHouse.id);
 
     return failWithCleanup(
-      `Будинок не створено: не вдалося ініціалізувати доступ. ${accessUpsertError.message}`,
+      "Будинок не створено: не вдалося ініціалізувати доступ.",
     );
   }
 
