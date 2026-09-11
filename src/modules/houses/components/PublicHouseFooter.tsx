@@ -8,6 +8,7 @@ import {
   type CreateFooterHouseMessageState,
 } from "@/src/modules/houses/actions/createFooterHouseMessage";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+import { formatHouseUnitLabel, getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type FooterSubject = "contact" | "improvement";
 
@@ -31,6 +32,7 @@ type PublicHouseFooterProps = {
   houseId: string;
   houseSlug: string;
   houseName: string;
+  objectKind?: string;
   apartmentOptions: ApartmentOption[];
   managementCompany: PublicHouseFooterCompany | null;
 };
@@ -49,6 +51,7 @@ function FooterMessageForm({
   houseSlug,
   houseName,
   subject,
+  objectKind,
   apartmentOptions,
 }: {
   districtColor: string;
@@ -56,6 +59,7 @@ function FooterMessageForm({
   houseSlug: string;
   houseName: string;
   subject: FooterSubject;
+  objectKind?: string;
   apartmentOptions: ApartmentOption[];
 }) {
   void districtColor;
@@ -78,6 +82,7 @@ function FooterMessageForm({
       <input type="hidden" name="houseId" value={houseId} />
       <input type="hidden" name="houseSlug" value={houseSlug} />
       <input type="hidden" name="houseName" value={houseName} />
+      <input type="hidden" name="objectKind" value={objectKind ?? ""} />
       <div>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-[var(--pub-text-muted)]">
@@ -128,7 +133,7 @@ function FooterMessageForm({
       <div>
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-[var(--pub-text-muted)]">
-            {houseCopy.footer.apartment}
+            {getHouseUnitTerminology(objectKind).full}
           </span>
           <div className="relative">
             <select
@@ -138,13 +143,13 @@ function FooterMessageForm({
               className={`${FIELD_CLASS} cursor-pointer appearance-none pr-11`}
             >
               <option value="" disabled>
-                {houseCopy.footer.selectApartment}
+                {getHouseUnitTerminology(objectKind).selectLabel}
               </option>
               {apartmentOptions.map((option) => (
                 <option key={option.id} value={option.label}>
                   {option.ownerName
-                    ? `${houseCopy.footer.apartmentShort} ${option.label} — ${option.ownerName}`
-                    : `${houseCopy.footer.apartmentShort} ${option.label}`}
+                    ? `${formatHouseUnitLabel(option.label, objectKind)} — ${option.ownerName}`
+                    : formatHouseUnitLabel(option.label, objectKind)}
                 </option>
               ))}
             </select>
@@ -192,6 +197,7 @@ export function PublicHouseFooter({
   houseId,
   houseSlug,
   houseName,
+  objectKind,
   apartmentOptions,
   managementCompany,
 }: PublicHouseFooterProps) {
@@ -377,6 +383,7 @@ export function PublicHouseFooter({
                 houseSlug={houseSlug}
                 houseName={houseName}
                 subject={subject}
+                objectKind={objectKind}
                 apartmentOptions={apartmentOptions}
               />
             </div>

@@ -11,6 +11,7 @@ import {
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { ACCEPTED_IMAGE_TYPES, validateSingleImageFile } from "@/src/shared/utils/validators/imageUpload";
+import { HOUSE_OBJECT_KIND_OPTIONS } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type CreateHouseFormProps = {
   districts: Array<{
@@ -218,6 +219,27 @@ export function CreateHouseForm({
           placeholder="ОСББ ..."
           className={adminInputClass}
         />
+      </div>
+
+      <div>
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
+          Тип обʼєкта
+        </label>
+        <select
+          name="objectKind"
+          required
+          className={adminInputClass}
+          defaultValue="apartment_building"
+        >
+          {HOUSE_OBJECT_KIND_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
+          Визначає термінологію в кабінеті: «Квартира» / «Ділянка». Після створення тип обʼєкта можна змінити, лише поки немає доданих квартир/ділянок.
+        </div>
       </div>
 
       <div>

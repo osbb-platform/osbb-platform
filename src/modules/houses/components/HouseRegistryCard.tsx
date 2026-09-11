@@ -10,6 +10,7 @@ import { ChangeHouseDashboardWidgetsForm } from "@/src/modules/houses/components
 import type { HouseHomeWidgetsSnapshot } from "@/src/modules/houses/services/getAdminHouseHomeWidgets";
 import { markHouseMessagesSeen } from "@/src/modules/houses/actions/markHouseMessagesSeen";
 import type { CurrentAdminUser } from "@/src/shared/types/entities/admin.types";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 import { getResolvedAccess } from "@/src/shared/permissions/rbac.guards";
 import { adminSecondaryButtonClass, adminSurfaceClass } from "@/src/shared/ui/admin/adminStyles";
 import { AdminActionIconButton, AdminActionIconLink } from "@/src/shared/ui/admin/AdminActionIconButton";
@@ -24,6 +25,7 @@ type HouseRegistryCardProps = {
     osbb_name: string | null;
     short_description: string | null;
     public_description: string | null;
+    object_kind: string;
     cover_image_path: string | null;
     cover_image_url?: string | null;
     tariff_amount: number | null;
@@ -139,6 +141,7 @@ export function HouseRegistryCard({
   const canManageSensitiveSettings =
     access.housesRegistry.changeAccessCode;
   const canManageSettings = access.housesRegistry.edit;
+  const terms = getHouseUnitTerminology(house.object_kind);
 
   function openMessagesPanel() {
     setIsMessagesOpen(true);
@@ -329,7 +332,7 @@ export function HouseRegistryCard({
       {getMessageTypeLabel(item.category)}
     </span>
     <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
-      Квартира: {item.apartment || "—"}
+      {terms.full}: {item.apartment || "—"}
     </span>
     <span className="rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-[11px] font-medium text-[var(--cms-text-muted)]">
       {formatMessageDate(item.created_at)}

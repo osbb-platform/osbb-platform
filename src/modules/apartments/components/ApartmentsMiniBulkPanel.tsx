@@ -11,6 +11,10 @@ import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import {
+  capitalizeFirst,
+  getHouseUnitTerminology,
+} from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type MiniBulkRow = {
   accountNumber: string;
@@ -22,6 +26,7 @@ type MiniBulkRow = {
 type ApartmentsMiniBulkPanelProps = {
   houseId: string;
   houseName: string;
+  objectKind?: string | null;
   onClose: () => void;
 };
 
@@ -74,9 +79,11 @@ function hasMissingRequiredFields(row: MiniBulkRow) {
 export function ApartmentsMiniBulkPanel({
   houseId,
   houseName,
+  objectKind,
   onClose,
 }: ApartmentsMiniBulkPanelProps) {
   const router = useRouter();
+  const terms = getHouseUnitTerminology(objectKind);
   const [rows, setRows] = useState<MiniBulkRow[]>(createInitialRows);
   const [rowsPayload, setRowsPayload] = useState("[]");
   const [state, formAction, isPending] = useActionState(
@@ -167,7 +174,7 @@ export function ApartmentsMiniBulkPanel({
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Закрити панель ручного додавання квартир"
+        aria-label={`Закрити панель ручного додавання ${terms.genitivePluralLower}`}
       />
 
       <div className="relative z-10 flex h-full w-full max-w-[980px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
@@ -178,11 +185,11 @@ export function ApartmentsMiniBulkPanel({
             </div>
 
             <h2 className="mt-4 text-2xl font-semibold text-[var(--cms-text)]">
-              Квартири для будинку {houseName}
+              {capitalizeFirst(terms.nominativePluralLower)} для будинку {houseName}
             </h2>
 
             <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
-              Заповніть до 20 рядків. Зберігаються лише рядки, де вказані особовий рахунок, квартира та власник.
+              Заповніть до 20 рядків. Зберігаються лише рядки, де вказані особовий рахунок, {terms.nominativeLower} та власник.
             </p>
           </div>
 
@@ -231,7 +238,7 @@ export function ApartmentsMiniBulkPanel({
                         Особовий рахунок *
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
-                        Квартира *
+                        {terms.full} *
                       </th>
                       <th className="px-4 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                         Власник *
@@ -353,7 +360,7 @@ export function ApartmentsMiniBulkPanel({
 
             {hasMissingRequiredRows ? (
               <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]">
-                Є рядки з незаповненими обов’язковими полями. Заповніть особовий рахунок, квартиру та власника або видаліть такий рядок.
+                Є рядки з незаповненими обов’язковими полями. Заповніть особовий рахунок, {terms.accusativeLower} та власника або видаліть такий рядок.
               </div>
             ) : null}
 
@@ -385,7 +392,7 @@ export function ApartmentsMiniBulkPanel({
                 disabled={isSubmitDisabled}
                 className={`${adminPrimaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
               >
-                {isPending ? "Зберігаємо..." : "Додати квартири"}
+                {isPending ? "Зберігаємо..." : `Додати ${terms.nominativePluralLower}`}
               </button>
             </div>
           </div>

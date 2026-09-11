@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { canChangeHouseObjectKind, normalizeHouseObjectKind } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type UpdateHouseState = {
   error: string | null;
@@ -44,6 +45,7 @@ export async function updateHouse(
   const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
+  const objectKind = normalizeHouseObjectKind(formData.get("objectKind"));
   const removeCoverImage =
     String(formData.get("removeCoverImage") ?? "false") === "true";
 
@@ -61,7 +63,7 @@ export async function updateHouse(
 
   const { data: existingHouse, error: existingHouseError } = await supabase
     .from("houses")
-    .select("id, slug, name, district_id, archived_at, cover_image_path")
+    .select("id, slug, name, district_id, archived_at, cover_image_path, object_kind")
     .eq("id", id)
     .maybeSingle();
 
@@ -75,6 +77,34 @@ export async function updateHouse(
 
   if (existingHouse.archived_at) {
     return failWithCleanup("Не можна редагувати архівний будинок. Спочатку відновіть його.");
+  }
+
+  // Track 4: object_kind drives user-facing terminology ("Квартира" vs
+  // "Ділянка") everywhere a unit is displayed. Changing it once real units
+  // exist would silently relabel data collected under the other kind's
+  // meaning, so it is only changeable while the house has no units yet.
+  if (existingHouse.object_kind !== objectKind) {
+    const { count: dependentUnitsCount, error: unitsCountError } = await supabase
+      .from("house_apartments")
+      .select("id", { count: "exact", head: true })
+      .eq("house_id", id)
+      .is("archived_at", null);
+
+    if (unitsCountError) {
+      return failWithCleanup(`Не вдалося перевірити наявність квартир/ділянок: ${unitsCountError.message}`);
+    }
+
+    if (
+      !canChangeHouseObjectKind({
+        currentObjectKind: existingHouse.object_kind,
+        nextObjectKind: objectKind,
+        activeUnitsCount: dependentUnitsCount ?? 0,
+      })
+    ) {
+      return failWithCleanup(
+        "Не можна змінити тип обʼєкта: у цього будинку вже є додані квартири/ділянки.",
+      );
+    }
   }
 
   let nextCoverImagePath =
@@ -108,6 +138,7 @@ export async function updateHouse(
       management_company_id: managementCompanyId,
       short_description: shortDescription || null,
       public_description: publicDescription || null,
+      object_kind: objectKind,
       cover_image_path: nextCoverImagePath,
     })
     .eq("id", id)

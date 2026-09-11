@@ -46,7 +46,11 @@ describe("P08 chairman cabinet UI contract", () => {
     expect(layout).toContain("validateHouseSession");
     expect(gate).toContain("house-chairman-return");
     expect(gate).toContain("window.sessionStorage.setItem");
-    expect(login).toContain('redirect("/")');
+    // RC-3 fix: loginToHouse returns a generic success flag instead of
+    // calling redirect("/") itself (a Next.js Server Action redirect() was
+    // intermittently rendering the marketing route tree on first paint);
+    // the actual navigation now happens client-side in HousePasswordGate.
+    expect(login).toContain("return { error: null, ok: true }");
     expect(login).not.toContain("chairman");
   });
 

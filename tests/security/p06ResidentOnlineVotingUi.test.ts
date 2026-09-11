@@ -97,8 +97,9 @@ describe("P06 T8 resident online voting UI", () => {
   });
 
   it("supports apartment selection and owned-area input", () => {
+    // Track 4: the unit noun is object_kind-aware (terms.selectLabel).
     expect(component).toContain(
-      "Оберіть квартиру",
+      "terms.selectLabel",
     );
 
     expect(component).toContain(
@@ -159,8 +160,9 @@ describe("P06 T8 resident online voting UI", () => {
       "Поточні результати за площею",
     );
 
+    // Track 4: the unit noun is object_kind-aware (terms.genitivePluralLower).
     expect(component).toContain(
-      "Статус квартир",
+      "Статус ${terms.genitivePluralLower}",
     );
 
     expect(component).toContain(

@@ -503,6 +503,7 @@ export default async function AdminHouseDetailPage({
         <HouseDebtorsWorkspace
           houseId={house.id}
           houseSlug={house.slug}
+          objectKind={house.object_kind}
           exportTitle="Боржники"
           apartments={debtorsApartments}
           debtors={debtorsData}
@@ -533,6 +534,7 @@ export default async function AdminHouseDetailPage({
             canChangeWorkflowStatus={access.houseWorkspaces.meetings.changeWorkflowStatus}
             houseId={house.id}
             houseSlug={house.slug}
+            objectKind={house.object_kind}
             hasApartments={meetingsApartments.length > 0}
             apartments={meetingsApartments.map((apartment) => ({
               id: apartment.id,
@@ -555,6 +557,7 @@ export default async function AdminHouseDetailPage({
           <HousePollsWorkspace
             houseId={house.id}
             houseSlug={house.slug}
+            objectKind={house.object_kind}
             polls={pollsData}
             canPublish={access.houseWorkspaces.polls.publish}
             canArchive={access.houseWorkspaces.polls.archive}

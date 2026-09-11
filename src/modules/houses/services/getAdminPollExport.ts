@@ -30,14 +30,21 @@ export async function getAdminPollExport(params: {
 }) {
   const supabase = createSupabaseAdminClient();
 
-  const pollResult = await supabase
-    .from("house_polls")
-    .select(
-      "id,house_id,title,description,identity_mode,results_visibility,poll_status",
-    )
-    .eq("id", params.pollId)
-    .eq("house_id", params.houseId)
-    .maybeSingle();
+  const [pollResult, houseResult] = await Promise.all([
+    supabase
+      .from("house_polls")
+      .select(
+        "id,house_id,title,description,identity_mode,results_visibility,poll_status",
+      )
+      .eq("id", params.pollId)
+      .eq("house_id", params.houseId)
+      .maybeSingle(),
+    supabase
+      .from("houses")
+      .select("object_kind")
+      .eq("id", params.houseId)
+      .maybeSingle(),
+  ]);
 
   if (pollResult.error) {
     throw new Error(
@@ -182,6 +189,7 @@ export async function getAdminPollExport(params: {
   const csv = serializeAdminPollExportCsv({
     identityMode: poll.identity_mode,
     rows,
+    objectKind: houseResult.data?.object_kind,
   });
 
   return {

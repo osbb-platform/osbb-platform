@@ -7,7 +7,7 @@ import {
   type ReplaceHouseApartmentsByImportState,
 } from "@/src/modules/apartments/actions/replaceHouseApartmentsByImport";
 import {
-  APARTMENTS_IMPORT_HEADERS,
+  getApartmentsImportHeaders,
   parseApartmentsImportFile,
   type ApartmentsImportRow,
 } from "@/src/modules/apartments/utils/parseApartmentsImportFile";
@@ -16,10 +16,12 @@ import {
   adminSecondaryButtonClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type ApartmentsImportPanelProps = {
   houseId: string;
   houseName: string;
+  objectKind?: string | null;
   onClose: () => void;
 };
 
@@ -31,9 +33,11 @@ const initialState: ReplaceHouseApartmentsByImportState = {
 export function ApartmentsImportPanel({
   houseId,
   houseName,
+  objectKind,
   onClose,
 }: ApartmentsImportPanelProps) {
   const router = useRouter();
+  const terms = getHouseUnitTerminology(objectKind);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [previewRows, setPreviewRows] = useState<ApartmentsImportRow[]>([]);
@@ -88,7 +92,7 @@ export function ApartmentsImportPanel({
     setIsParsing(true);
 
     try {
-      const result = await parseApartmentsImportFile(file);
+      const result = await parseApartmentsImportFile(file, objectKind);
       setPreviewRows(result.rows);
       setRowsPayload(JSON.stringify(result.rows));
     } catch (error) {
@@ -112,14 +116,14 @@ export function ApartmentsImportPanel({
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Закрити панель імпорту квартир"
+        aria-label={`Закрити панель імпорту ${terms.genitivePluralLower}`}
       />
 
       <div className="relative z-10 flex h-full w-full max-w-[1100px] flex-col border-l border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] shadow-[var(--cms-shadow-lg)]">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--cms-border)] px-5 py-4">
           <div>
             <div className="inline-flex rounded-[var(--r-pill)] bg-[var(--cms-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-pill-text)]">
-              Імпорт квартир
+              {`Імпорт ${terms.genitivePluralLower}`}
             </div>
 
             <h2 className="mt-3 text-xl font-semibold text-[var(--cms-text)]">
@@ -127,7 +131,7 @@ export function ApartmentsImportPanel({
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-[var(--cms-text-muted)]">
-              Завантажте CSV, XLS або XLSX. Поточний активний список квартир буде переміщено в архів, а новий файл стане єдиним активним реєстром.
+              {`Завантажте CSV, XLS або XLSX. Поточний активний список ${terms.genitivePluralLower} буде переміщено в архів, а новий файл стане єдиним активним реєстром.`}
             </p>
           </div>
 
@@ -162,7 +166,7 @@ export function ApartmentsImportPanel({
                   />
 
                   <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
-                    Обов’язкові колонки: {APARTMENTS_IMPORT_HEADERS.join(" / ")}
+                    Обов’язкові колонки: {getApartmentsImportHeaders(objectKind).join(" / ")}
                   </div>
                 </div>
 
@@ -197,7 +201,7 @@ export function ApartmentsImportPanel({
               {previewRows.length > 0 ? (
                 <>
                   <div className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] px-4 py-2.5 text-sm text-[var(--cms-warning-text)]">
-                    Після підтвердження поточний активний список квартир обраного будинку буде переміщено в архів. У зборах, боржниках та інших розділах буде використовуватись тільки новий активний список.
+                    {`Після підтвердження поточний активний список ${terms.genitivePluralLower} обраного будинку буде переміщено в архів. У зборах, боржниках та інших розділах буде використовуватись тільки новий активний список.`}
                   </div>
 
                   <div className="mt-4 overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
@@ -212,7 +216,7 @@ export function ApartmentsImportPanel({
                               Особовий рахунок
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
-                              Квартира
+                              {terms.full}
                             </th>
                             <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--cms-text-soft)]">
                               Власник
@@ -266,7 +270,7 @@ export function ApartmentsImportPanel({
                   disabled={previewRows.length === 0}
                 />
                 <span className="leading-6">
-                  Підтверджую, що потрібно архівувати поточний активний список квартир і зробити дані з файлу новим активним реєстром будинку.
+                  {`Підтверджую, що потрібно архівувати поточний активний список ${terms.genitivePluralLower} і зробити дані з файлу новим активним реєстром будинку.`}
                 </span>
               </label>
 

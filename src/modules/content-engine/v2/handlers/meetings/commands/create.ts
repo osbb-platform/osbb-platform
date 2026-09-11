@@ -3,6 +3,7 @@ import { err, ok } from "../../../types/result";
 import type { CreateMeetingPayload, HouseMeeting } from "../types";
 import {
   HOUSE_MEETING_ENTITY_TYPE,
+  isValidMeetingDate,
   meetingTitle,
   meetingsHistoryMetadata,
   normalizeDisplayStatus,
@@ -28,6 +29,10 @@ export const createCommand: CommandSpec = {
 
     if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
       return err("Додайте хоча б одне питання.", "VALIDATION_FAILED");
+    }
+
+    if (!isValidMeetingDate(payload.meetingDateTime)) {
+      return err("Некоректна дата зборів.", "VALIDATION_FAILED");
     }
 
     const votingMode = normalizeVotingMode(payload.votingMode);

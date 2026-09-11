@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type ArchiveAllHouseApartmentsState = {
   error: string | null;
@@ -30,6 +31,13 @@ export async function archiveAllHouseApartments(
 
   const supabase = await createSupabaseServerClient();
 
+  const { data: house } = await supabase
+    .from("houses")
+    .select("object_kind")
+    .eq("id", houseId)
+    .maybeSingle();
+  const terms = getHouseUnitTerminology(house?.object_kind);
+
   const { data: activeRows, error: activeRowsError } = await supabase
     .from("house_apartments")
     .select("id")
@@ -38,7 +46,7 @@ export async function archiveAllHouseApartments(
 
   if (activeRowsError) {
     return {
-      error: `Не вдалося отримати список квартир: ${activeRowsError.message}`,
+      error: `Не вдалося отримати список ${terms.genitivePluralLower}: ${activeRowsError.message}`,
       success: null,
     };
   }
@@ -76,7 +84,7 @@ export async function archiveAllHouseApartments(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "archive_all_apartments",
-      description: `Увесь активний список квартир будинку переміщено в архів.`,
+      description: `Увесь активний список ${terms.genitivePluralLower} будинку переміщено в архів.`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -91,6 +99,6 @@ export async function archiveAllHouseApartments(
 
   return {
     error: null,
-    success: `В архів переміщено ${activeRows.length} квартир.`,
+    success: `В архів переміщено ${activeRows.length} ${terms.genitivePluralLower}.`,
   };
 }

@@ -60,36 +60,70 @@ export const categoriesUpsertCommand: CommandSpec = {
 
     const before = (beforeData ?? []) as HouseSpecialistCategory[];
 
-    const { error: deleteError } = await ctx.supabase
-      .from("house_specialists_categories")
-      .delete()
-      .eq("house_id", ctx.house.id);
+    // Diff-based upsert, not delete-all-then-reinsert: house_specialist_categories
+    // (Track 6 M:N join table) has an ON DELETE CASCADE FK into this table, so
+    // deleting and immediately re-inserting a category — even with the same id —
+    // would silently drop every specialist's link to it in between the two
+    // statements. Only categories the admin actually removed get deleted here.
+    const keptIds = new Set(normalized.filter((c) => c.id).map((c) => c.id));
+    const idsToDelete = before
+      .map((category) => category.id)
+      .filter((id) => !keptIds.has(id));
 
-    if (deleteError) {
-      return err(deleteError.message, "INTERNAL");
-    }
-
-    const insertRows = normalized.map((category) => ({
-      ...(category.id ? { id: category.id } : {}),
-      house_id: category.house_id,
-      title: category.title,
-      sort_order: category.sort_order,
-    }));
-
-    let after: HouseSpecialistCategory[] = [];
-
-    if (insertRows.length > 0) {
-      const { data, error } = await ctx.supabase
+    if (idsToDelete.length > 0) {
+      const { error: deleteError } = await ctx.supabase
         .from("house_specialists_categories")
-        .insert(insertRows)
-        .select("*");
+        .delete()
+        .eq("house_id", ctx.house.id)
+        .in("id", idsToDelete);
 
-      if (error) {
-        return err(error.message, "INTERNAL");
+      if (deleteError) {
+        return err(deleteError.message, "INTERNAL");
       }
-
-      after = (data ?? []) as HouseSpecialistCategory[];
     }
+
+    const toUpdate = normalized.filter((c) => c.id);
+    const toInsert = normalized.filter((c) => !c.id);
+
+    for (const category of toUpdate) {
+      const { error: updateError } = await ctx.supabase
+        .from("house_specialists_categories")
+        .update({ title: category.title, sort_order: category.sort_order })
+        .eq("id", category.id)
+        .eq("house_id", ctx.house.id);
+
+      if (updateError) {
+        return err(updateError.message, "INTERNAL");
+      }
+    }
+
+    if (toInsert.length > 0) {
+      const { error: insertError } = await ctx.supabase
+        .from("house_specialists_categories")
+        .insert(
+          toInsert.map((category) => ({
+            house_id: category.house_id,
+            title: category.title,
+            sort_order: category.sort_order,
+          })),
+        );
+
+      if (insertError) {
+        return err(insertError.message, "INTERNAL");
+      }
+    }
+
+    const { data: afterData, error: afterError } = await ctx.supabase
+      .from("house_specialists_categories")
+      .select("*")
+      .eq("house_id", ctx.house.id)
+      .order("sort_order", { ascending: true });
+
+    if (afterError) {
+      return err(afterError.message, "INTERNAL");
+    }
+
+    const after = (afterData ?? []) as HouseSpecialistCategory[];
 
     return ok({
       data: after,

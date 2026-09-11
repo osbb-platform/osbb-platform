@@ -8,6 +8,7 @@ import { PubInput } from "@/src/shared/ui/public/PubInput";
 import { PubSelect } from "@/src/shared/ui/public/PubSelect";
 import { PubTextarea } from "@/src/shared/ui/public/PubTextarea";
 import { PubButton } from "@/src/shared/ui/public/PubButton";
+import { formatHouseUnitLabel, getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type Props = {
   houseId: string;
@@ -16,6 +17,7 @@ type Props = {
   category: string;
   specialistId: string;
   specialistLabel: string;
+  objectKind?: string;
   apartmentOptions: Array<{
     id: string;
     label: string;
@@ -56,6 +58,7 @@ export function SpecialistContactRequestForm({
   category,
   specialistId,
   specialistLabel,
+  objectKind,
   apartmentOptions,
 }: Props) {
   const [state, formAction, isPending] = useActionState(
@@ -85,6 +88,7 @@ export function SpecialistContactRequestForm({
       <input type="hidden" name="category" value={category} />
       <input type="hidden" name="specialistId" value={specialistId} />
       <input type="hidden" name="specialistLabel" value={specialistLabel} />
+      <input type="hidden" name="objectKind" value={objectKind ?? ""} />
 
       <PubFormField label={houseSpecialistsCopy.form.name}>
         {(id) => (
@@ -123,17 +127,17 @@ export function SpecialistContactRequestForm({
         )}
       </PubFormField>
 
-      <PubFormField label={houseSpecialistsCopy.form.apartment}>
+      <PubFormField label={getHouseUnitTerminology(objectKind).full}>
         {(id) => (
           <PubSelect id={id} name="apartment" required defaultValue="">
             <option value="" disabled>
-              {houseSpecialistsCopy.form.selectApartment}
+              {getHouseUnitTerminology(objectKind).selectLabel}
             </option>
             {apartmentOptions.map((option) => (
               <option key={option.id} value={option.label}>
                 {option.ownerName
-                  ? `Кв. ${option.label} — ${option.ownerName}`
-                  : `Кв. ${option.label}`}
+                  ? `${formatHouseUnitLabel(option.label, objectKind)} — ${option.ownerName}`
+                  : formatHouseUnitLabel(option.label, objectKind)}
               </option>
             ))}
           </PubSelect>

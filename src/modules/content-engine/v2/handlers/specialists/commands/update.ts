@@ -4,6 +4,7 @@ import type { HouseSpecialist, UpdateSpecialistPayload } from "../types";
 import {
   getSpecialist,
   HOUSE_SPECIALIST_ENTITY_TYPE,
+  normalizeCategoryTitles,
   normalizeOptionalText,
   normalizePhones,
   normalizePhoneTypes,
@@ -12,6 +13,8 @@ import {
   normalizeText,
   publicSpecialistsPaths,
   readIdAndLock,
+  replaceSpecialistCategoryLinks,
+  resolveSpecialistCategoryIds,
   specialistHistoryMetadata,
   specialistTaskTitle,
 } from "./shared";
@@ -28,6 +31,10 @@ export const updateCommand: CommandSpec = {
 
     if (!payload.title?.trim()) {
       return err("Заповніть назву спеціаліста.", "VALIDATION_FAILED");
+    }
+
+    if (normalizeCategoryTitles(payload).length === 0) {
+      return err("Оберіть хоча б одну категорію спеціаліста.", "VALIDATION_FAILED");
     }
 
     const phones = validatePhones(payload.phones);
@@ -49,12 +56,16 @@ export const updateCommand: CommandSpec = {
     const before = beforeResult.data;
     const now = new Date().toISOString();
     const phones = normalizePhones(payload.phones);
+    const categoryTitles = normalizeCategoryTitles(payload);
+
+    const categoryIdsResult = await resolveSpecialistCategoryIds(ctx, ctx.house.id, categoryTitles);
+    if (!categoryIdsResult.ok) return categoryIdsResult;
 
     const { data, error } = await ctx.supabase
       .from("house_specialists")
       .update({
         title: normalizeText(payload.title),
-        category: normalizeOptionalText(payload.category),
+        category: categoryTitles[0] ?? "",
         phones,
         phone_types: normalizePhoneTypes(payload.phoneTypes, phones),
         email: normalizeOptionalText(payload.email),
@@ -79,8 +90,16 @@ export const updateCommand: CommandSpec = {
 
     const specialist = data as HouseSpecialist;
 
+    const linkResult = await replaceSpecialistCategoryLinks(ctx, {
+      houseId: ctx.house.id,
+      specialistId: specialist.id,
+      categoryIds: categoryIdsResult.data,
+    });
+
+    if (!linkResult.ok) return linkResult;
+
     return ok({
-      data: specialist,
+      data: { ...specialist, categories: categoryTitles },
       history: {
         entityType: HOUSE_SPECIALIST_ENTITY_TYPE,
         entityId: specialist.id,
@@ -90,6 +109,7 @@ export const updateCommand: CommandSpec = {
         afterSnapshot: specialist,
         metadata: specialistHistoryMetadata({
           category: specialist.category,
+          categories: categoryTitles,
         }),
       },
       tasks:

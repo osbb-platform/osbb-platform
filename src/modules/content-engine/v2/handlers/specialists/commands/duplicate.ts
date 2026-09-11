@@ -8,7 +8,10 @@ import { ok } from "../../../types/result";
 import type { HouseSpecialist } from "../types";
 import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
+  loadSpecialistCategoryTitlesByHouse,
   publicSpecialistsPaths,
+  replaceSpecialistCategoryLinks,
+  resolveSpecialistCategoryIds,
   specialistHistoryMetadata,
   specialistTaskTitle,
 } from "./shared";
@@ -56,6 +59,37 @@ export const duplicateCommand: CommandSpec = {
     });
 
     if (!result.ok) return result;
+
+    // Copy the FULL category set (not just the legacy scalar `category`
+    // already copied by buildInsert above) to every created duplicate.
+    // Cross-house duplicates must never reuse a category_id from the source
+    // house — each target house's own catalog is resolved independently
+    // (get-or-create), so the composite-FK tenant-isolation constraint on
+    // house_specialist_categories is never at risk of being violated.
+    const sourceCategoriesResult = await loadSpecialistCategoryTitlesByHouse(ctx, ctx.house.id);
+    if (!sourceCategoriesResult.ok) return sourceCategoriesResult;
+
+    const sourceCategoryTitles = sourceCategoriesResult.data.get(payloadResult.data.sourceId) ?? [];
+
+    if (sourceCategoryTitles.length > 0) {
+      for (const created of result.data.created) {
+        const categoryIdsResult = await resolveSpecialistCategoryIds(
+          ctx,
+          created.targetHouseId,
+          sourceCategoryTitles,
+        );
+
+        if (!categoryIdsResult.ok) return categoryIdsResult;
+
+        const linkResult = await replaceSpecialistCategoryLinks(ctx, {
+          houseId: created.targetHouseId,
+          specialistId: created.createdId,
+          categoryIds: categoryIdsResult.data,
+        });
+
+        if (!linkResult.ok) return linkResult;
+      }
+    }
 
     return ok({
       data: result.data,

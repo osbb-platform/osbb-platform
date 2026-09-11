@@ -1,3 +1,4 @@
+import { INFORMATION_BODY_MAX_LENGTH } from "@/src/shared/constants/information/information.constants";
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { InformationPost, UpdateInformationPostPayload } from "../types";
@@ -30,6 +31,13 @@ export const updateCommand: CommandSpec = {
 
     if (!payload.body?.trim()) {
       return err("Заповніть текст інформаційного матеріалу.", "VALIDATION_FAILED");
+    }
+
+    if (payload.body.length > INFORMATION_BODY_MAX_LENGTH) {
+      return err(
+        `Текст інформаційного матеріалу не повинен перевищувати ${INFORMATION_BODY_MAX_LENGTH} символів.`,
+        "VALIDATION_FAILED",
+      );
     }
 
     if (!isValidCategory(payload.category)) {

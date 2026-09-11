@@ -52,6 +52,33 @@ export function normalizeOptionalDate(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+// RC-4: house_meetings.meeting_date has no server-side sanity bound, so a
+// malformed browser date input (e.g. a mistyped year) previously reached the
+// DB untouched and only surfaced as a generic downstream failure later. This
+// range accepts any real-world meeting date (past historical imports through
+// distant future scheduling) while rejecting obviously corrupted values.
+const MIN_MEETING_YEAR = 1900;
+const MAX_MEETING_YEAR = 2200;
+
+export function isValidMeetingDate(value: unknown): boolean {
+  if (value === undefined || value === null) {
+    return true;
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    return true;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  const year = parsed.getUTCFullYear();
+  return year >= MIN_MEETING_YEAR && year <= MAX_MEETING_YEAR;
+}
+
 export function normalizeUuid(value: unknown) {
   const text = normalizeText(value);
   return uuidPattern.test(text) ? text : null;

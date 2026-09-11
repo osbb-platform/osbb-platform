@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type CreateApartmentsMiniBulkState = {
   error: string | null;
@@ -98,6 +99,13 @@ export async function createApartmentsMiniBulk(
 
   const supabase = await createSupabaseServerClient();
 
+  const { data: house } = await supabase
+    .from("houses")
+    .select("object_kind")
+    .eq("id", houseId)
+    .maybeSingle();
+  const terms = getHouseUnitTerminology(house?.object_kind);
+
   const apartmentLabels = preparedRows.map((row) => row.apartment_label);
   const accountNumbers = preparedRows.map((row) => row.account_number);
 
@@ -119,7 +127,7 @@ export async function createApartmentsMiniBulk(
 
   if ((existingRows ?? []).length > 0) {
     return {
-      error: "Деякі квартири або особові рахунки вже існують в активному реєстрі.",
+      error: `Деякі ${terms.nominativePluralLower} або особові рахунки вже існують в активному реєстрі.`,
       successMessage: null,
     };
   }
@@ -138,7 +146,7 @@ export async function createApartmentsMiniBulk(
 
   if (insertError) {
     return {
-      error: `Помилка додавання квартир: ${insertError.message}`,
+      error: `Помилка додавання ${terms.genitivePluralLower}: ${insertError.message}`,
       successMessage: null,
     };
   }
@@ -153,7 +161,7 @@ export async function createApartmentsMiniBulk(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "mini_bulk_create_apartments",
-      description: `Додано ${preparedRows.length} квартир вручну.`,
+      description: `Додано ${preparedRows.length} ${terms.genitivePluralLower} вручну.`,
       metadata: {
         insertedCount: preparedRows.length,
         houseId,
@@ -166,6 +174,6 @@ export async function createApartmentsMiniBulk(
 
   return {
     error: null,
-    successMessage: `Додано ${preparedRows.length} квартир.`,
+    successMessage: `Додано ${preparedRows.length} ${terms.genitivePluralLower}.`,
   };
 }

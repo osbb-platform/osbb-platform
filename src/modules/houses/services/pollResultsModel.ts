@@ -4,6 +4,7 @@ import type {
   HousePollResultsVisibility,
   HousePollStatus,
 } from "@/src/modules/content-engine/v2/handlers/polls";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type PollResultsViewer =
   | {
@@ -450,12 +451,13 @@ function csvCell(value: string) {
 export function serializeAdminPollExportCsv(params: {
   identityMode: HousePollIdentityMode;
   rows: PollExportRow[];
+  objectKind?: unknown;
 }) {
   const headers =
     params.identityMode === "anonymous"
       ? ["Питання", "Тип", "Відповідь"]
       : [
-          "Квартира",
+          getHouseUnitTerminology(params.objectKind).full,
           "Власник",
           "Питання",
           "Тип",

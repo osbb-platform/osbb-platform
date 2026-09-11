@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { INFORMATION_BODY_MAX_LENGTH } from "@/src/shared/constants/information/information.constants";
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok, type Result } from "../../../types/result";
 import {
@@ -17,8 +18,6 @@ import {
   isValidCategory,
   normalizeCoverImage,
 } from "./shared";
-
-const INFORMATION_TEMPLATE_BODY_MAX_LENGTH = 512;
 
 type InformationPostsTemplatePayload = {
   posts?: unknown;
@@ -139,7 +138,7 @@ function normalizeTemplatePosts(value: unknown): NormalizedTemplatePost[] {
       if (
         !headline ||
         !body ||
-        body.length > INFORMATION_TEMPLATE_BODY_MAX_LENGTH ||
+        body.length > INFORMATION_BODY_MAX_LENGTH ||
         !isValidCategory(category)
       ) {
         return null;

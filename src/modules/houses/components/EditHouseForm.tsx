@@ -10,6 +10,7 @@ import {
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
 import { ACCEPTED_IMAGE_TYPES, validateSingleImageFile } from "@/src/shared/utils/validators/imageUpload";
+import { HOUSE_OBJECT_KIND_OPTIONS, normalizeHouseObjectKind } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type EditHouseFormProps = {
   house: {
@@ -20,6 +21,7 @@ type EditHouseFormProps = {
     osbb_name: string | null;
     short_description: string | null;
     public_description: string | null;
+    object_kind: string;
     cover_image_path: string | null;
     cover_image_url?: string | null;
     is_active: boolean;
@@ -245,6 +247,27 @@ export function EditHouseForm({
           defaultValue={house.osbb_name ?? ""}
           className={adminInputClass}
         />
+      </div>
+
+      <div>
+        <label className={`mb-2 block ${adminTextLabelClass}`}>
+          Тип обʼєкта
+        </label>
+        <select
+          name="objectKind"
+          required
+          className={adminInputClass}
+          defaultValue={normalizeHouseObjectKind(house.object_kind)}
+        >
+          {HOUSE_OBJECT_KIND_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <div className="mt-2 text-xs text-[var(--cms-text-soft)]">
+          Зміна типу можлива, лише поки в будинку немає доданих квартир/ділянок.
+        </div>
       </div>
 
       <div>

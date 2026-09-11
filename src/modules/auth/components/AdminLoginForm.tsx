@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { loginAdmin } from "@/src/modules/auth/actions/loginAdmin";
 import { ROUTES } from "@/src/shared/config/routes/routes.config";
 
 const initialState = {
   error: null,
+  ok: false,
 };
 
 export function AdminLoginForm() {
@@ -14,6 +15,15 @@ export function AdminLoginForm() {
     loginAdmin,
     initialState,
   );
+
+  useEffect(() => {
+    if (state.ok) {
+      // Hard navigation on purpose (see loginAdmin.ts RC-3 comment): a
+      // client-router soft transition here was intermittently rendering the
+      // marketing route tree for the very first post-login paint.
+      window.location.href = ROUTES.admin.dashboard;
+    }
+  }, [state.ok]);
 
   return (
     <form action={formAction} className="space-y-6 text-center">

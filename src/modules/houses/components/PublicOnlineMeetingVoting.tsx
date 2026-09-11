@@ -9,6 +9,7 @@ import {
 import {
   initOnlineBallot,
 } from "@/src/modules/houses/resident/initOnlineBallot";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type VoteChoice =
   | "for"
@@ -67,6 +68,7 @@ type Props = {
     | "internal_resident"
     | "official_diia"
     | "disabled";
+  objectKind?: string;
 };
 
 function formatArea(value: number) {
@@ -133,7 +135,9 @@ export function PublicOnlineMeetingVoting({
   apartments,
   aggregation,
   onlineVotingProviderMode,
+  objectKind,
 }: Props) {
+  const terms = getHouseUnitTerminology(objectKind);
   const [selectedApartmentId, setSelectedApartmentId] =
     useState("");
 
@@ -225,7 +229,7 @@ export function PublicOnlineMeetingVoting({
       !selectedStats
     ) {
       setError(
-        "Оберіть квартиру.",
+        `Оберіть ${terms.accusativeLower}.`,
       );
       return;
     }
@@ -445,7 +449,7 @@ export function PublicOnlineMeetingVoting({
       {aggregation?.apartments.length ? (
         <section className="rounded-[var(--r-xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-4 sm:p-5">
           <div className="text-sm font-semibold text-[var(--pub-text)]">
-            Статус квартир
+            {`Статус ${terms.genitivePluralLower}`}
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -511,14 +515,14 @@ export function PublicOnlineMeetingVoting({
 
           <p className="mt-2 text-sm leading-6 text-[var(--pub-text-muted)]">
             {onlineVotingProviderMode === "official_diia"
-              ? "Оберіть квартиру, вкажіть площу вашої частки та дайте одну відповідь на кожне питання. Після цього підтвердьте особу через Дію."
-              : "Оберіть квартиру, вкажіть площу вашої частки та дайте одну відповідь на кожне питання."}
+              ? `Оберіть ${terms.accusativeLower}, вкажіть площу вашої частки та дайте одну відповідь на кожне питання. Після цього підтвердьте особу через Дію.`
+              : `Оберіть ${terms.accusativeLower}, вкажіть площу вашої частки та дайте одну відповідь на кожне питання.`}
           </p>
 
           <div className="mt-5 grid gap-4">
             <label className="grid gap-2">
               <span className="text-sm font-medium text-[var(--pub-text)]">
-                Квартира
+                {terms.full}
               </span>
 
               <select
@@ -539,7 +543,7 @@ export function PublicOnlineMeetingVoting({
                 className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 text-sm text-[var(--pub-text)] outline-none focus:border-[var(--pub-accent)]"
               >
                 <option value="">
-                  Оберіть квартиру
+                  {terms.selectLabel}
                 </option>
 
                 {availableApartments.map(
@@ -619,7 +623,7 @@ export function PublicOnlineMeetingVoting({
                     ? `До ${formatArea(
                         selectedStats.remainingAreaM2,
                       )} м²`
-                    : "Спочатку оберіть квартиру"
+                    : `Спочатку оберіть ${terms.accusativeLower}`
                 }
                 className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] px-4 text-sm text-[var(--pub-text)] outline-none placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)]"
               />

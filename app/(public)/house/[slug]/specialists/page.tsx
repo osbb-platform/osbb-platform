@@ -20,7 +20,7 @@ type Props = {
 type SpecialistCard = {
   id: string;
   title: string;
-  category: string;
+  categories: string[];
   phones: string[];
   phoneTypes: Array<"mobile" | "landline" | "free">;
   email: string;
@@ -87,9 +87,9 @@ function SpecialistCardView({
   return (
     <article className="w-full min-w-0 rounded-[var(--r-2xl)] border border-[var(--pub-border)] bg-[var(--pub-surface)] p-6 shadow-[var(--pub-shadow-sm)] transition hover:-translate-y-0.5 hover:shadow-[var(--pub-shadow-md)] sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
-        {item.category ? (
+        {item.categories.length > 0 ? (
           <PubBadge tone="accent" size="sm">
-            {item.category}
+            {item.categories.join(", ")}
           </PubBadge>
         ) : null}
       </div>
@@ -188,7 +188,7 @@ export default async function SpecialistsPage({
     specialistsData.specialists.map((item) => ({
       id: item.id,
       title: item.content.title,
-      category: item.content.category,
+      categories: item.content.categories,
       phones: item.content.phones,
       phoneTypes: item.content.phoneTypes,
       email: item.content.email,
@@ -202,12 +202,14 @@ export default async function SpecialistsPage({
     .map((category) => category.title)
     .filter(Boolean);
 
+  // A specialist with multiple categories is findable under every one of
+  // them, not just the first.
   const usedCategories = categoryCatalog.filter((category) =>
-    activeSpecialists.some((item) => item.category === category),
+    activeSpecialists.some((item) => item.categories.includes(category)),
   );
 
   const fallbackUsedCategories = activeSpecialists
-    .map((item) => item.category)
+    .flatMap((item) => item.categories)
     .filter(Boolean)
     .filter((category, index, array) => array.indexOf(category) === index)
     .filter((category) => !usedCategories.includes(category));
@@ -221,7 +223,7 @@ export default async function SpecialistsPage({
     ...[...usedCategories, ...fallbackUsedCategories].map((category) => ({
       key: category,
       label: category,
-      count: activeSpecialists.filter((item) => item.category === category).length,
+      count: activeSpecialists.filter((item) => item.categories.includes(category)).length,
     })),
   ];
 
@@ -236,7 +238,7 @@ export default async function SpecialistsPage({
   const filteredSpecialists =
     activeCategory === houseSpecialistsCopy.filters.all
       ? activeSpecialists
-      : activeSpecialists.filter((item) => item.category === activeCategory);
+      : activeSpecialists.filter((item) => item.categories.includes(activeCategory));
 
   const selectedSpecialist = selectedSpecialistId
     ? activeSpecialists.find((item) => item.id === selectedSpecialistId) ?? null
@@ -312,7 +314,8 @@ export default async function SpecialistsPage({
                   houseName={house.name}
                   specialistId={selectedSpecialist.id}
                   specialistLabel={selectedSpecialist.title}
-                  category={selectedSpecialist.category || houseSpecialistsCopy.page.title}
+                  category={selectedSpecialist.categories.join(", ") || houseSpecialistsCopy.page.title}
+                  objectKind={house.object_kind}
                   apartmentOptions={apartmentOptions}
                 />
               </div>

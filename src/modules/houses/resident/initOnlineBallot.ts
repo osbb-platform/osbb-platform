@@ -25,6 +25,8 @@ import {
 import {
   rateLimitPolicies,
 } from "@/src/shared/security/rateLimitPolicies";
+import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 const VALID_CHOICES =
   new Set<OnlineVoteChoice>([
@@ -125,25 +127,36 @@ function residentErrorResult(
   };
 }
 
-function dbErrorMessage(code: string) {
+async function dbErrorMessage(code: string, houseId: string) {
   switch (code) {
     case "MEETING_NOT_ACTIVE_ONLINE":
       return "Онлайн-голосування для цих зборів зараз недоступне.";
 
     case "APARTMENT_INVALID":
-      return "Квартиру не знайдено в цьому будинку.";
-
     case "APARTMENT_AREA_MISSING":
-      return "Для квартири не заповнена площа. Зверніться до керуючого.";
+    case "OWNED_AREA_EXCEEDS_APARTMENT":
+    case "APARTMENT_AREA_SOFT_RESERVED": {
+      const { data: house } = await createSupabaseAdminClient()
+        .from("houses")
+        .select("object_kind")
+        .eq("id", houseId)
+        .maybeSingle();
+      const terms = getHouseUnitTerminology(house?.object_kind);
+
+      switch (code) {
+        case "APARTMENT_INVALID":
+          return `Не знайдено ${terms.accusativeLower} в цьому будинку.`;
+        case "APARTMENT_AREA_MISSING":
+          return `Для ${terms.genitiveLower} не заповнена площа. Зверніться до керуючого.`;
+        case "OWNED_AREA_EXCEEDS_APARTMENT":
+          return `Площа частки не може перевищувати площу ${terms.genitiveLower}.`;
+        default:
+          return `Заявлена площа перевищує доступний залишок ${terms.genitiveLower}. Можливо, інший співвласник уже голосує.`;
+      }
+    }
 
     case "OWNED_AREA_INVALID":
       return "Вкажіть коректну площу вашої частки.";
-
-    case "OWNED_AREA_EXCEEDS_APARTMENT":
-      return "Площа частки не може перевищувати площу квартири.";
-
-    case "APARTMENT_AREA_SOFT_RESERVED":
-      return "Заявлена площа перевищує доступний залишок квартири. Можливо, інший співвласник уже голосує.";
 
     case "ANSWERS_INCOMPLETE":
     case "ANSWERS_DUPLICATE_OR_MISSING":
@@ -239,7 +252,7 @@ export async function initOnlineBallot(
               ok: false,
               code: dbResult.code,
               message:
-                dbErrorMessage(dbResult.code),
+                await dbErrorMessage(dbResult.code, houseId),
             };
           }
 
@@ -275,7 +288,7 @@ export async function initOnlineBallot(
               ok: false,
               code: finalized.code,
               message:
-                dbErrorMessage(finalized.code),
+                await dbErrorMessage(finalized.code, houseId),
             };
           }
 
@@ -340,7 +353,7 @@ export async function initOnlineBallot(
               ok: false,
               code: dbResult.code,
               message:
-                dbErrorMessage(dbResult.code),
+                await dbErrorMessage(dbResult.code, houseId),
             };
           }
 

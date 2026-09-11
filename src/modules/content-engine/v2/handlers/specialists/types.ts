@@ -35,7 +35,9 @@ export type SpecialistIdAndLock = {
 
 export type CreateSpecialistPayload = {
   title: string;
+  /** @deprecated use `categories` — kept for backward compatibility */
   category?: string;
+  categories?: string[];
   phones?: string[];
   phoneTypes?: HouseSpecialistPhoneType[];
   email?: string;

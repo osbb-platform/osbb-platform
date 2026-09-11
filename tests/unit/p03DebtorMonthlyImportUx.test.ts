@@ -34,6 +34,7 @@ describe("P03 monthly debtor import UX", () => {
 
   it("shows missing-apartment warnings in preview", () => {
     expect(source).toContain("monthlyMissingApartmentsCount");
-    expect(source).toContain("Квартир без рядка");
+    // Track 4: the unit noun is object_kind-aware (Квартир/Ділянок).
+    expect(source).toContain("без рядка: {monthlyMissingApartmentsCount}");
   });
 });

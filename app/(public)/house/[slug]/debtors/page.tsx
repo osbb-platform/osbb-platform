@@ -5,6 +5,7 @@ import { PublicDebtorsCalculatorBlock } from "@/src/modules/houses/components/Pu
 import { computeDebtorTotals } from "@/src/modules/houses/debtors-history/computeDebtorTotals";
 import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsThreshold";
 import { PubIcon } from "@/src/shared/ui/public/PublicIcons";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -247,6 +248,7 @@ export default async function DebtorsPage({
   const searchQuery = String(resolvedSearchParams.q ?? "").trim();
 
   const house = await getHouseBySlug(slug);
+  const terms = getHouseUnitTerminology(house?.object_kind);
 
   const debtors = house
     ? await getPublishedHouseDebtors(house.id)
@@ -294,7 +296,7 @@ export default async function DebtorsPage({
         </h1>
 
         <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[var(--pub-text-muted)] sm:text-lg">
-          Актуальний баланс особових рахунків та список квартир із заборгованістю.
+          Актуальний баланс особових рахунків та список {terms.genitivePluralLower} із заборгованістю.
         </p>
 
         <div className="mt-6 inline-flex rounded-[var(--r-pill)] border border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] px-4 py-2 text-sm font-medium text-[var(--pub-text-muted)]">
@@ -316,7 +318,7 @@ export default async function DebtorsPage({
             {formatCurrency(totals.totalDebt)} ₴
           </div>
           <div className="mt-2 text-xs leading-5 text-[var(--pub-text-muted)]">
-            Сума заборгованості всіх квартир будинку
+            Сума заборгованості всіх {terms.genitivePluralLower} будинку
           </div>
         </article>
 
@@ -342,7 +344,7 @@ export default async function DebtorsPage({
               type="text"
               name="q"
               defaultValue={searchQuery}
-              placeholder="Введіть квартиру або особовий рахунок"
+              placeholder={`Введіть ${terms.accusativeLower} або особовий рахунок`}
               className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface-elevated)] pl-11 pr-4 text-[15px] text-[var(--pub-text)] outline-none transition-shadow placeholder:text-[var(--pub-text-soft)] focus:border-[var(--pub-accent)] focus:shadow-[0_0_0_3px_var(--pub-accent-soft)]"
             />
           </div>
@@ -355,7 +357,7 @@ export default async function DebtorsPage({
         </form>
 
         <p className="mt-3 text-sm leading-6 text-[var(--pub-text-muted)]">
-          Без пошуку показуються тільки квартири із заборгованістю. Через пошук мешканець може перевірити актуальний баланс своєї квартири або особового рахунку.
+          Без пошуку показуються тільки {terms.nominativePluralLower} із заборгованістю. Через пошук мешканець може перевірити актуальний баланс своєї {terms.genitiveLower} або особового рахунку.
         </p>
       </div>
 
@@ -366,7 +368,7 @@ export default async function DebtorsPage({
           </div>
         ) : noDebtorsState ? (
           <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
-            На даний момент за опублікованими балансами боржників немає. Для перевірки конкретної квартири скористайтесь пошуком.
+            На даний момент за опублікованими балансами боржників немає. Для перевірки конкретної {terms.genitiveLower} скористайтесь пошуком.
           </div>
         ) : noSearchResultsState ? (
           <div className="rounded-[var(--r-2xl)] border border-dashed border-[var(--pub-border-strong)] bg-[var(--pub-bg-quiet)] p-6 text-[var(--pub-text-muted)]">
@@ -379,7 +381,7 @@ export default async function DebtorsPage({
                 <thead className="sticky top-0 z-10 bg-[var(--pub-bg-quiet)]">
                   <tr className="border-b border-[var(--pub-border)] text-left">
                     <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
-                      Квартира
+                      {terms.full}
                     </th>
                     <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--pub-text-muted)]">
                       Особовий рахунок
@@ -445,6 +447,7 @@ export default async function DebtorsPage({
           accountNumber: item.accountNumber,
           amount: String(Math.abs(normalizeAmount(item.amount))),
         }))}
+        unitLabelFull={terms.full}
       />
 
       <PublicDebtorsCalculatorBlock

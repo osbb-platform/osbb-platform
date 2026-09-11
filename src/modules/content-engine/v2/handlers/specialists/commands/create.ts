@@ -3,6 +3,7 @@ import { err, ok } from "../../../types/result";
 import type { CreateSpecialistPayload, HouseSpecialist } from "../types";
 import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
+  normalizeCategoryTitles,
   normalizeOptionalText,
   normalizePhones,
   normalizePhoneTypes,
@@ -10,6 +11,8 @@ import {
   normalizeSortOrder,
   normalizeText,
   publicSpecialistsPaths,
+  replaceSpecialistCategoryLinks,
+  resolveSpecialistCategoryIds,
   specialistHistoryMetadata,
   specialistTaskTitle,
 } from "./shared";
@@ -25,6 +28,10 @@ export const createCommand: CommandSpec = {
       return err("Заповніть назву спеціаліста.", "VALIDATION_FAILED");
     }
 
+    if (normalizeCategoryTitles(payload).length === 0) {
+      return err("Оберіть хоча б одну категорію спеціаліста.", "VALIDATION_FAILED");
+    }
+
     const phones = validatePhones(payload.phones);
     if (!phones.ok) {
       return err("Введіть коректний номер телефону.", "VALIDATION_FAILED");
@@ -37,13 +44,19 @@ export const createCommand: CommandSpec = {
     const payload = rawPayload as CreateSpecialistPayload;
     const now = new Date().toISOString();
     const phones = normalizePhones(payload.phones);
+    const categoryTitles = normalizeCategoryTitles(payload);
+
+    const categoryIdsResult = await resolveSpecialistCategoryIds(ctx, ctx.house.id, categoryTitles);
+    if (!categoryIdsResult.ok) return categoryIdsResult;
 
     const { data, error } = await ctx.supabase
       .from("house_specialists")
       .insert({
         house_id: ctx.house.id,
         title: normalizeText(payload.title),
-        category: normalizeOptionalText(payload.category),
+        // Primary/compatibility scalar: first selected category. Not removed
+        // this release — legacy readers keep working unmodified.
+        category: categoryTitles[0] ?? "",
         phones,
         phone_types: normalizePhoneTypes(payload.phoneTypes, phones),
         email: normalizeOptionalText(payload.email),
@@ -63,8 +76,19 @@ export const createCommand: CommandSpec = {
 
     const specialist = data as HouseSpecialist;
 
+    const linkResult = await replaceSpecialistCategoryLinks(ctx, {
+      houseId: ctx.house.id,
+      specialistId: specialist.id,
+      categoryIds: categoryIdsResult.data,
+    });
+
+    if (!linkResult.ok) {
+      await ctx.supabase.from("house_specialists").delete().eq("id", specialist.id);
+      return linkResult;
+    }
+
     return ok({
-      data: specialist,
+      data: { ...specialist, categories: categoryTitles },
       history: {
         entityType: HOUSE_SPECIALIST_ENTITY_TYPE,
         entityId: specialist.id,
@@ -73,6 +97,7 @@ export const createCommand: CommandSpec = {
         afterSnapshot: specialist,
         metadata: specialistHistoryMetadata({
           category: specialist.category,
+          categories: categoryTitles,
         }),
       },
       tasks: {

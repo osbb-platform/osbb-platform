@@ -13,6 +13,7 @@ import type {
   PublishedHousePoll,
   PublishedPollQuestion,
 } from "@/src/modules/houses/services/getPublishedHousePolls";
+import { formatHouseUnitLabel, getHouseUnitTerminology, stripHouseUnitLabelPrefix } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type ApartmentOption = {
   id: string;
@@ -24,6 +25,7 @@ type Props = {
   slug: string;
   polls: PublishedHousePoll[];
   apartments: ApartmentOption[];
+  objectKind?: string;
 };
 
 type DraftValue =
@@ -34,11 +36,10 @@ type DraftValue =
   | undefined;
 
 function publicApartmentLabel(label: string) {
-  const trimmed = label.trim();
-  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
+  const withoutPrefix = stripHouseUnitLabelPrefix(label);
   const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
 
-  return withoutOwner || withoutPrefix || trimmed;
+  return withoutOwner || withoutPrefix || label.trim();
 }
 
 function pollStatusLabel(status: PublishedHousePoll["pollStatus"]) {
@@ -676,6 +677,7 @@ export function PublicHousePolls({
   slug,
   polls,
   apartments,
+  objectKind,
 }: Props) {
   const [selectedApartmentId, setSelectedApartmentId] =
     useState("");
@@ -685,12 +687,14 @@ export function PublicHousePolls({
       apartment.id === selectedApartmentId,
   );
 
+  const terms = getHouseUnitTerminology(objectKind);
+
   return (
     <div className="space-y-6">
       <section className="rounded-[var(--r-xl)] border border-[var(--pub-border)] bg-[var(--pub-surface-elevated)] p-5 shadow-[var(--pub-shadow-sm)] sm:p-6">
         <label>
           <span className="mb-2 block text-sm font-semibold text-[var(--pub-text)]">
-            Ваша квартира
+            Ваша {terms.nominativeLower}
           </span>
           <select
             value={selectedApartmentId}
@@ -702,14 +706,14 @@ export function PublicHousePolls({
             className="h-12 w-full rounded-[var(--r-lg)] border border-[var(--pub-border-strong)] bg-[var(--pub-surface)] px-4 text-sm text-[var(--pub-text)] outline-none focus:border-[var(--pub-accent)]"
           >
             <option value="">
-              Оберіть квартиру
+              {terms.selectLabel}
             </option>
             {apartments.map((apartment) => (
               <option
                 key={apartment.id}
                 value={apartment.id}
               >
-                Кв. {publicApartmentLabel(apartment.label)}
+                {formatHouseUnitLabel(apartment.label, objectKind)}
               </option>
             ))}
           </select>
@@ -718,7 +722,8 @@ export function PublicHousePolls({
         {selectedApartment ? (
           <p className="mt-2 text-xs text-[var(--pub-text-muted)]">
             Участь і захист від повторної відповіді перевіряються для
-            квартири {publicApartmentLabel(selectedApartment.label)}.
+            {" "}
+            {terms.genitiveLower} {publicApartmentLabel(selectedApartment.label)}.
           </p>
         ) : null}
       </section>

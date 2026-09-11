@@ -6,6 +6,7 @@ import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdmin
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import type { ApartmentsImportRow } from "@/src/modules/apartments/utils/parseApartmentsImportFile";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type ReplaceHouseApartmentsByImportState = {
   error: string | null;
@@ -60,6 +61,13 @@ export async function replaceHouseApartmentsByImport(
   }
 
   const supabase = await createSupabaseServerClient();
+
+  const { data: house } = await supabase
+    .from("houses")
+    .select("object_kind")
+    .eq("id", houseId)
+    .maybeSingle();
+  const terms = getHouseUnitTerminology(house?.object_kind);
 
   const { count: existingActiveCount, error: existingActiveCountError } = await supabase
     .from("house_apartments")
@@ -125,7 +133,7 @@ export async function replaceHouseApartmentsByImport(
 
   if ((activeCountAfterImport ?? 0) !== rows.length) {
     return {
-      error: `Імпорт зупинено: після заміни активний список містить ${activeCountAfterImport ?? 0} квартир замість ${rows.length}. Перевірте реєстр перед повторним імпортом.`,
+      error: `Імпорт зупинено: після заміни активний список містить ${activeCountAfterImport ?? 0} ${terms.genitivePluralLower} замість ${rows.length}. Перевірте реєстр перед повторним імпортом.`,
       success: null,
     };
   }
@@ -140,7 +148,7 @@ export async function replaceHouseApartmentsByImport(
       entityId: houseId,
       entityLabel: houseId,
       actionType: "replace_apartments_by_import",
-      description: `Імпортом повністю замінено реєстр квартир (${rows.length} строк).`,
+      description: `Імпортом повністю замінено реєстр ${terms.genitivePluralLower} (${rows.length} строк).`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -156,6 +164,6 @@ export async function replaceHouseApartmentsByImport(
 
   return {
     error: null,
-    success: `Імпортовано ${rows.length} квартир.`,
+    success: `Імпортовано ${rows.length} ${terms.genitivePluralLower}.`,
   };
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminDashboardWidgetCard } from "@/src/modules/cms/components/AdminDashboardWidgetCard";
 import { AdminDashboardAttentionCarousel } from "@/src/modules/cms/components/AdminDashboardAttentionCarousel";
 import { getAdminDashboardV1 } from "@/src/modules/houses/services/getAdminDashboardV1";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -139,7 +140,7 @@ export default async function AdminDashboardPage() {
             accent="amber"
           />
           <KpiTile
-            label="Будинків без квартир"
+            label="Будинків без облікових одиниць"
             value={dashboard.kpi.housesWithoutApartments}
             hint="Потрібне налаштування"
             accent="rose"
@@ -295,7 +296,7 @@ export default async function AdminDashboardPage() {
 
         <AdminDashboardWidgetCard
           title="Проблемні будинки"
-          subtitle="Будинки, де є незавершені матеріали або не налаштовані квартири"
+          subtitle="Будинки, де є незавершені матеріали або не налаштовані облікові одиниці"
           scroll
           maxRows={10}
         >
@@ -319,7 +320,7 @@ export default async function AdminDashboardPage() {
 
                       {!item.hasApartments ? (
                         <span className="rounded-[var(--r-pill)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-2.5 py-1 text-xs text-[var(--cms-danger-text)]">
-                          Немає квартир
+                          {`Немає ${getHouseUnitTerminology(item.objectKind).genitivePluralLower}`}
                         </span>
                       ) : null}
                     </div>
@@ -340,8 +341,8 @@ export default async function AdminDashboardPage() {
         </AdminDashboardWidgetCard>
 
         <AdminDashboardWidgetCard
-          title="Потрібно налаштувати квартири"
-          subtitle="Будинки без квартир"
+          title="Потрібно налаштувати облікові одиниці"
+          subtitle="Будинки без облікових одиниць"
           scroll
           maxRows={10}
         >
@@ -360,13 +361,13 @@ export default async function AdminDashboardPage() {
                     href={item.href}
                     className="shrink-0 rounded-[var(--r-md)] border border-[var(--cms-border)] px-3 py-2 text-sm text-[var(--cms-text-muted)] transition hover:border-[var(--cms-border-strong)] hover:bg-[var(--cms-surface-muted)]"
                   >
-                    До квартир
+                    {`До ${getHouseUnitTerminology(item.objectKind).genitivePluralLower}`}
                   </Link>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState text="Усі будинки вже мають квартири." />
+            <EmptyState text="Усі будинки вже мають облікові одиниці." />
           )}
         </AdminDashboardWidgetCard>
 

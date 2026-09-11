@@ -2,7 +2,7 @@
 
 import { formatKyivDateTime } from "@/src/shared/utils/dates/formatKyivDateTime";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type {
@@ -22,8 +22,14 @@ import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import {
   adminButtonClasses,
   adminInputClass,
+  adminInputInvalidClass,
   adminSurfaceClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { formatHouseUnitLabel, getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
+
+function fieldClass(invalid: boolean) {
+  return invalid ? `${adminInputClass} ${adminInputInvalidClass}` : adminInputClass;
+}
 
 type WorkspaceMode = "idle" | "create" | "edit";
 type WorkspaceTab = "active" | "draft" | "archived";
@@ -62,6 +68,7 @@ type PollDraft = {
 type Props = {
   houseId: string;
   houseSlug: string;
+  objectKind?: string;
   polls: AdminHousePollsSnapshot;
   canPublish: boolean;
   canArchive: boolean;
@@ -316,7 +323,7 @@ function downloadCsv(filename: string, csv: string) {
   URL.revokeObjectURL(url);
 }
 
-function PollResultsPanel({ poll }: { poll: AdminHousePollSnapshot }) {
+function PollResultsPanel({ poll, objectKind }: { poll: AdminHousePollSnapshot; objectKind?: string }) {
   const results = poll.results;
 
   if (!results) {
@@ -333,7 +340,7 @@ function PollResultsPanel({ poll }: { poll: AdminHousePollSnapshot }) {
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
           <div className="text-xs uppercase tracking-wide text-[var(--cms-text-muted)]">
-            Участь квартир
+            {`Участь ${getHouseUnitTerminology(objectKind).genitivePluralLower}`}
           </div>
           <div className="mt-2 text-2xl font-semibold text-[var(--cms-text)]">
             {results.participationCount ?? 0}
@@ -359,8 +366,8 @@ function PollResultsPanel({ poll }: { poll: AdminHousePollSnapshot }) {
 
       {poll.identityMode === "anonymous" ? (
         <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-4 text-sm leading-6 text-[var(--cms-text-muted)]">
-          Анонімний режим: система показує факт участі квартири окремо,
-          але відповіді не мають зв’язку з квартирою. Експорт також обезособлений.
+          {`Анонімний режим: система показує факт участі ${getHouseUnitTerminology(objectKind).genitiveLower} окремо,
+          але відповіді не мають зв’язку з ${getHouseUnitTerminology(objectKind).instrumentalSingularLower}. Експорт також обезособлений.`}
         </div>
       ) : null}
 
@@ -436,8 +443,8 @@ function PollResultsPanel({ poll }: { poll: AdminHousePollSnapshot }) {
                         {poll.identityMode === "open" ? (
                           <div className="mt-1 text-xs text-[var(--cms-text-muted)]">
                             {response.apartmentLabel
-                              ? `Кв. ${response.apartmentLabel}`
-                              : "Квартиру не вказано"}
+                              ? formatHouseUnitLabel(response.apartmentLabel, objectKind)
+                              : `${getHouseUnitTerminology(objectKind).short} не вказано`}
                             {response.ownerName ? ` · ${response.ownerName}` : ""}
                           </div>
                         ) : null}
@@ -472,6 +479,7 @@ function PollResultsPanel({ poll }: { poll: AdminHousePollSnapshot }) {
 export function HousePollsWorkspace({
   houseId,
   houseSlug,
+  objectKind,
   polls: snapshot,
   canPublish,
   canArchive,
@@ -480,6 +488,7 @@ export function HousePollsWorkspace({
 }: Props) {
   void houseSlug;
 
+  const terms = getHouseUnitTerminology(objectKind);
   const { dispatch, isPending, lastError } = useAdminContentCommand();
   const [items] = useState(snapshot.items);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
@@ -487,6 +496,15 @@ export function HousePollsWorkspace({
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
   const [draft, setDraft] = useState<PollDraft>(() => createEmptyPoll({ deterministic: true }));
   const [actionError, setActionError] = useState<string | null>(null);
+  const [invalidFields, setInvalidFields] = useState<Set<string>>(() => new Set());
+  const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  // Clear a stale validation error as soon as the operator edits the draft,
+  // instead of leaving a Save error on screen after the form has changed.
+  useEffect(() => {
+    setActionError(null);
+    setInvalidFields(new Set());
+  }, [draft]);
 
   const selectedSnapshot =
     items.find((item) => item.id === selectedPollId) ?? null;
@@ -636,11 +654,33 @@ export function HousePollsWorkspace({
     }));
   }
 
+  function focusInvalidField(fieldKey: string) {
+    // Wait one frame so the just-set invalid markup (and, if the drawer was
+    // closed, its open animation) has rendered before we try to focus it.
+    requestAnimationFrame(() => {
+      const element = fieldRefs.current[fieldKey];
+      if (!element) return;
+      element.focus();
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function reportValidationFailure(message: string, invalid: Set<string>, firstInvalidKey: string) {
+    setInvalidFields(invalid);
+    setActionError(message);
+    focusInvalidField(firstInvalidKey);
+  }
+
   async function persistDraft(): Promise<PollDraft | null> {
     setActionError(null);
+    setInvalidFields(new Set());
 
     if (!draft.title.trim()) {
-      setActionError("Вкажіть назву опитування.");
+      reportValidationFailure(
+        "Вкажіть назву опитування.",
+        new Set(["title"]),
+        "title",
+      );
       return null;
     }
 
@@ -649,22 +689,44 @@ export function HousePollsWorkspace({
       return null;
     }
 
-    const questions = draft.questions.map(questionPayload);
+    const invalid = new Set<string>();
+    let firstInvalidKey: string | null = null;
 
-    if (
-      questions.some(
-        (question) =>
-          !question.question ||
-          ((question.questionType === "single_choice" ||
-            question.questionType === "multiple_choice") &&
-            question.options.filter((option) => option.label).length < 2),
-      )
-    ) {
-      setActionError(
+    for (const question of draft.questions) {
+      const needsOptions =
+        question.questionType === "single_choice" ||
+        question.questionType === "multiple_choice";
+      const filledOptionCount = needsOptions
+        ? question.options.filter((option) => option.label.trim()).length
+        : 0;
+
+      if (!question.question.trim()) {
+        const key = `question:${question.id}`;
+        invalid.add(key);
+        firstInvalidKey ??= key;
+      }
+
+      if (needsOptions && filledOptionCount < 2) {
+        for (const option of question.options) {
+          if (!option.label.trim()) {
+            const key = `option:${option.id}`;
+            invalid.add(key);
+            firstInvalidKey ??= key;
+          }
+        }
+      }
+    }
+
+    if (invalid.size > 0) {
+      reportValidationFailure(
         "Заповніть усі питання. Для варіантів відповіді потрібно щонайменше два непорожні варіанти.",
+        invalid,
+        firstInvalidKey ?? "title",
       );
       return null;
     }
+
+    const questions = draft.questions.map(questionPayload);
 
     if (mode === "create") {
       const created = await dispatch<Record<string, unknown>>(
@@ -822,9 +884,9 @@ export function HousePollsWorkspace({
             Опитування
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--cms-text-muted)]">
-            Створюйте опитування мешканців, налаштовуйте анонімність і
+            {`Створюйте опитування мешканців, налаштовуйте анонімність і
             видимість результатів, відкривайте та завершуйте збір відповідей.
-            Від однієї квартири приймається лише одна незмінна відповідь.
+            Від однієї ${terms.genitiveLower} приймається лише одна незмінна відповідь.`}
           </p>
         </div>
 
@@ -864,7 +926,7 @@ export function HousePollsWorkspace({
         ) : null}
       </div>
 
-      {actionError || lastError ? (
+      {mode === "idle" && (actionError || lastError) ? (
         <div
           role="alert"
           className="mt-5 rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]"
@@ -1031,6 +1093,15 @@ export function HousePollsWorkspace({
         }
       >
         <div className="space-y-5">
+          {mode !== "idle" && (actionError || lastError) ? (
+            <div
+              role="alert"
+              className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]"
+            >
+              {actionError ?? lastError}
+            </div>
+          ) : null}
+
           <section className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
             <h3 className="font-semibold text-[var(--cms-text)]">Основне</h3>
             <div className="mt-4 grid gap-4">
@@ -1039,13 +1110,17 @@ export function HousePollsWorkspace({
                   Назва
                 </span>
                 <input
+                  ref={(el) => {
+                    fieldRefs.current.title = el;
+                  }}
+                  aria-invalid={invalidFields.has("title")}
                   value={draft.title}
                   disabled={isPending || draft.lifecycleStatus === "archived"}
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, title: event.target.value }))
                   }
                   placeholder="Наприклад: Благоустрій подвірʼя"
-                  className={adminInputClass}
+                  className={fieldClass(invalidFields.has("title"))}
                 />
               </label>
 
@@ -1086,8 +1161,8 @@ export function HousePollsWorkspace({
                     }
                     className={adminInputClass}
                   >
-                    <option value="open">Відкрите — відповідь повʼязана з квартирою</option>
-                    <option value="anonymous">Анонімне — звʼязку відповіді з квартирою немає</option>
+                    <option value="open">{`Відкрите — відповідь повʼязана з ${terms.instrumentalSingularLower}`}</option>
+                    <option value="anonymous">{`Анонімне — звʼязку відповіді з ${terms.instrumentalSingularLower} немає`}</option>
                   </select>
                 </label>
 
@@ -1118,8 +1193,8 @@ export function HousePollsWorkspace({
 
               {settingsFrozen ? (
                 <div className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-muted)] p-3 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  В опитуванні вже є участь квартир. Режим ідентифікації
-                  та видимість результатів більше не змінюються.
+                  {`В опитуванні вже є участь ${terms.genitivePluralLower}. Режим ідентифікації
+                  та видимість результатів більше не змінюються.`}
                 </div>
               ) : null}
             </div>
@@ -1169,6 +1244,10 @@ export function HousePollsWorkspace({
 
                   <div className="mt-3 grid gap-3">
                     <input
+                      ref={(el) => {
+                        fieldRefs.current[`question:${question.id}`] = el;
+                      }}
+                      aria-invalid={invalidFields.has(`question:${question.id}`)}
                       value={question.question}
                       disabled={!questionsEditable || isPending}
                       onChange={(event) =>
@@ -1177,7 +1256,7 @@ export function HousePollsWorkspace({
                         })
                       }
                       placeholder="Текст питання"
-                      className={adminInputClass}
+                      className={fieldClass(invalidFields.has(`question:${question.id}`))}
                     />
 
                     <textarea
@@ -1241,6 +1320,10 @@ export function HousePollsWorkspace({
                         {question.options.map((option, optionIndex) => (
                           <div key={option.id} className="flex gap-2">
                             <input
+                              ref={(el) => {
+                                fieldRefs.current[`option:${option.id}`] = el;
+                              }}
+                              aria-invalid={invalidFields.has(`option:${option.id}`)}
                               value={option.label}
                               disabled={!questionsEditable || isPending}
                               onChange={(event) =>
@@ -1251,7 +1334,7 @@ export function HousePollsWorkspace({
                                 )
                               }
                               placeholder={`Варіант ${optionIndex + 1}`}
-                              className={adminInputClass}
+                              className={fieldClass(invalidFields.has(`option:${option.id}`))}
                             />
                             {questionsEditable && question.options.length > 2 ? (
                               <button
@@ -1344,7 +1427,7 @@ export function HousePollsWorkspace({
             <section className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4">
               <h3 className="font-semibold text-[var(--cms-text)]">Результати</h3>
               <div className="mt-4">
-                <PollResultsPanel poll={selectedSnapshot} />
+                <PollResultsPanel poll={selectedSnapshot} objectKind={objectKind} />
               </div>
             </section>
           ) : null}

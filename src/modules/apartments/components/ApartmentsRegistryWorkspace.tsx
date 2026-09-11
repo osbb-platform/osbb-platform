@@ -38,6 +38,10 @@ import {
   adminSurfaceClass,
   adminTextLabelClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import {
+  capitalizeFirst,
+  getHouseUnitTerminology,
+} from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type DistrictOption = {
   id: string;
@@ -48,6 +52,7 @@ type HouseOption = {
   id: string;
   name: string;
   districtId: string;
+  objectKind?: string | null;
 };
 
 type ApartmentsRegistryWorkspaceProps = {
@@ -208,6 +213,8 @@ export function ApartmentsRegistryWorkspace({
     [districtHouses, selectedHouseId],
   );
 
+  const terms = getHouseUnitTerminology(selectedHouse?.objectKind);
+
   const filteredItems = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -364,7 +371,7 @@ export function ApartmentsRegistryWorkspace({
   }
 
   function handleDownloadTemplate() {
-    downloadApartmentsImportTemplate();
+    downloadApartmentsImportTemplate(selectedHouse?.objectKind);
   }
 
   function handleExportRegistry() {
@@ -373,6 +380,7 @@ export function ApartmentsRegistryWorkspace({
     exportApartmentsRegistry({
       houseName: selectedHouse.name,
       items,
+      objectKind: selectedHouse.objectKind,
     });
   }
 
@@ -410,10 +418,10 @@ export function ApartmentsRegistryWorkspace({
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-[var(--cms-text)]">
-                Реєстр квартир
+                {capitalizeFirst(`Реєстр ${terms.genitivePluralLower}`)}
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--cms-text-muted)]">
-                Керування квартирами, приміщеннями та іншими об’єктами нерухомості всередині обраного будинку.
+                Керування {terms.instrumentalPluralLower}, приміщеннями та іншими об’єктами нерухомості всередині обраного будинку.
               </p>
             </div>
 
@@ -424,7 +432,7 @@ export function ApartmentsRegistryWorkspace({
                     type="button"
                     onClick={() => setIsImportOpen(true)}
                     className={adminIconButtonClass}
-                    aria-label="Завантажити квартири"
+                    aria-label={`Завантажити ${terms.nominativePluralLower}`}
                     title="Завантажити"
                   >
                     <UploadIcon className="h-5 w-5" />
@@ -436,7 +444,7 @@ export function ApartmentsRegistryWorkspace({
                     type="button"
                     onClick={handleExportRegistry}
                     className={adminIconButtonClass}
-                    aria-label="Вивантажити реєстр квартир"
+                    aria-label={`Вивантажити реєстр ${terms.genitivePluralLower}`}
                     title="Вивантажити"
                   >
                     <DownloadIcon className="h-5 w-5" />
@@ -460,7 +468,7 @@ export function ApartmentsRegistryWorkspace({
                     type="button"
                     onClick={() => setIsMiniBulkOpen(true)}
                     className={adminIconButtonClass}
-                    aria-label="Додати квартиру вручну"
+                    aria-label={`Додати ${terms.accusativeLower} вручну`}
                     title="Додати"
                   >
                     <PlusIcon className="h-5 w-5" />
@@ -472,7 +480,7 @@ export function ApartmentsRegistryWorkspace({
                     type="button"
                     onClick={handleArchiveAll}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger-text)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cms-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cms-surface)]"
-                    aria-label="Очистити активний список квартир"
+                    aria-label={`Очистити активний список ${terms.genitivePluralLower}`}
                     title="Очистити"
                   >
                     <TrashIcon className="h-5 w-5" />
@@ -524,7 +532,7 @@ export function ApartmentsRegistryWorkspace({
                 {selectedHouse.name}
               </h2>
               <p className="mt-2 text-sm leading-7 text-[var(--cms-text-muted)]">
-                Зведення по поточному реєстру квартир обраного будинку.
+                Зведення по поточному реєстру {terms.genitivePluralLower} обраного будинку.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -555,7 +563,7 @@ export function ApartmentsRegistryWorkspace({
               type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Введіть квартиру, особовий рахунок або власника"
+              placeholder={`Введіть ${terms.accusativeLower}, особовий рахунок або власника`}
               className={adminInputClass}
             />
           </div>
@@ -626,8 +634,8 @@ export function ApartmentsRegistryWorkspace({
         {filteredItems.length === 0 ? (
           <div className="mt-6 rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface)] p-8 text-[var(--cms-text-muted)]">
             {archived
-              ? "В архіві обраного будинку за поточними фільтрами немає квартир."
-              : "В активному реєстрі обраного будинку за поточними фільтрами немає квартир. Змініть фільтри, використайте завантаження файлу або ручне додавання."}
+              ? `В архіві обраного будинку за поточними фільтрами немає ${terms.genitivePluralLower}.`
+              : `В активному реєстрі обраного будинку за поточними фільтрами немає ${terms.genitivePluralLower}. Змініть фільтри, використайте завантаження файлу або ручне додавання.`}
           </div>
         ) : (
           <>
@@ -635,7 +643,7 @@ export function ApartmentsRegistryWorkspace({
               Сортування:{" "}
               <span className="text-[var(--cms-text)]">
                 {sortKey === "id" && "ID"}
-                {sortKey === "apartment_label" && "Квартира"}
+                {sortKey === "apartment_label" && terms.full}
                 {sortKey === "account_number" && "Особовий рахунок"}
                 {sortKey === "owner_name" && "Власник"}
                 {sortKey === "area" && "Площа"}
@@ -661,7 +669,7 @@ export function ApartmentsRegistryWorkspace({
                       </th>
                       <th className="px-4 py-3">
                         <SortableHeader
-                          label="Квартира"
+                          label={terms.full}
                           sortKey="apartment_label"
                           activeSortKey={sortKey}
                           sortDirection={sortDirection}
@@ -785,6 +793,7 @@ export function ApartmentsRegistryWorkspace({
         <ApartmentsMiniBulkPanel
           houseId={selectedHouse!.id}
           houseName={selectedHouse!.name}
+          objectKind={selectedHouse?.objectKind}
           onClose={() => setIsMiniBulkOpen(false)}
         />
       ) : null}
@@ -793,6 +802,7 @@ export function ApartmentsRegistryWorkspace({
         <ApartmentsImportPanel
           houseId={selectedHouse!.id}
           houseName={selectedHouse!.name}
+          objectKind={selectedHouse?.objectKind}
           onClose={() => setIsImportOpen(false)}
         />
       ) : null}
@@ -802,12 +812,12 @@ export function ApartmentsRegistryWorkspace({
         title={
           confirmAction?.type === "bulk"
             ? "Перемістити весь список в архів?"
-            : "Перемістити квартиру в архів?"
+            : `Перемістити ${terms.accusativeLower} в архів?`
         }
         description={
           confirmAction?.type === "bulk"
-            ? "Після підтвердження весь активний список квартир обраного будинку буде переміщено в архів CMS."
-            : "Після підтвердження квартира буде переміщена в архів CMS та зникне з активного реєстру."
+            ? `Після підтвердження весь активний список ${terms.genitivePluralLower} обраного будинку буде переміщено в архів CMS.`
+            : `Після підтвердження ${terms.nominativeLower} буде переміщена в архів CMS та зникне з активного реєстру.`
         }
         confirmLabel="Перемістити в архів"
         onCancel={() => setConfirmAction(null)}

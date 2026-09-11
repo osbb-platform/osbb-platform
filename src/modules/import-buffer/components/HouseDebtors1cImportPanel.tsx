@@ -29,11 +29,13 @@ import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
 } from "@/src/shared/ui/admin/adminStyles";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type Props = {
   houseId: string;
   isOpen: boolean;
   onClose: () => void;
+  objectKind?: string | null;
 };
 
 const MONTHS = [
@@ -51,7 +53,8 @@ const MONTHS = [
   "Грудень",
 ];
 
-export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
+export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind }: Props) {
+  const terms = getHouseUnitTerminology(objectKind);
   const router = useRouter();
   const [serverState, parseAction, isParsePending] = useActionState(
     parseDebtors1cImportBuffer,
@@ -483,7 +486,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose }: Props) {
                   <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
                     <tr className="border-b border-[var(--cms-border)] text-left">
                       <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
-                        Кв.
+                        {terms.short}
                       </th>
                       <th className="px-3 py-3 text-xs text-[var(--cms-text-muted)]">
                         Л/С

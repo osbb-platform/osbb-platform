@@ -5,6 +5,7 @@ import {
   getOnlineMeetingAggregation,
   type OnlineMeetingAggregation,
 } from "@/src/modules/houses/services/getOnlineMeetingAggregation";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type AdminOnlineBallotStatus =
   | "pending"
@@ -51,7 +52,7 @@ export async function getAdminOnlineMeetingVoting(params: {
   houseId: string;
   meetingId: string;
 }): Promise<AdminOnlineMeetingVotingSnapshot> {
-  const [aggregation, ballotsResult] = await Promise.all([
+  const [aggregation, ballotsResult, houseResult] = await Promise.all([
     getOnlineMeetingAggregation({
       houseId: params.houseId,
       meetingId: params.meetingId,
@@ -71,7 +72,14 @@ export async function getAdminOnlineMeetingVoting(params: {
       .eq("house_id", params.houseId)
       .eq("meeting_id", params.meetingId)
       .order("created_at", { ascending: false }),
+    createSupabaseAdminClient()
+      .from("houses")
+      .select("object_kind")
+      .eq("id", params.houseId)
+      .maybeSingle(),
   ]);
+
+  const fallbackLabel = getHouseUnitTerminology(houseResult.data?.object_kind).full;
 
   if (ballotsResult.error) {
     console.error(
@@ -111,7 +119,7 @@ export async function getAdminOnlineMeetingVoting(params: {
         ((apartmentsResult.data ?? []) as unknown as ApartmentRow[]).map(
           (apartment) => [
             apartment.id,
-            apartment.apartment_label?.trim() || "Квартира",
+            apartment.apartment_label?.trim() || fallbackLabel,
           ],
         ),
       );
@@ -124,7 +132,7 @@ export async function getAdminOnlineMeetingVoting(params: {
       id: ballot.id,
       apartmentId: ballot.apartment_id,
       apartmentLabel:
-        apartmentLabels.get(ballot.apartment_id) ?? "Квартира",
+        apartmentLabels.get(ballot.apartment_id) ?? fallbackLabel,
       ownedAreaM2: numeric(ballot.owned_area_m2),
       status: ballot.status,
       createdAt: ballot.created_at,

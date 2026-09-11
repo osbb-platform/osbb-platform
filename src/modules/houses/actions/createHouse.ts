@@ -8,6 +8,7 @@ import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAcces
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { bootstrapHouseContent } from "@/src/modules/houses/services/bootstrapHouseContent";
 import { slugify } from "@/src/shared/utils/slug/slugify";
+import { normalizeHouseObjectKind } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type CreateHouseState = {
   error: string | null;
@@ -154,6 +155,7 @@ export async function createHouse(
   const managementCompanyId = String(formData.get("managementCompanyId") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim();
   const publicDescription = String(formData.get("publicDescription") ?? "").trim();
+  const objectKind = normalizeHouseObjectKind(formData.get("objectKind"));
 
   if (!name || !address) {
     return failWithCleanup("Заповніть назву будинку та адресу.");
@@ -204,6 +206,7 @@ export async function createHouse(
       osbb_name: osbbName || null,
       short_description: shortDescription || null,
       public_description: publicDescription || null,
+      object_kind: objectKind,
       cover_image_path: uploadedImagePath || null,
       is_active: true,
       current_access_code: defaultAccessCode,

@@ -4,6 +4,7 @@ import type { HouseMeeting, UpdateMeetingPayload } from "../types";
 import {
   getMeetingSnapshot,
   HOUSE_MEETING_ENTITY_TYPE,
+  isValidMeetingDate,
   meetingTitle,
   meetingsHistoryMetadata,
   meetingHasAnyVotes,
@@ -34,6 +35,10 @@ export const updateCommand: CommandSpec = {
 
     if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
       return err("Додайте хоча б одне питання.", "VALIDATION_FAILED");
+    }
+
+    if (!isValidMeetingDate(payload.meetingDateTime)) {
+      return err("Некоректна дата зборів.", "VALIDATION_FAILED");
     }
 
     return ok(undefined);

@@ -26,6 +26,7 @@ export type AdminHouseListItem = {
   osbb_name: string | null;
   short_description: string | null;
   public_description: string | null;
+  object_kind: string;
   cover_image_path: string | null;
   cover_image_url?: string | null;
   tariff_amount: number | null;
@@ -80,6 +81,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
           osbb_name,
           short_description,
           public_description,
+          object_kind,
           cover_image_path,
           tariff_amount,
           current_access_code,

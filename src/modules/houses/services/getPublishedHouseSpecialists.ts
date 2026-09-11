@@ -11,6 +11,7 @@ import type {
   HouseSpecialistCategory,
 } from "@/src/modules/content-engine/v2/handlers/specialists";
 import {
+  loadSpecialistCategoriesBySpecialistId,
   mapHouseSpecialist,
   mapHouseSpecialistCategory,
   type AdminHouseSpecialistsSnapshot,
@@ -47,6 +48,8 @@ async function loadPublishedHouseSpecialists(
     });
   }
 
+  const categoriesBySpecialistId = await loadSpecialistCategoriesBySpecialistId(supabase, houseId);
+
   if (categoriesResult.error) {
     logOptionalPublicReadError({
       section: "specialists",
@@ -57,7 +60,7 @@ async function loadPublishedHouseSpecialists(
 
     return {
       specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
-        mapHouseSpecialist,
+        (specialist) => mapHouseSpecialist(specialist, categoriesBySpecialistId.get(specialist.id)),
       ),
       categories: [],
     };
@@ -65,7 +68,7 @@ async function loadPublishedHouseSpecialists(
 
   return {
     specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
-      mapHouseSpecialist,
+      (specialist) => mapHouseSpecialist(specialist, categoriesBySpecialistId.get(specialist.id)),
     ),
     categories: ((categoriesResult.data ?? []) as unknown as HouseSpecialistCategory[]).map(
       mapHouseSpecialistCategory,

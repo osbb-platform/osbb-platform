@@ -7,6 +7,7 @@ import { ensureResidentRequestTask } from "@/src/modules/tasks/services/ensureRe
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type CreateFooterHouseMessageState = {
   error: string | null;
@@ -25,6 +26,8 @@ export async function createFooterHouseMessage(
   const requesterEmail = String(formData.get("requesterEmail") ?? "").trim();
   const apartment = String(formData.get("apartment") ?? "").trim();
   const comment = String(formData.get("comment") ?? "").trim();
+  const objectKind = String(formData.get("objectKind") ?? "").trim();
+  const terms = getHouseUnitTerminology(objectKind);
 
   if (
     !houseId ||
@@ -36,7 +39,7 @@ export async function createFooterHouseMessage(
     !comment
   ) {
     return {
-      error: "Заповніть ім’я, email, квартиру та повідомлення.",
+      error: `Заповніть ім’я, email, ${terms.accusativeLower} та повідомлення.`,
       successMessage: null,
     };
   }

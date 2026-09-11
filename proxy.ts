@@ -201,7 +201,7 @@ export async function proxy(request: NextRequest) {
 
     return NextResponse.rewrite(
       new URL(withSearch(adminPath, url.search), request.url),
-      { headers: response.headers }
+      { headers: response.current.headers }
     );
   }
 

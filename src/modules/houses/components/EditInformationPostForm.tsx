@@ -12,6 +12,7 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
+import { INFORMATION_BODY_MAX_LENGTH } from "@/src/shared/constants/information/information.constants";
 
 import {
   adminButtonClasses,
@@ -386,14 +387,14 @@ export function EditInformationPostForm({
           <textarea
             name="body"
             value={body}
-            maxLength={512}
+            maxLength={INFORMATION_BODY_MAX_LENGTH}
             rows={6}
             onChange={(e) => setBody(e.target.value)}
             className={adminInputClass}
             required
           />
           <div className="mt-2 text-xs text-[var(--cms-text-muted)]">
-            {body.length}/512
+            {body.length}/{INFORMATION_BODY_MAX_LENGTH}
           </div>
         </div>
 

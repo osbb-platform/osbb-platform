@@ -2,7 +2,6 @@
 
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { HOUSE_VISITOR_COOKIE_NAME } from "@/src/modules/analytics/utils/visitorId";
 import { trackVisitorEvent } from "@/src/modules/analytics/ingest/trackVisitorEvent";
@@ -12,6 +11,7 @@ import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAc
 type LoginToHouseState = {
   error: string | null;
   lockedUntil?: number | null;
+  ok?: boolean;
 };
 
 function normalizeAccessCode(value: string) {
@@ -191,5 +191,9 @@ export async function loginToHouse(
     path: "/",
   });
 
-  redirect("/");
+  // RC-3: see loginAdmin.ts for why this is a returned success flag instead
+  // of a server-side redirect() — the client-router soft transition from a
+  // redirect() intermittently rendered the marketing route tree on the very
+  // first post-login paint, for both admin and resident destinations.
+  return { error: null, ok: true };
 }

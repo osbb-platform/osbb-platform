@@ -10,6 +10,7 @@ import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/u
 import { createSupabaseBrowserClient } from "@/src/integrations/supabase/client/browser";
 import { INFORMATION_CATEGORIES } from "@/src/modules/houses/components/HouseInformationWorkspace";
 import type { ContentTemplateSlot } from "@/src/modules/houses/components/ContentTemplateSlotsPanel";
+import { INFORMATION_BODY_MAX_LENGTH } from "@/src/shared/constants/information/information.constants";
 
 import {
   adminButtonClasses,
@@ -395,13 +396,13 @@ export function CreateInformationPostInlineForm({
             name="body"
             value={body}
             onChange={(event) => setBody(event.target.value)}
-            maxLength={512}
+            maxLength={INFORMATION_BODY_MAX_LENGTH}
             rows={6}
             className={adminInputClass}
             required
           />
           <div className="text-xs text-[var(--cms-text-muted)]">
-            {body.length}/512
+            {body.length}/{INFORMATION_BODY_MAX_LENGTH}
           </div>
         </div>
       </div>

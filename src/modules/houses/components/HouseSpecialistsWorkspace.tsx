@@ -56,6 +56,7 @@ const DEFAULT_SPECIALIST_CATEGORIES = [
   "Аварійна служба",
   "Прибирання / обслуговування",
   "Керуюча компанія",
+  "Бухгалтер",
 ] as const;
 
 type WorkspaceTab = "published" | "draft" | "archived";
@@ -73,7 +74,7 @@ type SpecialistDraft = {
   id: string | null;
   lockVersion: number | null;
   title: string;
-  category: string;
+  categories: string[];
   phones: string[];
   phoneTypes: SpecialistPhoneType[];
   email: string;
@@ -95,7 +96,7 @@ function createEmptyDraft(sortOrder: number): SpecialistDraft {
     id: null,
     lockVersion: null,
     title: "",
-    category: "",
+    categories: [],
     phones: [""],
     phoneTypes: ["mobile"],
     email: "",
@@ -139,7 +140,7 @@ function toDraft(item: HouseSpecialistSnapshot): SpecialistDraft {
     id: item.id,
     lockVersion: item.lockVersion,
     title: item.content.title,
-    category: item.content.category,
+    categories: item.content.categories,
     phones: item.content.phones.length > 0 ? item.content.phones : [""],
     phoneTypes: normalizeDraftPhoneTypes(
       item.content.phoneTypes,
@@ -226,7 +227,7 @@ export function HouseSpecialistsWorkspace({
       .filter(Boolean);
 
     const fromItems = specialistsData.specialists
-      .map((item) => item.content.category)
+      .flatMap((item) => item.content.categories)
       .filter(Boolean);
 
     return [...DEFAULT_SPECIALIST_CATEGORIES, ...fromCatalog, ...fromItems]
@@ -393,7 +394,7 @@ export function HouseSpecialistsWorkspace({
     if (!draft) return;
 
     const title = draft.title.trim();
-    const category = draft.category.trim();
+    const categories = draft.categories;
     const phones = normalizePhones(draft.phones);
     const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
 
@@ -402,8 +403,8 @@ export function HouseSpecialistsWorkspace({
       return;
     }
 
-    if (!category) {
-      setWorkspaceError("Оберіть категорію спеціаліста.");
+    if (categories.length === 0) {
+      setWorkspaceError("Оберіть хоча б одну категорію спеціаліста.");
       return;
     }
 
@@ -417,7 +418,7 @@ export function HouseSpecialistsWorkspace({
 
     const payload = {
       title,
-      category,
+      categories,
       phones,
       phoneTypes,
       email: draft.email.trim(),
@@ -473,7 +474,7 @@ export function HouseSpecialistsWorkspace({
     }
 
     const title = draft.title.trim();
-    const category = draft.category.trim();
+    const categories = draft.categories;
     const phones = normalizePhones(draft.phones);
     const phoneTypes = normalizeDraftPhoneTypes(draft.phoneTypes, phones);
 
@@ -482,8 +483,8 @@ export function HouseSpecialistsWorkspace({
       return;
     }
 
-    if (!category) {
-      setWorkspaceError("Оберіть категорію спеціаліста.");
+    if (categories.length === 0) {
+      setWorkspaceError("Оберіть хоча б одну категорію спеціаліста.");
       return;
     }
 
@@ -506,11 +507,11 @@ export function HouseSpecialistsWorkspace({
           name: title,
           description: draft.description.trim(),
           payload: {
-            categories: category ? [{ title: category }] : [],
+            categories: categories.map((categoryTitle) => ({ title: categoryTitle })),
             specialists: [
               {
                 title,
-                category,
+                categories,
                 phones,
                 phoneTypes,
                 email: draft.email.trim(),
@@ -788,19 +789,30 @@ export function HouseSpecialistsWorkspace({
               />
             </FormField>
 
-            <FormField label="Категорія" required>
-              <select
-                value={draft.category}
-                onChange={(event) => updateDraft("category", event.target.value)}
-                className={adminSelectClass}
-              >
-                <option value="">Оберіть категорію</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+            <FormField label="Категорії" required hint="Оберіть одну або кілька категорій.">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {categories.map((category) => {
+                  const checked = draft.categories.includes(category);
+                  return (
+                    <label
+                      key={category}
+                      className="flex items-center gap-2 rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => {
+                          const next = event.target.checked
+                            ? [...draft.categories, category]
+                            : draft.categories.filter((item) => item !== category);
+                          updateDraft("categories", next);
+                        }}
+                      />
+                      {category}
+                    </label>
+                  );
+                })}
+              </div>
             </FormField>
 
             <FormField
@@ -951,9 +963,9 @@ export function HouseSpecialistsWorkspace({
                     {statusLabelFor(item.status)}
                   </AdminStatusBadge>
 
-                  {item.content.category ? (
+                  {item.content.categories.length > 0 ? (
                     <span className="inline-flex rounded-[var(--r-pill)] border border-[var(--cms-border-strong)] bg-[var(--cms-pill-bg)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[var(--cms-text-muted)]">
-                      {item.content.category}
+                      {item.content.categories.join(", ")}
                     </span>
                   ) : null}
                 </div>

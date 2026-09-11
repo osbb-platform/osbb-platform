@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { loadLocalEnvForRealDbTests } from "../helpers/loadLocalEnv";
 
 vi.mock("server-only", () => ({}));
 
@@ -7,8 +8,13 @@ import { submitPollAnswersDb } from "../../src/modules/houses/resident/pollsRepo
 import { getAdminPollExport } from "../../src/modules/houses/services/getAdminPollExport";
 import { getPollResults } from "../../src/modules/houses/services/getPollResults";
 
-const enabled = process.env.RUN_P07_REAL_DB === "1";
+loadLocalEnvForRealDbTests();
 
+// This suite runs as part of the standard `npm run test` path against local
+// Supabase (the same precondition every other tests/**/*RealDb*.test.ts file
+// in this repo already assumes). It is intentionally not gated behind an
+// opt-in env flag: a real-DB acceptance suite that is skipped by default is
+// not part of canonical coverage, which is exactly the gap this track closes.
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -32,9 +38,7 @@ type Fixture = {
   };
 };
 
-const suite = enabled ? describe : describe.skip;
-
-suite("P07 T8 real database acceptance", () => {
+describe("P07 T8 real database acceptance", () => {
   if (!url || !serviceRoleKey || !anonKey) {
     throw new Error(
       "RUN_P07_REAL_DB requires local Supabase URL, service-role key and anon key",

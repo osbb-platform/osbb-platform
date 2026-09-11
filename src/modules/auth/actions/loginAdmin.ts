@@ -1,11 +1,10 @@
 "use server";
 
-import { ROUTES } from "@/src/shared/config/routes/routes.config";
-import { redirect } from "next/navigation";
 import { createSupabaseActionClient } from "@/src/integrations/supabase/server/action";
 
 type LoginAdminState = {
   error: string | null;
+  ok?: boolean;
 };
 
 export async function loginAdmin(
@@ -34,5 +33,12 @@ export async function loginAdmin(
     };
   }
 
-  redirect(ROUTES.admin.dashboard);
+  // RC-3: a Next.js redirect() here performs a client-router *soft*
+  // transition. That transition was intermittently resolving the target
+  // path against the wrong (marketing) route tree on the very first
+  // post-login paint, on both dev and production builds — a plain reload of
+  // the same URL immediately afterwards always rendered the correct admin
+  // destination. Returning success and letting the client do a real
+  // (hard) navigation avoids the soft-transition race entirely.
+  return { error: null, ok: true };
 }

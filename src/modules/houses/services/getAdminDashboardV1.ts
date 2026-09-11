@@ -5,6 +5,7 @@ import {
   getAdminHousePagesByHouseIds,
 } from "@/src/modules/houses/services/getAdminDashboardBatchData";
 import { getAdminHouses } from "@/src/modules/houses/services/getAdminHouses";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type AdminDashboardKpi = {
   totalHouses: number;
@@ -38,6 +39,7 @@ export type AdminDashboardPublicationItem = {
 export type AdminDashboardHouseHealthItem = {
   houseId: string;
   houseName: string;
+  objectKind: string;
   hasDrafts: boolean;
   hasApartments: boolean;
   href: string;
@@ -65,6 +67,7 @@ type HouseAggregationRow = {
   houseId: string;
   houseName: string;
   houseSlug: string;
+  objectKind: string;
   hasDrafts: boolean;
   hasApartments: boolean;
   draftItems: AdminDashboardLinkItem[];
@@ -164,6 +167,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
       houseId: house.id,
       houseName: house.name,
       houseSlug: house.slug,
+      objectKind: house.object_kind,
       hasDrafts,
       hasApartments: (apartmentCounts.get(house.id) ?? 0) > 0,
       draftItems,
@@ -223,6 +227,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     .map((row) => ({
       houseId: row.houseId,
       houseName: row.houseName,
+      objectKind: row.objectKind,
       hasDrafts: row.hasDrafts,
       hasApartments: row.hasApartments,
       href: row.hasDrafts
@@ -236,6 +241,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
     .map((row) => ({
       houseId: row.houseId,
       houseName: row.houseName,
+      objectKind: row.objectKind,
       hasDrafts: row.hasDrafts,
       hasApartments: false,
       href: `${getHouseBlockHref(row.houseId)}#apartments`,
@@ -282,7 +288,7 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
         section: row.hasDrafts ? "draft" : "apartments",
         title: row.hasDrafts
           ? "Є чернетки"
-          : "Потрібно налаштувати квартири",
+          : `Потрібно налаштувати ${getHouseUnitTerminology(row.objectKind).genitivePluralLower}`,
         href: row.href,
         updatedAt: null,
       })),

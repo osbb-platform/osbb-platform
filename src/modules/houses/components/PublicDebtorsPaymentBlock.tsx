@@ -20,6 +20,7 @@ type PaymentSettings = {
 type Props = {
   payment: PaymentSettings;
   items: DebtorItem[];
+  unitLabelFull?: string;
 };
 
 function normalizeAmount(value: string) {
@@ -37,6 +38,7 @@ function formatCurrency(amount: number) {
 export function PublicDebtorsPaymentBlock({
   payment,
   items,
+  unitLabelFull = "Квартира",
 }: Props) {
   const [accountQuery, setAccountQuery] = useState("");
 
@@ -80,7 +82,7 @@ export function PublicDebtorsPaymentBlock({
         match ? (
           <div className="mt-5 rounded-[var(--r-lg)] border border-[var(--pub-border)] bg-[var(--pub-bg-quiet)] p-4">
             <div className="text-sm text-[var(--pub-text-soft)]">
-              Квартира {match.apartmentLabel}
+              {unitLabelFull} {match.apartmentLabel}
             </div>
             <div className="mt-2 font-[var(--font-serif)] text-lg font-semibold text-[var(--pub-text)]">
               {formatCurrency(normalizeAmount(match.amount))} ₴

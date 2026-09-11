@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 import type { CommandSpec } from "../../../types/handler";
 import { err, ok } from "../../../types/result";
 import type { RecordManualVotePayload } from "../types";
@@ -14,14 +15,23 @@ export const recordManualVoteCommand: CommandSpec = {
   actionKey: "edit",
   requiresLockCheck: true,
 
-  async validate(rawPayload) {
+  async validate(rawPayload, ctx) {
     const idAndLock = readIdAndLock(rawPayload);
     if (!idAndLock.ok) return idAndLock;
 
     const payload = rawPayload as Partial<RecordManualVotePayload>;
 
     if (!payload.apartmentId) {
-      return err("Оберіть квартиру.", "VALIDATION_FAILED");
+      const { data: house } = await ctx.supabase
+        .from("houses")
+        .select("object_kind")
+        .eq("id", ctx.house.id)
+        .maybeSingle();
+
+      return err(
+        `Оберіть ${getHouseUnitTerminology(house?.object_kind).accusativeLower}.`,
+        "VALIDATION_FAILED",
+      );
     }
 
     if (!Array.isArray(payload.answers) || payload.answers.length === 0) {

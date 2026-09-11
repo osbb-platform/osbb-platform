@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/src/integrations/supabase/server/s
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { assertRegistryActionAccess } from "@/src/shared/permissions/actionAccess";
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type ArchiveApartmentState = {
   error: string | null;
@@ -24,12 +25,19 @@ export async function archiveApartment(
 
   if (!apartmentId || !houseId) {
     return {
-      error: "Не передано дані квартири.",
+      error: "Не передано дані об’єкта обліку.",
       success: null,
     };
   }
 
   const supabase = await createSupabaseServerClient();
+
+  const { data: house } = await supabase
+    .from("houses")
+    .select("object_kind")
+    .eq("id", houseId)
+    .maybeSingle();
+  const terms = getHouseUnitTerminology(house?.object_kind);
 
   const { data: existingApartment, error: existingError } = await supabase
     .from("house_apartments")
@@ -42,7 +50,7 @@ export async function archiveApartment(
   if (existingError || !existingApartment) {
     return {
       error:
-        existingError?.message ?? "Квартиру не знайдено для архівації.",
+        existingError?.message ?? `Не знайдено ${terms.accusativeLower} для архівації.`,
       success: null,
     };
   }
@@ -57,7 +65,7 @@ export async function archiveApartment(
 
   if (archiveError) {
     return {
-      error: `Не вдалося архівувати квартиру: ${archiveError.message}`,
+      error: `Не вдалося архівувати ${terms.accusativeLower}: ${archiveError.message}`,
       success: null,
     };
   }
@@ -73,7 +81,7 @@ export async function archiveApartment(
       entityId: apartmentId,
       entityLabel: existingApartment.apartment_label,
       actionType: "archive_apartment",
-      description: `Квартира ${existingApartment.apartment_label} переміщена в архів.`,
+      description: `${terms.full} ${existingApartment.apartment_label} переміщена в архів.`,
       metadata: {
         sourceType: "cms",
         sourceModule: "apartments",
@@ -90,6 +98,6 @@ export async function archiveApartment(
 
   return {
     error: null,
-    success: "Квартира переміщена в архів.",
+    success: `${terms.full} переміщена в архів.`,
   };
 }

@@ -1,3 +1,5 @@
+import { stripHouseUnitLabelPrefix } from "@/src/shared/utils/houses/houseUnitTerminology";
+
 export type MeetingApartmentOption = {
   id: string;
   apartmentLabel: string;
@@ -32,9 +34,7 @@ export function normalizeMeetingApartmentLabel(label: string) {
     .normalize("NFKC")
     .replace(/\u00a0/gu, " ")
     .trim();
-  const withoutPrefix = trimmed
-    .replace(/^(квартира|прим\.?|кв\.?)\s*/iu, "")
-    .trim();
+  const withoutPrefix = stripHouseUnitLabelPrefix(trimmed);
   const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
 
   return withoutOwner || withoutPrefix || trimmed;

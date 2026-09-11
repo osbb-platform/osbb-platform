@@ -81,6 +81,7 @@ export default async function AdminApartmentsPage({
         id: house.id,
         name: house.name,
         districtId: house.district?.id ?? "",
+        objectKind: house.object_kind,
       }))}
       selectedDistrictId={selectedDistrictId}
       selectedHouseId={selectedHouseId}

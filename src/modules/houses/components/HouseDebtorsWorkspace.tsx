@@ -15,6 +15,7 @@ import { isAmountEligibleForDebtors } from "@/src/modules/houses/utils/debtorsTh
 import type { AdminHouseApartmentListItem } from "@/src/modules/apartments/services/getAdminHouseApartments";
 import type { AdminHouseDebtorsSnapshot } from "@/src/modules/houses/services/getAdminHouseDebtors";
 import { AdminStatusBadge } from "@/src/shared/ui/admin/AdminStatusBadge";
+import { capitalizeFirst, getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 import {
   adminInputClass,
   adminPrimaryButtonClass,
@@ -55,6 +56,7 @@ type DebtorsCalculator = {
 type Props = {
   houseId: string;
   houseSlug: string;
+  objectKind?: string;
   exportTitle?: string;
   apartments: AdminHouseApartmentListItem[];
   debtors: AdminHouseDebtorsSnapshot | null;
@@ -246,10 +248,12 @@ function formatPeriodLabel(year: number, month: number) {
 export function HouseDebtorsWorkspace({
   houseId,
   houseSlug,
+  objectKind,
   exportTitle = "Боржники",
   apartments,
   debtors,
 }: Props) {
+  const terms = getHouseUnitTerminology(objectKind);
   const { dispatch, isPending, lastError } = useAdminContentCommand();
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("all");
@@ -585,6 +589,7 @@ export function HouseDebtorsWorkspace({
         amount: row.amount,
         days: row.days,
       })),
+      objectKind,
     });
   }
 
@@ -610,6 +615,7 @@ export function HouseDebtorsWorkspace({
       const result = await parseDebtorsImportFile({
         file,
         referenceRows: buildReferenceRows(workingRows),
+        objectKind,
       });
 
       const importedMap = new Map(
@@ -740,7 +746,7 @@ export function HouseDebtorsWorkspace({
             {[
               {
                 key: "all",
-                label: "Усі квартири",
+                label: `Усі ${terms.nominativePluralLower}`,
                 count: totalApartmentsCount,
               },
               {
@@ -806,7 +812,7 @@ export function HouseDebtorsWorkspace({
             type="text"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Пошук: квартира / особовий рахунок / власник"
+            placeholder={`Пошук: ${terms.nominativeLower} / особовий рахунок / власник`}
             className={adminInputClass}
           />
 
@@ -1517,8 +1523,8 @@ export function HouseDebtorsWorkspace({
 
         {activeTab === "all" && filteredRows.length === 0 ? (
           <div className="rounded-[var(--r-xl)] border border-dashed border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-6 py-8 text-base leading-7 text-[var(--cms-text)]">
-            У цьому будинку поки немає квартир для роботи із заборгованістю.
-            Спочатку додайте квартири в розділі «Квартири», після цього тут
+            У цьому будинку поки немає {terms.genitivePluralLower} для роботи із заборгованістю.
+            Спочатку додайте {terms.nominativePluralLower} в розділі «{terms.full}», після цього тут
             з’явиться реєстр.
           </div>
         ) : filteredRows.length > 0 ? (
@@ -1528,7 +1534,7 @@ export function HouseDebtorsWorkspace({
                 <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
                   <tr className="border-b border-[var(--cms-border)] text-left">
                     <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
-                      Кв.
+                      {terms.short}
                     </th>
                     <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
                       Л/С
@@ -1660,6 +1666,7 @@ export function HouseDebtorsWorkspace({
           houseId={houseId}
           isOpen={is1cImportOpen}
           onClose={() => setIs1cImportOpen(false)}
+          objectKind={objectKind}
         />
 
         <HouseDebtorMonthHistoryPanel
@@ -1698,7 +1705,7 @@ export function HouseDebtorsWorkspace({
                 </h2>
 
                 <p className="mt-2 text-sm leading-6 text-[var(--cms-text-muted)]">
-                  У чернетку будуть збережені лише квартири, де заповнена сума
+                  У чернетку будуть збережені лише {terms.nominativePluralLower}, де заповнена сума
                   боргу.
                 </p>
 
@@ -1749,7 +1756,7 @@ export function HouseDebtorsWorkspace({
                     Період: {formatPeriodLabel(periodYear, periodMonth)}
                   </span>
                   <span className="rounded-[var(--r-pill)] bg-[var(--cms-warning-bg)] px-3 py-1 text-xs font-medium text-[var(--cms-warning-text)]">
-                    Квартир без рядка: {monthlyMissingApartmentsCount}
+                    {capitalizeFirst(terms.genitivePluralLower)} без рядка: {monthlyMissingApartmentsCount}
                   </span>
                 </div>
               </div>
@@ -1758,7 +1765,7 @@ export function HouseDebtorsWorkspace({
                 {isPreviewEmpty ? (
                   <div className="rounded-[var(--r-lg)] border border-dashed border-[var(--cms-border)] p-5 text-sm text-[var(--cms-text-muted)]">
                     У попередньому перегляді немає рядків для збереження.
-                    Вкажіть суму боргу хоча б для однієї квартири.
+                    Вкажіть суму боргу хоча б для однієї {terms.genitiveLower}.
                   </div>
                 ) : (
                   <div className="overflow-hidden rounded-[var(--r-xl)] border border-[var(--cms-border)]">
@@ -1766,7 +1773,7 @@ export function HouseDebtorsWorkspace({
                       <thead className="sticky top-0 bg-[var(--cms-surface-elevated)]">
                         <tr className="border-b border-[var(--cms-border)] text-left">
                           <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
-                            Кв.
+                            {terms.short}
                           </th>
                           <th className="px-4 py-3 text-xs text-[var(--cms-text-muted)]">
                             Л/С

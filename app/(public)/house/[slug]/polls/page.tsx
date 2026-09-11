@@ -42,6 +42,7 @@ export default async function PublicHousePollsPage({
           slug={slug}
           polls={polls}
           apartments={apartments}
+          objectKind={house.object_kind}
         />
       </div>
     </div>

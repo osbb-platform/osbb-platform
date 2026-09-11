@@ -11,11 +11,14 @@ import {
 import type { HouseSpecialist, HouseSpecialistCategory } from "../types";
 import {
   HOUSE_SPECIALIST_ENTITY_TYPE,
+  normalizeCategoryTitles,
   normalizeOptionalText,
   normalizePhoneTypes,
   validatePhones,
   normalizeSortOrder,
   publicSpecialistsPaths,
+  replaceSpecialistCategoryLinks,
+  resolveSpecialistCategoryIds,
   specialistHistoryMetadata,
 } from "./shared";
 
@@ -46,9 +49,15 @@ function normalizeTemplateSpecialists(value: unknown) {
         return null;
       }
 
+      const categories = normalizeCategoryTitles({
+        categories: record.categories,
+        category: record.category,
+      });
+
       return {
         title,
         category: normalizeOptionalText(record.category),
+        categories,
         phones: phoneValidation.phones,
         phone_types: normalizePhoneTypes(
           record.phoneTypes ?? record.phone_types,
@@ -101,7 +110,7 @@ export const applyTemplateCommand: CommandSpec = {
 
     const categoryTitles = uniqueStrings([
       ...templateCategories,
-      ...specialists.map((specialist) => specialist.category).filter(Boolean),
+      ...specialists.flatMap((specialist) => specialist.categories),
     ]);
 
     const { data: beforeCategoriesData, error: beforeCategoriesError } =
@@ -188,6 +197,34 @@ export const applyTemplateCommand: CommandSpec = {
     }
 
     const createdSpecialists = (createdData ?? []) as HouseSpecialist[];
+
+    // Every category title used by any template specialist already exists in
+    // the catalog at this point (beforeCategories + createdCategories cover
+    // the full categoryTitles set computed above), so this is a pure lookup,
+    // not a get-or-create — resolveSpecialistCategoryIds() will not insert.
+    const allCategoryIdsResult = await resolveSpecialistCategoryIds(ctx, ctx.house.id, categoryTitles);
+
+    if (!allCategoryIdsResult.ok) {
+      return allCategoryIdsResult;
+    }
+
+    const categoryIdByLowerTitle = new Map(
+      categoryTitles.map((title, index) => [title.toLowerCase(), allCategoryIdsResult.data[index]]),
+    );
+
+    for (let index = 0; index < createdSpecialists.length; index += 1) {
+      const specialistCategoryIds = specialists[index]!.categories
+        .map((title) => categoryIdByLowerTitle.get(title.toLowerCase()))
+        .filter((id): id is string => Boolean(id));
+
+      const linkResult = await replaceSpecialistCategoryLinks(ctx, {
+        houseId: ctx.house.id,
+        specialistId: createdSpecialists[index]!.id,
+        categoryIds: specialistCategoryIds,
+      });
+
+      if (!linkResult.ok) return linkResult;
+    }
 
     return ok({
       data: {

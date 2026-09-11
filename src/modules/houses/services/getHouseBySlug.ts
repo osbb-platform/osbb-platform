@@ -20,6 +20,7 @@ async function loadHouseBySlug(slug: string): Promise<HouseRecord | null> {
         osbb_name,
         short_description,
         public_description,
+        object_kind,
         cover_image_path,
         tariff_amount,
         is_active,

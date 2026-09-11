@@ -13,6 +13,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "src/legacy-v1/**",
+    // Local Supabase CLI-generated runtime artifacts (bundled/minified JS
+    // written by `supabase start`), not repository application source.
+    "supabase/.temp/**",
   ]),
 ]);
 

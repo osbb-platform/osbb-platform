@@ -55,6 +55,12 @@ export const adminTextareaClass = cx(
   "disabled:cursor-not-allowed disabled:opacity-60",
 );
 
+// Append conditionally to adminInputClass/adminTextareaClass for a field an
+// operator must fix before Save can succeed. Pair with aria-invalid so the
+// state is exposed to assistive tech, not just visually.
+export const adminInputInvalidClass =
+  "border-[var(--cms-danger-border)] focus:border-[var(--cms-danger-border)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-danger-border)_28%,transparent)]";
+
 export const adminSelectClass = cx(
   "h-11 w-full rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] bg-[var(--cms-surface-elevated)] px-3.5 text-sm text-[var(--cms-text)] shadow-none transition-colors",
   "focus:border-[var(--cms-accent-primary)] focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--cms-ring)_28%,transparent)]",

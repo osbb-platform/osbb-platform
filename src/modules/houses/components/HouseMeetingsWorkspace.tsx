@@ -34,6 +34,11 @@ import {
 } from "@/src/modules/houses/utils/meetingApartmentIdentity";
 import { EmptyState } from "@/src/shared/ui/admin/EmptyState";
 import { AdminOnlineMeetingVotingPanel } from "@/src/modules/houses/components/AdminOnlineMeetingVotingPanel";
+import {
+  capitalizeFirst,
+  formatHouseUnitLabel,
+  getHouseUnitTerminology,
+} from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type MeetingLifecycleStatus =
   | "draft"
@@ -96,6 +101,7 @@ type Props = {
   canChangeWorkflowStatus?: boolean;
   houseId: string;
   houseSlug: string;
+  objectKind?: string;
   hasApartments: boolean;
   apartments: Array<{
     id: string;
@@ -335,13 +341,14 @@ function combineMeetingDateTime(date: string, time: string) {
   return `${date}T${time || "00:00"}`;
 }
 
-function formatApartmentVoteLabel(apartment: {
-  apartmentLabel: string;
-  ownerName?: string | null;
-}) {
-  const label = apartment.apartmentLabel.trim();
-  const normalizedLabel =
-    /^(кв\.?|прим\.?)\s+/i.test(label) ? label : `Кв. ${label}`;
+function formatApartmentVoteLabel(
+  apartment: {
+    apartmentLabel: string;
+    ownerName?: string | null;
+  },
+  objectKind: unknown,
+) {
+  const normalizedLabel = formatHouseUnitLabel(apartment.apartmentLabel, objectKind);
 
   return apartment.ownerName
     ? `${normalizedLabel} — ${apartment.ownerName}`
@@ -355,16 +362,20 @@ function formatRecordedApartmentVoteLabel(
     apartmentLabel: string;
     ownerName?: string | null;
   }>,
+  objectKind: unknown,
 ) {
   const apartment = findMeetingApartmentForVote(vote, apartments);
   const apartmentLabel = normalizeMeetingApartmentLabel(
     apartment?.apartmentLabel ?? vote.apartmentLabel,
   );
 
-  return formatApartmentVoteLabel({
-    apartmentLabel,
-    ownerName: apartment?.ownerName ?? null,
-  });
+  return formatApartmentVoteLabel(
+    {
+      apartmentLabel,
+      ownerName: apartment?.ownerName ?? null,
+    },
+    objectKind,
+  );
 }
 
 function getNotParticipatingApartments(
@@ -392,11 +403,12 @@ function formatNotParticipatingApartments(
     apartmentLabel: string;
     ownerName?: string | null;
   }>,
+  objectKind?: unknown,
 ) {
   const notParticipating = getNotParticipatingApartments(meeting, apartments);
 
   if (notParticipating.length === 0) {
-    return "усі квартири взяли участь";
+    return `усі ${getHouseUnitTerminology(objectKind).nominativePluralLower} взяли участь`;
   }
 
   return notParticipating.map(formatApartmentVoteLabel).join(", ");
@@ -457,6 +469,7 @@ function recalculateMeetingQuestionResults(
 
 export function HouseMeetingsWorkspace({
   houseId,
+  objectKind,
   hasApartments,
   apartments,
   meetings: meetingsSnapshot,
@@ -464,6 +477,7 @@ export function HouseMeetingsWorkspace({
   onlineVotingProviderMode,
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
+  const terms = getHouseUnitTerminology(objectKind);
   const { dispatch, isPending } = useAdminContentCommand();
 
   const [meetings, setMeetings] = useState<MeetingItem[]>(
@@ -596,7 +610,7 @@ export function HouseMeetingsWorkspace({
   function openCreateMode() {
     if (!hasApartments) {
       setWorkspaceError(
-        "Спочатку заповніть розділ «Квартири» для цього будинку. Без списку квартир неможливо створити збори та запустити голосування.",
+        `Спочатку заповніть розділ «${capitalizeFirst(terms.nominativePluralLower)}» для цього будинку. Без списку ${terms.genitivePluralLower} неможливо створити збори та запустити голосування.`,
       );
       return;
     }
@@ -1118,7 +1132,6 @@ export function HouseMeetingsWorkspace({
               Порядок денний
             </summary>
             <div className="mt-4">
-            {draft.status !== "review" && draft.status !== "completed" ? (
               <div className="border-t border-[var(--cms-border)] pt-4">
               <div className="mb-3 text-sm font-semibold text-[var(--cms-text)]">
                 Порядок денний / питання
@@ -1130,40 +1143,48 @@ export function HouseMeetingsWorkspace({
                     key={question.id}
                     className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                   >
-                    <input
-                      value={question.title}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          questions: prev.questions.map((q) =>
-                            q.id === question.id
-                              ? { ...q, title: e.target.value }
-                              : q,
-                          ),
-                        }))
-                      }
-                      disabled={isContentLocked || isPending}
-                      placeholder={`Питання ${index + 1}`}
-                      className="w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
-                    />
+                    {draft.status !== "review" && draft.status !== "completed" ? (
+                      <>
+                        <input
+                          value={question.title}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              questions: prev.questions.map((q) =>
+                                q.id === question.id
+                                  ? { ...q, title: e.target.value }
+                                  : q,
+                              ),
+                            }))
+                          }
+                          disabled={isContentLocked || isPending}
+                          placeholder={`Питання ${index + 1}`}
+                          className="w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                        />
 
-                    <textarea
-                      value={question.description}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          questions: prev.questions.map((q) =>
-                            q.id === question.id
-                              ? { ...q, description: e.target.value }
-                              : q,
-                          ),
-                        }))
-                      }
-                      rows={3}
-                      disabled={isContentLocked || isPending}
-                      placeholder="Опис питання"
-                      className="mt-3 w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
-                    />
+                        <textarea
+                          value={question.description}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              questions: prev.questions.map((q) =>
+                                q.id === question.id
+                                  ? { ...q, description: e.target.value }
+                                  : q,
+                              ),
+                            }))
+                          }
+                          rows={3}
+                          disabled={isContentLocked || isPending}
+                          placeholder="Опис питання"
+                          className="mt-3 w-full rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-sm text-[var(--cms-text)] disabled:opacity-60"
+                        />
+                      </>
+                    ) : (
+                      <div className="text-sm font-medium text-[var(--cms-text)]">
+                        {question.title || `Питання ${index + 1}`}
+                      </div>
+                    )}
 
                     {mode === "edit" &&
                     (draft.status === "review" ||
@@ -1232,7 +1253,7 @@ export function HouseMeetingsWorkspace({
                               Утрималися: {votesAbstained} ({abstainedPercent}%)
                             </div>
                             <div className="rounded-[var(--r-md)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] px-3 py-2 text-xs text-[var(--cms-text-muted)]">
-                              Проголосувало квартир: {votedApartments} / {totalVotes}
+                              {`Проголосувало ${terms.genitivePluralLower}: ${votedApartments} / ${totalVotes}`}
                             </div>
                           </div>
 
@@ -1243,32 +1264,35 @@ export function HouseMeetingsWorkspace({
                       );
                     })() : null}
 
-                    <button
-                      type="button"
-                      onClick={() => removeQuestion(question.id)}
-                      disabled={
-                        isContentLocked ||
-                        draft.questions.length <= 1 ||
-                        isPending
-                      }
-                      className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
-                    >
-                      Видалити питання
-                    </button>
+                    {draft.status !== "review" && draft.status !== "completed" ? (
+                      <button
+                        type="button"
+                        onClick={() => removeQuestion(question.id)}
+                        disabled={
+                          isContentLocked ||
+                          draft.questions.length <= 1 ||
+                          isPending
+                        }
+                        className="mt-3 text-xs text-[var(--cms-danger-text)] disabled:opacity-40"
+                      >
+                        Видалити питання
+                      </button>
+                    ) : null}
                   </div>
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={addQuestion}
-                disabled={isPending}
-                className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
-              >
-                Додати питання
-              </button>
+              {draft.status !== "review" && draft.status !== "completed" ? (
+                <button
+                  type="button"
+                  onClick={addQuestion}
+                  disabled={isPending}
+                  className="mt-4 rounded-[var(--r-lg)] border border-[var(--cms-border-strong)] px-4 py-2 text-sm text-[var(--cms-text)]"
+                >
+                  Додати питання
+                </button>
+              ) : null}
             </div>
-            ) : null}
             </div>
           </details>
 
@@ -1381,6 +1405,7 @@ export function HouseMeetingsWorkspace({
                   ballots={draft.onlineBallots}
                   providerMode={onlineVotingProviderMode}
                   canChangeWorkflowStatus={workflowAccessGranted}
+                  objectKind={objectKind}
                   onMeetingChanged={(nextMeeting) => {
                     setDraft((prev) => ({
                       ...prev,
@@ -1411,7 +1436,7 @@ export function HouseMeetingsWorkspace({
                   Ручне внесення голосів
                 </div>
                 <p className="mt-1 text-xs leading-5 text-[var(--cms-text-muted)]">
-                  Внесіть повний голос квартири за всіма питаннями. Після збереження запис з’явиться у списку нижче.
+                  {`Внесіть повний голос ${terms.genitiveLower} за всіма питаннями. Після збереження запис з’явиться у списку нижче.`}
                 </p>
 
                 <div className="mt-4 space-y-4">
@@ -1422,10 +1447,10 @@ export function HouseMeetingsWorkspace({
                     }
                     className={adminInputClass}
                   >
-                    <option value="">Оберіть квартиру</option>
+                    <option value="">{terms.selectLabel}</option>
                     {availableVotingApartments.map((apartment) => (
                       <option key={apartment.id} value={apartment.id}>
-                        {formatApartmentVoteLabel(apartment)}
+                        {formatApartmentVoteLabel(apartment, objectKind)}
                       </option>
                     ))}
                   </select>
@@ -1475,7 +1500,7 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartmentVote || !isComplete) {
-                        setWorkspaceError("Заповніть квартиру та всі відповіді.");
+                        setWorkspaceError(`Заповніть ${terms.accusativeLower} та всі відповіді.`);
                         return;
                       }
 
@@ -1484,7 +1509,7 @@ export function HouseMeetingsWorkspace({
                       );
 
                       if (!selectedApartment) {
-                        setWorkspaceError("Оберіть квартиру зі списку.");
+                        setWorkspaceError(`Оберіть ${terms.accusativeLower} зі списку.`);
                         return;
                       }
 
@@ -1561,7 +1586,7 @@ export function HouseMeetingsWorkspace({
                     disabled={isPending}
                     className={adminButtonClasses({ variant: "success" })}
                   >
-                    Зберегти голос квартири
+                    {`Зберегти голос ${terms.genitiveLower}`}
                   </button>
 
                   {(draft.manualVotes ?? []).length > 0 ? (
@@ -1578,7 +1603,7 @@ export function HouseMeetingsWorkspace({
                           className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto] items-center gap-3 rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4"
                         >
                           <div className="text-sm font-medium text-[var(--cms-text)]">
-                            {formatRecordedApartmentVoteLabel(vote, apartments)}
+                            {formatRecordedApartmentVoteLabel(vote, apartments, objectKind)}
                           </div>
 
                           <div className="text-xs text-[var(--cms-text-muted)]">
@@ -1632,14 +1657,14 @@ export function HouseMeetingsWorkspace({
 
       {!hasApartments ? (
         <EmptyState
-          title="Для голосування немає квартир"
-          description="Спочатку додайте квартири цього будинку. Після цього можна буде створювати збори та фіксувати голоси."
+          title={`Для голосування немає ${terms.genitivePluralLower}`}
+          description={`Спочатку додайте ${terms.nominativePluralLower} цього будинку. Після цього можна буде створювати збори та фіксувати голоси.`}
           action={
             <Link
               href="/admin/apartments"
               className={adminButtonClasses({ variant: "primary" })}
             >
-              Перейти до квартир
+              {`Перейти до ${terms.genitivePluralLower}`}
             </Link>
           }
         />
@@ -1704,7 +1729,7 @@ export function HouseMeetingsWorkspace({
                   ? meeting.onlineAggregation
                     ? ` · Онлайн · Участь: ${meeting.onlineAggregation.participationPercent.toFixed(1)}% · Підтверджено: ${meeting.onlineAggregation.confirmedAreaM2.toFixed(2)} м²`
                     : " · Онлайн"
-                  : ` · Не брали участь: ${formatNotParticipatingApartments(meeting, apartments)}`}
+                  : ` · Не брали участь: ${formatNotParticipatingApartments(meeting, apartments, objectKind)}`}
               </div>
 
               <div>

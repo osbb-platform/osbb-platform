@@ -1,7 +1,8 @@
 import * as XLSX from "xlsx";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 const HEADER_ALIASES = {
-  apartmentLabel: ["Квартира"],
+  apartmentLabel: ["Квартира", "Ділянка"],
   accountNumber: ["Особовий рахунок", "Лицевой счет"],
   ownerName: ["Власник", "Владелец"],
   area: ["Площа", "Квадраты"],
@@ -16,14 +17,12 @@ const HEADER_ALIASES = {
   days: ["Термін боргу", "Срок долга"],
 } as const;
 
-export const DEBTORS_IMPORT_HEADERS = [
-  "Квартира",
-  "Особовий рахунок",
-  "Власник",
-  "Площа",
-  "Сума боргу",
-  "Термін боргу",
-] as const;
+export function getDebtorsImportHeaders(
+  objectKind?: unknown,
+): [string, string, string, string, string, string] {
+  const terms = getHouseUnitTerminology(objectKind);
+  return [terms.full, "Особовий рахунок", "Власник", "Площа", "Сума боргу", "Термін боргу"];
+}
 
 export type DebtorsSpreadsheetRow = {
   apartmentLabel: string;
@@ -46,6 +45,7 @@ type DebtorsExportItem = {
 type ParseDebtorsImportParams = {
   file: File;
   referenceRows: DebtorsSpreadsheetRow[];
+  objectKind?: unknown;
 };
 
 type ParseDebtorsImportResult = {
@@ -115,11 +115,13 @@ function findHeaderIndex(
 export function exportDebtorsRegistry(params: {
   houseName: string;
   rows: DebtorsExportItem[];
+  objectKind?: unknown;
 }) {
-  const { houseName, rows } = params;
+  const { houseName, rows, objectKind } = params;
+  const terms = getHouseUnitTerminology(objectKind);
 
   const sheetRows = rows.map((row) => ({
-    "Квартира": row.apartmentLabel,
+    [terms.full]: row.apartmentLabel,
     "Особовий рахунок": row.accountNumber,
     "Власник": row.ownerName,
     "Площа": formatAreaForSheet(row.area),
@@ -147,7 +149,9 @@ export function exportDebtorsRegistry(params: {
 export async function parseDebtorsImportFile({
   file,
   referenceRows,
+  objectKind,
 }: ParseDebtorsImportParams): Promise<ParseDebtorsImportResult> {
+  const terms = getHouseUnitTerminology(objectKind);
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
 
   if (!["csv", "xls", "xlsx"].includes(extension)) {
@@ -184,9 +188,7 @@ export async function parseDebtorsImportFile({
 
   const missingHeaders = requiredFields
     .filter(([, aliases]) => !aliases.some((alias) => headerRow.includes(alias)))
-    .map(([key]) => DEBTORS_IMPORT_HEADERS[
-      ["apartmentLabel", "accountNumber", "ownerName", "area", "amount", "days"].indexOf(key)
-    ]);
+    .map(([, aliases]) => aliases[0]);
 
   if (missingHeaders.length > 0) {
     throw new Error(
@@ -234,7 +236,7 @@ export async function parseDebtorsImportFile({
     }
 
     if (!row.apartmentLabel) {
-      throw new Error(`Рядок ${rowNumber}: поле «Квартира» є обов’язковим.`);
+      throw new Error(`Рядок ${rowNumber}: поле «${terms.full}» є обов’язковим.`);
     }
 
     if (!row.ownerName) {
@@ -262,7 +264,7 @@ export async function parseDebtorsImportFile({
 
   if (parsedRows.length !== referenceRows.length) {
     throw new Error(
-      "Імпорт відхилено: кількість рядків не збігається з поточним списком квартир.",
+      `Імпорт відхилено: кількість рядків не збігається з поточним списком ${terms.genitivePluralLower}.`,
     );
   }
 
@@ -276,7 +278,7 @@ export async function parseDebtorsImportFile({
 
     if (!referenceMap.has(key)) {
       throw new Error(
-        `Рядок ${index + 2}: readonly-дані квартири не збігаються з поточним реєстром. Імпорт відхилено.`,
+        `Рядок ${index + 2}: readonly-дані ${terms.genitiveLower} не збігаються з поточним реєстром. Імпорт відхилено.`,
       );
     }
   }

@@ -9,6 +9,7 @@ import { ensureSpecialistRequestTask } from "@/src/modules/tasks/services/ensure
 import { logPlatformChange } from "@/src/modules/history/services/logPlatformChange";
 import { validateHouseSession } from "@/src/modules/houses/services/validateHouseSession";
 import { getHouseAccessCookieName } from "@/src/shared/utils/security/getHouseAccessCookieName";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type CreateSpecialistContactRequestState = {
   error: string | null;
@@ -34,6 +35,8 @@ export async function createSpecialistContactRequest(
     rawSubject ||
     `Заявка на зв’язок зі спеціалістом: ${specialistLabel || category || "Спеціаліст"}`;
   const comment = String(formData.get("comment") ?? "").trim();
+  const objectKind = String(formData.get("objectKind") ?? "").trim();
+  const terms = getHouseUnitTerminology(objectKind);
 
   if (
     !houseId ||
@@ -45,7 +48,7 @@ export async function createSpecialistContactRequest(
     !apartment
   ) {
     return {
-      error: "Заповніть ім’я, email та квартиру.",
+      error: `Заповніть ім’я, email та ${terms.accusativeLower}.`,
       successMessage: null,
     };
   }

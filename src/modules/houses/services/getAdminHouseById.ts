@@ -10,6 +10,7 @@ export type AdminHouseDetail = {
   osbb_name: string | null;
   short_description: string | null;
   public_description: string | null;
+  object_kind: string;
   cover_image_path: string | null;
   cover_image_url?: string | null;
   is_active: boolean;
@@ -59,6 +60,7 @@ export async function getAdminHouseById(
         osbb_name,
         short_description,
         public_description,
+        object_kind,
         cover_image_path,
         is_active,
         management_company_id,

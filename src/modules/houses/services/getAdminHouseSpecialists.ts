@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import type {
@@ -8,6 +9,39 @@ import type {
   HouseSpecialistPhoneType,
 } from "@/src/modules/content-engine/v2/handlers/specialists";
 
+type SpecialistCategoryLinkRow = {
+  specialist_id: string;
+  house_specialists_categories: { title: string } | null;
+};
+
+export async function loadSpecialistCategoriesBySpecialistId(
+  // Untyped on purpose: shared by the admin (server, cookie-scoped) and
+  // public (anon) Supabase clients, which have distinct wrapper types.
+  supabase: SupabaseClient,
+  houseId: string,
+): Promise<Map<string, string[]>> {
+  const { data, error } = await supabase
+    .from("house_specialist_categories")
+    .select("specialist_id, sort_order, house_specialists_categories(title)")
+    .eq("house_id", houseId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load specialist category links:", error.message);
+    return new Map();
+  }
+
+  const map = new Map<string, string[]>();
+  for (const row of (data ?? []) as unknown as SpecialistCategoryLinkRow[]) {
+    const title = row.house_specialists_categories?.title;
+    if (!title) continue;
+    const list = map.get(row.specialist_id) ?? [];
+    list.push(title);
+    map.set(row.specialist_id, list);
+  }
+  return map;
+}
+
 export type HouseSpecialistSnapshot = {
   id: string;
   title: string;
@@ -16,6 +50,11 @@ export type HouseSpecialistSnapshot = {
   content: {
     title: string;
     category: string;
+    // Full multi-category set (Track 6). Falls back to [category] when the
+    // join table has no rows yet for this specialist (should not happen
+    // post-backfill, but keeps old snapshots/tests that only ever set
+    // `category` rendering something sensible).
+    categories: string[];
     phones: string[];
     phoneTypes: HouseSpecialistPhoneType[];
     email: string;
@@ -63,8 +102,15 @@ function normalizePhoneTypes(value: unknown, phones: string[]) {
 
 export function mapHouseSpecialist(
   specialist: HouseSpecialist,
+  categories?: string[],
 ): HouseSpecialistSnapshot {
   const phones = normalizePhones(specialist.phones);
+  const resolvedCategories =
+    categories && categories.length > 0
+      ? categories
+      : specialist.category
+        ? [specialist.category]
+        : [];
 
   return {
     id: specialist.id,
@@ -74,6 +120,7 @@ export function mapHouseSpecialist(
     content: {
       title: specialist.title,
       category: specialist.category,
+      categories: resolvedCategories,
       phones,
       phoneTypes: normalizePhoneTypes(specialist.phone_types, phones),
       email: specialist.email,
@@ -134,9 +181,14 @@ export async function getAdminHouseSpecialists(params: {
     );
   }
 
+  const categoriesBySpecialistId = await loadSpecialistCategoriesBySpecialistId(
+    supabase,
+    params.houseId,
+  );
+
   return {
     specialists: ((specialistsResult.data ?? []) as unknown as HouseSpecialist[]).map(
-      mapHouseSpecialist,
+      (specialist) => mapHouseSpecialist(specialist, categoriesBySpecialistId.get(specialist.id)),
     ),
     categories: ((categoriesResult.data ?? []) as unknown as HouseSpecialistCategory[]).map(
       mapHouseSpecialistCategory,

@@ -27,6 +27,7 @@ export type HouseRecord = {
   osbb_name: string | null;
   short_description: string | null;
   public_description: string | null;
+  object_kind: string;
   cover_image_path: string | null;
   cover_image_url?: string | null;
   is_active: boolean;

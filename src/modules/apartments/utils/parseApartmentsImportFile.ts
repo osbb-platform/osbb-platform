@@ -1,4 +1,8 @@
 import * as XLSX from "xlsx";
+import {
+  getHouseUnitTerminology,
+  HOUSE_OBJECT_KIND_OPTIONS,
+} from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export const APARTMENTS_IMPORT_HEADERS = [
   "Особовий рахунок",
@@ -6,6 +10,21 @@ export const APARTMENTS_IMPORT_HEADERS = [
   "Власник",
   "Площа",
 ] as const;
+
+// Every unit-label header any object_kind's export template can produce.
+// Accepted interchangeably on import so a garden-association template
+// round-trips, and a legacy apartment-building file still imports for a
+// house that was later reclassified.
+const ALL_UNIT_LABEL_HEADERS = HOUSE_OBJECT_KIND_OPTIONS.map(
+  (option) => getHouseUnitTerminology(option.value).full,
+);
+
+export function getApartmentsImportHeaders(
+  objectKind?: unknown,
+): [string, string, string, string] {
+  const terms = getHouseUnitTerminology(objectKind);
+  return ["Особовий рахунок", terms.full, "Власник", "Площа"];
+}
 
 export type ApartmentsImportRow = {
   accountNumber: string;
@@ -37,7 +56,10 @@ function isAreaValid(value: string) {
 
 export async function parseApartmentsImportFile(
   file: File,
+  objectKind?: unknown,
 ): Promise<ApartmentsImportParseResult> {
+  const terms = getHouseUnitTerminology(objectKind);
+  const unitHeader = terms.full;
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
 
   if (!["csv", "xls", "xlsx"].includes(extension)) {
@@ -70,9 +92,19 @@ export async function parseApartmentsImportFile(
 
   const headerRow = (rows[0] ?? []).map((cell) => normalizeCellValue(cell));
 
-  const missingHeaders = APARTMENTS_IMPORT_HEADERS.filter(
-    (header) => !headerRow.includes(header),
+  const hasUnitHeader = ALL_UNIT_LABEL_HEADERS.some((header) =>
+    headerRow.includes(header),
   );
+
+  const missingHeaders = [
+    "Особовий рахунок",
+    "Власник",
+    "Площа",
+  ].filter((header) => !headerRow.includes(header));
+
+  if (!hasUnitHeader) {
+    missingHeaders.splice(1, 0, unitHeader);
+  }
 
   if (missingHeaders.length > 0) {
     throw new Error(
@@ -82,7 +114,9 @@ export async function parseApartmentsImportFile(
 
   const headerIndexes = {
     accountNumber: headerRow.indexOf("Особовий рахунок"),
-    apartmentLabel: headerRow.indexOf("Квартира"),
+    apartmentLabel: ALL_UNIT_LABEL_HEADERS.map((header) =>
+      headerRow.indexOf(header),
+    ).find((foundIndex) => foundIndex !== -1)!,
     ownerName: headerRow.indexOf("Власник"),
     area: headerRow.indexOf("Площа"),
   };
@@ -118,7 +152,7 @@ export async function parseApartmentsImportFile(
     }
 
     if (!row.apartmentLabel) {
-      throw new Error(`Рядок ${rowNumber}: поле «Квартира» є обов’язковим.`);
+      throw new Error(`Рядок ${rowNumber}: поле «${unitHeader}» є обов’язковим.`);
     }
 
     if (!row.ownerName) {
@@ -136,7 +170,7 @@ export async function parseApartmentsImportFile(
 
     if (duplicateApartmentSet.has(apartmentKey)) {
       throw new Error(
-        `Рядок ${rowNumber}: дублікат значення «Квартира» всередині файлу (${row.apartmentLabel}).`,
+        `Рядок ${rowNumber}: дублікат значення «${unitHeader}» всередині файлу (${row.apartmentLabel}).`,
       );
     }
 

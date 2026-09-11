@@ -12,6 +12,7 @@ import {
   getOnlineMeetingAggregation,
   type OnlineMeetingAggregation,
 } from "@/src/modules/houses/services/getOnlineMeetingAggregation";
+import { formatHouseUnitLabel, stripHouseUnitLabelPrefix } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -103,30 +104,25 @@ function getMeetingStatusLabel(status: MeetingLifecycleStatus) {
 }
 
 function normalizePublicApartmentLabel(label: string) {
-  const trimmed = label.trim();
-  const withoutPrefix = trimmed.replace(/^кв\.?\s*/i, "").trim();
+  const withoutPrefix = stripHouseUnitLabelPrefix(label);
   const withoutOwner = withoutPrefix.replace(/\s+—.*$/u, "").trim();
 
-  return withoutOwner || withoutPrefix || trimmed;
+  return withoutOwner || withoutPrefix || label.trim();
 }
 
-function formatPublicApartmentLabel(label: string) {
+function formatPublicApartmentLabel(label: string, objectKind: unknown) {
   const normalized = normalizePublicApartmentLabel(label);
-
-  if (/^(кв\.?|прим\.?)\s+/i.test(normalized)) {
-    return normalized;
-  }
-
-  return `Кв. ${normalized}`;
+  return formatHouseUnitLabel(normalized, objectKind);
 }
 
 function formatManualVoteApartmentLabel(
   vote: ManualVoteEntry,
   apartments: Array<{ id: string; label: string }>,
+  objectKind: unknown,
 ) {
   const apartment = apartments.find((item) => item.id === vote.apartmentId);
 
-  return formatPublicApartmentLabel(apartment?.label ?? vote.apartmentLabel);
+  return formatPublicApartmentLabel(apartment?.label ?? vote.apartmentLabel, objectKind);
 }
 
 function getApartmentLabelKey(label: string) {
@@ -136,6 +132,7 @@ function getApartmentLabelKey(label: string) {
 function getNotVotedApartmentLabels(
   meeting: MeetingItem,
   apartments: Array<{ id: string; label: string }>,
+  objectKind: unknown,
 ) {
   const votedLabelKeys = new Set(
     (meeting.manualVotes ?? [])
@@ -146,7 +143,7 @@ function getNotVotedApartmentLabels(
   const notVotedByLabel = new Map<string, string>();
 
   for (const apartment of apartments) {
-    const formattedLabel = formatPublicApartmentLabel(apartment.label);
+    const formattedLabel = formatPublicApartmentLabel(apartment.label, objectKind);
     const key = getApartmentLabelKey(formattedLabel);
 
     if (!key || votedLabelKeys.has(key) || notVotedByLabel.has(key)) {
@@ -446,10 +443,11 @@ export default async function PublicMeetingsPage({
                   }))}
                   apartments={apartments.map((apartment) => ({
                     id: apartment.id,
-                    label: formatPublicApartmentLabel(apartment.label),
+                    label: formatPublicApartmentLabel(apartment.label, house.object_kind),
                   }))}
                   aggregation={meeting.onlineAggregation}
                   onlineVotingProviderMode={readOnlineVotingProviderModeForUi()}
+                  objectKind={house.object_kind}
                 />
               ) : null}
 
@@ -506,7 +504,7 @@ export default async function PublicMeetingsPage({
                       {(meeting.manualVotes ?? []).length > 0 ? (
                         (meeting.manualVotes ?? []).map((vote) => (
                           <div key={vote.apartmentId}>
-                            {formatManualVoteApartmentLabel(vote, apartments)}
+                            {formatManualVoteApartmentLabel(vote, apartments, house.object_kind)}
                           </div>
                         ))
                       ) : (
@@ -522,8 +520,8 @@ export default async function PublicMeetingsPage({
                         : houseMeetingsCopy.voters.notYet}
                     </div>
                     <div className="mt-3 max-h-80 overflow-y-auto overscroll-contain whitespace-pre-wrap break-words pr-2 text-sm text-[var(--pub-text-muted)]">
-                      {getNotVotedApartmentLabels(meeting, apartments).join(",\n") ||
-                        "Усі квартири вже враховані"}
+                      {getNotVotedApartmentLabels(meeting, apartments, house.object_kind).join(",\n") ||
+                        (house.object_kind === "garden_association" ? "Усі ділянки вже враховані" : "Усі квартири вже враховані")}
                     </div>
                   </div>
                 </div>

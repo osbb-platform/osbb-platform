@@ -21,11 +21,13 @@ type HousePasswordGateProps = {
 type LoginState = {
   error: string | null;
   lockedUntil: number | null;
+  ok?: boolean;
 };
 
 const initialState: LoginState = {
   error: null,
   lockedUntil: null,
+  ok: false,
 };
 
 const CODE_LENGTH = 6;
@@ -107,6 +109,15 @@ export function HousePasswordGate({
 
     return () => window.clearTimeout(timeoutId);
   }, []);
+
+  useEffect(() => {
+    if (state.ok) {
+      // RC-3: see loginToHouse.ts — a hard navigation avoids the
+      // client-router soft-transition race that intermittently rendered the
+      // marketing route tree for the very first post-login paint.
+      window.location.href = "/";
+    }
+  }, [state.ok]);
 
   useEffect(() => {
     if (!state.error) {

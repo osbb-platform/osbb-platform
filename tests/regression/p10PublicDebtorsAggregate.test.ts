@@ -14,8 +14,10 @@ describe("P10 T6 public debtors semantics", () => {
   it("shows total debt from all negative balances and threshold debtor count", () => {
     expect(page).toContain("totals.totalDebt");
     expect(page).toContain("totals.debtorsCount");
+    // Track 4: the unit noun is object_kind-aware (Квартира/Ділянка), so the
+    // literal string is no longer static — assert the surrounding template.
     expect(page).toContain(
-      "Сума заборгованості всіх квартир будинку",
+      "Сума заборгованості всіх {terms.genitivePluralLower} будинку",
     );
   });
 

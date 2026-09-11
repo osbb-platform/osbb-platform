@@ -8,6 +8,7 @@ import type { OnlineMeetingAggregation } from "@/src/modules/houses/services/get
 import {
   adminButtonClasses,
 } from "@/src/shared/ui/admin/adminStyles";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type MeetingStatus =
   | "draft"
@@ -30,6 +31,7 @@ type Props = {
     | "official_diia"
     | "disabled";
   canChangeWorkflowStatus: boolean;
+  objectKind?: string;
   onMeetingChanged: (next: {
     status: MeetingStatus;
     lifecycleStatus?: "draft" | "published" | "archived";
@@ -93,10 +95,12 @@ export function AdminOnlineMeetingVotingPanel({
   ballots,
   providerMode,
   canChangeWorkflowStatus,
+  objectKind,
   onMeetingChanged,
 }: Props) {
   const { dispatch, isPending } = useAdminContentCommand();
   const [notice, setNotice] = useState<string | null>(null);
+  const terms = getHouseUnitTerminology(objectKind);
 
   async function runCommand(command: "openVoting" | "closeVoting") {
     setNotice(null);
@@ -163,7 +167,7 @@ export function AdminOnlineMeetingVotingPanel({
       typeof warning.count === "number"
     ) {
       setNotice(
-        `Онлайн-голосування відкрито. ${warning.count} квартир не мають заповненої площі та не зможуть голосувати онлайн.`,
+        `Онлайн-голосування відкрито. ${warning.count} ${terms.genitivePluralLower} не мають заповненої площі та не зможуть голосувати онлайн.`,
       );
     } else {
       setNotice(
@@ -292,7 +296,7 @@ export function AdminOnlineMeetingVotingPanel({
 
           <div>
             <div className="text-sm font-semibold text-[var(--cms-text)]">
-              Участь квартир
+              {`Участь ${terms.genitivePluralLower}`}
             </div>
 
             <div className="mt-3 overflow-hidden rounded-[var(--r-lg)] border border-[var(--cms-border)]">
@@ -302,7 +306,7 @@ export function AdminOnlineMeetingVotingPanel({
                   className="flex flex-col gap-1 border-b border-[var(--cms-border)] px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="text-sm font-medium text-[var(--cms-text)]">
-                    Квартира
+                    {terms.full}
                   </div>
 
                   <div className="text-xs text-[var(--cms-text-muted)]">
@@ -326,8 +330,8 @@ export function AdminOnlineMeetingVotingPanel({
           Бюлетені
         </div>
         <p className="mt-1 text-xs text-[var(--cms-text-muted)]">
-          Показуються лише квартира, площа голосу, час і статус. Дані
-          особи та технічні ідентифікатори провайдера не відображаються.
+          {`Показуються лише ${terms.nominativeLower}, площа голосу, час і статус. Дані
+          особи та технічні ідентифікатори провайдера не відображаються.`}
         </p>
 
         {ballots.length > 0 ? (

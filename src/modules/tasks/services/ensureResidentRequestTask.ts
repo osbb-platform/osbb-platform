@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
+import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 type EnsureResidentRequestTaskParams = {
   requestId: string;
@@ -15,11 +16,19 @@ export async function ensureResidentRequestTask(
 ) {
   const supabase = createSupabaseAdminClient();
 
+  const { data: house } = await supabase
+    .from("houses")
+    .select("object_kind")
+    .eq("id", params.houseId)
+    .maybeSingle();
+
+  const terms = getHouseUnitTerminology(house?.object_kind);
+
   const { error } = await supabase.rpc("create_house_scoped_platform_task", {
     p_house_id: params.houseId,
     p_task_type: "resident_request",
     p_title: `Звернення мешканця: ${params.category}`,
-    p_description: `${params.requesterName}, квартира ${params.apartment}. Потрібно опрацювати звернення мешканця.`,
+    p_description: `${params.requesterName}, ${terms.nominativeLower} ${params.apartment}. Потрібно опрацювати звернення мешканця.`,
     p_priority: "medium",
     p_assigned_to: null,
     p_deadline_at: null,
