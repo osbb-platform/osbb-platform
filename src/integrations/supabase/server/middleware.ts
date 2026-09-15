@@ -33,7 +33,7 @@ export function createSupabaseMiddlewareClient(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
@@ -44,6 +44,10 @@ export function createSupabaseMiddlewareClient(request: NextRequest) {
 
         cookiesToSet.forEach(({ name, value, options }) => {
           responseHolder.current.cookies.set(name, value, options);
+        });
+
+        Object.entries(headers).forEach(([name, value]) => {
+          responseHolder.current.headers.set(name, value);
         });
       },
     },

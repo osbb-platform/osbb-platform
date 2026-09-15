@@ -88,6 +88,31 @@ function withSearch(pathname: string, search: string) {
   return `${pathname}${search || ""}`;
 }
 
+function rewriteWithSupabaseResponse(
+  request: NextRequest,
+  destination: URL,
+  supabaseResponse: NextResponse,
+) {
+  const response = NextResponse.rewrite(destination, {
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  for (const cookie of supabaseResponse.cookies.getAll()) {
+    response.cookies.set(cookie);
+  }
+
+  for (const headerName of ["cache-control", "expires", "pragma"] as const) {
+    const value = supabaseResponse.headers.get(headerName);
+    if (value !== null) {
+      response.headers.set(headerName, value);
+    }
+  }
+
+  return response;
+}
+
 /** Возвращает поддомен ("admin" | "{slug}") или null для корневого домена. */
 function resolveSubdomain(hostname: string): string | null {
   // DEV: localhost = root, admin.localhost / slug.localhost = subdomains
@@ -199,9 +224,10 @@ export async function proxy(request: NextRequest) {
 
     const adminPath = pathname === "/" ? "/admin" : `/admin${pathname}`;
 
-    return NextResponse.rewrite(
+    return rewriteWithSupabaseResponse(
+      request,
       new URL(withSearch(adminPath, url.search), request.url),
-      { headers: response.current.headers }
+      response.current,
     );
   }
 
