@@ -108,7 +108,7 @@ async function run(): Promise<void> {
     // --- Scenario 2: valid Save -> soft refresh -> Edit -> Publish -> Open ---
     const postCountBeforeValidSave = netLog.postRequests.length;
     await clickButtonByText(page, "Зберегти");
-    await sleep(900);
+    await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 20_000 });
 
     const postCountAfterValidSave = netLog.postRequests.length;
     assert(postCountAfterValidSave > postCountBeforeValidSave, "expected a POST request for the valid Save");
@@ -140,8 +140,14 @@ async function run(): Promise<void> {
       `expected persisted option values, got ${JSON.stringify(reloadedOptionValues)}`,
     );
 
+    const postCountBeforePublish = netLog.postRequests.length;
     await clickButtonByText(page, "Зберегти й опублікувати");
-    await sleep(900);
+    await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 20_000 });
+    const publishRequestCount = netLog.postRequests.length - postCountBeforePublish;
+    assert(
+      publishRequestCount > 0 && publishRequestCount <= 3,
+      `expected a bounded compound publish (1-3 POSTs), got ${publishRequestCount}`,
+    );
     assert(
       fullNavigationCount === navigationCountAfterInitialLoad,
       "poll Publish performed a hard browser navigation",
@@ -154,8 +160,13 @@ async function run(): Promise<void> {
     await clickAndWaitForDialog(page, "E2E Опитування про благоустрій");
     await sleep(200);
 
+    const postCountBeforeOpen = netLog.postRequests.length;
     await clickButtonByText(page, "Відкрити опитування");
-    await sleep(900);
+    await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 20_000 });
+    assert(
+      netLog.postRequests.length - postCountBeforeOpen === 1,
+      `expected exactly one lifecycle POST, got ${netLog.postRequests.length - postCountBeforeOpen}`,
+    );
     assert(
       fullNavigationCount === navigationCountAfterInitialLoad,
       "poll lifecycle action performed a hard browser navigation",
@@ -167,13 +178,15 @@ async function run(): Promise<void> {
     // Regression for the production "return to tab, UI looks alive but does
     // not accept clicks" incident. Exercise Chromium's real page lifecycle,
     // then inspect the DOM hit-testing/pending state before a meaningful click.
-    const lifecycleSession = await page.createCDPSession();
-    await lifecycleSession.send("Page.setLifecycleEventsEnabled", { enabled: true });
-    await lifecycleSession.send("Page.setWebLifecycleState", { state: "frozen" });
-    await lifecycleSession.send("Page.setWebLifecycleState", { state: "active" });
+    const otherTab = await browser.newPage();
+    await otherTab.goto("about:blank");
+    await otherTab.bringToFront();
+    const backgroundVisibility = await safeEvaluate(page, () => document.visibilityState);
     await page.bringToFront();
+    await page.waitForFunction(() => document.visibilityState === "visible", { timeout: 10_000 });
+    await otherTab.close();
 
-    const lifecycleEvidence = await safeEvaluate(page, () => {
+    const foregroundEvidence = await safeEvaluate(page, () => {
       const centerX = Math.floor(window.innerWidth / 2);
       const centerY = Math.floor(window.innerHeight / 2);
       const top = document.elementFromPoint(centerX, centerY);
@@ -204,11 +217,15 @@ async function run(): Promise<void> {
           .filter((entry) => entry.name.includes("_rsc")).length,
       };
     });
+    const lifecycleEvidence = { backgroundVisibility, ...foregroundEvidence };
     console.log(`TAB_LIFECYCLE_EVIDENCE=${JSON.stringify(lifecycleEvidence)}`);
     assert(lifecycleEvidence.bodyPointerEvents !== "none", "body ignored pointer events after foregrounding");
     assert(lifecycleEvidence.htmlPointerEvents !== "none", "html ignored pointer events after foregrounding");
     assert(lifecycleEvidence.inertElements === 0, "stale inert element remained after foregrounding");
+    assert(lifecycleEvidence.backgroundVisibility === "hidden", "test tab never entered background state");
+    assert(lifecycleEvidence.visibilityState === "visible", "test tab did not return to foreground state");
 
+    await clickAndWaitForDialog(page, "E2E Опитування про благоустрій");
     const closeButton = await page.$('[role="dialog"] button[aria-label="Закрити"]');
     assert(closeButton, "poll drawer close button not found after foregrounding");
     await closeButton.click();

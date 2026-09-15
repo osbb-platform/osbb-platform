@@ -260,6 +260,52 @@ function normalizeReturnedPoll(value: unknown, fallback: PollDraft): PollDraft {
   };
 }
 
+function toSnapshot(
+  poll: PollDraft,
+  current?: AdminHousePollSnapshot,
+): AdminHousePollSnapshot {
+  const now = new Date().toISOString();
+
+  return {
+    id: poll.id,
+    title: poll.title,
+    description: poll.description,
+    identityMode: poll.identityMode,
+    resultsVisibility: poll.resultsVisibility,
+    pollStatus: poll.pollStatus,
+    lifecycleStatus: poll.lifecycleStatus,
+    lockVersion: poll.lockVersion,
+    createdAt: current?.createdAt ?? now,
+    updatedAt: now,
+    publishedAt:
+      poll.lifecycleStatus === "published"
+        ? (current?.publishedAt ?? now)
+        : current?.publishedAt ?? null,
+    archivedAt:
+      poll.lifecycleStatus === "archived"
+        ? (current?.archivedAt ?? now)
+        : null,
+    questions: poll.questions.map((question, questionIndex) => ({
+      id: question.id,
+      question: question.question,
+      description: question.description,
+      questionType: question.questionType,
+      scaleMax: question.questionType === "scale" ? question.scaleMax : null,
+      scaleMinLabel: question.scaleMinLabel,
+      scaleMaxLabel: question.scaleMaxLabel,
+      isRequired: question.isRequired,
+      sortOrder: questionIndex,
+      options: question.options.map((option, optionIndex) => ({
+        id: option.id,
+        label: option.label,
+        sortOrder: optionIndex,
+      })),
+    })),
+    results: current?.results ?? null,
+    exportData: current?.exportData ?? null,
+  };
+}
+
 function questionTypeLabel(value: HousePollQuestionType) {
   return questionTypeOptions.find((item) => item.value === value)?.label ?? value;
 }
@@ -824,6 +870,13 @@ export function HousePollsWorkspace({
   async function saveOnly() {
     const saved = await persistDraft();
     if (!saved) return;
+    setItems((current) => {
+      const existing = current.find((item) => item.id === saved.id);
+      const next = toSnapshot(saved, existing);
+      return existing
+        ? current.map((item) => (item.id === saved.id ? next : item))
+        : [next, ...current];
+    });
     setActiveTab(saved.lifecycleStatus === "draft" ? "draft" : "active");
     resetWorkspace();
     router.refresh();
@@ -845,6 +898,17 @@ export function HousePollsWorkspace({
     );
 
     if (!published) return;
+    const publishedPoll = normalizeReturnedPoll(published, {
+      ...saved,
+      lifecycleStatus: "published",
+    });
+    setItems((current) => {
+      const existing = current.find((item) => item.id === publishedPoll.id);
+      const next = toSnapshot(publishedPoll, existing);
+      return existing
+        ? current.map((item) => (item.id === publishedPoll.id ? next : item))
+        : [next, ...current];
+    });
     setActiveTab("active");
     resetWorkspace();
     router.refresh();
