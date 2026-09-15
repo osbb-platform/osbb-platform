@@ -164,6 +164,62 @@ async function run(): Promise<void> {
     const openBanner = await safeEvaluate(page, () => document.querySelector('[role="alert"]')?.textContent ?? null);
     assert(!openBanner, `unexpected error after opening the poll: ${openBanner}`);
 
+    // Regression for the production "return to tab, UI looks alive but does
+    // not accept clicks" incident. Exercise Chromium's real page lifecycle,
+    // then inspect the DOM hit-testing/pending state before a meaningful click.
+    const lifecycleSession = await page.createCDPSession();
+    await lifecycleSession.send("Page.setLifecycleEventsEnabled", { enabled: true });
+    await lifecycleSession.send("Page.setWebLifecycleState", { state: "frozen" });
+    await lifecycleSession.send("Page.setWebLifecycleState", { state: "active" });
+    await page.bringToFront();
+
+    const lifecycleEvidence = await safeEvaluate(page, () => {
+      const centerX = Math.floor(window.innerWidth / 2);
+      const centerY = Math.floor(window.innerHeight / 2);
+      const top = document.elementFromPoint(centerX, centerY);
+      const fixedOverlays = Array.from(document.querySelectorAll("body *")).filter((node) => {
+        const element = node as HTMLElement;
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return (
+          style.position === "fixed" &&
+          style.pointerEvents !== "none" &&
+          rect.width >= window.innerWidth * 0.9 &&
+          rect.height >= window.innerHeight * 0.9
+        );
+      });
+
+      return {
+        visibilityState: document.visibilityState,
+        hasFocus: document.hasFocus(),
+        disabledButtons: document.querySelectorAll("button:disabled").length,
+        inertElements: document.querySelectorAll("[inert]").length,
+        ariaHiddenElements: document.querySelectorAll('[aria-hidden="true"]').length,
+        fixedOverlays: fixedOverlays.length,
+        hitTarget: top?.tagName ?? null,
+        bodyPointerEvents: getComputedStyle(document.body).pointerEvents,
+        htmlPointerEvents: getComputedStyle(document.documentElement).pointerEvents,
+        pendingRscResources: performance
+          .getEntriesByType("resource")
+          .filter((entry) => entry.name.includes("_rsc")).length,
+      };
+    });
+    console.log(`TAB_LIFECYCLE_EVIDENCE=${JSON.stringify(lifecycleEvidence)}`);
+    assert(lifecycleEvidence.bodyPointerEvents !== "none", "body ignored pointer events after foregrounding");
+    assert(lifecycleEvidence.htmlPointerEvents !== "none", "html ignored pointer events after foregrounding");
+    assert(lifecycleEvidence.inertElements === 0, "stale inert element remained after foregrounding");
+
+    const closeButton = await page.$('[role="dialog"] button[aria-label="Закрити"]');
+    assert(closeButton, "poll drawer close button not found after foregrounding");
+    await closeButton.click();
+    await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 10_000 });
+    await clickAndWaitForCondition(
+      page,
+      () => clickButtonContainingText(page, "Чернетки"),
+      () => isWorkspaceTabActive(page, "Чернетки"),
+      { label: 'meaningful click after foregrounding switched to "Чернетки"' },
+    );
+
     // Confirm DB state directly: poll is published + active with our two options.
     const admin = createClient(e2eEnv.supabaseUrl, e2eEnv.serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
