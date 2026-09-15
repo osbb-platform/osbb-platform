@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
 import { dispatchAdminCommand } from "@/src/modules/content-engine/v2/dispatch";
 import { useToast } from "@/src/shared/ui/toast/ToastProvider";
@@ -27,81 +27,93 @@ type DispatchOptions = {
 export function useAdminContentCommand() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [pendingCount, setPendingCount] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
+  const isPending = pendingCount > 0;
 
-  function dispatch<T = unknown>(
+  async function dispatch<T = unknown>(
     command: AdminCommand,
     options: DispatchOptions = {},
   ): Promise<T | null> {
-    return new Promise((resolve) => {
-      startTransition(async () => {
-        setLastError(null);
+    setPendingCount((count) => count + 1);
+    setLastError(null);
 
-        const result = await dispatchAdminCommand(command);
+    try {
+      const result = await dispatchAdminCommand(command);
 
-        if (!result.ok) {
-          setLastError(result.error);
-          options.onError?.(result.error, result.code);
+      if (!result.ok) {
+        setLastError(result.error);
+        options.onError?.(result.error, result.code);
 
-          // STALE_CONTENT and INTERNAL can arrive after the server has already
-          // mutated authoritative data. Refresh immediately so server props,
-          // including lock_version, replace any stale client snapshot.
-          // Never blind-retry the same command payload here.
-          if (
-            result.code === "STALE_CONTENT" ||
-            result.code === "INTERNAL"
-          ) {
-            router.refresh();
-          }
-
-          toast({
-            tone: "error",
-            title:
-              result.code === "STALE_CONTENT"
-                ? "Дані застаріли"
-                : (options.errorPrefix ?? "Помилка"),
-            description: result.code
-              ? (errorMessages[result.code] ?? result.error)
-              : result.error,
-            action: undefined,
-          });
-          resolve(null);
-          return;
-        }
-
-        if (options.refreshOnSuccess !== false) {
+        // STALE_CONTENT and INTERNAL can arrive after the server has already
+        // mutated authoritative data. Refresh immediately so server props,
+        // including lock_version, replace any stale client snapshot.
+        // Never blind-retry the same command payload here.
+        if (
+          result.code === "STALE_CONTENT" ||
+          result.code === "INTERNAL"
+        ) {
           router.refresh();
         }
 
-        options.onSuccess?.(result.data);
+        toast({
+          tone: "error",
+          title:
+            result.code === "STALE_CONTENT"
+              ? "Дані застаріли"
+              : (options.errorPrefix ?? "Помилка"),
+          description: result.code
+            ? (errorMessages[result.code] ?? result.error)
+            : result.error,
+          action: undefined,
+        });
+        return null;
+      }
 
-        if (options.successMessage !== null) {
-          const undoCommand =
-            options.enableUndo === false
-              ? null
-              : buildLifecycleUndoCommand(command, result.data);
+      if (options.refreshOnSuccess !== false) {
+        router.refresh();
+      }
 
-          toast({
-            tone: "success",
-            title: options.successMessage ?? "Збережено",
-            action: undoCommand
-              ? {
-                  label: "Скасувати",
-                  onClick: () => {
-                    void dispatch(undoCommand, {
-                      successMessage: "Дію скасовано",
-                      enableUndo: false,
-                    });
-                  },
-                }
-              : undefined,
-          });
-        }
+      options.onSuccess?.(result.data);
 
-        resolve(result.data as T);
+      if (options.successMessage !== null) {
+        const undoCommand =
+          options.enableUndo === false
+            ? null
+            : buildLifecycleUndoCommand(command, result.data);
+
+        toast({
+          tone: "success",
+          title: options.successMessage ?? "Збережено",
+          action: undoCommand
+            ? {
+                label: "Скасувати",
+                onClick: () => {
+                  void dispatch(undoCommand, {
+                    successMessage: "Дію скасовано",
+                    enableUndo: false,
+                  });
+                },
+              }
+            : undefined,
+        });
+      }
+
+      return result.data as T;
+    } catch {
+      const message = "Не вдалося виконати дію. Спробуйте ще раз.";
+      setLastError(message);
+      options.onError?.(message, "INTERNAL");
+      toast({
+        tone: "error",
+        title: options.errorPrefix ?? "Помилка",
+        description: errorMessages.INTERNAL ?? message,
+        action: undefined,
       });
-    });
+      return null;
+    } finally {
+      setPendingCount((count) => Math.max(0, count - 1));
+    }
   }
 
   return { dispatch, isPending, lastError };
