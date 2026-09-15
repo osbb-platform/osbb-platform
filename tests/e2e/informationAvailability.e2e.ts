@@ -41,6 +41,20 @@ async function run(): Promise<void> {
     const admin = createClient(e2eEnv.supabaseUrl, e2eEnv.serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    // `house_pages` is only the compatibility page shell in Architecture 2.0,
+    // but the current admin form still uses its presence as the enablement
+    // signal. Production houses have this row from the historical backfill;
+    // a direct test-fixture house insert does not.
+    const pageShell = await admin.from("house_pages").upsert(
+      {
+        house_id: fixture.houseId,
+        slug: "information",
+        title: "Інформація",
+        status: "published",
+      },
+      { onConflict: "house_id,slug" },
+    );
+    assert(!pageShell.error, `failed to create information page shell: ${pageShell.error?.message}`);
     const accessCode = "654321";
     const accessUpdate = await admin
       .from("houses")
