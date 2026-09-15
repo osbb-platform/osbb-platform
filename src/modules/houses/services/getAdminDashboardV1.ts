@@ -118,7 +118,10 @@ export async function getAdminDashboardV1(): Promise<AdminDashboardV1> {
 
   const [pages, apartmentCounts, history] = await Promise.all([
     getAdminHousePagesByHouseIds(houseIds),
-    getAdminActiveApartmentCountsByHouseIds(houseIds),
+    getAdminActiveApartmentCountsByHouseIds(houseIds).catch(() => {
+      console.error("Dashboard optional apartment counts failed.");
+      return new Map<string, number>();
+    }),
     getPlatformChangeHistory({
       tab: "cms",
       pageSize: 50,
