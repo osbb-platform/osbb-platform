@@ -27,8 +27,8 @@ export async function loadSpecialistCategoriesBySpecialistId(
     .order("sort_order", { ascending: true });
 
   if (error) {
-    console.error("Failed to load specialist category links:", error.message);
-    return new Map();
+    console.error("Specialist category link loader failed.");
+    throw new Error("Failed to load specialist category links.");
   }
 
   const map = new Map<string, string[]>();
@@ -168,17 +168,13 @@ export async function getAdminHouseSpecialists(params: {
   ]);
 
   if (specialistsResult.error) {
-    console.error(
-      "Failed to load admin specialists:",
-      specialistsResult.error.message,
-    );
+    console.error("Admin specialist loader failed at specialists query.");
+    throw new Error("Failed to load admin specialists.");
   }
 
   if (categoriesResult.error) {
-    console.error(
-      "Failed to load admin specialist categories:",
-      categoriesResult.error.message,
-    );
+    console.error("Admin specialist loader failed at category catalog query.");
+    throw new Error("Failed to load admin specialist categories.");
   }
 
   const categoriesBySpecialistId = await loadSpecialistCategoriesBySpecialistId(
