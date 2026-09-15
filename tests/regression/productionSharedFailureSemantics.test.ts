@@ -34,7 +34,11 @@ function publicClient(result: { data: unknown; error: { message: string } | null
 
 function adminClient(options: {
   authUser?: { id: string; email?: string } | null;
-  authError?: { message: string } | null;
+  authError?: {
+    message: string;
+    name?: string;
+    code?: string;
+  } | null;
   profileError?: { message: string } | null;
   membershipError?: { message: string } | null;
 }) {
@@ -101,6 +105,24 @@ describe("production shared failure semantics", () => {
   it("returns null only when the authenticated user is genuinely absent", async () => {
     serverClientFactory.mockResolvedValue(adminClient({ authUser: null }));
     const { getCurrentAdminUser } = await import("@/src/modules/auth/services/getCurrentAdminUser");
+
+    await expect(getCurrentAdminUser()).resolves.toBeNull();
+  });
+
+  it("treats a missing Supabase auth session as unauthenticated instead of infrastructure failure", async () => {
+    serverClientFactory.mockResolvedValue(
+      adminClient({
+        authUser: null,
+        authError: {
+          name: "AuthSessionMissingError",
+          message: "Auth session missing!",
+        },
+      }),
+    );
+
+    const { getCurrentAdminUser } = await import(
+      "@/src/modules/auth/services/getCurrentAdminUser"
+    );
 
     await expect(getCurrentAdminUser()).resolves.toBeNull();
   });

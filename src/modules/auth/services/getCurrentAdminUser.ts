@@ -86,6 +86,33 @@ function pickBestMembership(rows: AdminMembershipRow[]) {
   return sorted[0] ?? null;
 }
 
+function isMissingAuthSessionError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const candidate = error as {
+    name?: unknown;
+    code?: unknown;
+    message?: unknown;
+  };
+
+  if (candidate.name === "AuthSessionMissingError") {
+    return true;
+  }
+
+  if (
+    candidate.code === "session_not_found" ||
+    candidate.code === "session_expired" ||
+    candidate.code === "refresh_token_not_found" ||
+    candidate.code === "refresh_token_already_used"
+  ) {
+    return true;
+  }
+
+  return candidate.message === "Auth session missing!";
+}
+
 export const getCurrentAdminUser = cache(
   async (): Promise<CurrentAdminUser | null> => {
     try {
@@ -97,6 +124,10 @@ export const getCurrentAdminUser = cache(
       } = await supabase.auth.getUser();
 
       if (userError) {
+        if (isMissingAuthSessionError(userError)) {
+          return null;
+        }
+
         console.error("ADMIN_USER_RESOLUTION_FAILED", { stage: "auth" });
         throw new Error("Failed to resolve current admin user");
       }
