@@ -68,8 +68,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
     return [];
   }
 
-  const [unreadCounts, { data, error }, { data: messageData, error: messageError }] = await Promise.all([
-    getHouseMessageUnreadCounts(scope.houseIds),
+  const [housesResult, unreadCountsResult, messagesResult] = await Promise.allSettled([
     supabase
       .from("houses")
       .select(
@@ -110,6 +109,7 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
       )
       .in("id", scope.houseIds)
       .order("created_at", { ascending: false }),
+    getHouseMessageUnreadCounts(scope.houseIds),
     supabase
       .from("specialist_contact_requests")
       .select(
@@ -133,20 +133,29 @@ export async function getAdminHouses(): Promise<AdminHouseListItem[]> {
       .limit(500),
   ]);
 
-  if (messageError) {
-    const message = messageError.message?.toLowerCase() ?? "";
-    const isMissingTable =
-      message.includes("could not find the table") ||
-      message.includes("schema cache") ||
-      message.includes("column");
-
-    if (!isMissingTable) {
-      throw new Error(`Failed to load house messages: ${messageError.message}`);
-    }
+  if (housesResult.status === "rejected") {
+    console.error("ADMIN_HOUSES_REQUIRED_READ_FAILED", { stage: "query" });
+    throw new Error("Failed to load admin houses");
   }
 
+  const { data, error } = housesResult.value;
   if (error) {
-    throw new Error(`Failed to load admin houses: ${error.message}`);
+    console.error("ADMIN_HOUSES_REQUIRED_READ_FAILED", { stage: "response" });
+    throw new Error("Failed to load admin houses");
+  }
+
+  let unreadCounts: Record<string, number> = {};
+  if (unreadCountsResult.status === "fulfilled") {
+    unreadCounts = unreadCountsResult.value;
+  } else {
+    console.error("ADMIN_HOUSES_OPTIONAL_READ_FAILED", { stage: "unread_counts" });
+  }
+
+  let messageData: unknown[] = [];
+  if (messagesResult.status === "fulfilled" && !messagesResult.value.error) {
+    messageData = messagesResult.value.data ?? [];
+  } else {
+    console.error("ADMIN_HOUSES_OPTIONAL_READ_FAILED", { stage: "messages" });
   }
 
   const messageMap = new Map<string, AdminHouseMessageListItem[]>();

@@ -26,8 +26,8 @@ export const getAdminCityScope = cache(
       .eq("city_id", cityContext.cityId);
 
     if (districtsError) {
-      console.error("getAdminCityScope districts error:", districtsError.message);
-      return null;
+      console.error("ADMIN_CITY_SCOPE_FAILED", { stage: "districts" });
+      throw new Error("Failed to resolve admin city scope");
     }
 
     const districtIds = (districts ?? [])
@@ -48,8 +48,8 @@ export const getAdminCityScope = cache(
       .in("district_id", districtIds);
 
     if (housesError) {
-      console.error("getAdminCityScope houses error:", housesError.message);
-      return null;
+      console.error("ADMIN_CITY_SCOPE_FAILED", { stage: "houses" });
+      throw new Error("Failed to resolve admin city scope");
     }
 
     return {

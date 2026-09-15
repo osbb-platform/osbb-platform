@@ -11,14 +11,36 @@ import type { Result } from "./types/result";
 export async function buildHandlerContext(
   command: AdminCommand,
 ): Promise<Result<HandlerContext>> {
-  const supabase = await createSupabaseServerClient();
-  const user = await getCurrentAdminUser();
+  let supabase;
+  let user;
+
+  try {
+    [supabase, user] = await Promise.all([
+      createSupabaseServerClient(),
+      getCurrentAdminUser(),
+    ]);
+  } catch {
+    console.error("HANDLER_CONTEXT_FAILED", { stage: "authentication" });
+    return err(
+      "Тимчасово не вдалося перевірити сесію. Спробуйте ще раз.",
+      "INTERNAL",
+    );
+  }
 
   if (!user) {
     return err("Потрібна авторизація адміністратора.", "UNAUTHENTICATED");
   }
 
-  const cityContext = await getAdminCityContext();
+  let cityContext;
+  try {
+    cityContext = await getAdminCityContext();
+  } catch {
+    console.error("HANDLER_CONTEXT_FAILED", { stage: "city_context" });
+    return err(
+      "Тимчасово не вдалося завантажити контекст міста. Спробуйте ще раз.",
+      "INTERNAL",
+    );
+  }
 
   if (!cityContext) {
     return err(
@@ -30,9 +52,12 @@ export async function buildHandlerContext(
   let house;
   try {
     house = await getAdminHouseById(command.houseId);
-  } catch (error) {
-    console.error("buildHandlerContext house load error:", error);
-    return err("Будинок не знайдено.", "NOT_FOUND");
+  } catch {
+    console.error("HANDLER_CONTEXT_FAILED", { stage: "house" });
+    return err(
+      "Тимчасово не вдалося завантажити будинок. Спробуйте ще раз.",
+      "INTERNAL",
+    );
   }
 
   if (!house) {

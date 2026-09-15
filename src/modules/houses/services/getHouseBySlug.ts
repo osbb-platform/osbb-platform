@@ -48,11 +48,10 @@ async function loadHouseBySlug(slug: string): Promise<HouseRecord | null> {
     .maybeSingle();
 
   if (error) {
-    console.error("Failed to load house by slug:", {
+    console.error("PUBLIC_HOUSE_LOOKUP_FAILED", {
       slug,
-      message: error.message,
     });
-    return null;
+    throw new Error("Failed to load public house");
   }
 
   if (!data) {

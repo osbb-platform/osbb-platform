@@ -34,8 +34,8 @@ async function loadActiveCity(cityId: string): Promise<CityRow | null> {
     .maybeSingle();
 
   if (error) {
-    console.error("getAdminCityContext city lookup error:", error.message);
-    return null;
+    console.error("ADMIN_CITY_CONTEXT_FAILED", { stage: "city_lookup" });
+    throw new Error("Failed to resolve admin city context");
   }
 
   return (data ?? null) as CityRow | null;

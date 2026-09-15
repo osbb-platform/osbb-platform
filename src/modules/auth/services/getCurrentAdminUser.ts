@@ -97,8 +97,8 @@ export const getCurrentAdminUser = cache(
       } = await supabase.auth.getUser();
 
       if (userError) {
-        console.error("❌ getCurrentAdminUser auth.getUser error:", userError.message);
-        return null;
+        console.error("ADMIN_USER_RESOLUTION_FAILED", { stage: "auth" });
+        throw new Error("Failed to resolve current admin user");
       }
 
       if (!authUser) {
@@ -112,8 +112,8 @@ export const getCurrentAdminUser = cache(
         .maybeSingle();
 
       if (profileError) {
-        console.error("❌ getCurrentAdminUser profile error:", profileError.message);
-        return null;
+        console.error("ADMIN_USER_RESOLUTION_FAILED", { stage: "profile" });
+        throw new Error("Failed to resolve current admin user");
       }
 
       const { data: memberships, error: membershipError } = await supabase
@@ -124,8 +124,8 @@ export const getCurrentAdminUser = cache(
         .eq("is_active", true);
 
       if (membershipError) {
-        console.error("❌ getCurrentAdminUser membership error:", membershipError.message);
-        return null;
+        console.error("ADMIN_USER_RESOLUTION_FAILED", { stage: "membership" });
+        throw new Error("Failed to resolve current admin user");
       }
 
       const bestMembership = pickBestMembership(
@@ -151,9 +151,12 @@ export const getCurrentAdminUser = cache(
           access.employees.resendInvite,
       };
     } catch (error) {
-      console.error("🔥 getCurrentAdminUser crash:", error);
-      return null;
+      if (error instanceof Error && error.message === "Failed to resolve current admin user") {
+        throw error;
+      }
+
+      console.error("ADMIN_USER_RESOLUTION_FAILED", { stage: "unexpected" });
+      throw new Error("Failed to resolve current admin user", { cause: error });
     }
   }
 );
-
