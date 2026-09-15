@@ -101,6 +101,7 @@ export type AdminHousePollsSnapshot = {
 
 export async function getAdminHousePolls(params: {
   houseId: string;
+  objectKind: string;
 }): Promise<AdminHousePollsSnapshot> {
   noStore();
 
@@ -215,6 +216,7 @@ export async function getAdminHousePolls(params: {
         getAdminPollExport({
           houseId: params.houseId,
           pollId: poll.id,
+          objectKind: params.objectKind,
         }),
       ]);
 

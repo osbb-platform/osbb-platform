@@ -261,7 +261,10 @@ export default async function AdminHouseDetailPage({
 
   const pollsData =
     activeBlock === "polls"
-      ? await getAdminHousePolls({ houseId: house.id })
+      ? await getAdminHousePolls({
+          houseId: house.id,
+          objectKind: house.object_kind,
+        })
       : null;
 
   const requisites =

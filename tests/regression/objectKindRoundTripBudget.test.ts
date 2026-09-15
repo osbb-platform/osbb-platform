@@ -39,4 +39,13 @@ describe("object_kind hot-path query budget", () => {
       expect(source).not.toContain('.from("houses")');
     }
   });
+
+  it("reuses the admin house objectKind while building poll exports", () => {
+    const pollLoader = read("src/modules/houses/services/getAdminHousePolls.ts");
+    const exportLoader = read("src/modules/houses/services/getAdminPollExport.ts");
+
+    expect(pollLoader).toContain("objectKind: params.objectKind");
+    expect(exportLoader).toContain("objectKind: params.objectKind");
+    expect(exportLoader).not.toContain('.from("houses")');
+  });
 });

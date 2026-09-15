@@ -541,6 +541,7 @@ describe("P07 T8 real database acceptance", () => {
     const exportData = await getAdminPollExport({
       houseId: fixture.houseId,
       pollId: fixture.anonymousPollId,
+      objectKind: "apartment",
     });
 
     expect(exportData).not.toBeNull();
