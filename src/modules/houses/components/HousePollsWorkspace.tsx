@@ -3,6 +3,7 @@
 import { formatKyivDateTime } from "@/src/shared/utils/dates/formatKyivDateTime";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import type {
@@ -489,8 +490,9 @@ export function HousePollsWorkspace({
   void houseSlug;
 
   const terms = getHouseUnitTerminology(objectKind);
+  const router = useRouter();
   const { dispatch, isPending, lastError } = useAdminContentCommand();
-  const [items] = useState(snapshot.items);
+  const [items, setItems] = useState(snapshot.items);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("active");
   const [mode, setMode] = useState<WorkspaceMode>("idle");
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
@@ -499,12 +501,9 @@ export function HousePollsWorkspace({
   const [invalidFields, setInvalidFields] = useState<Set<string>>(() => new Set());
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  // Clear a stale validation error as soon as the operator edits the draft,
-  // instead of leaving a Save error on screen after the form has changed.
   useEffect(() => {
-    setActionError(null);
-    setInvalidFields(new Set());
-  }, [draft]);
+    setItems(snapshot.items);
+  }, [snapshot.items]);
 
   const selectedSnapshot =
     items.find((item) => item.id === selectedPollId) ?? null;
@@ -534,8 +533,20 @@ export function HousePollsWorkspace({
     draft.pollStatus === "idle" &&
     draft.participationCount === 0;
 
-  function refreshPage() {
-    window.location.reload();
+  function clearFieldValidation(fieldKey: string) {
+    const wasTheLastInvalidField =
+      invalidFields.size === 1 && invalidFields.has(fieldKey);
+
+    setInvalidFields((current) => {
+      if (!current.has(fieldKey)) return current;
+      const next = new Set(current);
+      next.delete(fieldKey);
+      return next;
+    });
+
+    if (wasTheLastInvalidField) {
+      setActionError(null);
+    }
   }
 
   function resetWorkspace() {
@@ -564,6 +575,9 @@ export function HousePollsWorkspace({
     questionId: string,
     patch: Partial<PollDraftQuestion>,
   ) {
+    if (Object.hasOwn(patch, "question")) {
+      clearFieldValidation(`question:${questionId}`);
+    }
     setDraft((current) => ({
       ...current,
       questions: current.questions.map((question) =>
@@ -624,6 +638,7 @@ export function HousePollsWorkspace({
   }
 
   function updateOption(questionId: string, optionId: string, label: string) {
+    clearFieldValidation(`option:${optionId}`);
     setDraft((current) => ({
       ...current,
       questions: current.questions.map((question) =>
@@ -741,7 +756,7 @@ export function HousePollsWorkspace({
             questions,
           },
         },
-        { onError: setActionError },
+        { onError: setActionError, refreshOnSuccess: false },
       );
 
       if (!created) return null;
@@ -769,7 +784,7 @@ export function HousePollsWorkspace({
           resultsVisibility: draft.resultsVisibility,
         },
       },
-      { onError: setActionError },
+      { onError: setActionError, refreshOnSuccess: false },
     );
 
     if (!updated) return null;
@@ -787,7 +802,7 @@ export function HousePollsWorkspace({
             questions,
           },
         },
-        { onError: setActionError },
+        { onError: setActionError, refreshOnSuccess: false },
       );
 
       if (!replaced) return null;
@@ -809,7 +824,9 @@ export function HousePollsWorkspace({
   async function saveOnly() {
     const saved = await persistDraft();
     if (!saved) return;
-    refreshPage();
+    setActiveTab(saved.lifecycleStatus === "draft" ? "draft" : "active");
+    resetWorkspace();
+    router.refresh();
   }
 
   async function saveAndPublish() {
@@ -824,11 +841,13 @@ export function HousePollsWorkspace({
         houseId,
         payload: { id: saved.id, lockVersion: saved.lockVersion },
       },
-      { onError: setActionError },
+      { onError: setActionError, refreshOnSuccess: false },
     );
 
     if (!published) return;
-    refreshPage();
+    setActiveTab("active");
+    resetWorkspace();
+    router.refresh();
   }
 
   async function runLifecycle(
@@ -855,7 +874,7 @@ export function HousePollsWorkspace({
     );
 
     if (!result) return;
-    refreshPage();
+    resetWorkspace();
   }
 
   async function deleteAllArchived() {
@@ -873,7 +892,7 @@ export function HousePollsWorkspace({
     );
 
     if (!result) return;
-    refreshPage();
+    resetWorkspace();
   }
 
   return (
@@ -1116,9 +1135,10 @@ export function HousePollsWorkspace({
                   aria-invalid={invalidFields.has("title")}
                   value={draft.title}
                   disabled={isPending || draft.lifecycleStatus === "archived"}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, title: event.target.value }))
-                  }
+                  onChange={(event) => {
+                    clearFieldValidation("title");
+                    setDraft((current) => ({ ...current, title: event.target.value }));
+                  }}
                   placeholder="Наприклад: Благоустрій подвірʼя"
                   className={fieldClass(invalidFields.has("title"))}
                 />

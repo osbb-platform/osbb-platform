@@ -25,6 +25,10 @@ async function run(): Promise<void> {
     browser = await launchE2eBrowser();
     const page: Page = await browser.newPage();
     const netLog = attachNetworkLog(page);
+    let fullNavigationCount = 0;
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame()) fullNavigationCount += 1;
+    });
 
     await loginAsE2eAdmin(page, { email: fixture.email, password: fixture.password });
 
@@ -34,6 +38,7 @@ async function run(): Promise<void> {
     });
     await sleep(500);
     await dismissOnboardingIfPresent(page);
+    const navigationCountAfterInitialLoad = fullNavigationCount;
 
     // --- Scenario 1: RC-2 regression — invalid options must be visible and block Save ---
     await clickButtonByText(page, "Нове опитування");
@@ -84,44 +89,36 @@ async function run(): Promise<void> {
     });
     assert(activeElementIsInvalid, "first invalid field was not focused after failed Save");
 
-    // Fixing the form must clear the error (per spec: error updates when the
-    // draft changes) without requiring a page reload.
+    // Fixing one field clears only that field's marker; the shared validation
+    // message remains while another invalid option is still present.
     const optionInputs = await page.$$('input[placeholder^="Варіант"]');
     assert(optionInputs.length >= 2, "expected at least 2 option inputs");
     await optionInputs[0]!.type("Так", { delay: 3 });
     await sleep(150);
 
-    const errorClearedAfterEdit = await page.evaluate(() => {
+    const errorStillVisibleAfterOneEdit = await page.evaluate(() => {
       const dialog = document.querySelector('[role="dialog"]');
-      return dialog?.querySelector('[role="alert"]') === null;
+      return dialog?.querySelector('[role="alert"]') !== null;
     });
-    assert(errorClearedAfterEdit, "validation error was not cleared after editing the draft");
+    assert(errorStillVisibleAfterOneEdit, "validation error cleared while another field was invalid");
 
     await optionInputs[1]!.type("Ні", { delay: 3 });
     await sleep(150);
 
-    // --- Scenario 2: valid Save -> reload -> Edit -> Save -> Publish -> Open ---
-    // Every successful save/lifecycle action in this workspace calls
-    // refreshPage() = window.location.reload() (a real hard reload, not a
-    // soft router refresh), which also closes any open drawer. Each step
-    // below waits for that navigation, then explicitly re-selects the tab
-    // and reopens the drawer for the next step.
+    // --- Scenario 2: valid Save -> soft refresh -> Edit -> Publish -> Open ---
     const postCountBeforeValidSave = netLog.postRequests.length;
     await clickButtonByText(page, "Зберегти");
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15_000 }).catch(() => null);
     await sleep(900);
 
     const postCountAfterValidSave = netLog.postRequests.length;
     assert(postCountAfterValidSave > postCountBeforeValidSave, "expected a POST request for the valid Save");
+    assert(
+      fullNavigationCount === navigationCountAfterInitialLoad,
+      "poll Save performed a hard browser navigation",
+    );
 
     // The freshly-saved poll is a draft, so it lives under the "Чернетки"
-    // tab, not the default "Опубліковані" (active) tab. The preceding Save
-    // did a hard `window.location.reload()`, so this is the first click
-    // after a fresh navigation — if it fires before React finishes
-    // hydrating, the click is a silent no-op (the tab's aria-selected never
-    // flips), which previously left the test unable to find the poll's
-    // title button under a tab that never actually became active. Retry the
-    // click itself (not just the wait) until the tab is verifiably active.
+    // tab, not the default "Опубліковані" (active) tab.
     await clickAndWaitForCondition(
       page,
       () => clickButtonContainingText(page, "Чернетки"),
@@ -144,8 +141,11 @@ async function run(): Promise<void> {
     );
 
     await clickButtonByText(page, "Зберегти й опублікувати");
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15_000 }).catch(() => null);
     await sleep(900);
+    assert(
+      fullNavigationCount === navigationCountAfterInitialLoad,
+      "poll Publish performed a hard browser navigation",
+    );
 
     const publishedBanner = await safeEvaluate(page, () => document.querySelector('[role="alert"]')?.textContent ?? null);
     assert(!publishedBanner, `unexpected error after publish: ${publishedBanner}`);
@@ -155,8 +155,11 @@ async function run(): Promise<void> {
     await sleep(200);
 
     await clickButtonByText(page, "Відкрити опитування");
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15_000 }).catch(() => null);
     await sleep(900);
+    assert(
+      fullNavigationCount === navigationCountAfterInitialLoad,
+      "poll lifecycle action performed a hard browser navigation",
+    );
 
     const openBanner = await safeEvaluate(page, () => document.querySelector('[role="alert"]')?.textContent ?? null);
     assert(!openBanner, `unexpected error after opening the poll: ${openBanner}`);
