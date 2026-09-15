@@ -82,6 +82,7 @@ function context(): HandlerContext {
       id: houseId,
       slug: houseSlug,
       name: "P11 T5 Integration House",
+      objectKind: "apartment_building",
     },
     city: {
       id: "00000000-0000-0000-0000-000000000901",

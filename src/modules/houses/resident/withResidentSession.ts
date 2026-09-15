@@ -10,6 +10,7 @@ import type { ServerRateLimitPolicy } from "@/src/shared/security/rateLimitPolic
 
 export type ResidentSessionContext = {
   houseId: string;
+  objectKind: string;
   slug: string;
   sessionToken: string;
 };
@@ -124,7 +125,7 @@ export async function withResidentSession<T>(
 
   const { data: house, error: houseError } = await supabase
     .from("houses")
-    .select("id, slug")
+    .select("id, slug, object_kind")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -168,6 +169,7 @@ export async function withResidentSession<T>(
 
   return operation({
     houseId: house.id,
+    objectKind: String(house.object_kind ?? "apartment_building"),
     slug,
     sessionToken,
   });

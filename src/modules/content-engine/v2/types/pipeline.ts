@@ -15,6 +15,7 @@ export type HandlerContext = {
     id: string;
     slug: string;
     name: string;
+    objectKind: string;
   };
   city: {
     id: string;

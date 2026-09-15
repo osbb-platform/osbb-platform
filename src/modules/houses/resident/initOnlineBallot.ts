@@ -25,7 +25,6 @@ import {
 import {
   rateLimitPolicies,
 } from "@/src/shared/security/rateLimitPolicies";
-import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 const VALID_CHOICES =
@@ -127,7 +126,7 @@ function residentErrorResult(
   };
 }
 
-async function dbErrorMessage(code: string, houseId: string) {
+function dbErrorMessage(code: string, objectKind: string) {
   switch (code) {
     case "MEETING_NOT_ACTIVE_ONLINE":
       return "Онлайн-голосування для цих зборів зараз недоступне.";
@@ -136,12 +135,7 @@ async function dbErrorMessage(code: string, houseId: string) {
     case "APARTMENT_AREA_MISSING":
     case "OWNED_AREA_EXCEEDS_APARTMENT":
     case "APARTMENT_AREA_SOFT_RESERVED": {
-      const { data: house } = await createSupabaseAdminClient()
-        .from("houses")
-        .select("object_kind")
-        .eq("id", houseId)
-        .maybeSingle();
-      const terms = getHouseUnitTerminology(house?.object_kind);
+      const terms = getHouseUnitTerminology(objectKind);
 
       switch (code) {
         case "APARTMENT_INVALID":
@@ -216,6 +210,7 @@ export async function initOnlineBallot(
       },
       async ({
         houseId,
+        objectKind,
         slug,
         sessionToken,
       }) => {
@@ -252,7 +247,7 @@ export async function initOnlineBallot(
               ok: false,
               code: dbResult.code,
               message:
-                await dbErrorMessage(dbResult.code, houseId),
+                dbErrorMessage(dbResult.code, objectKind),
             };
           }
 
@@ -288,7 +283,7 @@ export async function initOnlineBallot(
               ok: false,
               code: finalized.code,
               message:
-                await dbErrorMessage(finalized.code, houseId),
+                dbErrorMessage(finalized.code, objectKind),
             };
           }
 
@@ -353,7 +348,7 @@ export async function initOnlineBallot(
               ok: false,
               code: dbResult.code,
               message:
-                await dbErrorMessage(dbResult.code, houseId),
+                dbErrorMessage(dbResult.code, objectKind),
             };
           }
 

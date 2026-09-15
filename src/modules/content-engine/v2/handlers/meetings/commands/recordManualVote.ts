@@ -22,14 +22,8 @@ export const recordManualVoteCommand: CommandSpec = {
     const payload = rawPayload as Partial<RecordManualVotePayload>;
 
     if (!payload.apartmentId) {
-      const { data: house } = await ctx.supabase
-        .from("houses")
-        .select("object_kind")
-        .eq("id", ctx.house.id)
-        .maybeSingle();
-
       return err(
-        `Оберіть ${getHouseUnitTerminology(house?.object_kind).accusativeLower}.`,
+        `Оберіть ${getHouseUnitTerminology(ctx.house.objectKind).accusativeLower}.`,
         "VALIDATION_FAILED",
       );
     }

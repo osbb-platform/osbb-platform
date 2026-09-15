@@ -30,7 +30,12 @@ describe("P10 specialists multi-category real DB acceptance (Track 6)", () => {
       supabase: admin,
       command: { type: "specialists.create", houseId, payload: {} } as never,
       user: { id: randomUUID(), email: null, fullName: null, role: "admin" },
-      house: { id: houseId, slug: houseSlug, name: houseSlug },
+      house: {
+        id: houseId,
+        slug: houseSlug,
+        name: houseSlug,
+        objectKind: "apartment_building",
+      },
       city: { id: randomUUID(), name: "Test", slug: "test" },
     };
   }

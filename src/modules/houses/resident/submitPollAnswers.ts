@@ -3,7 +3,6 @@
 import { ResidentSessionError, withResidentSession } from "@/src/modules/houses/resident/withResidentSession";
 import { submitPollAnswersDb, type PollAnswerInput } from "@/src/modules/houses/resident/pollsRepository";
 import { rateLimitPolicies } from "@/src/shared/security/rateLimitPolicies";
-import { createSupabaseAdminClient } from "@/src/integrations/supabase/server/admin";
 import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
 export type SubmitPollAnswersInput = { slug: string; pollId: string; apartmentId: string; answers: PollAnswerInput[] };
@@ -13,17 +12,12 @@ export type SubmitPollAnswersResult =
 
 function norm(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 
-async function dbMessage(code: string, houseId: string) {
+function dbMessage(code: string, objectKind: string) {
   switch (code) {
     case "POLL_NOT_ACTIVE": return "Це опитування зараз недоступне для відповідей.";
     case "APARTMENT_INVALID":
     case "APARTMENT_ALREADY_ANSWERED": {
-      const { data: house } = await createSupabaseAdminClient()
-        .from("houses")
-        .select("object_kind")
-        .eq("id", houseId)
-        .maybeSingle();
-      const terms = getHouseUnitTerminology(house?.object_kind);
+      const terms = getHouseUnitTerminology(objectKind);
       return code === "APARTMENT_INVALID"
         ? `Не знайдено ${terms.accusativeLower} в цьому будинку.`
         : `Ця ${terms.nominativeLower} вже відповіла на опитування.`;
@@ -41,9 +35,9 @@ export async function submitPollAnswers(input: SubmitPollAnswersInput): Promise<
   try {
     return await withResidentSession(
       { slug: input.slug, rateLimitPolicy: rateLimitPolicies.pollSubmit },
-      async ({ houseId }) => {
+      async ({ houseId, objectKind }) => {
         const result = await submitPollAnswersDb({ houseId, pollId: norm(input.pollId), apartmentId: norm(input.apartmentId), answers: input.answers });
-        if (!result.ok) return { ok: false, code: result.code, message: await dbMessage(result.code, houseId) };
+        if (!result.ok) return { ok: false, code: result.code, message: dbMessage(result.code, objectKind) };
         return { ok: true, code: "SUBMITTED" as const };
       },
     );

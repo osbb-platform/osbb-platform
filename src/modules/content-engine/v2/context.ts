@@ -84,6 +84,7 @@ export async function buildHandlerContext(
       id: house.id,
       slug: house.slug,
       name: house.name,
+      objectKind: house.object_kind,
     },
     city: {
       id: cityContext.cityId,
