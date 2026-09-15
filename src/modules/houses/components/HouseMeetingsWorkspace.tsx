@@ -484,10 +484,6 @@ export function HouseMeetingsWorkspace({
     normalizeMeetings(meetingsSnapshot),
   );
 
-  useEffect(() => {
-    setMeetings(normalizeMeetings(meetingsSnapshot));
-  }, [meetingsSnapshot]);
-
   const [activeTab, setActiveTab] = useWorkspaceMemory<WorkspaceTab>(
     "meetings",
     "activeTab",
@@ -527,8 +523,40 @@ export function HouseMeetingsWorkspace({
   >({});
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [panelDirty, setPanelDirty] = useState(false);
+  const [snapshotConflict, setSnapshotConflict] = useState(false);
   const dirtyGuard = useDirtyGuard({ isDirty: panelDirty });
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+
+  useEffect(() => {
+    const authoritativeMeetings = normalizeMeetings(meetingsSnapshot);
+    setMeetings(authoritativeMeetings);
+
+    if (mode !== "edit" || !selectedMeetingId) return;
+
+    const authoritativeMeeting = authoritativeMeetings.find(
+      (meeting) => meeting.id === selectedMeetingId,
+    );
+    if (!authoritativeMeeting || authoritativeMeeting.lockVersion === draft.lockVersion) {
+      return;
+    }
+
+    if (panelDirty) {
+      setSnapshotConflict(true);
+      setWorkspaceError(
+        "Серверна версія зборів змінилася. Ваші незбережені правки збережено локально.",
+      );
+      return;
+    }
+
+    const splitDateTime = splitMeetingDateTime(authoritativeMeeting.meetingDateTime);
+    setDraft(authoritativeMeeting);
+    setMeetingDateInput(splitDateTime.date);
+    setMeetingTimeInput(splitDateTime.time);
+    setSnapshotConflict(false);
+    setWorkspaceError(null);
+    // Reconciliation is intentionally driven by a new authoritative snapshot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingsSnapshot]);
 
   const counters = useMemo(
     () => ({
@@ -591,6 +619,7 @@ export function HouseMeetingsWorkspace({
     setSelectedApartmentVote("");
     setManualVoteAnswers({});
     setPanelDirty(false);
+    setSnapshotConflict(false);
   }
 
   function openCreateWorkspace() {
@@ -605,6 +634,7 @@ export function HouseMeetingsWorkspace({
     setManualVoteAnswers({});
     setActiveTab("draft");
     setPanelDirty(false);
+    setSnapshotConflict(false);
   }
 
   function openCreateMode() {
@@ -630,6 +660,7 @@ export function HouseMeetingsWorkspace({
       setSelectedApartmentVote("");
       setManualVoteAnswers({});
       setPanelDirty(false);
+      setSnapshotConflict(false);
     });
   }
 
@@ -659,6 +690,22 @@ export function HouseMeetingsWorkspace({
     if (!panelDirty) {
       setPanelDirty(true);
     }
+  }
+
+  function reloadAuthoritativeMeeting() {
+    if (!selectedMeetingId) return;
+    const authoritativeMeeting = meetings.find(
+      (meeting) => meeting.id === selectedMeetingId,
+    );
+    if (!authoritativeMeeting) return;
+
+    const splitDateTime = splitMeetingDateTime(authoritativeMeeting.meetingDateTime);
+    setDraft(authoritativeMeeting);
+    setMeetingDateInput(splitDateTime.date);
+    setMeetingTimeInput(splitDateTime.time);
+    setPanelDirty(false);
+    setSnapshotConflict(false);
+    setWorkspaceError(null);
   }
 
   function addQuestion() {
@@ -1019,6 +1066,21 @@ export function HouseMeetingsWorkspace({
         }
       >
         <div onChange={markDirty} className="space-y-4">
+          {snapshotConflict ? (
+            <div
+              role="alert"
+              className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] px-4 py-3 text-sm text-[var(--cms-danger-text)]"
+            >
+              <p>Серверна версія зборів змінилася. Незбережені правки не перезаписано.</p>
+              <button
+                type="button"
+                onClick={reloadAuthoritativeMeeting}
+                className={`mt-3 ${adminButtonClasses({ variant: "secondary" })}`}
+              >
+                Завантажити серверну версію
+              </button>
+            </div>
+          ) : null}
           <details
             open
             className="rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface-elevated)] p-4"
@@ -1536,7 +1598,7 @@ export function HouseMeetingsWorkspace({
                             answers: nextVote.answers,
                           },
                         },
-                        { refreshOnSuccess: true },
+                        { refreshOnSuccess: false },
                       );
 
                       if (!recorded) return;
@@ -1582,6 +1644,8 @@ export function HouseMeetingsWorkspace({
 
                       setSelectedApartmentVote("");
                       setManualVoteAnswers({});
+                      setPanelDirty(false);
+                      setSnapshotConflict(false);
                     }}
                     disabled={isPending}
                     className={adminButtonClasses({ variant: "success" })}

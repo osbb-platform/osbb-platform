@@ -339,11 +339,8 @@ async function run(): Promise<void> {
       const ballotError = await waitForSaveOutcome(page, 5000);
       assert(!ballotError, `unexpected error after casting ballot for apartment "${apartmentLabel}": ${ballotError}`);
 
-      // dispatch()'s router.refresh() (refreshOnSuccess: true) keeps
-      // useTransition's isPending — and therefore this button's disabled
-      // state — true until the RSC re-render round trip finishes, which can
-      // outlast a short fixed sleep. Poll for it to re-enable before the
-      // next ballot instead of assuming a fixed delay is enough.
+      // Mutation pending is independent from the optional route refresh.
+      // Poll for the actual mutation to settle before the next ballot.
       const reenabled = await waitForCondition(
         page,
         () => {
@@ -395,7 +392,28 @@ async function run(): Promise<void> {
     const countAfterC = await voteRowCount();
     assert(countAfterC === 6, `expected 6 vote rows after ballot C, got ${countAfterC}`);
 
-    // --- Step 5: verify the recorded votes and per-question tallies directly from the DB ---
+    // --- Step 5: own ballot lock_version must be accepted by the next edit
+    // and then by a status transition in the same open drawer lifecycle. ---
+    const descriptionInput = await page.$('textarea[placeholder="Короткий опис"]');
+    assert(descriptionInput, "meeting short description input not found after ballots");
+    await descriptionInput.type(" Перевірено після ручних бюлетенів", { delay: 3 });
+    await clickButtonByText(page, "Зберегти");
+    const postBallotSaveError = await waitForSaveOutcome(page);
+    assert(!postBallotSaveError, `false stale error after ballot -> edit/save: ${postBallotSaveError}`);
+    await waitAndDismissDirtyGuardIfPresent(page);
+    await sleep(300);
+
+    await openMeetingCard(page, "E2E Загальні збори");
+    await clickButtonByText(page, "Завершено");
+    await clickButtonByText(page, "Зберегти");
+    const completionError = await waitForSaveOutcome(page);
+    assert(!completionError, `false stale error after ballot -> status transition: ${completionError}`);
+    await waitForMeetingStatus("display_status", "completed");
+    await waitAndDismissDirtyGuardIfPresent(page);
+    await sleep(300);
+    await openMeetingCard(page, "E2E Загальні збори");
+
+    // --- Step 6: verify the recorded votes and per-question tallies directly from the DB ---
     const meetingRow = await admin
       .from("house_meetings")
       .select("id, lock_version")
@@ -438,7 +456,7 @@ async function run(): Promise<void> {
       `expected lock_version to have advanced across all 3 ballots, got ${meetingRow.data!.lock_version}`,
     );
 
-    // --- Step 6: results are visible in the UI while status is "review" ---
+    // --- Step 7: results remain visible after the status transition ---
     const resultsText = await safeEvaluate(page, () => document.body.innerText);
     assert(resultsText.includes("За:"), "expected tallied 'За:' result text in the UI after casting ballots");
     assert(resultsText.includes("Проти:"), "expected tallied 'Проти:' result text in the UI after casting ballots");
