@@ -31,4 +31,12 @@ describe("object_kind hot-path query budget", () => {
       expect(source).not.toContain('.from("houses")');
     }
   });
+
+  it("passes canonical objectKind into resident-request task creation", () => {
+    for (const file of ["ensureResidentRequestTask.ts", "ensureSpecialistRequestTask.ts"]) {
+      const source = read(`src/modules/tasks/services/${file}`);
+      expect(source).toContain("params.objectKind");
+      expect(source).not.toContain('.from("houses")');
+    }
+  });
 });

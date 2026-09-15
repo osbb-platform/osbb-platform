@@ -9,6 +9,7 @@ type EnsureSpecialistRequestTaskParams = {
   specialistLabel: string;
   requesterName: string;
   apartment: string;
+  objectKind: string;
 };
 
 export async function ensureSpecialistRequestTask(
@@ -16,13 +17,7 @@ export async function ensureSpecialistRequestTask(
 ) {
   const supabase = createSupabaseAdminClient();
 
-  const { data: house } = await supabase
-    .from("houses")
-    .select("object_kind")
-    .eq("id", params.houseId)
-    .maybeSingle();
-
-  const terms = getHouseUnitTerminology(house?.object_kind);
+  const terms = getHouseUnitTerminology(params.objectKind);
 
   const { error } = await supabase.rpc("create_house_scoped_platform_task", {
     p_house_id: params.houseId,

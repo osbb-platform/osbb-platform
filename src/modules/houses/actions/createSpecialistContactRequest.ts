@@ -35,8 +35,7 @@ export async function createSpecialistContactRequest(
     rawSubject ||
     `Заявка на зв’язок зі спеціалістом: ${specialistLabel || category || "Спеціаліст"}`;
   const comment = String(formData.get("comment") ?? "").trim();
-  const objectKind = String(formData.get("objectKind") ?? "").trim();
-  const terms = getHouseUnitTerminology(objectKind);
+  const defaultTerms = getHouseUnitTerminology(undefined);
 
   if (
     !houseId ||
@@ -48,7 +47,7 @@ export async function createSpecialistContactRequest(
     !apartment
   ) {
     return {
-      error: `Заповніть ім’я, email та ${terms.accusativeLower}.`,
+      error: `Заповніть ім’я, email та ${defaultTerms.accusativeLower}.`,
       successMessage: null,
     };
   }
@@ -73,6 +72,23 @@ export async function createSpecialistContactRequest(
   }
 
   const supabase = await createSupabaseServerClient();
+
+  const { data: canonicalHouse, error: houseError } = await supabase
+    .from("houses")
+    .select("id, object_kind")
+    .eq("id", houseId)
+    .eq("slug", houseSlug)
+    .maybeSingle();
+
+  if (houseError || !canonicalHouse) {
+    console.error("SPECIALIST_REQUEST_HOUSE_LOOKUP_FAILED", {
+      stage: houseError ? "response" : "not_found",
+    });
+    return {
+      error: "Не вдалося підтвердити будинок. Оновіть сторінку та спробуйте ще раз.",
+      successMessage: null,
+    };
+  }
 
   const { data: insertedRequest, error } = await supabase
     .from("specialist_contact_requests")
@@ -106,6 +122,7 @@ export async function createSpecialistContactRequest(
     specialistLabel,
     requesterName,
     apartment,
+    objectKind: canonicalHouse.object_kind,
   });
 
   if (visitorSessionId) {
