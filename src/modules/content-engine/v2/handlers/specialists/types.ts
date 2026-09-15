@@ -50,6 +50,8 @@ export type UpdateSpecialistPayload = CreateSpecialistPayload & SpecialistIdAndL
 export type DeleteSpecialistPayload = SpecialistIdAndLock;
 
 export type CategoriesUpsertSpecialistsPayload = {
+  /** IDs visible when the editor opened; absent means no destructive diff. */
+  loadedCategoryIds?: string[];
   categories: Array<{
     id?: string;
     title: string;

@@ -106,7 +106,8 @@ export async function replaceSpecialistCategoryLinks(
   const { error: deleteError } = await ctx.supabase
     .from("house_specialist_categories")
     .delete()
-    .eq("specialist_id", params.specialistId);
+    .eq("specialist_id", params.specialistId)
+    .eq("house_id", params.houseId);
 
   if (deleteError) {
     return err(deleteError.message, "INTERNAL");

@@ -66,9 +66,12 @@ export const categoriesUpsertCommand: CommandSpec = {
     // would silently drop every specialist's link to it in between the two
     // statements. Only categories the admin actually removed get deleted here.
     const keptIds = new Set(normalized.filter((c) => c.id).map((c) => c.id));
+    const loadedIds = new Set(
+      (payload.loadedCategoryIds ?? []).map(normalizeText).filter(Boolean),
+    );
     const idsToDelete = before
       .map((category) => category.id)
-      .filter((id) => !keptIds.has(id));
+      .filter((id) => loadedIds.has(id) && !keptIds.has(id));
 
     if (idsToDelete.length > 0) {
       const { error: deleteError } = await ctx.supabase
