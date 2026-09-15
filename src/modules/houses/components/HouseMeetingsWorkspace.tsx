@@ -14,6 +14,7 @@ import {
   statusToneFor } from "@/src/shared/ui/admin/AdminStatusBadge";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAdminContentCommand } from "@/src/modules/content-engine/v2/client/useAdminContentCommand";
 import { PlatformConfirmModal } from "@/src/modules/cms/components/PlatformConfirmModal";
 import type { AdminHouseMeetingsSnapshot } from "@/src/modules/houses/services/getAdminHouseMeetings";
@@ -480,6 +481,7 @@ export function HouseMeetingsWorkspace({
 }: Props) {
   const workflowAccessGranted = Boolean(canChangeWorkflowStatus);
   const terms = getHouseUnitTerminology(objectKind);
+  const router = useRouter();
   const { dispatch, isPending } = useAdminContentCommand();
 
   const [meetings, setMeetings] = useState<MeetingItem[]>(
@@ -799,7 +801,7 @@ export function HouseMeetingsWorkspace({
               }
             : payload,
       },
-      { refreshOnSuccess: true },
+      { refreshOnSuccess: false },
     );
 
     if (!saved) return;
@@ -846,7 +848,8 @@ export function HouseMeetingsWorkspace({
 
     setMeetings(nextMeetings);
     setActiveTab(savedMeeting.status === "archived" ? "archived" : savedMeeting.status === "draft" ? "draft" : "active");
-    closeWorkspace();
+    resetWorkspace();
+    router.refresh();
   }
 
   async function deleteMeetingFromRegistry(meetingId: string) {
@@ -862,7 +865,7 @@ export function HouseMeetingsWorkspace({
           lockVersion: current.lockVersion,
         },
       },
-      { refreshOnSuccess: true },
+      { refreshOnSuccess: false },
     );
 
     if (!deleted) return;
@@ -871,6 +874,7 @@ export function HouseMeetingsWorkspace({
     setMeetings(nextMeetings);
     setActiveTab("draft");
     resetWorkspace();
+    router.refresh();
   }
 
   async function publishMeetingFromRegistry(meetingId: string) {
@@ -889,7 +893,7 @@ export function HouseMeetingsWorkspace({
           status: "scheduled",
         },
       },
-      { refreshOnSuccess: true },
+      { refreshOnSuccess: false },
     );
 
     if (!published) return;
@@ -913,6 +917,7 @@ export function HouseMeetingsWorkspace({
     setMeetings(nextMeetings);
     setActiveTab("active");
     resetWorkspace();
+    router.refresh();
   }
 
   async function archiveMeetingFromRegistry(meetingId: string) {
@@ -930,7 +935,7 @@ export function HouseMeetingsWorkspace({
           lockVersion: current.lockVersion,
         },
       },
-      { refreshOnSuccess: true },
+      { refreshOnSuccess: false },
     );
 
     if (!archived) return;
@@ -954,6 +959,7 @@ export function HouseMeetingsWorkspace({
     setMeetings(nextMeetings);
     setActiveTab("archived");
     resetWorkspace();
+    router.refresh();
   }
 
   return (
