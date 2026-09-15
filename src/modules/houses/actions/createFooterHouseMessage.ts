@@ -26,8 +26,7 @@ export async function createFooterHouseMessage(
   const requesterEmail = String(formData.get("requesterEmail") ?? "").trim();
   const apartment = String(formData.get("apartment") ?? "").trim();
   const comment = String(formData.get("comment") ?? "").trim();
-  const objectKind = String(formData.get("objectKind") ?? "").trim();
-  const terms = getHouseUnitTerminology(objectKind);
+  const defaultTerms = getHouseUnitTerminology(undefined);
 
   if (
     !houseId ||
@@ -39,7 +38,7 @@ export async function createFooterHouseMessage(
     !comment
   ) {
     return {
-      error: `Заповніть ім’я, email, ${terms.accusativeLower} та повідомлення.`,
+      error: `Заповніть ім’я, email, ${defaultTerms.accusativeLower} та повідомлення.`,
       successMessage: null,
     };
   }
@@ -74,6 +73,25 @@ export async function createFooterHouseMessage(
 
   const supabase = await createSupabaseServerClient();
 
+  const { data: canonicalHouse, error: houseError } = await supabase
+    .from("houses")
+    .select("id, object_kind")
+    .eq("id", houseId)
+    .eq("slug", houseSlug)
+    .maybeSingle();
+
+  if (houseError || !canonicalHouse) {
+    console.error("FOOTER_MESSAGE_HOUSE_LOOKUP_FAILED", {
+      stage: houseError ? "response" : "not_found",
+    });
+    return {
+      error: "Не вдалося підтвердити будинок. Оновіть сторінку та спробуйте ще раз.",
+      successMessage: null,
+    };
+  }
+
+  const objectKind = canonicalHouse.object_kind;
+
   const { data: insertedRequest, error } = await supabase
     .from("specialist_contact_requests")
     .insert({
@@ -95,7 +113,7 @@ export async function createFooterHouseMessage(
 
   if (error || !insertedRequest) {
     return {
-      error: `Не вдалося надіслати повідомлення: ${error.message}`,
+      error: "Не вдалося надіслати повідомлення. Спробуйте ще раз.",
       successMessage: null,
     };
   }
@@ -106,6 +124,7 @@ export async function createFooterHouseMessage(
     category,
     requesterName,
     apartment,
+    objectKind,
   });
 
   await logPlatformChange({

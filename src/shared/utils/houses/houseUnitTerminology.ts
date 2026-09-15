@@ -83,7 +83,7 @@ export function getHouseUnitTerminology(
 // Matches whichever unit-word prefix (apartment- or garden-style) a raw
 // label already carries, so mixed/legacy data normalizes the same way
 // regardless of which object_kind produced it.
-const UNIT_LABEL_PREFIX_PATTERN = /^(квартира|кв\.?|прим\.?|ділянка|д\.?)\s*/iu;
+const UNIT_LABEL_PREFIX_PATTERN = /^(?:(?:квартира|ділянка)(?=\s|$)|(?:кв|прим|д)\.(?=\s|\p{N}|$)|(?:кв|прим|д)(?=\s))\s*/iu;
 
 export function stripHouseUnitLabelPrefix(label: string): string {
   return label.trim().replace(UNIT_LABEL_PREFIX_PATTERN, "").trim();

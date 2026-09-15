@@ -411,7 +411,9 @@ function formatNotParticipatingApartments(
     return `усі ${getHouseUnitTerminology(objectKind).nominativePluralLower} взяли участь`;
   }
 
-  return notParticipating.map(formatApartmentVoteLabel).join(", ");
+  return notParticipating
+    .map((apartment) => formatApartmentVoteLabel(apartment, objectKind))
+    .join(", ");
 }
 
 function recalculateMeetingQuestionResults(

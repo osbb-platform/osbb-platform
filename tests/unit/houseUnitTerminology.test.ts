@@ -56,6 +56,10 @@ describe("Track 4: house unit terminology (apartment building vs garden associat
     expect(stripHouseUnitLabelPrefix("Д. 5")).toBe("5");
     expect(stripHouseUnitLabelPrefix("Ділянка 5")).toBe("5");
     expect(stripHouseUnitLabelPrefix("12")).toBe("12");
+    expect(stripHouseUnitLabelPrefix("Д12")).toBe("Д12");
+    expect(stripHouseUnitLabelPrefix("Дом 5")).toBe("Дом 5");
+    expect(stripHouseUnitLabelPrefix("Д. 12")).toBe("12");
+    expect(stripHouseUnitLabelPrefix("Ділянка 12")).toBe("12");
   });
 
   it("formats a raw label with the correct prefix for the object kind, regardless of the label's original prefix", () => {
