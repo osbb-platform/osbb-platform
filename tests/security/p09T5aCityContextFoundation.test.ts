@@ -45,7 +45,9 @@ describe("P09 T5a server-side city context foundation", () => {
     const pipeline = read("src/modules/content-engine/v2/types/pipeline.ts");
 
     expect(context).toContain('getAdminCityContext } from "@/src/modules/auth/services/getAdminCityContext"');
-    expect(context).toContain("const cityContext = await getAdminCityContext()");
+    expect(context).toContain("cityContext = await getAdminCityContext()");
+    expect(context).toContain('stage: "city_context"');
+    expect(context).toContain('"INTERNAL"');
     expect(context).toContain("house.district.city_id !== cityContext.cityId");
     expect(context).toContain("Будинок недоступний у поточному міському контексті.");
     expect(pipeline).toMatch(/city:\s*\{[\s\S]*?id:\s*string;[\s\S]*?name:\s*string;[\s\S]*?slug:\s*string;/);
