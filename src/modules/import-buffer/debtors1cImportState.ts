@@ -1,4 +1,5 @@
 import type { ImportReconciliationWarning } from "./workflowTypes";
+import type { Debtors1cImportCounters } from "./debtors1cImportDiagnostics";
 
 export type Debtors1cPreviewRow = {
   rowIndex: number;
@@ -32,6 +33,7 @@ export type Debtors1cImportState =
       unknownSourceAccounts: readonly string[];
       missingRegistryAccounts: readonly string[];
       warningCount: number;
+      counters?: Debtors1cImportCounters;
       snapshotId?: string;
       message: string;
     }

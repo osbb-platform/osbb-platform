@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
+import { readAllCountedPages } from "@/src/shared/data/readAllCountedPages";
 import type {
   HouseDebtorMonthRow,
   HouseDebtorMonthSnapshot,
@@ -226,7 +227,7 @@ async function ensureSettings(params: {
 
   if (error) {
     console.error("Failed to ensure house debtors settings:", error.message);
-    return null;
+    throw new Error("Не вдалося завантажити налаштування боржників.");
   }
 
   return (data ?? null) as HouseDebtorsSettings | null;
@@ -252,6 +253,7 @@ export async function getAdminHouseDebtors(params: {
       "Failed to load admin house debtors settings:",
       settingsResult.error.message,
     );
+    throw new Error("Не вдалося завантажити налаштування боржників.");
   }
 
   if (!settings) {
@@ -261,53 +263,84 @@ export async function getAdminHouseDebtors(params: {
     });
   }
 
-  const [
-    monthSnapshotsResult,
-    monthRowsResult,
-  ] = await Promise.all([
-    supabase
-      .from("house_debtor_month_snapshots")
-      .select("*")
-      .eq("house_id", params.houseId)
-      .order("period_year", { ascending: false })
-      .order("period_month", { ascending: false })
-      .order("revision", { ascending: false }),
-    supabase
-      .from("house_debtor_month_rows")
-      .select(
-        "id, snapshot_id, house_id, apartment_id, account_number, apartment_label, owner_name, area, accrued, paid, closing_balance, debt_source_value",
-      )
-      .eq("house_id", params.houseId),
-  ]);
+  let snapshotRows: HouseDebtorMonthSnapshot[];
 
-  if (monthSnapshotsResult.error) {
-    console.error(
-      "Failed to load admin debtor month snapshots:",
-      monthSnapshotsResult.error.message,
+  try {
+    snapshotRows = await readAllCountedPages<HouseDebtorMonthSnapshot>({
+      label: "admin debtor month snapshots",
+      getRowKey: (snapshot) => snapshot.id,
+      fetchPage: async (from, to) => {
+        const result = await supabase
+          .from("house_debtor_month_snapshots")
+          .select("*", { count: "exact" })
+          .eq("house_id", params.houseId)
+          .order("period_year", { ascending: false })
+          .order("period_month", { ascending: false })
+          .order("revision", { ascending: false })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as HouseDebtorMonthSnapshot[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load complete admin debtor snapshots:", error);
+    throw new Error(
+      "Не вдалося повністю завантажити історію боржників. Повторіть спробу.",
     );
   }
 
-  if (monthRowsResult.error) {
-    console.error(
-      "Failed to load admin debtor month row counts:",
-      monthRowsResult.error.message,
+  const monthRowCounts = new Map(
+    snapshotRows.map((snapshot) => [snapshot.id, 0]),
+  );
+
+  try {
+    const countedRows = await readAllCountedPages<{
+      id: string;
+      snapshot_id: string;
+    }>({
+      label: "admin debtor snapshot row counts",
+      getRowKey: (row) => row.id,
+      fetchPage: async (from, to) => {
+        const result = await supabase
+          .from("house_debtor_month_rows")
+          .select("id, snapshot_id", { count: "exact" })
+          .eq("house_id", params.houseId)
+          .order("snapshot_id", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as {
+            id: string;
+            snapshot_id: string;
+          }[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+
+    for (const row of countedRows) {
+      const currentCount = monthRowCounts.get(row.snapshot_id);
+      if (currentCount === undefined) {
+        throw new Error("Snapshot set changed during admin read");
+      }
+
+      monthRowCounts.set(row.snapshot_id, currentCount + 1);
+    }
+  } catch (error) {
+    console.error("Failed to load exact admin debtor row counts:", error);
+    throw new Error(
+      "Не вдалося перевірити кількість рядків історії боржників.",
     );
   }
 
-  const monthRowCounts = new Map<string, number>();
-
-  const monthRows = (monthRowsResult.data ?? []) as HouseDebtorMonthRow[];
-
-  for (const row of monthRows) {
-    monthRowCounts.set(
-      row.snapshot_id,
-      (monthRowCounts.get(row.snapshot_id) ?? 0) + 1,
-    );
-  }
-
-  const monthSnapshots = (
-    (monthSnapshotsResult.data ?? []) as HouseDebtorMonthSnapshot[]
-  ).map((snapshot) =>
+  const monthSnapshots = snapshotRows.map((snapshot) =>
     mapMonthSnapshot(
       snapshot,
       monthRowCounts.get(snapshot.id) ?? 0,
@@ -323,9 +356,56 @@ export async function getAdminHouseDebtors(params: {
       (snapshot) => snapshot.status === "published",
     ) ?? null;
 
+  const latestDraftMonth = draftMonthSnapshots[0] ?? null;
+  const currentSnapshotIds = [
+    latestPublishedMonth?.id ?? null,
+    latestDraftMonth?.id ?? null,
+  ].filter((value): value is string => Boolean(value));
+  const currentRowsBySnapshot = new Map<string, HouseDebtorMonthRow[]>();
+
+  try {
+    await Promise.all(
+      [...new Set(currentSnapshotIds)].map(async (snapshotId) => {
+        const rows = await readAllCountedPages<HouseDebtorMonthRow>({
+          label: `admin debtor snapshot rows ${snapshotId}`,
+          getRowKey: (row) => row.id,
+          fetchPage: async (from, to) => {
+            const result = await supabase
+              .from("house_debtor_month_rows")
+              .select(
+                "id, snapshot_id, house_id, apartment_id, account_number, apartment_label, owner_name, area, accrued, paid, closing_balance, debt_source_value",
+                { count: "exact" },
+              )
+              .eq("house_id", params.houseId)
+              .eq("snapshot_id", snapshotId)
+              .order("account_number", { ascending: true })
+              .order("id", { ascending: true })
+              .range(from, to);
+
+            return {
+              data: (result.data ?? []) as HouseDebtorMonthRow[],
+              error: result.error,
+              count: result.count,
+            };
+          },
+        });
+
+        if (rows.length !== (monthRowCounts.get(snapshotId) ?? 0)) {
+          throw new Error("Snapshot row count changed during admin read");
+        }
+
+        currentRowsBySnapshot.set(snapshotId, rows);
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to load complete current debtor rows:", error);
+    throw new Error(
+      "Не вдалося повністю завантажити актуальні рядки боржників.",
+    );
+  }
+
   const latestPublishedItems = latestPublishedMonth
-    ? monthRows
-        .filter((row) => row.snapshot_id === latestPublishedMonth.id)
+    ? (currentRowsBySnapshot.get(latestPublishedMonth.id) ?? [])
         .map((row) =>
           mapMonthRowItem({
             row,
@@ -336,11 +416,8 @@ export async function getAdminHouseDebtors(params: {
         .sort(sortItems)
     : [];
 
-  const latestDraftMonth = draftMonthSnapshots[0] ?? null;
-
   const latestDraftItems = latestDraftMonth
-    ? monthRows
-        .filter((row) => row.snapshot_id === latestDraftMonth.id)
+    ? (currentRowsBySnapshot.get(latestDraftMonth.id) ?? [])
         .map((row) =>
           mapMonthRowItem({
             row,

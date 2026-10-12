@@ -504,6 +504,18 @@ export default async function AdminHouseDetailPage({
 
       {activeBlock === "debtors" ? (
         <HouseDebtorsWorkspace
+          key={[
+            house.id,
+            debtorsData?.updatedAt ?? "",
+            debtorsData?.settingsLockVersion ?? "",
+            debtorsData?.latestPublishedMonth?.id ?? "",
+            debtorsData?.latestPublishedMonth?.lockVersion ?? "",
+            debtorsData?.draftMonthSnapshots[0]?.id ?? "",
+            debtorsData?.draftMonthSnapshots[0]?.lockVersion ?? "",
+            debtorsApartments
+              .map((apartment) => `${apartment.id}@${apartment.updated_at}`)
+              .join(","),
+          ].join(":")}
           houseId={house.id}
           houseSlug={house.slug}
           objectKind={house.object_kind}

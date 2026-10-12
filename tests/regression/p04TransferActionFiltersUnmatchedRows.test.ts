@@ -12,13 +12,14 @@ const source = fs.readFileSync(actionPath, "utf8");
 
 describe("P04 transfer action filters unmatched staging rows", () => {
   it("builds the P03 payload from matched staging rows only", () => {
-    expect(source).toContain("const matchedRegistryRows = staged.data.filter");
+    expect(source).toContain("const stagedDataRows = stagedRows.filter");
+    expect(source).toContain("const matchedRegistryRows = stagedDataRows.filter");
     expect(source).toContain('row.match_status === "matched"');
     expect(source).toContain(
       "const matchedRows = matchedRegistryRows.filter",
     );
     expect(source).toContain("rows: matchedRows.map");
-    expect(source).not.toContain("rows: staged.data.map");
+    expect(source).not.toContain("rows: stagedRows.map");
   });
 
   it("keeps a zero-matched guard", () => {

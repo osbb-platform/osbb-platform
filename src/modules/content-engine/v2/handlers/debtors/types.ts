@@ -143,6 +143,11 @@ export type ImportMonthDraftPayload = {
   source?: Exclude<HouseDebtorMonthSource, "migration_legacy">;
   importMeta?: Record<string, unknown>;
   rows: ImportMonthDraftRowPayload[];
+  bufferTransfer?: {
+    uploadId: string;
+    expectedLockVersion: number;
+    acceptPartial: boolean;
+  };
 };
 
 export type MonthSnapshotIdAndLockPayload = {

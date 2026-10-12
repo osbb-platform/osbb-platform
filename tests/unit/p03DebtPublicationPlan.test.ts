@@ -47,6 +47,40 @@ function snapshot(params: {
 }
 
 describe("buildDebtPublicationPlan", () => {
+  it("recomputes five complete 325-account months after a historical correction", () => {
+    const rows = (balance: number) =>
+      Array.from({ length: 325 }, (_, index) =>
+        row(`A-${String(index + 1).padStart(3, "0")}`, balance),
+      );
+    const publishedSnapshots = [1, 2, 3, 4, 5].map((month) =>
+      snapshot({
+        id: `month-${month}`,
+        year: 2026,
+        month,
+        rows: rows(month === 2 ? -100 : -700),
+      }),
+    );
+
+    const plan = buildDebtPublicationPlan({
+      publishedSnapshots,
+      targetSnapshot: snapshot({
+        id: "month-2-correction",
+        year: 2026,
+        month: 2,
+        revision: 2,
+        status: "draft",
+        rows: rows(-750),
+      }),
+    });
+
+    expect(plan.seriesRows).toHaveLength(1_625);
+    expect(
+      plan.seriesRows.find(
+        (item) => item.accountNumber === "A-325" && item.asOfMonth === 5,
+      ),
+    ).toMatchObject({ monthsInDebt: 5, seriesBroken: false });
+  });
+
   it("recalculates later months after correcting a past month", () => {
     const plan = buildDebtPublicationPlan({
       publishedSnapshots: [
@@ -96,21 +130,20 @@ describe("buildDebtPublicationPlan", () => {
     });
   });
 
-
-  it("uses the latest published month for series projection", () => {
+  it("keeps October as the latest calendar period when September is corrected later", () => {
     const plan = buildDebtPublicationPlan({
       publishedSnapshots: [
         snapshot({
-          id: "apr",
+          id: "oct",
           year: 2026,
-          month: 4,
+          month: 10,
           rows: [row("A", -900)],
         }),
       ],
       targetSnapshot: snapshot({
-        id: "mar-revision",
+        id: "sep-revision",
         year: 2026,
-        month: 3,
+        month: 9,
         revision: 2,
         status: "draft",
         rows: [row("A", -800)],
@@ -122,11 +155,12 @@ describe("buildDebtPublicationPlan", () => {
         expect.objectContaining({
           accountNumber: "A",
           asOfYear: 2026,
-          asOfMonth: 4,
+          asOfMonth: 10,
           monthsInDebt: 2,
           latestBalance: -900,
         }),
       ]),
     );
+    expect(plan.latestPeriod).toEqual({ year: 2026, month: 10 });
   });
 });

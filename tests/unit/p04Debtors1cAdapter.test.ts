@@ -12,6 +12,7 @@ import { registerBuiltInImportAdapters } from "../../src/modules/import-buffer/r
 import { resetImportAdapterRegistryForTests } from "../../src/modules/import-buffer/registry";
 import type { RawSheet } from "../../src/modules/import-buffer/types";
 import type { Debtors1cRow } from "../../src/modules/import-buffer/adapters/debtors1c";
+import { readDebtors1cWorkbook } from "../../src/modules/import-buffer/readDebtors1cWorkbook";
 
 function loadFixtureSheet(): RawSheet {
   const fixture = join(process.cwd(), "tests/fixtures/1c/Соборний,186.xls");
@@ -37,6 +38,41 @@ function loadFixtureSheet(): RawSheet {
 }
 
 describe("P04 debtors_1c adapter", () => {
+  it("finds the 1C report when it is not the first workbook sheet", () => {
+    const fixture = join(process.cwd(), "tests/fixtures/1c/Соборний,186.xls");
+    const source = XLSX.read(readFileSync(fixture), {
+      type: "buffer",
+      raw: true,
+      dense: true,
+    });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Інструкція"]]),
+      "README",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      source.Sheets[source.SheetNames[0]],
+      "1C",
+    );
+    const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+
+    expect(readDebtors1cWorkbook(bytes).name).toBe("1C");
+  });
+
+  it("rejects an oversized declared sheet before row materialization", () => {
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet([["x"]]);
+    sheet["!ref"] = "A1:A5001";
+    XLSX.utils.book_append_sheet(workbook, sheet, "oversized");
+    const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+
+    expect(() => readDebtors1cWorkbook(bytes)).toThrow(
+      "Аркуш файлу перевищує безпечний розмір імпорту.",
+    );
+  });
+
   it("detects the real fixture and extracts May 2026", () => {
     const sheet = loadFixtureSheet();
 

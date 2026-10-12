@@ -53,6 +53,8 @@ export type ExecResult = {
     metadata?: Record<string, unknown>;
   };
 
+  skipHistory?: boolean;
+
   filesToTrack?: FileRef[];
 
   filesToDelete?: {

@@ -65,6 +65,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
   );
   const [isCommandPending, setIsCommandPending] = useState(false);
   const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const [partialTransferAccepted, setPartialTransferAccepted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const commandInFlightRef = useRef(false);
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
@@ -72,6 +73,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
 
   useEffect(() => {
     setState(serverState);
+    setPartialTransferAccepted(false);
 
     if (serverState.ok && serverState.detectedPeriod) {
       setPeriodYear(serverState.detectedPeriod.year);
@@ -117,6 +119,24 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
     [state],
   );
 
+  const transferableTotals = useMemo(
+    () =>
+      computeDebtorTotals({
+        rows: state.ok
+          ? state.rows
+              .filter(
+                (row) =>
+                  row.matchStatus === "matched" && row.osbbBalance !== null,
+              )
+              .map((row) => ({
+                accountNumber: row.accountNumber,
+                closingBalance: Number(row.osbbBalance),
+              }))
+          : [],
+      }),
+    [state],
+  );
+
   const hasDiscardableBuffer =
     state.ok && (state.status === "parsed" || state.status === "confirmed");
   const isCompleted = state.ok && state.status === "transferred";
@@ -136,6 +156,7 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
 
   function resetLocalImportState() {
     setState(INITIAL_DEBTORS_1C_IMPORT_STATE);
+    setPartialTransferAccepted(false);
     setPeriodYear(new Date().getFullYear());
     setPeriodMonth(new Date().getMonth() + 1);
 
@@ -240,6 +261,9 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
 
       const transferData = new FormData();
       transferData.set("houseId", houseId);
+      if (partialTransferAccepted) {
+        transferData.set("acceptPartialTransfer", "true");
+      }
 
       const result = await transferDebtors1cImportBuffer(
         currentState,
@@ -256,7 +280,11 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
   }
 
   const transferBlocked =
-    !state.ok || state.status === "discarded" || state.status === "transferred";
+    !state.ok ||
+    state.status === "discarded" ||
+    state.status === "transferred" ||
+    Boolean(state.ok && state.counters?.missingDebtRows) ||
+    (unmatchedRows.length > 0 && !partialTransferAccepted);
 
   return (
     <AdminSidePanel
@@ -345,6 +373,25 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
         {state.ok && !isCompleted ? (
           <>
             <div className="flex flex-wrap gap-2">
+              {state.counters ? (
+                <>
+                  <AdminStatusBadge tone="neutral">
+                    Рядків аркуша: {state.counters.sourceRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    Активний реєстр: {state.counters.registryRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    Даних: {state.counters.dataRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    Шапка/порожні: {state.counters.unclassifiedRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    Технічних виключено: {state.counters.technicalExcludedRows}
+                  </AdminStatusBadge>
+                </>
+              ) : null}
               <AdminStatusBadge tone="success">
                 Зіставлено: {matchedCount}
               </AdminStatusBadge>
@@ -360,6 +407,23 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
               >
                 Попереджень: {state.warningCount}
               </AdminStatusBadge>
+
+              {state.counters ? (
+                <>
+                  <AdminStatusBadge
+                    tone={state.counters.missingDebtRows > 0 ? "danger" : "success"}
+                  >
+                    Без боргу: {state.counters.missingDebtRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    До переносу: {state.counters.transferableRows}
+                  </AdminStatusBadge>
+                  <AdminStatusBadge tone="neutral">
+                    Публічних після публікації (≥500 ₴):{" "}
+                    {transferableTotals.debtorsCount}
+                  </AdminStatusBadge>
+                </>
+              ) : null}
 
               <AdminStatusBadge tone="neutral">
                 Борг з 1С:{" "}
@@ -382,6 +446,14 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
               <div className="rounded-[var(--r-lg)] border border-[var(--cms-warning-border)] bg-[var(--cms-warning-bg)] p-4 text-sm text-[var(--cms-warning-text)]">
                 Перевірте звітний період. Кнопка «Підтвердити та передати»
                 підтвердить вибраний місяць і рік та одразу створить чернетку.
+              </div>
+            ) : null}
+
+            {state.counters && state.counters.missingDebtRows > 0 ? (
+              <div className="rounded-[var(--r-lg)] border border-[var(--cms-danger-border)] bg-[var(--cms-danger-bg)] p-4 text-sm text-[var(--cms-danger-text)]">
+                <strong>Передача заблокована.</strong> У{" "}
+                {state.counters.missingDebtRows} зіставлених рядках немає
+                значення боргу. Виправте джерело та створіть новий preview.
               </div>
             ) : null}
 
@@ -418,6 +490,23 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
                     </div>
                   ))}
                 </div>
+
+                <label className="mt-4 flex cursor-pointer items-start gap-3 font-medium">
+                  <input
+                    type="checkbox"
+                    checked={partialTransferAccepted}
+                    disabled={isCommandPending}
+                    onChange={(event) =>
+                      setPartialTransferAccepted(event.target.checked)
+                    }
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>
+                    Підтверджую частковий перенос: неспівставлені рядки не
+                    потраплять до чернетки, а опубліковані дані не зміняться до
+                    окремої публікації.
+                  </span>
+                </label>
               </details>
             ) : null}
 
@@ -558,9 +647,24 @@ export function HouseDebtors1cImportPanel({ houseId, isOpen, onClose, objectKind
               Чернетку успішно створено
             </div>
             <p className="mt-2 text-sm leading-6">
-              Дані імпорту передано один раз. Список боржників і історію версій
-              оновлено.
+              Дані імпорту передано один раз у чернетку. Опублікований список
+              не змінено.
             </p>
+            {state.counters ? (
+              <p className="mt-3 text-sm font-medium">
+                У реєстрі: {state.counters.registryRows} · рядків даних:{" "}
+                {state.counters.dataRows} · до переносу:{" "}
+                {state.counters.transferableRows}
+                {state.counters.persistedRows === null
+                  ? ""
+                  : ` · фізично збережено: ${state.counters.persistedRows}`}
+                {state.counters.unmatchedRows > 0
+                  ? ` · не зіставлено: ${state.counters.unmatchedRows}`
+                  : ""}
+                {" · публічних після публікації (≥500 ₴): "}
+                {transferableTotals.debtorsCount}
+              </p>
+            ) : null}
             {state.confirmedPeriod ? (
               <p className="mt-3 text-sm font-medium">
                 Період: {MONTHS[state.confirmedPeriod.month - 1]}{" "}

@@ -33,7 +33,7 @@ export function reconcileDebtors1cRows(
       continue;
     }
 
-    const account = normalizeAccountForMatching(
+    const account = normalizeDebtors1cAccountForMatching(
       row.value.accountNumberNormalized,
     );
 
@@ -63,7 +63,7 @@ export function reconcileDebtors1cRows(
   }
 
   const registryAccountsMissingFromFile = registryRows
-    .map((row) => normalizeAccountForMatching(row.accountNumber))
+    .map((row) => normalizeDebtors1cAccountForMatching(row.accountNumber))
     .filter(
       (accountNumber) => accountNumber && !sourceAccounts.has(accountNumber),
     )
@@ -95,7 +95,7 @@ const ACCOUNT_NUMBER_PREFIXES = [
 
 const ACCOUNT_NUMBER_REMOVABLE_SYMBOLS = ["№"] as const;
 
-function normalizeAccountForMatching(value: unknown): string {
+export function normalizeDebtors1cAccountForMatching(value: unknown): string {
   return (
     normalizeAccountNumber(value, {
       prefixes: ACCOUNT_NUMBER_PREFIXES,
@@ -104,13 +104,51 @@ function normalizeAccountForMatching(value: unknown): string {
   );
 }
 
+export function hasDebtors1cRegistryMappingChanged(params: {
+  stagedRows: readonly {
+    account_number_normalized: string | null;
+    match_status: "matched" | "unmatched" | "skipped";
+    matched_apartment_id: string | null;
+  }[];
+  registryRows: readonly {
+    id: string;
+    account_number: string;
+  }[];
+}) {
+  const apartmentByAccount = new Map<string, string>();
+
+  for (const row of params.registryRows) {
+    const account = normalizeDebtors1cAccountForMatching(row.account_number);
+    const existingApartmentId = apartmentByAccount.get(account);
+
+    if (existingApartmentId && existingApartmentId !== row.id) {
+      return true;
+    }
+
+    apartmentByAccount.set(account, row.id);
+  }
+
+  return params.stagedRows.some((row) => {
+    if (row.match_status === "skipped") return false;
+
+    const account = normalizeDebtors1cAccountForMatching(
+      row.account_number_normalized,
+    );
+    const currentApartmentId = apartmentByAccount.get(account) ?? null;
+
+    return row.match_status === "matched"
+      ? currentApartmentId !== row.matched_apartment_id
+      : currentApartmentId !== null;
+  });
+}
+
 function buildRegistryByNormalizedAccount(
   registryRows: readonly ActiveApartmentRegistryRow[],
 ): Map<string, ActiveApartmentRegistryRow> {
   const registryByAccount = new Map<string, ActiveApartmentRegistryRow>();
 
   for (const row of registryRows) {
-    const account = normalizeAccountForMatching(row.accountNumber);
+    const account = normalizeDebtors1cAccountForMatching(row.accountNumber);
 
     if (!account) {
       continue;

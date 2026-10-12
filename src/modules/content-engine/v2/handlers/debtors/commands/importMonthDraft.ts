@@ -31,28 +31,53 @@ export const importMonthDraftCommand: CommandSpec = {
 
     const adminSupabase = createSupabaseAdminClient();
 
-    const { data, error } = await adminSupabase.rpc(
-      "import_house_debtor_month_draft_idempotent",
-      {
-        p_house_id: ctx.house.id,
-        p_created_by: ctx.user.id,
-        p_period_year: payload.periodYear,
-        p_period_month: payload.periodMonth,
-        p_source: payload.source ?? "manual_import",
-        p_import_meta: payload.importMeta ?? {},
-        p_rows: payload.rows,
-      },
-    );
+    const rpcResult = payload.bufferTransfer
+      ? await adminSupabase.rpc(
+          "transfer_house_debtor_import_buffer_atomic",
+          {
+            p_upload_id: payload.bufferTransfer.uploadId,
+            p_house_id: ctx.house.id,
+            p_created_by: ctx.user.id,
+            p_expected_lock_version:
+              payload.bufferTransfer.expectedLockVersion,
+            p_accept_partial: payload.bufferTransfer.acceptPartial,
+            p_import_meta: payload.importMeta ?? {},
+          },
+        )
+      : await adminSupabase.rpc(
+          "import_house_debtor_month_draft_idempotent",
+          {
+            p_house_id: ctx.house.id,
+            p_created_by: ctx.user.id,
+            p_period_year: payload.periodYear,
+            p_period_month: payload.periodMonth,
+            p_source: payload.source ?? "manual_import",
+            p_import_meta: payload.importMeta ?? {},
+            p_rows: payload.rows,
+          },
+        );
+
+    const { data, error } = rpcResult;
 
     if (error) {
       return mapDebtorHistoryRpcError(error.message);
     }
 
-    if (typeof data !== "string") {
+    const atomicResult =
+      payload.bufferTransfer && data && typeof data === "object"
+        ? (data as Record<string, unknown>)
+        : null;
+    const snapshotId = atomicResult
+      ? String(atomicResult.snapshotId ?? "").trim()
+      : typeof data === "string"
+        ? data
+        : "";
+
+    if (!snapshotId) {
       return err("Не вдалося визначити створений знімок.", "INTERNAL");
     }
 
-    const snapshotResult = await getMonthSnapshot(ctx, data);
+    const snapshotResult = await getMonthSnapshot(ctx, snapshotId);
     if (!snapshotResult.ok) return snapshotResult;
 
     const missingResult = await getMissingRegistryAccounts(
@@ -66,6 +91,7 @@ export const importMonthDraftCommand: CommandSpec = {
     return ok({
       data: {
         ...snapshot,
+        ...(atomicResult ? { bufferTransfer: atomicResult } : {}),
         warnings: {
           missingRegistryAccountNumbers: missingResult.data,
         },
@@ -80,6 +106,7 @@ export const importMonthDraftCommand: CommandSpec = {
           missingRegistryRowsCount: missingResult.data.length,
         }),
       },
+      ...(atomicResult ? { skipHistory: true } : {}),
     });
   },
 };

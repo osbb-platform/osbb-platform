@@ -41,7 +41,7 @@ describe("P10 T7 admin snapshot reconciliation", () => {
     expect(workspace).toContain("Не увійшло (техрахунок)");
     expect(workspace).toContain("Разом (звірка з 1С)");
     expect(workspace).toContain("Сума всіх боргів");
-    expect(workspace).toContain("Боржників (≥500 ₴)");
+    expect(workspace).toContain("Публічних боржників (борг ≥500 ₴)");
     expect(workspace).toContain(
       'Це число має збігатися з колонкою "Борг" у підсумковому рядку 1С',
     );

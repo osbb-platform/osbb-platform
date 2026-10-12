@@ -2,6 +2,10 @@ import {
   buildDebtPublicationPlan,
   type DebtorHistorySnapshot,
 } from "../../../../../houses/debtors-history/buildDebtPublicationPlan";
+import {
+  chunkValues,
+  readAllCountedPages,
+} from "@/src/shared/data/readAllCountedPages";
 
 import type { HandlerContext } from "../../../types/pipeline";
 import { err, ok, type Result } from "../../../types/result";
@@ -24,6 +28,7 @@ const IMPORT_SOURCES = new Set<HouseDebtorMonthSource>([
   "buffer_1c",
   "manual_edit",
 ]);
+const SNAPSHOT_IDS_PER_HISTORY_QUERY = 100;
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -168,11 +173,42 @@ export function normalizeImportMonthPayload(
       ? (raw.importMeta as Record<string, unknown>)
       : {};
 
+  let bufferTransfer: ImportMonthDraftPayload["bufferTransfer"];
+  if (raw.bufferTransfer !== undefined) {
+    if (
+      sourceText !== "buffer_1c" ||
+      !raw.bufferTransfer ||
+      typeof raw.bufferTransfer !== "object" ||
+      Array.isArray(raw.bufferTransfer)
+    ) {
+      return err("Некоректний контекст передачі буфера.", "VALIDATION_FAILED");
+    }
+
+    const transfer = raw.bufferTransfer as Record<string, unknown>;
+    const uploadId = normalizeText(transfer.uploadId);
+    if (
+      !UUID_PATTERN.test(uploadId) ||
+      typeof transfer.expectedLockVersion !== "number" ||
+      !Number.isInteger(transfer.expectedLockVersion) ||
+      transfer.expectedLockVersion < 1 ||
+      typeof transfer.acceptPartial !== "boolean"
+    ) {
+      return err("Некоректний контекст передачі буфера.", "VALIDATION_FAILED");
+    }
+
+    bufferTransfer = {
+      uploadId,
+      expectedLockVersion: transfer.expectedLockVersion,
+      acceptPartial: transfer.acceptPartial,
+    };
+  }
+
   return ok({
     ...period.data,
     source: sourceText as Exclude<HouseDebtorMonthSource, "migration_legacy">,
     importMeta,
     rows,
+    ...(bufferTransfer ? { bufferTransfer } : {}),
   });
 }
 
@@ -267,64 +303,128 @@ export async function getMonthSnapshot(
     return err("Місячний знімок не знайдено.", "NOT_FOUND");
   }
 
-  const rowsResult = await ctx.supabase
-    .from("house_debtor_month_rows")
-    .select("*")
-    .eq("snapshot_id", snapshotId)
-    .eq("house_id", ctx.house.id)
-    .order("account_number", { ascending: true });
+  let rows: HouseDebtorMonthRow[];
 
-  if (rowsResult.error) {
+  try {
+    rows = await readAllCountedPages<HouseDebtorMonthRow>({
+      label: "debtor snapshot rows",
+      getRowKey: (row) => row.id,
+      fetchPage: async (from, to) => {
+        const result = await ctx.supabase
+          .from("house_debtor_month_rows")
+          .select("*", { count: "exact" })
+          .eq("snapshot_id", snapshotId)
+          .eq("house_id", ctx.house.id)
+          .order("account_number", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as HouseDebtorMonthRow[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load complete debtor snapshot rows:", error);
     return err("Не вдалося завантажити рядки знімка.", "INTERNAL");
   }
 
   return ok({
     snapshot: snapshotResult.data as HouseDebtorMonthSnapshot,
-    rows: (rowsResult.data ?? []) as HouseDebtorMonthRow[],
+    rows,
   });
 }
 
 async function getPublishedSnapshots(
   ctx: HandlerContext,
 ): Promise<Result<HouseDebtorMonthSnapshotWithRows[]>> {
-  const snapshotsResult = await ctx.supabase
-    .from("house_debtor_month_snapshots")
-    .select("*")
-    .eq("house_id", ctx.house.id)
-    .eq("status", "published")
-    .order("period_year", { ascending: true })
-    .order("period_month", { ascending: true });
+  let snapshots: HouseDebtorMonthSnapshot[];
 
-  if (snapshotsResult.error) {
+  try {
+    snapshots = await readAllCountedPages<HouseDebtorMonthSnapshot>({
+      label: "published debtor snapshots",
+      getRowKey: (snapshot) => snapshot.id,
+      fetchPage: async (from, to) => {
+        const result = await ctx.supabase
+          .from("house_debtor_month_snapshots")
+          .select("*", { count: "exact" })
+          .eq("house_id", ctx.house.id)
+          .eq("status", "published")
+          .order("period_year", { ascending: true })
+          .order("period_month", { ascending: true })
+          .order("revision", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as HouseDebtorMonthSnapshot[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load complete published debtor snapshots:", error);
     return err("Не вдалося завантажити історію боргів.", "INTERNAL");
   }
-
-  const snapshots = (snapshotsResult.data ?? []) as HouseDebtorMonthSnapshot[];
 
   if (snapshots.length === 0) {
     return ok([]);
   }
 
-  const rowsResult = await ctx.supabase
-    .from("house_debtor_month_rows")
-    .select("*")
-    .eq("house_id", ctx.house.id)
-    .in(
-      "snapshot_id",
+  const rowsBySnapshot = new Map(
+    snapshots.map((snapshot) => [snapshot.id, [] as HouseDebtorMonthRow[]]),
+  );
+
+  try {
+    const seenRowIds = new Set<string>();
+    const snapshotIdChunks = chunkValues(
       snapshots.map((snapshot) => snapshot.id),
-    )
-    .order("account_number", { ascending: true });
+      SNAPSHOT_IDS_PER_HISTORY_QUERY,
+    );
 
-  if (rowsResult.error) {
+    for (const [chunkIndex, snapshotIds] of snapshotIdChunks.entries()) {
+      const rows = await readAllCountedPages<HouseDebtorMonthRow>({
+        label: `published debtor history rows chunk ${chunkIndex + 1}`,
+        getRowKey: (row) => row.id,
+        fetchPage: async (from, to) => {
+          const result = await ctx.supabase
+            .from("house_debtor_month_rows")
+            .select("*", { count: "exact" })
+            .eq("house_id", ctx.house.id)
+            .in("snapshot_id", snapshotIds)
+            .order("snapshot_id", { ascending: true })
+            .order("account_number", { ascending: true })
+            .order("id", { ascending: true })
+            .range(from, to);
+
+          return {
+            data: (result.data ?? []) as HouseDebtorMonthRow[],
+            error: result.error,
+            count: result.count,
+          };
+        },
+      });
+
+      for (const row of rows) {
+        if (seenRowIds.has(row.id)) {
+          throw new Error("Duplicate published debtor history row");
+        }
+        seenRowIds.add(row.id);
+
+        const snapshotRows = rowsBySnapshot.get(row.snapshot_id);
+        if (!snapshotRows) {
+          throw new Error("Unexpected snapshot row in published history");
+        }
+
+        snapshotRows.push(row);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load complete published debtor history:", error);
     return err("Не вдалося завантажити історичні рядки.", "INTERNAL");
-  }
-
-  const rowsBySnapshot = new Map<string, HouseDebtorMonthRow[]>();
-
-  for (const row of (rowsResult.data ?? []) as HouseDebtorMonthRow[]) {
-    const current = rowsBySnapshot.get(row.snapshot_id) ?? [];
-    current.push(row);
-    rowsBySnapshot.set(row.snapshot_id, current);
   }
 
   return ok(
@@ -359,20 +459,41 @@ export async function getMissingRegistryAccounts(
   ctx: HandlerContext,
   importedAccounts: readonly string[],
 ): Promise<Result<string[]>> {
-  const apartmentsResult = await ctx.supabase
-    .from("house_apartments")
-    .select("account_number")
-    .eq("house_id", ctx.house.id)
-    .is("archived_at", null);
+  let apartmentRows: { id: string; account_number: string }[];
 
-  if (apartmentsResult.error) {
+  try {
+    apartmentRows = await readAllCountedPages<{
+      id: string;
+      account_number: string;
+    }>({
+      label: "active apartment registry accounts",
+      getRowKey: (row) => row.id,
+      fetchPage: async (from, to) => {
+        const result = await ctx.supabase
+          .from("house_apartments")
+          .select("id, account_number", { count: "exact" })
+          .eq("house_id", ctx.house.id)
+          .is("archived_at", null)
+          .order("account_number", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as {
+            id: string;
+            account_number: string;
+          }[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load complete apartment registry:", error);
     return err("Не вдалося перевірити реєстр квартир.", "INTERNAL");
   }
 
   const imported = new Set(importedAccounts);
-  const apartmentRows = (apartmentsResult.data ?? []) as {
-    account_number: string;
-  }[];
 
   const missing = apartmentRows
     .map((row) => normalizeText(row.account_number))
@@ -383,6 +504,52 @@ export async function getMissingRegistryAccounts(
 }
 
 export function mapDebtorHistoryRpcError(message: string): Result<never> {
+  if (message.includes("P04_STALE")) {
+    return err("Дані буфера застаріли, оновіть preview.", "STALE_CONTENT");
+  }
+
+  if (message.includes("P04_PARTIAL_CONFIRMATION_REQUIRED")) {
+    return err(
+      "Є неспівставлені рядки. Підтвердьте усвідомлений частковий перенос.",
+      "VALIDATION_FAILED",
+    );
+  }
+
+  if (message.includes("P04_MISSING_DEBT")) {
+    return err(
+      "У зіставлених рядках відсутнє значення боргу. Передача зупинена.",
+      "VALIDATION_FAILED",
+    );
+  }
+
+  if (
+    message.includes("P04_COUNTER") ||
+    message.includes("P04_SOURCE_COUNT") ||
+    message.includes("P04_STAGED_COUNTERS_CHANGED") ||
+    message.includes("P04_REGISTRY_MAPPING_CHANGED") ||
+    message.includes("P04_PERSISTED_COUNT_MISMATCH") ||
+    message.includes("P04_EXISTING_SNAPSHOT") ||
+    message.includes("P04_TRANSFERRED_") ||
+    message.includes("P04_DUPLICATE_REGISTRY_ACCOUNT") ||
+    message.includes("P04_DUPLICATE_MATCHED_APARTMENT") ||
+    message.includes("P04_INVALID_MATCHED_ROW")
+  ) {
+    return err(
+      "Буфер або реєстр змінився. Передача зупинена; оновіть preview.",
+      "STALE_CONTENT",
+    );
+  }
+
+  if (
+    message.includes("P04_UPLOAD_NOT_FOUND") ||
+    message.includes("P04_HOUSE_NOT_FOUND") ||
+    message.includes("P04_NO_TRANSFERABLE_ROWS") ||
+    message.includes("P04_CONFIRMED_PERIOD_REQUIRED") ||
+    message.includes("P04_INVALID_ATOMIC_TRANSFER_INPUT")
+  ) {
+    return err("Перевірте дані буфера імпорту.", "VALIDATION_FAILED");
+  }
+
   if (message.includes("P03_STALE")) {
     return err("Дані застаріли, оновіть сторінку.", "STALE_CONTENT");
   }

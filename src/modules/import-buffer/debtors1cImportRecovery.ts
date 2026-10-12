@@ -1,4 +1,5 @@
 import type { Debtors1cImportState } from "./debtors1cImportState";
+import { readStoredImportCounters } from "./debtors1cImportDiagnostics";
 
 export type Debtors1cImportUploadRecoveryRow = {
   status: string;
@@ -42,6 +43,7 @@ export function recoverTransferredDebtors1cImportState(
   if (upload.status !== "transferred") return null;
 
   const snapshotId = readSnapshotId(upload.stats);
+  const counters = readStoredImportCounters(upload.stats);
 
   return {
     ...state,
@@ -49,6 +51,7 @@ export function recoverTransferredDebtors1cImportState(
     lockVersion: Number(upload.lock_version),
     confirmedPeriod: readConfirmedPeriod(upload) ?? state.confirmedPeriod,
     ...(snapshotId ? { snapshotId } : {}),
+    ...(counters ? { counters } : {}),
     message: "Дані вже передано в чернетку боржників.",
   };
 }

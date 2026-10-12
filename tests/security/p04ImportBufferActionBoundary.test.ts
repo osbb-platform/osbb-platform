@@ -53,6 +53,8 @@ describe("P04 server/security boundary", () => {
 
   it("enforces file validation without a global hourly user cap", () => {
     expect(actions).toContain("validateImportFileDescriptor");
+    expect(actions).toContain("consumeServerRateLimit");
+    expect(actions).toContain("rateLimitPolicies.importBufferUpload");
     expect(actions).not.toContain("MAX_UPLOADS_PER_HOUR");
     expect(actions).not.toContain("не більше 10 файлів на годину");
     expect(actions).not.toContain('.gte("created_at", since)');

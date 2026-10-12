@@ -24,6 +24,12 @@ describe("P03 admin debtor month read model", () => {
       '.from("house_debtor_month_rows")',
     );
     expect(source).toContain("rowsCount");
+    expect(source).toContain("readAllCountedPages");
+    expect(source).toContain('{ count: "exact" }');
+    expect(source).toContain('label: "admin debtor snapshot row counts"');
+    expect(source).toContain('.select("id, snapshot_id", { count: "exact" })');
+    expect(source).not.toContain('{ count: "exact", head: true }');
+    expect(source).toContain("throw new Error");
   });
 
   it("exposes period, revision, source, status and lock version", () => {

@@ -144,8 +144,10 @@ describe("P10 T8 snapshot-only debtor model", () => {
 
     expect(admin).toContain('.from("house_debtor_month_rows")');
     expect(publicService).toContain(
-      '.rpc("get_public_house_debtor_history"',
+      '"get_public_house_debtor_history",',
     );
+    expect(publicService).toContain('{ count: "exact" }');
+    expect(publicService).toContain('.range(from, to)');
     expect(publicService).not.toContain(
       '.from("house_debtors_items")',
     );

@@ -1,6 +1,12 @@
 import * as XLSX from "xlsx";
 import { getHouseUnitTerminology } from "@/src/shared/utils/houses/houseUnitTerminology";
 
+const MAX_IMPORT_FILE_BYTES = 15 * 1024 * 1024;
+const MAX_IMPORT_SHEETS = 20;
+const MAX_IMPORT_ROWS = 5_000;
+const MAX_IMPORT_COLUMNS = 64;
+const MAX_IMPORT_CELLS = 200_000;
+
 const HEADER_ALIASES = {
   apartmentLabel: ["Квартира", "Ділянка"],
   accountNumber: ["Особовий рахунок", "Лицевой счет"],
@@ -158,11 +164,26 @@ export async function parseDebtorsImportFile({
     throw new Error("Підтримуються лише файли CSV, XLS та XLSX.");
   }
 
+  if (
+    !Number.isInteger(file.size) ||
+    file.size <= 0 ||
+    file.size > MAX_IMPORT_FILE_BYTES
+  ) {
+    throw new Error("Файл має бути непорожнім і не перевищувати 15 МБ.");
+  }
+
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, {
     type: "array",
     raw: false,
+    cellFormula: false,
+    dense: true,
+    sheetRows: MAX_IMPORT_ROWS + 1,
   });
+
+  if (workbook.SheetNames.length > MAX_IMPORT_SHEETS) {
+    throw new Error("Файл містить забагато аркушів.");
+  }
 
   const firstSheetName = workbook.SheetNames[0];
 
@@ -171,6 +192,32 @@ export async function parseDebtorsImportFile({
   }
 
   const worksheet = workbook.Sheets[firstSheetName];
+  if (!worksheet) {
+    throw new Error("Не вдалося прочитати перший аркуш файлу.");
+  }
+
+  const sheetReference = (
+    worksheet as XLSX.WorkSheet & { "!fullref"?: string }
+  )["!fullref"] ?? worksheet["!ref"];
+
+  if (sheetReference) {
+    let range: XLSX.Range;
+    try {
+      range = XLSX.utils.decode_range(sheetReference);
+    } catch {
+      throw new Error("Аркуш файлу має некоректний діапазон даних.");
+    }
+    const rowCount = range.e.r - range.s.r + 1;
+    const columnCount = range.e.c - range.s.c + 1;
+
+    if (
+      rowCount > MAX_IMPORT_ROWS ||
+      columnCount > MAX_IMPORT_COLUMNS ||
+      rowCount * columnCount > MAX_IMPORT_CELLS
+    ) {
+      throw new Error("Аркуш файлу перевищує безпечний розмір імпорту.");
+    }
+  }
 
   const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(worksheet, {
     header: 1,

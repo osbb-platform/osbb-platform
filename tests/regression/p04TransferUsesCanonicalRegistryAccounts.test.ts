@@ -11,11 +11,14 @@ const actions = readFileSync(
 );
 
 describe("P04 transfer canonical registry accounts", () => {
-  it("re-resolves matched apartment IDs inside the same active house registry", () => {
+  it("re-reads the complete active registry for the same house", () => {
     expect(actions).toContain('from("house_apartments")');
     expect(actions).toContain('.eq("house_id", access.house.id)');
     expect(actions).toContain('.is("archived_at", null)');
-    expect(actions).toContain('.in("id", matchedApartmentIds)');
+    expect(actions).toContain('label: "canonical apartment registry for 1C transfer"');
+    expect(actions).toContain('getRowKey: (row) => String(row.id)');
+    expect(actions).toContain('.order("account_number", { ascending: true })');
+    expect(actions).toContain('.range(from, to)');
   });
 
   it("dispatches canonical registry accounts instead of normalized source accounts", () => {

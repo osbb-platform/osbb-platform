@@ -9,6 +9,13 @@ const source = readFileSync(
   ),
   "utf8",
 );
+const parserSource = readFileSync(
+  join(
+    process.cwd(),
+    "src/modules/houses/utils/debtorsSpreadsheet.ts",
+  ),
+  "utf8",
+);
 
 describe("P03 monthly debtor import UX", () => {
   it("selects the history period inside preview", () => {
@@ -36,5 +43,17 @@ describe("P03 monthly debtor import UX", () => {
     expect(source).toContain("monthlyMissingApartmentsCount");
     // Track 4: the unit noun is object_kind-aware (Квартир/Ділянок).
     expect(source).toContain("без рядка: {monthlyMissingApartmentsCount}");
+  });
+
+  it("bounds cleaned spreadsheet parsing and disables formula retention", () => {
+    expect(parserSource).toContain("MAX_IMPORT_FILE_BYTES");
+    expect(parserSource).toContain("MAX_IMPORT_ROWS");
+    expect(parserSource).toContain("MAX_IMPORT_CELLS");
+    expect(parserSource).toContain("cellFormula: false");
+  });
+
+  it("distinguishes physical snapshot rows from public threshold debtors", () => {
+    expect(source).toContain("Фізично збережених балансів:");
+    expect(source).toContain("Публічних боржників (борг ≥500 ₴)");
   });
 });

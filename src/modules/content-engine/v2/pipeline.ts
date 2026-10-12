@@ -62,19 +62,21 @@ export async function runPipeline(args: {
     });
   }
 
-  const historyResult = await writeHistory(ctx.supabase, {
-    actor: ctx.user,
-    houseId: ctx.house.id,
-    entry: execResult.history,
-  });
-
-  if (!historyResult.ok) {
-    console.warn("Command pipeline non-fatal warning after domain mutation", {
+  if (!execResult.skipHistory) {
+    const historyResult = await writeHistory(ctx.supabase, {
+      actor: ctx.user,
       houseId: ctx.house.id,
-      commandType: args.command.type,
-      warning: historyResult.warning,
-      reconciliation: historyResult.reconciliation,
+      entry: execResult.history,
     });
+
+    if (!historyResult.ok) {
+      console.warn("Command pipeline non-fatal warning after domain mutation", {
+        houseId: ctx.house.id,
+        commandType: args.command.type,
+        warning: historyResult.warning,
+        reconciliation: historyResult.reconciliation,
+      });
+    }
   }
 
   return ok(undefined);

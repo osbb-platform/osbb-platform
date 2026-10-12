@@ -1,24 +1,35 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import * as XLSX from "xlsx";
 
 import { dispatchAdminCommand } from "@/src/modules/content-engine/v2/dispatch";
 import { createSupabaseServerClient } from "@/src/integrations/supabase/server/server";
 import { getCurrentAdminUser } from "@/src/modules/auth/services/getCurrentAdminUser";
 import { getAdminHouseById } from "@/src/modules/houses/services/getAdminHouseById";
 import { assertWorkspaceAction } from "@/src/shared/permissions/actionAccess";
+import { readAllCountedPages } from "@/src/shared/data/readAllCountedPages";
+import { rateLimitPolicies } from "@/src/shared/security/rateLimitPolicies";
+import { consumeServerRateLimit } from "@/src/shared/security/serverRateLimit";
 
 import { debtors1cAdapter, toOsbbBalance } from "../adapters/debtors1c";
+import {
+  buildDebtors1cImportCounters,
+  readStoredImportCounters,
+  resolveStoredConfirmedPeriod,
+} from "../debtors1cImportDiagnostics";
 import { validateImportFileDescriptor } from "../fileSecurity";
 import {
   recoverConfirmedDebtors1cImportState,
   recoverTransferredDebtors1cImportState,
 } from "../debtors1cImportRecovery";
-import { reconcileDebtors1cRows } from "../matching";
+import {
+  hasDebtors1cRegistryMappingChanged,
+  reconcileDebtors1cRows,
+} from "../matching";
+import { readDebtors1cWorkbook } from "../readDebtors1cWorkbook";
+import type { RawSheet } from "../types";
 import type { ActiveApartmentRegistryRow } from "../workflowTypes";
 import type { Debtors1cImportState } from "../debtors1cImportState";
-import type { RawSheet } from "../types";
 
 export async function parseDebtors1cImportBuffer(
   _previousState: Debtors1cImportState,
@@ -41,13 +52,45 @@ export async function parseDebtors1cImportBuffer(
   });
   if (!security.ok) return security;
 
+  try {
+    const rateLimit = await consumeServerRateLimit({
+      policy: rateLimitPolicies.importBufferUpload,
+      subject: [access.user.id, access.house.id].join(":"),
+    });
+
+    if (!rateLimit.allowed) {
+      return {
+        ok: false,
+        error: `Забагато спроб імпорту. Повторіть через ${Math.max(
+          1,
+          rateLimit.retryAfterSeconds,
+        )} с.`,
+      };
+    }
+  } catch (error) {
+    console.error("[P04 debtors 1C] Import rate limit unavailable", {
+      houseId: access.house.id,
+      error,
+    });
+    return {
+      ok: false,
+      error: "Не вдалося перевірити ліміт імпорту. Повторіть пізніше.",
+    };
+  }
+
   const supabase = await createSupabaseServerClient();
 
   let sheet: RawSheet;
   try {
-    sheet = readFirstSheet(await file.arrayBuffer());
-  } catch {
-    return { ok: false, error: "Не вдалося прочитати файл 1С." };
+    sheet = readDebtors1cWorkbook(await file.arrayBuffer());
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Не вдалося прочитати файл 1С.",
+    };
   }
 
   const detected = debtors1cAdapter.detect(sheet);
@@ -68,22 +111,51 @@ export async function parseDebtors1cImportBuffer(
   const period = debtors1cAdapter.extractPeriod(sheet);
   const parsedRows = debtors1cAdapter.parseRows(sheet, header.value);
 
-  const registryResult = await supabase
-    .from("house_apartments")
-    .select("id, account_number, apartment_label, owner_name, area")
-    .eq("house_id", access.house.id)
-    .is("archived_at", null);
+  type RegistryRow = {
+    id: string;
+    account_number: string;
+    apartment_label: string;
+    owner_name: string;
+    area: number | null;
+  };
+  let registryRows: RegistryRow[];
 
-  if (registryResult.error) {
+  try {
+    registryRows = await readAllCountedPages<RegistryRow>({
+      label: "active apartment registry for 1C import",
+      getRowKey: (row) => row.id,
+      fetchPage: async (from, to) => {
+        const result = await supabase
+          .from("house_apartments")
+          .select(
+            "id, account_number, apartment_label, owner_name, area",
+            { count: "exact" },
+          )
+          .eq("house_id", access.house.id)
+          .is("archived_at", null)
+          .order("account_number", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as RegistryRow[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("[P04 debtors 1C] Failed to load complete registry", {
+      houseId: access.house.id,
+      error,
+    });
     return {
       ok: false,
       error: "Не вдалося завантажити активний реєстр квартир.",
     };
   }
 
-  const registry: ActiveApartmentRegistryRow[] = (
-    registryResult.data ?? []
-  ).map((row) => ({
+  const registry: ActiveApartmentRegistryRow[] = registryRows.map((row) => ({
     id: String(row.id),
     accountNumber: String(row.account_number ?? "").trim(),
     apartmentLabel: String(row.apartment_label ?? "").trim(),
@@ -113,6 +185,28 @@ export async function parseDebtors1cImportBuffer(
 
   const registryById = new Map(registry.map((row) => [row.id, row]));
 
+  const counters = buildDebtors1cImportCounters({
+    sourceRows: sheet.rows.length,
+    registryRows: registry.length,
+    rows: reconciliation.rows.map((row) =>
+      row.classification === "data"
+        ? {
+            classification: row.classification,
+            match_status: row.matchStatus,
+            matched_apartment_id: row.matchedApartmentId,
+            account_number_normalized: row.source.accountNumberNormalized,
+            debt_value: row.source.debtValue,
+          }
+        : {
+            classification: row.classification,
+            match_status: "skipped" as const,
+            matched_apartment_id: null,
+            account_number_normalized: null,
+            debt_value: null,
+          },
+    ),
+  });
+
   const uploadInsert = await supabase
     .from("import_buffer_uploads")
     .insert({
@@ -126,6 +220,7 @@ export async function parseDebtors1cImportBuffer(
       confirmed_period_month: null,
       status: "parsed",
       stats: {
+        counters,
         matchedCount: reconciliation.matchedCount,
         warningCount: reconciliation.warningCount,
         unknownSourceAccounts: reconciliation.unknownSourceAccountNumbers,
@@ -215,6 +310,7 @@ export async function parseDebtors1cImportBuffer(
     unknownSourceAccounts: reconciliation.unknownSourceAccountNumbers,
     missingRegistryAccounts: reconciliation.registryAccountsMissingFromFile,
     warningCount: reconciliation.warningCount,
+    counters,
     message: "Файл оброблено. Перевірте preview і підтвердьте період.",
   };
 }
@@ -337,7 +433,7 @@ export async function transferDebtors1cImportBuffer(
   state: Debtors1cImportState,
   formData: FormData,
 ): Promise<Debtors1cImportState> {
-  if (!state.ok || state.status !== "confirmed" || !state.confirmedPeriod) {
+  if (!state.ok) {
     return { ok: false, error: "Спочатку підтвердьте період." };
   }
 
@@ -351,7 +447,7 @@ export async function transferDebtors1cImportBuffer(
   const upload = await supabase
     .from("import_buffer_uploads")
     .select(
-      "id, status, lock_version, confirmed_period_year, confirmed_period_month, stats, original_file_name",
+      "id, status, lock_version, detected_period_year, detected_period_month, confirmed_period_year, confirmed_period_month, stats, original_file_name",
     )
     .eq("id", state.uploadId)
     .eq("house_id", access.house.id)
@@ -377,20 +473,89 @@ export async function transferDebtors1cImportBuffer(
     return { ok: false, error: "Дані застаріли. Оновіть preview." };
   }
 
-  const staged = await supabase
-    .from("import_buffer_rows")
-    .select(
-      "account_number_normalized, apartment_label, accrued, paid, debt_value, match_status, matched_apartment_id",
-    )
-    .eq("upload_id", state.uploadId)
-    .eq("classification", "data")
-    .order("row_index", { ascending: true });
+  const confirmedPeriod = resolveStoredConfirmedPeriod(upload.data);
+  if (!confirmedPeriod) {
+    return {
+      ok: false,
+      error: "У буфері відсутній коректний підтверджений період.",
+    };
+  }
 
-  if (staged.error || !staged.data?.length) {
+  type StagedRow = {
+    row_index: number;
+    classification:
+      | "data"
+      | "skip_service"
+      | "skip_provider"
+      | "skip_group"
+      | "skip_total";
+    account_number_normalized: string | null;
+    apartment_label: string | null;
+    accrued: number | null;
+    paid: number | null;
+    debt_value: number | null;
+    match_status: "matched" | "unmatched" | "skipped";
+    matched_apartment_id: string | null;
+  };
+
+  let stagedRows: StagedRow[];
+  try {
+    stagedRows = await readAllCountedPages<StagedRow>({
+      label: "1C staged import rows",
+      getRowKey: (row) => row.row_index,
+      fetchPage: async (from, to) => {
+        const result = await supabase
+          .from("import_buffer_rows")
+          .select(
+            "row_index, classification, account_number_normalized, apartment_label, accrued, paid, debt_value, match_status, matched_apartment_id",
+            { count: "exact" },
+          )
+          .eq("upload_id", state.uploadId)
+          .order("row_index", { ascending: true })
+          .range(from, to);
+
+        return {
+          data: (result.data ?? []) as StagedRow[],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("[P04 debtors 1C] Failed to load complete staged rows", {
+      houseId: access.house.id,
+      uploadId: state.uploadId,
+      error,
+    });
     return { ok: false, error: "Не вдалося завантажити staged rows." };
   }
 
-  const matchedRegistryRows = staged.data.filter(
+  if (stagedRows.length === 0) {
+    return { ok: false, error: "Буфер не містить staged rows." };
+  }
+
+  const storedCounters = readStoredImportCounters(upload.data.stats);
+  if (
+    storedCounters &&
+    storedCounters.classifiedRows !== stagedRows.length
+  ) {
+    return {
+      ok: false,
+      error:
+        "Кількість staged rows не збігається з preview. Передача зупинена.",
+    };
+  }
+
+  const counters = buildDebtors1cImportCounters({
+    sourceRows: storedCounters?.sourceRows ?? stagedRows.length,
+    registryRows: storedCounters?.registryRows ?? 0,
+    rows: stagedRows,
+  });
+  const stagedDataRows = stagedRows.filter(
+    (row) => row.classification === "data",
+  );
+
+  const matchedRegistryRows = stagedDataRows.filter(
     (row) =>
       row.match_status === "matched" &&
       Boolean(row.matched_apartment_id) &&
@@ -428,6 +593,13 @@ export async function transferDebtors1cImportBuffer(
     };
   }
 
+  if (counters.missingDebtRows > 0) {
+    return {
+      ok: false,
+      error: `У ${counters.missingDebtRows} зіставлених рядках відсутнє значення боргу. Передача зупинена.`,
+    };
+  }
+
   const matchedRows = matchedRegistryRows.filter(
     (row) => row.debt_value !== null,
   );
@@ -439,9 +611,22 @@ export async function transferDebtors1cImportBuffer(
     };
   }
 
-  const unmatchedRows = staged.data.filter(
+  const unmatchedRows = stagedDataRows.filter(
     (row) => row.match_status === "unmatched",
   );
+  const acceptPartialTransfer =
+    formData.get("acceptPartialTransfer") === "true";
+
+  if (
+    unmatchedRows.length > 0 &&
+    !acceptPartialTransfer
+  ) {
+    return {
+      ok: false,
+      error:
+        "Є неспівставлені рядки. Підтвердьте усвідомлений частковий перенос.",
+    };
+  }
 
   const unmatchedAccounts = unmatchedRows.map((row) => ({
     account: String(row.account_number_normalized ?? "").trim(),
@@ -461,25 +646,63 @@ export async function transferDebtors1cImportBuffer(
     ...new Set(matchedRows.map((row) => String(row.matched_apartment_id))),
   ];
 
-  const canonicalRegistry = await supabase
-    .from("house_apartments")
-    .select("id, account_number")
-    .eq("house_id", access.house.id)
-    .is("archived_at", null)
-    .in("id", matchedApartmentIds);
+  let canonicalRegistry: { id: string; account_number: string }[];
+  try {
+    canonicalRegistry = await readAllCountedPages<{
+      id: string;
+      account_number: string;
+    }>({
+      label: "canonical apartment registry for 1C transfer",
+      getRowKey: (row) => String(row.id),
+      fetchPage: async (from, to) => {
+        const result = await supabase
+          .from("house_apartments")
+          .select("id, account_number", { count: "exact" })
+          .eq("house_id", access.house.id)
+          .is("archived_at", null)
+          .order("account_number", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, to);
 
-  if (canonicalRegistry.error) {
+        return {
+          data: result.data ?? [],
+          error: result.error,
+          count: result.count,
+        };
+      },
+    });
+  } catch (error) {
+    console.error("[P04 debtors 1C] Failed to recheck complete registry", {
+      houseId: access.house.id,
+      uploadId: state.uploadId,
+      error,
+    });
     return {
       ok: false,
       error: "Не вдалося повторно перевірити зіставлені квартири.",
     };
   }
 
+  if (
+    storedCounters &&
+    canonicalRegistry.length !== storedCounters.registryRows
+  ) {
+    return {
+      ok: false,
+      error:
+        "Активний реєстр квартир змінився після preview. Завантажте файл повторно.",
+    };
+  }
+
+  const matchedApartmentIdSet = new Set(matchedApartmentIds);
+
   const canonicalAccountByApartmentId = new Map(
-    (canonicalRegistry.data ?? []).map((row) => [
-      String(row.id),
-      String(row.account_number ?? "").trim(),
-    ]),
+    canonicalRegistry
+      .filter((row) => matchedApartmentIdSet.has(String(row.id)))
+      .map((row) => [
+        String(row.id),
+        String(row.account_number ?? "").trim(),
+      ]),
   );
 
   const unresolvedMatchedApartmentIds = matchedApartmentIds.filter(
@@ -494,21 +717,76 @@ export async function transferDebtors1cImportBuffer(
     };
   }
 
+  if (
+    hasDebtors1cRegistryMappingChanged({
+      stagedRows: stagedDataRows,
+      registryRows: canonicalRegistry,
+    })
+  ) {
+    return {
+      ok: false,
+      error:
+        "Зіставлення з реєстром квартир змінилося після preview. Завантажте файл повторно.",
+    };
+  }
+
+  const canonicalTransferAccounts = matchedRows.map((row) =>
+    canonicalAccountByApartmentId.get(String(row.matched_apartment_id)),
+  );
+  if (
+    new Set(canonicalTransferAccounts).size !==
+    canonicalTransferAccounts.length
+  ) {
+    return {
+      ok: false,
+      error:
+        "Кілька рядків файлу зіставлено з одним особовим рахунком. Передача зупинена.",
+    };
+  }
+
+  const uploadStats =
+    upload.data.stats &&
+    typeof upload.data.stats === "object" &&
+    !Array.isArray(upload.data.stats)
+      ? (upload.data.stats as Record<string, unknown>)
+      : {};
+  const warningCount =
+    typeof uploadStats.warningCount === "number" &&
+    Number.isInteger(uploadStats.warningCount)
+    ? Number(uploadStats.warningCount)
+    : 0;
+  const missingRegistryAccounts = Array.isArray(
+    uploadStats.missingRegistryAccounts,
+  )
+    ? uploadStats.missingRegistryAccounts.map((value) => String(value))
+    : [];
+  const detectedPeriod =
+    typeof upload.data.detected_period_year === "number" &&
+    typeof upload.data.detected_period_month === "number" &&
+    Number.isInteger(upload.data.detected_period_year) &&
+    Number.isInteger(upload.data.detected_period_month)
+      ? {
+          year: Number(upload.data.detected_period_year),
+          month: Number(upload.data.detected_period_month),
+        }
+      : null;
+
   const result = await dispatchAdminCommand({
     type: "debtors.importMonthDraft",
     houseId: access.house.id,
     payload: {
-      periodYear: state.confirmedPeriod.year,
-      periodMonth: state.confirmedPeriod.month,
+      periodYear: confirmedPeriod.year,
+      periodMonth: confirmedPeriod.month,
       source: "buffer_1c",
       importMeta: {
         importBufferUploadId: state.uploadId,
         adapterKey: "debtors_1c",
         originalFileName: String(upload.data.original_file_name ?? "").trim(),
-        detectedPeriod: state.detectedPeriod,
-        confirmedPeriod: state.confirmedPeriod,
-        warningCount: state.warningCount,
-        missingRegistryAccounts: state.missingRegistryAccounts,
+        detectedPeriod,
+        confirmedPeriod,
+        counters,
+        warningCount,
+        missingRegistryAccounts,
         unmatchedAccounts,
         unmatchedDebtTotal,
       },
@@ -521,6 +799,11 @@ export async function transferDebtors1cImportBuffer(
         closingBalance: toOsbbBalance(Number(row.debt_value)) as number,
         debtSourceValue: Number(row.debt_value),
       })),
+      bufferTransfer: {
+        uploadId: state.uploadId,
+        expectedLockVersion: state.lockVersion,
+        acceptPartial: acceptPartialTransfer,
+      },
     },
   });
 
@@ -530,8 +813,22 @@ export async function transferDebtors1cImportBuffer(
 
   const payload = result.data as {
     snapshot?: { id?: string };
+    rows?: unknown[];
+    bufferTransfer?: {
+      snapshotId?: unknown;
+      persistedRows?: unknown;
+      lockVersion?: unknown;
+      counters?: unknown;
+    };
   };
   const snapshotId = String(payload?.snapshot?.id ?? "").trim();
+  const persistedRows = Array.isArray(payload.rows)
+    ? payload.rows.length
+    : null;
+  const atomicPersistedRows = Number(
+    payload.bufferTransfer?.persistedRows,
+  );
+  const atomicLockVersion = Number(payload.bufferTransfer?.lockVersion);
 
   if (!snapshotId) {
     return {
@@ -540,57 +837,33 @@ export async function transferDebtors1cImportBuffer(
     };
   }
 
-  const mark = await supabase
-    .from("import_buffer_uploads")
-    .update({
-      status: "transferred",
-      stats: {
-        snapshotId,
-        warningCount: state.warningCount,
-        missingRegistryAccounts: state.missingRegistryAccounts,
-      },
-    })
-    .eq("id", state.uploadId)
-    .eq("house_id", access.house.id)
-    .eq("status", "confirmed")
-    .eq("lock_version", state.lockVersion)
-    .select("lock_version")
-    .maybeSingle();
-
-  if (mark.error || !mark.data) {
-    const current = await supabase
-      .from("import_buffer_uploads")
-      .select(
-        "status, lock_version, confirmed_period_year, confirmed_period_month, stats",
-      )
-      .eq("id", state.uploadId)
-      .eq("house_id", access.house.id)
-      .maybeSingle();
-
-    if (!current.error && current.data) {
-      const recovered = recoverTransferredDebtors1cImportState(
-        {
-          ...state,
-          snapshotId,
-        },
-        current.data,
-      );
-
-      if (recovered) return recovered;
-    }
-
+  if (
+    persistedRows !== counters.transferableRows ||
+    !Number.isInteger(atomicPersistedRows) ||
+    atomicPersistedRows !== counters.transferableRows ||
+    !Number.isInteger(atomicLockVersion) ||
+    atomicLockVersion < 1
+  ) {
     return {
       ok: false,
-      error: "Чернетку створено, але буфер не вдалося позначити переданим.",
+      error:
+        "Результат атомарної передачі не збігається з preview. Оновіть дані.",
     };
   }
+
+  const completedCounters = {
+    ...counters,
+    persistedRows,
+  };
 
   revalidatePath(`/admin/houses/${access.house.id}`);
 
   return {
     ...state,
     status: "transferred",
-    lockVersion: Number(mark.data.lock_version),
+    lockVersion: atomicLockVersion,
+    confirmedPeriod,
+    counters: completedCounters,
     snapshotId,
     message: "Дані передано в чернетку боржників.",
   };
@@ -625,25 +898,4 @@ async function requireAccess(houseId: string) {
   }
 
   return { ok: true as const, user, house };
-}
-
-function readFirstSheet(buffer: ArrayBuffer): RawSheet {
-  const workbook = XLSX.read(buffer, {
-    type: "array",
-    raw: true,
-    cellDates: false,
-    dense: true,
-  });
-
-  const name = workbook.SheetNames[0];
-  if (!name) throw new Error("Workbook has no sheets");
-
-  return {
-    name,
-    rows: XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[name], {
-      header: 1,
-      raw: true,
-      defval: null,
-    }),
-  };
 }

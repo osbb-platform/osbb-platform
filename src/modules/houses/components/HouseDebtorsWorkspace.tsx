@@ -883,7 +883,8 @@ export function HouseDebtorsWorkspace({
                     draftMonthSnapshot.periodYear,
                     draftMonthSnapshot.periodMonth,
                   )}{" "}
-                  · Ревізія {draftMonthSnapshot.revision} · Рядків:{" "}
+                  · Ревізія {draftMonthSnapshot.revision} · Фізично збережених
+                  балансів:{" "}
                   {draftMonthSnapshot.rowsCount}
                 </p>
               </div>
@@ -976,7 +977,7 @@ export function HouseDebtorsWorkspace({
               · Ревізія {latestPublishedMonth.revision}
             </div>
             <div className="mt-1 text-xs text-[var(--cms-success-text)]">
-              Рядків: {latestPublishedMonth.rowsCount}
+              Фізично збережених балансів: {latestPublishedMonth.rowsCount}
             </div>
 
             <div className="mt-4 max-w-xl rounded-[var(--r-lg)] border border-[var(--cms-border)] bg-[var(--cms-surface)] p-4">
@@ -1026,7 +1027,7 @@ export function HouseDebtorsWorkspace({
                 </div>
 
                 <div className="text-[var(--cms-text-muted)]">
-                  Боржників (≥500 ₴)
+                  Публічних боржників (борг ≥500 ₴)
                 </div>
                 <div className="text-right font-medium text-[var(--cms-text)]">
                   {publishedReconciliationTotals.debtorsCount}

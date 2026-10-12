@@ -20,6 +20,11 @@ export const rateLimitPolicies = {
     windowSeconds: 60 * 60,
     maxAttempts: 5,
   },
+  importBufferUpload: {
+    scope: "import_buffer_upload",
+    windowSeconds: 60,
+    maxAttempts: 10,
+  },
   diiaCallback: {
     scope: "diia_callback",
     windowSeconds: 60,

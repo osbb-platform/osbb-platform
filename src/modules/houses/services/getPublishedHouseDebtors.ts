@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { createSupabasePublicClient } from "@/src/integrations/supabase/server/public";
+import { readAllCountedPages } from "@/src/shared/data/readAllCountedPages";
 import { throwRequiredPublicReadError } from "./publicContentResilience";
 import type { HouseDebtorsSettings } from "@/src/modules/content-engine/v2/handlers/debtors";
 import {
@@ -82,15 +83,47 @@ async function loadPublishedHouseDebtors(
   houseId: string,
 ): Promise<AdminHouseDebtorsSnapshot> {
   const supabase = createSupabasePublicClient();
-  const [settingsResult, historyResult] = await Promise.all([
+  const [settingsResult, rows] = await Promise.all([
     supabase
       .from("house_debtors_settings")
       .select("*")
       .eq("house_id", houseId)
       .maybeSingle(),
-    supabase.rpc("get_public_house_debtor_history", {
-      p_house_id: houseId,
-    }),
+    (async () => {
+      try {
+        return await readAllCountedPages<PublicDebtorHistoryRow>({
+          label: "public debtor history",
+          getRowKey: (row) => row.row_id,
+          fetchPage: async (from, to) => {
+            const result = await supabase
+              .rpc(
+                "get_public_house_debtor_history",
+                { p_house_id: houseId },
+                { count: "exact" },
+              )
+              .range(from, to);
+
+            return {
+              data: (result.data ?? []) as PublicDebtorHistoryRow[],
+              error: result.error,
+              count: result.count,
+            };
+          },
+        });
+      } catch (error) {
+        throwRequiredPublicReadError({
+          section: "debtors",
+          resource: "get_public_house_debtor_history",
+          houseId,
+          error: {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Unknown public debtor history read error",
+          },
+        });
+      }
+    })(),
   ]);
 
   if (settingsResult.error) {
@@ -102,17 +135,7 @@ async function loadPublishedHouseDebtors(
     });
   }
 
-  if (historyResult.error) {
-    throwRequiredPublicReadError({
-      section: "debtors",
-      resource: "get_public_house_debtor_history",
-      houseId,
-      error: historyResult.error,
-    });
-  }
-
   const settings = (settingsResult.data ?? null) as HouseDebtorsSettings | null;
-  const rows = (historyResult.data ?? []) as PublicDebtorHistoryRow[];
   const activeItems = rows.map(mapItem).sort((left, right) =>
     left.apartmentLabel.localeCompare(right.apartmentLabel, "uk", { numeric: true }),
   );
